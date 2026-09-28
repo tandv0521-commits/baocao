@@ -1334,10 +1334,12 @@
       return false;
     }
 
-    function isSharedGroupDeptClient(deptName) {
+   function isSharedGroupDeptClient(deptName) {
       if (!deptName) return false;
       const d = removeAccents(deptName);
-      return d.includes("kho") || d.includes("to kho") || d.includes("tiep lieu") || d.includes("ong to") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
+      // Tuyệt đối không gộp nhóm Phân xe và Tiếp liệu giao hàng (làm việc cá nhân)
+      if (d.includes("tiep lieu") || d.includes("phan xe")) return false;
+      return d.includes("kho") || d.includes("to kho") || d.includes("ong to") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
     }
 
     function isDirectorOrAdmin(roleStr, usernameStr) {
@@ -2664,6 +2666,9 @@
     /**
      * TRUY VẤN MA TRẬN BÁO CÁO TRỰC TIẾP TỪ SUPABASE
      */
+  /**
+     * TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP CÁC THÀNH VIÊN TỔ KHO TỪ 73 NHÂN SỰ THẬT
+     */
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2682,13 +2687,19 @@
         });
       }
 
+      // 1. Tải danh sách bộ phận và toàn bộ 73 nhân sự thật
+      const { data: dbDepts } = await supabase.from('departments').select('*');
+      const { data: dbUsers } = await supabase.from('users').select('*').eq('status', 'Hoạt động');
+
+      // 2. Tải toàn bộ danh mục công việc
       const { data: tasks, error: tErr } = await supabase
         .from('tasks')
-        .select('*, departments(name), users(id, full_name, username)')
+        .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role)')
         .order('id', { ascending: true });
 
       if (tErr) throw tErr;
 
+      // 3. Tải nhật ký số liệu tháng đang chọn
       const mFormatted = (month < 10 ? '0' : '') + month;
       const startDate = `${year}-${mFormatted}-01`;
       const endDate = `${year}-${mFormatted}-${daysInMonth < 10 ? '0' + daysInMonth : daysInMonth}`;
@@ -2715,16 +2726,57 @@
       }
 
       const staffGroupsMap = {};
+
       tasks.forEach(t => {
         const deptName = t.departments ? t.departments.name : "Chưa phân bộ phận";
-        const staffName = t.users ? t.users.full_name : "Chung bộ phận";
-        const groupKey = `${deptName}___${staffName}`;
+        const deptId = t.department_id;
+        const isShared = (t.departments && t.departments.is_shared_group) || isSharedGroupDeptClient(deptName);
+
+        let groupKey = "";
+        let displayStaffName = "";
+        let groupUserId = t.assigned_user_id;
+
+        if (isShared) {
+          // ================= ĐỐI VỚI BỘ PHẬN NHÓM KHO =================
+          // Gom tất cả các đầu việc của kho này vào chung 1 khối
+          groupKey = `DEPT_GROUP_${deptId}_${deptName}`;
+
+          // Tự động tìm toàn bộ thành viên thuộc kho này từ danh sách 73 nhân sự
+          const deptMembers = (dbUsers || []).filter(u => u.department_id === deptId);
+
+          // Sắp xếp: Trưởng nhóm / Kho chính đứng STT 1, các Phụ kho / Thành viên xếp sau
+          deptMembers.sort((a, b) => {
+            const aLead = /chinh|truong|to truong|leader/i.test(a.role || "");
+            const bLead = /chinh|truong|to truong|leader/i.test(b.role || "");
+            if (aLead && !bLead) return -1;
+            if (!aLead && bLead) return 1;
+            return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
+          });
+
+          if (deptMembers.length > 0) {
+            // Tạo chuỗi danh sách đầy đủ thành viên để hệ thống tự vẽ khung nhóm gộp
+            displayStaffName = deptMembers.map((u, i) => {
+              let rStr = u.role ? ` - ${u.role}` : "";
+              return `${i + 1}. ${u.full_name}${rStr}`;
+            }).join('\n');
+
+            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader/i.test(u.role || ""));
+            groupUserId = leadUser ? leadUser.id : deptMembers[0].id;
+          } else {
+            displayStaffName = t.users ? t.users.full_name : deptName;
+          }
+        } else {
+          // ================= ĐỐI VỚI BỘ PHẬN CÁ NHÂN =================
+          // (Nhóm phân xe - AT, Tiếp liệu giao hàng, v.v.): Hiển thị từng cá nhân riêng biệt
+          displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
+          groupKey = `${deptName}___${displayStaffName}`;
+        }
 
         if (!staffGroupsMap[groupKey]) {
           staffGroupsMap[groupKey] = {
             department: deptName,
-            staffName: staffName,
-            userId: t.users ? t.users.id : 1,
+            staffName: displayStaffName,
+            userId: groupUserId,
             tasks: []
           };
         }
@@ -3688,7 +3740,8 @@
         let tasksForDay = [];
         let allTaskList = [];
         let isShared = isSharedGroupDeptClient(currentUser.department);
-        let isLead = true;
+// Kiểm tra: Nếu là nhóm kho, chỉ ai có vai trò Kho chính/Trưởng nhóm/Quản lý mới có quyền Lưu
+let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = isStaffMatchedInCell(targetStaff, grp.staffName);
@@ -3791,12 +3844,15 @@
           }));
 
           currentTaskEntryDays = days;
-          renderTaskEntryDays({
-            task: targetTask,
-            days: days,
-            isWarehouse: isSharedGroupDeptClient(currentUser.department),
-            isLead: true
-          });
+          let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
+let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+
+renderTaskEntryDays({
+  task: targetTask,
+  days: days,
+  isWarehouse: isSharedTaskMode,
+  isLead: isLeadTaskMode
+});
           checkAndShowDraftRestoreButton();
           updateSyncStatusUI('synced');
         }
