@@ -412,6 +412,7 @@
           </div>
         </div>
 
+        <!-- Khối Đọc hiểu Ngữ nghĩa & Nhận định Chuyên môn -->
         <div id="taskSemanticInsightCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2">
@@ -982,7 +983,7 @@
   </div>
 
 
-  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (MỚI) ================= -->
+  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (MỚI CÓ BÁO ĐỘNG TRÙNG LẶP) ================= -->
   <div id="accountEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -998,6 +999,12 @@
         <button onclick="closeAccountEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
+      </div>
+
+      <!-- Khung báo động tài khoản trùng lặp -->
+      <div id="accEditErrorBox" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-300 text-rose-700 text-xs flex items-center gap-2.5 animate-bounce">
+        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm flex-shrink-0"></i>
+        <span id="accEditErrorMsg" class="font-bold"></span>
       </div>
 
       <div class="space-y-3.5">
@@ -1205,7 +1212,7 @@
   </div>
 
 
-  <!-- ================= MODAL THÊM MỚI NHÂN SỰ ================= -->
+  <!-- ================= MODAL THÊM MỚI NHÂN SỰ (MỚI CÓ BÁO ĐỘNG TRÙNG LẶP) ================= -->
   <div id="addUserModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
@@ -1216,6 +1223,12 @@
         <button type="button" onclick="closeAddUserModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
+      </div>
+
+      <!-- Khung báo động tài khoản trùng lặp khi thêm mới -->
+      <div id="addUserErrorBox" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-300 text-rose-700 text-xs flex items-center gap-2.5 animate-bounce">
+        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm flex-shrink-0"></i>
+        <span id="addUserErrorMsg" class="font-bold"></span>
       </div>
 
       <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
@@ -1335,6 +1348,27 @@
     let draftSaveTimeout = null;
     let pendingTransferData = null;
 
+    // ================= ÂM THANH BÁO ĐỘNG KHI PHÁT HIỆN TRÙNG LẶP =================
+    function playAlarmSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+      } catch(e) {
+        console.warn("Audio alarm policy:", e);
+      }
+    }
+
     // ================= SYSTEM PROGRESS HUD =================
     let progressTimer = null;
     let currentHudPercent = 0;
@@ -1453,7 +1487,6 @@
       if (!deptName) return false;
       const d = removeAccents(deptName);
       
-      // Tuyệt đối không gộp các bộ phận làm việc cá nhân
       if (d.includes("hang nhap tra")) return false; 
       if (d.includes("tiep lieu") || d.includes("phan xe") || d.includes("kcs") || d.includes("van phong") || d.includes("ke toan")) return false;
       
@@ -1623,6 +1656,10 @@
       return count;
     }
 
+    /**
+     * HIỂN THỊ THÀNH VIÊN TRONG Ô HỌ VÀ TÊN:
+     * Chỉ hiển thị Họ tên sạch và thẻ chức danh Kho chính / Phụ kho
+     */
     function formatStaffNameHtml(nameStr, deptName) {
       if (!nameStr) return '';
       const members = parseStaffList(nameStr);
@@ -1774,7 +1811,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
+        // Lọc sạch không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1989,9 +2026,10 @@
         }
       }
 
+      // Giám đốc ban tuyệt đối không hiện nút điền báo cáo
       if (btnDayEntry && currentUser) {
-        const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
-        if (isLead) {
+        const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
+        if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
           if (isLocked) {
@@ -2492,14 +2530,15 @@
       document.getElementById('userRoleBadge').innerText = currentUser.role;
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
-      const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
+      const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
 
+      // Giám đốc ban không bao giờ hiển thị nút "Điền báo cáo"
       if (btnDayEntry) {
-        if (isLead) btnDayEntry.classList.add('hidden');
+        if (isDir) btnDayEntry.classList.add('hidden');
         else btnDayEntry.classList.remove('hidden');
       }
 
-      if (isLead) {
+      if (isDir) {
         currentSelectedDept = "TẤT CẢ";
         currentSelectedStaff = "TẤT CẢ";
       } else {
@@ -2512,7 +2551,7 @@
 
       document.getElementById('tableScrollContainer').classList.remove('hidden');
 
-      if (cachedPreloadMatrix && (isLead || currentSelectedDept === "TẤT CẢ")) {
+      if (cachedPreloadMatrix && (isDir || currentSelectedDept === "TẤT CẢ")) {
         fullPeriodMatrixCache = cachedPreloadMatrix;
         currentMatrixData = cachedPreloadMatrix;
         document.getElementById('loadingTasksBox').classList.add('hidden');
@@ -2830,7 +2869,7 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: ẨN CÔNG VIỆC TẠM KHÓA/KHÓA & SỬA LỖI GOM 69 NGƯỜI =================
+    // ================= TRUY VẤN MA TRẬN: LOẠI BỎ VIỆC GIÁM ĐỐC & ẨN CÔNG VIỆC TẠM KHÓA =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2909,17 +2948,21 @@
 
         if (!deptName) deptName = "Chưa phân bộ phận";
 
+        const assignedUser = t.users || (dbUsers || []).find(u => u.id === t.assigned_user_id);
+
+        // 1. TUYỆT ĐỐI KHÔNG CÓ CÔNG VIỆC CỦA GIÁM ĐỐC BAN (GIÁM ĐỐC CHỈ XEM)
+        if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username) || normalizeDeptKey(deptName).includes("giam doc")) {
+          return;
+        }
+
         // Tách biệt rõ Hàng nhập trả vs Tổ kho
         const isShared = isSharedGroupDeptClient(deptName);
 
-        // NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN
-        if (!isShared) {
-          const assignedUser = t.users || (dbUsers || []).find(u => u.id === t.assigned_user_id);
-          if (assignedUser) {
-            const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
-            if (uStatus.includes("tam") || uStatus.includes("khoa")) {
-              return; // ẨN HOÀN TOÀN KHỎI BẢNG TỔNG HỢP TIẾN ĐỘ
-            }
+        // 2. NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN
+        if (!isShared && assignedUser) {
+          const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
+          if (uStatus.includes("tam") || uStatus.includes("khoa")) {
+            return; // Ẩn hẳn dòng công việc của người tạm khóa / khóa
           }
         }
 
@@ -2930,7 +2973,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ BỎ LỖI GOM 69 NGƯỜI)
           const deptMembers = (dbUsers || []).filter(u => {
             if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -2961,7 +3004,7 @@
             displayStaffName = t.users ? t.users.full_name : deptName;
           }
         } else {
-          // BỘ PHẬN CÁ NHÂN (Hàng nhập trả, Tiếp liệu, Phân xe...): Hiển thị riêng từng cá nhân
+          // BỘ PHẬN CÁ NHÂN: Hiển thị riêng từng cá nhân
           displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
           groupKey = `${deptName}___${displayStaffName}`;
         }
@@ -3038,7 +3081,7 @@
       }
     }
 
-    // ================= RENDER BẢNG MA TRẬN & NHẬP TRỰC TIẾP QUA PHÍM ĐIỀU HƯỚNG =================
+    // ================= RENDER BẢNG MA TRẬN & PHÂN QUYỀN NHẬP TRỰC TIẾP =================
     function renderMatrixTable(data) {
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
@@ -3124,20 +3167,23 @@
             `;
           }
 
-          // Kiểm tra quyền chỉnh sửa trực tiếp vào bảng:
-          // Admin / Quản lý: có quyền sửa toàn bộ
-          // Tổ kho: Kho chính / Trưởng nhóm có quyền sửa
-          // Cá nhân: Nhân viên có tên trùng khớp được sửa dòng của mình
-          const isLeadUser = isAdminOrManager(currentUser.role, currentUser.username);
-          let canEditThisRow = isLeadUser;
-          if (!canEditThisRow && !currentPeriodLocked) {
+          // ================= PHÂN QUYỀN CHỈNH SỬA TRỰC TIẾP Ô MA TRẬN =================
+          // 1. Giám đốc ban: CHỈ XEM, không sửa bất kỳ ô nào
+          // 2. Quản lý / Nhân viên: CHỈ ĐƯỢC ĐIỀN VÀO CÔNG VIỆC CỦA CHÍNH MÌNH (hoặc Kho chính điền cho kho của mình)
+          const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
+          let canEditThisRow = false;
+
+          if (!isDir && !currentPeriodLocked) {
             if (grp.isShared) {
               const myRole = removeAccents(currentUser.role || "");
-              if ((myRole.includes("chinh") || myRole.includes("truong")) && isDeptEquivalent(currentUser.department, grp.department)) {
+              const isLeadOfThisWarehouse = (myRole.includes("chinh") || myRole.includes("truong")) && 
+                                            isDeptEquivalent(currentUser.department, grp.department);
+              if (isLeadOfThisWarehouse) {
                 canEditThisRow = true;
               }
             } else {
-              if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+              // Chỉ được sửa nếu là công việc của chính mình!
+              if (isStaffMatchedInCell(currentUser.fullName, grp.staffName) || (t.assigned_user_id && t.assigned_user_id === currentUser.id)) {
                 canEditThisRow = true;
               }
             }
@@ -3177,7 +3223,7 @@
                   oninput="formatNumberInputLive(this)" />
               `;
             } else {
-              // CHẾ ĐỘ CHỈ XEM (HIỂN THỊ BADGE ĐẸP MẮT)
+              // CHẾ ĐỘ CHỈ XEM
               if (rawVal !== '' && rawVal !== '-') {
                 const sym = rawVal.toUpperCase();
                 if (['X', 'P', 'Đ', 'C'].includes(sym)) {
@@ -3291,7 +3337,7 @@
       const oldVal = (inputElem.dataset.oldValue || "").trim();
       const newVal = inputElem.value.trim().replace(/,/g, '');
 
-      if (oldVal === newVal) return; // Nếu không có thay đổi thì không lưu
+      if (oldVal === newVal) return;
 
       const taskId = parseInt(inputElem.dataset.taskId, 10);
       const userId = parseInt(inputElem.dataset.userId, 10);
@@ -3335,7 +3381,7 @@
         inputElem.dataset.oldValue = val;
         inputElem.classList.remove('cell-saving');
 
-        // Cập nhật RAM Cache và tính lại tổng cột
+        // Cập nhật RAM Cache và tính lại tổng dòng
         const activeData = fullPeriodMatrixCache || currentMatrixData;
         if (activeData && activeData.staffGroups) {
           activeData.staffGroups.forEach(grp => {
@@ -4014,10 +4060,14 @@
 
     // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
     function openDayEntryModal() {
-      let targetStaff = currentSelectedStaff;
-      if (!targetStaff || targetStaff === "TẤT CẢ") {
-        targetStaff = currentUser.fullName;
+      // Giám đốc ban không bao giờ được phép điền báo cáo
+      if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
+        showToast("Giám đốc ban chỉ có quyền xem, không điền báo cáo!", true);
+        return;
       }
+
+      // Quản lý hoặc nhân viên: CHỈ ĐIỀN CÔNG VIỆC CỦA CHÍNH MÌNH
+      let targetStaff = currentUser.fullName;
 
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
       document.getElementById('dayEntryModal').classList.remove('hidden');
@@ -4065,10 +4115,10 @@
 
     /**
      * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY:
-     * Khắc phục triệt để cho 6 kho & phân tách độc lập Hàng nhập trả
+     * Quản lý/Nhân viên chỉ điền công việc của chính mình; Kho chính điền cho kho
      */
     function fetchDayEntryTasks() {
-      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
+      let targetStaff = currentUser.fullName;
       const targetDate = document.getElementById('modalEntryDate').value;
       const parts = targetDate.split('-');
       const targetDay = parseInt(parts[2], 10);
@@ -4091,26 +4141,22 @@
         let allTaskList = [];
 
         let isShared = isSharedGroupDeptClient(currentUser.department);
-        let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+        let myRole = removeAccents(currentUser.role || "");
+        let isLead = isShared && (myRole.includes("chinh") || myRole.includes("truong"));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
-          // 1. So khớp theo ID bộ phận
-          if (currentUser.department_id && grp.departmentId && grp.departmentId === currentUser.department_id) {
-            isMatch = true;
-          } 
-          // 2. So khớp theo tên kho tương đương
-          else if (isShared && isDeptEquivalent(grp.department, currentUser.department)) {
-            isMatch = true;
-          } 
-          // 3. So khớp nếu họ tên người dùng nằm trong danh sách nhóm kho
-          else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
-            isMatch = true;
-          } 
-          // 4. Nếu là bộ phận cá nhân (Hàng nhập trả, Tiếp liệu, Phân xe...)
-          else if (!isShared && isStaffMatchedInCell(targetStaff, grp.staffName)) {
-            isMatch = true;
+          if (isShared) {
+            // Tổ kho: Kho chính đại diện điền cho toàn kho
+            if (isDeptEquivalent(grp.department, currentUser.department)) {
+              isMatch = true;
+            }
+          } else {
+            // Bộ phận thường: CHỈ TẢI ĐÚNG CÔNG VIỆC CỦA CHÍNH MÌNH (kể cả là Quản lý)
+            if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
+              isMatch = true;
+            }
           }
 
           if (isMatch) {
@@ -4145,7 +4191,7 @@
         renderDayEntryTasks({
           tasks: tasksForDay,
           isWarehouse: isShared,
-          isLead: isLead
+          isLead: !isShared || isLead
         });
         checkAndShowDraftRestoreButton();
         updateSyncStatusUI('synced');
@@ -4168,11 +4214,11 @@
     }
 
     /**
-     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO CÔNG VIỆC:
-     * Khắc phục triệt để cho 6 kho
+     * PHÂN QUYỀN ĐIỀN BÁO CÁO THEO CÔNG VIỆC:
+     * Quản lý/Nhân viên chỉ điền công việc của chính mình
      */
     function fetchTaskEntryDays(targetRowIndex) {
-      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
+      let targetStaff = currentUser.fullName;
       const activeData = fullPeriodMatrixCache || currentMatrixData;
 
       if (activeData && activeData.staffGroups) {
@@ -4181,19 +4227,20 @@
         let targetUserId = 1;
 
         let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
-        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+        let myRole = removeAccents(currentUser.role || "");
+        let isLeadTaskMode = isSharedTaskMode && (myRole.includes("chinh") || myRole.includes("truong"));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
-          if (currentUser.department_id && grp.departmentId && grp.departmentId === currentUser.department_id) {
-            isMatch = true;
-          } else if (isSharedTaskMode && isDeptEquivalent(grp.department, currentUser.department)) {
-            isMatch = true;
-          } else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
-            isMatch = true;
-          } else if (!isSharedTaskMode && isStaffMatchedInCell(targetStaff, grp.staffName)) {
-            isMatch = true;
+          if (isSharedTaskMode) {
+            if (isDeptEquivalent(grp.department, currentUser.department)) {
+              isMatch = true;
+            }
+          } else {
+            if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
+              isMatch = true;
+            }
           }
 
           if (isMatch) {
@@ -4232,7 +4279,7 @@
             task: targetTask,
             days: days,
             isWarehouse: isSharedTaskMode,
-            isLead: isLeadTaskMode
+            isLead: !isSharedTaskMode || isLeadTaskMode
           });
           checkAndShowDraftRestoreButton();
           updateSyncStatusUI('synced');
@@ -4254,7 +4301,7 @@
       container.innerHTML = '';
 
       const isLocked = currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username);
-      const isReadOnly = (res.isWarehouse && !res.isLead && !isAdminOrManager(currentUser.role, currentUser.username)) || isLocked;
+      const isReadOnly = (res.isWarehouse && !res.isLead) || isLocked;
 
       if (banner) {
         if (isLocked) {
@@ -4328,7 +4375,7 @@
       container.innerHTML = '';
 
       const isLocked = currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username);
-      const isReadOnly = (res.isWarehouse && !res.isLead && !isAdminOrManager(currentUser.role, currentUser.username)) || isLocked;
+      const isReadOnly = (res.isWarehouse && !res.isLead) || isLocked;
 
       if (banner) {
         if (isLocked) {
@@ -4505,7 +4552,6 @@
         });
       }
 
-      // Cập nhật tức thì vào RAM Cache
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4847,7 +4893,6 @@
         loading.classList.add('hidden');
         if (uErr) throw uErr;
 
-        // LỌC SẠCH CÁC BẢN GHI GROUP ẢO, CHỈ HIỂN THỊ ĐÚNG 73 NHÂN SỰ THẬT
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -4973,11 +5018,14 @@
       });
     }
 
-    // ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (MỚI) =================
+    // ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP & BÁO ĐỘNG TRÙNG LẶP =================
     function openAccountEditModal(username) {
       if (!adminManageUsersCache || !adminManageUsersCache.users) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
       if (!user) return;
+
+      const errBox = document.getElementById('accEditErrorBox');
+      if (errBox) errBox.classList.add('hidden');
 
       document.getElementById('accEditOriginalUsername').value = user.username;
       document.getElementById('accEditFullNameInput').value = user.fullName;
@@ -5010,17 +5058,43 @@
       }
     }
 
+    /**
+     * SỬA TÀI KHOẢN: KIỂM TRA TRÙNG LẶP & BÁO ĐỘNG ÂM THANH
+     */
     async function submitAccountEdit() {
       const origUsername = document.getElementById('accEditOriginalUsername').value.trim();
       const fullName = document.getElementById('accEditFullNameInput').value.trim();
-      const newUsername = document.getElementById('accEditUsernameInput').value.trim();
+      const newUsername = document.getElementById('accEditUsernameInput').value.trim().toLowerCase();
       const newPass = document.getElementById('accEditPasswordInput').value.trim();
       const role = document.getElementById('accEditRoleSelect').value;
       const status = document.getElementById('accEditStatusSelect').value;
+      const errBox = document.getElementById('accEditErrorBox');
+      const errMsg = document.getElementById('accEditErrorMsg');
+
+      if (errBox) errBox.classList.add('hidden');
 
       if (!fullName || !newUsername) {
         showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
         return;
+      }
+
+      // 1. KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP (USERNAME)
+      if (newUsername !== origUsername.toLowerCase()) {
+        const { data: dupUser, error: dupErr } = await supabase
+          .from('users')
+          .select('id')
+          .eq('username', newUsername)
+          .limit(1);
+
+        if (!dupErr && dupUser && dupUser.length > 0) {
+          playAlarmSound(); // Bật âm thanh báo động
+          if (errBox && errMsg) {
+            errMsg.innerText = `CẢNH BÁO: Tên đăng nhập "${newUsername}" đã tồn tại trên hệ thống!`;
+            errBox.classList.remove('hidden');
+          }
+          showToast(`Tên đăng nhập "${newUsername}" đã bị trùng lặp!`, true);
+          return;
+        }
       }
 
       showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-pen animate-pulse");
@@ -5413,7 +5487,6 @@
         // 6. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
         autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
-          
           closeTransferModal(); 
 
           let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
@@ -5441,10 +5514,13 @@
       }
     }
 
-    // ================= THÊM MỚI NHÂN SỰ =================
+    // ================= THÊM MỚI NHÂN SỰ & BÁO ĐỘNG TRÙNG LẶP =================
     function openAddUserModal() {
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.remove('hidden');
+
+      const errBox = document.getElementById('addUserErrorBox');
+      if (errBox) errBox.classList.add('hidden');
 
       document.getElementById('addFullNameInput').value = '';
       document.getElementById('addUsernameInput').value = '';
@@ -5472,15 +5548,39 @@
       if (modal) modal.classList.add('hidden');
     }
 
+    /**
+     * THÊM NHÂN SỰ: KIỂM TRA TRÙNG LẶP & BÁO ĐỘNG ÂM THANH
+     */
     async function submitCreateUser() {
       const fullName = document.getElementById('addFullNameInput').value.trim();
-      const username = document.getElementById('addUsernameInput').value.trim();
+      const username = document.getElementById('addUsernameInput').value.trim().toLowerCase();
       const password = document.getElementById('addPasswordInput').value.trim();
       const dept = document.getElementById('addDeptSelect').value.trim();
       const role = document.getElementById('addRoleSelect').value;
+      const errBox = document.getElementById('addUserErrorBox');
+      const errMsg = document.getElementById('addUserErrorMsg');
+
+      if (errBox) errBox.classList.add('hidden');
 
       if (!fullName || !username || !dept) {
         showToast("Vui lòng điền đầy đủ các thông tin bắt buộc!", true);
+        return;
+      }
+
+      // KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP
+      const { data: dupUser, error: dupErr } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username)
+        .limit(1);
+
+      if (!dupErr && dupUser && dupUser.length > 0) {
+        playAlarmSound(); // Bật âm thanh báo động
+        if (errBox && errMsg) {
+          errMsg.innerText = `CẢNH BÁO: Tên đăng nhập "${username}" đã tồn tại trên hệ thống!`;
+          errBox.classList.remove('hidden');
+        }
+        showToast(`Tên đăng nhập "${username}" đã bị trùng lặp!`, true);
         return;
       }
 
