@@ -1651,7 +1651,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch không lấy các tài khoản nhóm ảo
+        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1847,7 +1847,7 @@
         }
       }
 
-      // HIỆN LẠI NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
+      // HIỆN NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
       if (btn) {
         if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
           btn.classList.remove('hidden');
@@ -2445,7 +2445,7 @@
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
       }
 
-      // Đảm bảo cập nhật trạng thái hiển thị của nút Khóa sổ
+      // Cập nhật trạng thái nút Khóa sổ cho Admin / Quản lý
       updatePeriodLockUI(currentPeriodLocked);
     }
 
@@ -3261,7 +3261,7 @@
       }
     }
 
-    // ================= XUẤT EXCEL =================
+    // ================= XUẤT EXCEL TIÊU CHUẨN =================
     async function exportToExcel() {
       if (!currentMatrixData || !currentMatrixData.staffGroups || currentMatrixData.staffGroups.length === 0) {
         showToast("Chưa có dữ liệu để xuất Excel!", true);
@@ -3750,7 +3750,7 @@
         let tasksForDay = [];
         let allTaskList = [];
 
-        // KIỂM TRA PHÂN QUYỀN CHÍNH XÁC: KHO CHÍNH / TRƯỞNG NHÓM ĐƯỢC LƯU, PHỤ KHO CHỈ XEM
+        // KIỂM TRA PHÂN QUYỀN: KHO CHÍNH / TRƯỞNG NHÓM ĐƯỢC LƯU, PHỤ KHO CHỈ XEM
         let isShared = isSharedGroupDeptClient(currentUser.department);
         let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
@@ -4136,7 +4136,7 @@
         });
       }
 
-      // 1. Cập nhật ngay tức thì vào bộ nhớ đệm RAM để giao diện phản hồi 0 giây
+      // 1. Cập nhật tức thì vào bộ nhớ đệm RAM để giao diện mượt 0 giây
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4591,10 +4591,49 @@
     }
 
     function onTransferStatusSelectChange(val) {
-      // ================= QUẢN LÝ ĐIỀU CHUYỂN NHÂN SỰ CHUẨN XÁC =================
+      const lockWarningBox = document.getElementById('transferLockWarningBox');
+      const pauseNoticeBox = document.getElementById('transferPausedNoticeBox');
+      const wrapper = document.getElementById('transferAssignmentWrapper');
+      const btn = document.getElementById('btnSubmitTransfer');
+
+      if (val === 'Khóa') {
+        if (lockWarningBox) lockWarningBox.classList.remove('hidden');
+        if (pauseNoticeBox) pauseNoticeBox.classList.add('hidden');
+        if (wrapper) {
+          wrapper.classList.add('opacity-30', 'pointer-events-none');
+          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+        }
+        if (btn) {
+          btn.className = "px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
+          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa & Xóa Báo Cáo</span>';
+        }
+      } else if (val === 'Tạm khóa') {
+        if (lockWarningBox) lockWarningBox.classList.add('hidden');
+        if (pauseNoticeBox) pauseNoticeBox.classList.remove('hidden');
+        if (wrapper) {
+          wrapper.classList.add('opacity-40', 'pointer-events-none');
+          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+        }
+        if (btn) {
+          btn.className = "px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
+          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Bảo Toàn Số Liệu)</span>';
+        }
+      } else {
+        if (lockWarningBox) lockWarningBox.classList.add('hidden');
+        if (pauseNoticeBox) pauseNoticeBox.classList.add('hidden');
+        if (wrapper) {
+          wrapper.classList.remove('opacity-30', 'opacity-40', 'pointer-events-none');
+          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = false);
+        }
+        if (btn) {
+          btn.className = "px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition cursor-pointer";
+          btn.innerHTML = 'Lưu Cập Nhật';
+        }
+      }
+    }
 
     /**
-     * ĐÓNG CỬA SỔ ĐIỀU CHUYỂN (SỬA LỖI MODAL KHÔNG TỰ MẤT)
+     * ĐÓNG CỬA SỔ ĐIỀU CHUYỂN
      */
     function closeTransferModal() {
       const modal = document.getElementById('transferModal');
@@ -4732,10 +4771,10 @@
     }
 
     /**
-     * THỰC THI ĐIỀU CHUYỂN: 
-     * 1. NẾU LÊN LÀM KHO CHÍNH -> TẤT CẢ NGƯỜI CŨ TRONG KHO TỰ ĐỘNG XUỐNG PHỤ KHO
+     * THỰC THI ĐIỀU CHUYỂN:
+     * 1. 1 KHO CHỈ CÓ 1 KHO CHÍNH -> TẤT CẢ NGƯỜI CŨ TỰ ĐỘNG XUỐNG PHỤ KHO
      * 2. CHUYỂN GIAO CÔNG VIỆC SANG KHO CHÍNH MỚI
-     * 3. TỰ ĐỘNG TẮT CỬA SỔ ĐIỀU CHUYỂN NGAY KHI LƯU XONG
+     * 3. TỰ ĐỘNG ĐÓNG POPUP ĐIỀU CHUYỂN KHI LƯU THÀNH CÔNG
      */
     async function executeUserTransfer(updateData) {
       showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
@@ -4762,7 +4801,7 @@
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 1. Cập nhật tài khoản của nhân sự được chọn
+        // 1. Cập nhật hồ sơ tài khoản nhân sự được chọn
         const { data: updatedUser, error } = await supabase
           .from('users')
           .update(updatePayload)
@@ -4776,7 +4815,7 @@
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
           
-          // Lấy danh sách tất cả các thành viên khác trong kho này
+          // Lấy tất cả thành viên khác trong kho này
           const { data: otherMembers } = await supabase
             .from('users')
             .select('id, role')
@@ -4784,7 +4823,7 @@
             .neq('id', currentUserId);
 
           if (otherMembers && otherMembers.length > 0) {
-            // Lọc ra tất cả những ai đang giữ vai trò Kho chính hoặc Trưởng nhóm cũ
+            // Lọc ra tất cả những ai đang giữ chức danh Kho chính hoặc Trưởng nhóm cũ
             const oldLeadIds = otherMembers
               .filter(u => /chinh|truong|leader/i.test(removeAccents(u.role || "")))
               .map(u => u.id);
@@ -4798,26 +4837,26 @@
             }
           }
 
-          // Chuyển quyền đại diện các đầu việc trong kho sang cho Kho chính mới
+          // Chuyển giao toàn bộ đầu việc của kho sang cho Kho chính mới đại diện
           await supabase
             .from('tasks')
             .update({ assigned_user_id: currentUserId })
             .eq('department_id', dId);
         }
 
-        // 3. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG
+        // 3. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
           
-          // Đóng ngay cửa sổ popup điều chuyển
+          // Tự động đóng hoàn toàn popup điều chuyển
           closeTransferModal(); 
 
-          showToast(`Đã điều chuyển ${updateData.fullName} thành công!`);
+          showToast(`Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`);
 
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
 
-          // Tải lại bảng nhân sự và bảng ma trận công việc
+          // Nạp lại dữ liệu
           loadAllUsersManagementData();
           loadInitialData(() => {
             setupRoleControls();
@@ -4829,6 +4868,7 @@
         showToast("Lỗi xử lý: " + err.message, true);
       }
     }
+
     // ================= THÊM MỚI NHÂN SỰ =================
     function openAddUserModal() {
       const modal = document.getElementById('addUserModal');
