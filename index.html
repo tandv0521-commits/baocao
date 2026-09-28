@@ -21,7 +21,7 @@
     .font-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
     .hidden { display: none !important; }
 
-    /* Thanh cuộn mảnh dịu mắt */
+    /* Thanh cuộn mảnh công thái học */
     .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -46,7 +46,7 @@
       .col-fixed-total { width: 120px; min-width: 120px; max-width: 120px; }
     }
 
-    /* Tiêu đề bảng công thái học chống lóa */
+    /* Tiêu đề bảng chống lóa */
     thead .col-fixed-tt { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
@@ -915,6 +915,13 @@
             <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
           <select id="userFilterDeptSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"></select>
+          <!-- BỘ LỌC TRẠNG THÁI NHÂN SỰ -->
+          <select id="userFilterStatusSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Hoạt động">🟢 Hoạt động</option>
+            <option value="Tạm khóa">🟡 Tạm khóa</option>
+            <option value="Khóa">🔴 Khóa</option>
+          </select>
         </div>
 
         <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
@@ -1316,8 +1323,8 @@
     }
 
     /**
-     * CHUẨN HÓA BỘ PHẬN:
-     * TÁCH BIỆT RÕ: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
+     * CHUẨN HÓA BỘ PHẬN CHO CÁC KHO:
+     * PHÂN TÁCH ĐỘC LẬP: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
      */
     function normalizeDeptKey(d) {
       if (!d) return "";
@@ -1359,7 +1366,7 @@
       const norm = normalizeDeptKey(deptName);
       if (norm === "hang nhap tra") return false;
       
-      // Chỉ các kho thực sự mới là nhóm gộp
+      // Chỉ các kho thực sự mới kích hoạt hình thức nhóm gộp
       return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho");
     }
 
@@ -1487,8 +1494,9 @@
           clean = clean.substring(0, suffixMatch.index).trim();
         }
 
-        // Làm sạch các dấu gạch nối, chấm phẩy thừa ở cuối tên
-        let name = clean.replace(/^[\s\.\,\-\–\:]+|[\s\.\,\-\–\:]+$/g, '').trim();
+        // Cắt sạch các chuỗi thừa dính trong họ tên
+        clean = clean.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|PhuKho|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên).*/gi, '').trim();
+        clean = clean.replace(/^[\s\.\,\-\–\:]+|[\s\.\,\-\–\:]+$/g, '').trim();
 
         let rLower = removeAccents(role);
         if (rLower.includes('chinh') || rLower.includes('truong') || rLower.includes('leader')) {
@@ -1504,8 +1512,8 @@
           role = "Phụ kho";
         }
 
-        if (name) {
-          members.push({ index: num, name: name, role: role, isLead: isLead });
+        if (clean) {
+          members.push({ index: num, name: clean, role: role, isLead: isLead });
         }
       });
 
@@ -1680,7 +1688,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
+        // Lọc sạch không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -2612,9 +2620,11 @@
         filteredGroups = filteredGroups.filter(grp => {
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
           if (isShared) {
+            // Tổ kho gộp: Thành viên trong kho xem toàn bộ danh mục của kho
             if (isDeptEquivalent(grp.department, currentSelectedDept)) return true;
             return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
           }
+          // Bộ phận cá nhân (Hàng nhập trả, Tiếp liệu, Phân xe...): Lọc chính xác theo cá nhân
           return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
         });
       }
@@ -2819,10 +2829,13 @@
         const isShared = isSharedGroupDeptClient(deptName);
 
         // NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN
-        if (!isShared && t.users) {
-          const uStatus = (t.users.status || "").toLowerCase();
-          if (uStatus.includes("tam") || uStatus.includes("khoa")) {
-            return; // Ẩn hoàn toàn công việc của nhân sự tạm khóa/khóa
+        if (!isShared) {
+          const assignedUser = t.users || (dbUsers || []).find(u => u.id === t.assigned_user_id);
+          if (assignedUser) {
+            const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
+            if (uStatus.includes("tam") || uStatus.includes("khoa")) {
+              return; // ẨN HOÀN TOÀN CÔNG VIỆC CỦA NHÂN SỰ TẠM KHÓA / KHÓA
+            }
           }
         }
 
@@ -2833,9 +2846,9 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
           const deptMembers = (dbUsers || []).filter(u => {
-            if (u.status !== 'Hoạt động') return false; // Không đưa người tạm khóa/khóa vào danh sách tổ
+            if (u.status !== 'Hoạt động') return false; // Người tạm khóa/khóa không đưa vào danh sách nhóm kho
             if (deptId && u.department_id && u.department_id === deptId) return true;
             const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
             const uDeptName = uDeptObj ? uDeptObj.name : "";
@@ -3836,7 +3849,7 @@
         let allTaskList = [];
 
         let isShared = isSharedGroupDeptClient(currentUser.department);
-        let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+        let isLead = !isShared || /chinh|truong|to truong|leader/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
@@ -3926,7 +3939,7 @@
         let targetUserId = 1;
 
         let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
-        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|leader/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
@@ -4638,15 +4651,20 @@
       });
     }
 
+    /**
+     * BỘ LỌC ĐA NĂNG: TÌM KIẾM, LỌC BỘ PHẬN & LỌC TRẠNG THÁI (HOẠT ĐỘNG / TẠM KHÓA / KHÓA)
+     */
     function filterUserListTable() {
       if (!adminManageUsersCache || !adminManageUsersCache.users) return;
       const query = document.getElementById('userSearchInput').value.trim().toLowerCase();
       const filterDept = document.getElementById('userFilterDeptSelect').value;
+      const filterStatus = document.getElementById('userFilterStatusSelect') ? document.getElementById('userFilterStatusSelect').value : "";
 
       const filtered = adminManageUsersCache.users.filter(u => {
         const matchName = u.fullName.toLowerCase().includes(query) || u.username.toLowerCase().includes(query);
         const matchDept = filterDept ? isDeptEquivalent(u.dept, filterDept) : true;
-        return matchName && matchDept;
+        const matchStatus = filterStatus ? (u.status === filterStatus) : true;
+        return matchName && matchDept && matchStatus;
       });
 
       renderUsersManagementTable(filtered);
@@ -4719,7 +4737,7 @@
         }
         if (btn) {
           btn.className = "px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa Tài Khoản</span>';
+          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa & Xóa Danh Mục Việc</span>';
         }
       } else if (val === 'Tạm khóa') {
         if (lockWarningBox) lockWarningBox.classList.add('hidden');
@@ -4730,7 +4748,7 @@
         }
         if (btn) {
           btn.className = "px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Bảo Toàn Số Liệu)</span>';
+          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Ẩn Báo Cáo)</span>';
         }
       } else {
         if (lockWarningBox) lockWarningBox.classList.add('hidden');
@@ -4935,11 +4953,11 @@
 
       if (isLock) {
         hudTitle = "KHÓA TÀI KHOẢN";
-        hudDesc = `Đang vô hiệu hóa tài khoản ${updateData.fullName}...`;
+        hudDesc = `Đang vô hiệu hóa tài khoản và xóa dữ liệu việc của ${updateData.fullName}...`;
         hudIcon = "fa-solid fa-user-slash animate-pulse text-rose-500";
       } else if (isPause) {
         hudTitle = "TẠM KHÓA TÀI KHOẢN";
-        hudDesc = `Đang tạm khóa tài khoản ${updateData.fullName}...`;
+        hudDesc = `Đang tạm khóa và ẩn công việc của ${updateData.fullName}...`;
         hudIcon = "fa-solid fa-pause-circle animate-pulse text-amber-500";
       }
 
@@ -4966,7 +4984,7 @@
         if (deptErr) throw deptErr;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
 
-        // 1. NẾU KHÓA NHÂN SỰ BỘ PHẬN THƯỜNG -> XÓA SẠCH CÔNG VIỆC VÀ BÁO CÁO CỦA NHÂN SỰ ĐÓ
+        // 1. NẾU KHÓA NHÂN SỰ BỘ PHẬN THƯỜNG -> XÓA SẠCH HOÀN TOÀN CÔNG VIỆC VÀ BÁO CÁO CỦA NHÂN SỰ ĐÓ
         if (isLock && currentUserId && !updateData.isWarehouse) {
           const { data: userTasks } = await supabase
             .from('tasks')
@@ -4980,7 +4998,7 @@
           }
         }
 
-        // 2. DỌN SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC (NẾU CÓ ĐỔI BỘ PHẬN):
+        // 2. DỌN SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC (NẾU CÓ ĐỔI BỘ PHẬN CÔNG TÁC):
         if (oldDeptId && dId && oldDeptId !== dId && currentUserId) {
           const { data: oldTasks } = await supabase
             .from('tasks')
@@ -5072,9 +5090,9 @@
 
           let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
           if (isLock) {
-            msg = `Đã khóa tài khoản của ${updateData.fullName} thành công!`;
+            msg = `Đã khóa tài khoản và xóa danh mục công việc của ${updateData.fullName} thành công!`;
           } else if (isPause) {
-            msg = `Đã tạm khóa tài khoản của ${updateData.fullName}!`;
+            msg = `Đã tạm khóa tài khoản của ${updateData.fullName} (công việc đã được ẩn khỏi bảng)!`;
           } else if (copiedTasksCount > 0) {
             msg += ` (Đã sao chép ${copiedTasksCount} đầu việc)`;
           }
