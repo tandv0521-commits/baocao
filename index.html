@@ -21,7 +21,7 @@
     .font-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
     .hidden { display: none !important; }
 
-    /* Thanh cuộn mảnh công thái học */
+    /* Thanh cuộn mảnh dịu mắt */
     .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -46,7 +46,7 @@
       .col-fixed-total { width: 120px; min-width: 120px; max-width: 120px; }
     }
 
-    /* Tiêu đề bảng chống lóa */
+    /* Tiêu đề bảng công thái học chống lóa */
     thead .col-fixed-tt { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
@@ -79,6 +79,34 @@
     /* Màu nhận diện cột ngày Chủ nhật (CN) */
     .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
     .col-sunday-cell { background-color: #fff1f2/40 !important; }
+
+    /* ================= Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN ================= */
+    .matrix-input-cell {
+      width: 100%;
+      height: 100%;
+      min-height: 38px;
+      padding: 0 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      outline: none;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      transition: all 0.15s ease-in-out;
+      border-radius: 6px;
+    }
+    .matrix-input-cell:focus {
+      background-color: #ffffff !important;
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25) !important;
+      z-index: 30;
+      position: relative;
+    }
+    .matrix-input-cell.cell-saving {
+      background-color: #ecfdf5 !important;
+      color: #047857 !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
@@ -915,7 +943,7 @@
             <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
           <select id="userFilterDeptSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"></select>
-          <!-- BỘ LỌC TRẠNG THÁI NHÂN SỰ -->
+          <!-- BỘ LỌC TRẠNG THÁI NHÂN SỰ (HOẠT ĐỘNG - TẠM KHÓA - KHÓA) -->
           <select id="userFilterStatusSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer">
             <option value="">Tất cả trạng thái</option>
             <option value="Hoạt động">🟢 Hoạt động</option>
@@ -949,6 +977,75 @@
           <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
           <p class="text-xs text-slate-400">Đang tải danh sách nhân sự...</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (MỚI) ================= -->
+  <div id="accountEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center font-bold text-base shadow-2xs">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý Tài Khoản</h3>
+            <p class="text-xs text-slate-400">Sửa đổi thông tin tài khoản đăng nhập</p>
+          </div>
+        </div>
+        <button onclick="closeAccountEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5">
+        <input type="hidden" id="accEditOriginalUsername" value="" />
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Họ và tên nhân sự <span class="text-rose-500">*</span></label>
+          <input type="text" id="accEditFullNameInput" placeholder="Ví dụ: Nguyễn Văn A..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
+          <input type="text" id="accEditUsernameInput" placeholder="Ví dụ: a.nv, nguyen.va..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Đặt lại mật khẩu mới (Để trống nếu không đổi)</label>
+          <div class="relative">
+            <input type="password" id="accEditPasswordInput" placeholder="Nhập mật khẩu mới từ 4 ký tự..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            <button type="button" onclick="toggleAccEditPasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+              <i id="accEyeIcon" class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
+            <select id="accEditRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+              <option value="Nhân viên">Nhân viên</option>
+              <option value="Quản lý">Quản lý</option>
+              <option value="Giám đốc ban">Giám đốc ban</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Trạng thái tài khoản</label>
+            <select id="accEditStatusSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+              <option value="Hoạt động">🟢 Hoạt động</option>
+              <option value="Tạm khóa">🟡 Tạm khóa</option>
+              <option value="Khóa">🔴 Khóa</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeAccountEditModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Hủy</button>
+        <button type="button" onclick="submitAccountEdit()" id="btnSubmitAccountEdit" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span>Lưu Tài Khoản</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1323,18 +1420,15 @@
     }
 
     /**
-     * CHUẨN HÓA BỘ PHẬN CHO CÁC KHO:
-     * PHÂN TÁCH ĐỘC LẬP: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
+     * CHUẨN HÓA BỘ PHẬN:
+     * TÁCH BIỆT RÕ: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
      */
     function normalizeDeptKey(d) {
       if (!d) return "";
       let s = removeAccents(d).replace(/📁/g, '').replace(/^(bo phan|to|phong|nhom)\s+/i, '').replace(/\s+/g, ' ').trim();
       
-      // 1. Phân biệt rõ Hàng nhập trả vs Kho nhập trả
       if (s.includes("hang nhap tra")) return "hang nhap tra";
       if (s.includes("kho nhap tra") || (s.includes("nhap tra") && s.includes("kho"))) return "kho nhap tra";
-      
-      // 2. Các tổ kho khác
       if (s.includes("ong nho")) return "kho ong nho";
       if (s.includes("ong to")) return "kho ong to";
       if (s.includes("ong pe") || s.includes("pepp") || s.includes("pe pp") || s.includes("kho pe")) return "kho ong pe";
@@ -1366,7 +1460,6 @@
       const norm = normalizeDeptKey(deptName);
       if (norm === "hang nhap tra") return false;
       
-      // Chỉ các kho thực sự mới kích hoạt hình thức nhóm gộp
       return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho");
     }
 
@@ -1480,21 +1573,18 @@
         let role = "";
         let isLead = false;
 
-        // Trích xuất vai trò trong ngoặc đơn nếu có
         let parenMatch = clean.match(/\s*\((.*?)\)\s*$/);
         if (parenMatch) {
           role = parenMatch[1].trim();
           clean = clean.replace(/\s*\(.*?\)\s*$/, '').trim();
         }
 
-        // Cắt bỏ triệt để các hậu tố bị dính vào tên: - Truongnhom, - KhoChinh, - NhanVien, v.v.
         let suffixMatch = clean.match(/[\s\-\–\:\(\,]+(kho chính|phụ kho|thủ kho|tổ trưởng|nhóm trưởng|phụ nhóm|phụ|chính|nv|nhân viên|kế toán|chuyên viên|trưởng nhóm|thành viên|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i);
         if (suffixMatch) {
           if (!role) role = suffixMatch[1].trim();
           clean = clean.substring(0, suffixMatch.index).trim();
         }
 
-        // Cắt sạch các chuỗi thừa dính trong họ tên
         clean = clean.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|PhuKho|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên).*/gi, '').trim();
         clean = clean.replace(/^[\s\.\,\-\–\:]+|[\s\.\,\-\–\:]+$/g, '').trim();
 
@@ -1533,10 +1623,6 @@
       return count;
     }
 
-    /**
-     * HIỂN THỊ THÀNH VIÊN TRONG Ô HỌ VÀ TÊN:
-     * Chỉ hiển thị Họ tên sạch và thẻ chức danh Kho chính / Phụ kho
-     */
     function formatStaffNameHtml(nameStr, deptName) {
       if (!nameStr) return '';
       const members = parseStaffList(nameStr);
@@ -1688,7 +1774,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch không lấy các tài khoản nhóm ảo
+        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1862,7 +1948,7 @@
       updatePeriodLockUI(currentPeriodLocked);
     }
 
-    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH RIÊNG CHO ADMIN & QUẢN LÝ =================
+    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH CHO ADMIN & QUẢN LÝ =================
     function updatePeriodLockUI(isLocked) {
       currentPeriodLocked = isLocked;
       const badge = document.getElementById('periodLockBadge');
@@ -2620,11 +2706,9 @@
         filteredGroups = filteredGroups.filter(grp => {
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
           if (isShared) {
-            // Tổ kho gộp: Thành viên trong kho xem toàn bộ danh mục của kho
             if (isDeptEquivalent(grp.department, currentSelectedDept)) return true;
             return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
           }
-          // Bộ phận cá nhân (Hàng nhập trả, Tiếp liệu, Phân xe...): Lọc chính xác theo cá nhân
           return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
         });
       }
@@ -2746,7 +2830,7 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: ẨN CÔNG VIỆC TẠM KHÓA & SỬA LỖI GOM 69 NGƯỜI =================
+    // ================= TRUY VẤN MA TRẬN: ẨN CÔNG VIỆC TẠM KHÓA/KHÓA & SỬA LỖI GOM 69 NGƯỜI =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2834,7 +2918,7 @@
           if (assignedUser) {
             const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
             if (uStatus.includes("tam") || uStatus.includes("khoa")) {
-              return; // ẨN HOÀN TOÀN CÔNG VIỆC CỦA NHÂN SỰ TẠM KHÓA / KHÓA
+              return; // ẨN HOÀN TOÀN KHỎI BẢNG TỔNG HỢP TIẾN ĐỘ
             }
           }
         }
@@ -2848,7 +2932,7 @@
 
           // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
           const deptMembers = (dbUsers || []).filter(u => {
-            if (u.status !== 'Hoạt động') return false; // Người tạm khóa/khóa không đưa vào danh sách nhóm kho
+            if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
             const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
             const uDeptName = uDeptObj ? uDeptObj.name : "";
@@ -2865,7 +2949,6 @@
 
           if (deptMembers.length > 0) {
             displayStaffName = deptMembers.map((u, i) => {
-              // Cắt sạch các chuỗi thừa dính trong họ tên
               let cleanName = u.full_name.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
               let isUserLead = /chinh|truong|to truong|leader/i.test(removeAccents(u.role || ""));
               let rStr = isUserLead ? " (Kho chính)" : " (Phụ kho)";
@@ -2955,6 +3038,7 @@
       }
     }
 
+    // ================= RENDER BẢNG MA TRẬN & NHẬP TRỰC TIẾP QUA PHÍM ĐIỀU HƯỚNG =================
     function renderMatrixTable(data) {
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
@@ -2967,7 +3051,7 @@
         <th class="col-fixed-task py-3.5 px-3 text-left border-r">Nội dung công việc</th>
       `;
 
-      data.dayCols.forEach(dc => {
+      data.dayCols.forEach((dc, cIdx) => {
         const th = document.createElement('th');
         const isToday = dc.isToday;
 
@@ -3012,6 +3096,8 @@
         return;
       }
 
+      let globalRowCounter = 0;
+
       data.staffGroups.forEach((grp, gIdx) => {
         const totalStaffRows = grp.tasks.length;
         const autoSTT = gIdx + 1;
@@ -3019,6 +3105,7 @@
         grp.tasks.forEach((t, tIdx) => {
           const tr = document.createElement('tr');
           tr.className = "hover:bg-slate-50/80 transition";
+          const currentRowIndex = globalRowCounter++;
 
           let ttCellHtml = '';
           let nameCellHtml = '';
@@ -3037,41 +3124,31 @@
             `;
           }
 
-          let dayCellsHtml = '';
-          data.dayCols.forEach(dc => {
-            const rawVal = t.dailyValues[dc.colIndex] !== undefined ? String(t.dailyValues[dc.colIndex]).trim() : '';
-            const hasVal = rawVal !== '' && rawVal !== '-';
-            const isToday = dc.isToday;
-
-            const dateObj = new Date(currentSelectedYear, currentSelectedMonth - 1, dc.dayNum);
-            const isSunday = (dateObj.getDay() === 0);
-
-            let badgeHtml = '';
-            if (hasVal) {
-              const sym = rawVal.toUpperCase();
-              if (['X', 'P', 'Đ', 'C'].includes(sym)) {
-                let colorCls = "bg-emerald-50 text-emerald-800 border-emerald-200";
-                if (sym === 'P') colorCls = "bg-amber-50 text-amber-700 border-amber-200";
-                if (sym === 'Đ') colorCls = "bg-teal-50 text-teal-700 border-teal-200";
-                if (sym === 'C') colorCls = "bg-rose-50 text-rose-700 border-rose-200";
-                badgeHtml = `<span class="inline-block w-6 py-0.5 rounded font-black text-xs border ${colorCls}">${sym}</span>`;
-              } else {
-                let clean = rawVal.replace(/,/g, '');
-                if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
-                  badgeHtml = `<span class="font-num font-bold text-slate-900 text-xs">${formatNumberWithCommas(rawVal)}</span>`;
-                } else {
-                  let lowVal = removeAccents(rawVal).toLowerCase();
-                  let tagCls = "bg-slate-100 text-slate-700 border-slate-200";
-                  if (lowVal.includes('nghi') || lowVal.includes('om') || lowVal.includes('phep')) tagCls = "bg-rose-50 text-rose-700 border-rose-200";
-                  else if (lowVal.includes('hop')) tagCls = "bg-sky-50 text-sky-700 border-sky-200";
-                  else if (lowVal.includes('cong tac')) tagCls = "bg-purple-50 text-purple-700 border-purple-200";
-
-                  badgeHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border ${tagCls} max-w-[70px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
-                }
+          // Kiểm tra quyền chỉnh sửa trực tiếp vào bảng:
+          // Admin / Quản lý: có quyền sửa toàn bộ
+          // Tổ kho: Kho chính / Trưởng nhóm có quyền sửa
+          // Cá nhân: Nhân viên có tên trùng khớp được sửa dòng của mình
+          const isLeadUser = isAdminOrManager(currentUser.role, currentUser.username);
+          let canEditThisRow = isLeadUser;
+          if (!canEditThisRow && !currentPeriodLocked) {
+            if (grp.isShared) {
+              const myRole = removeAccents(currentUser.role || "");
+              if ((myRole.includes("chinh") || myRole.includes("truong")) && isDeptEquivalent(currentUser.department, grp.department)) {
+                canEditThisRow = true;
               }
             } else {
-              badgeHtml = `<span class="text-slate-300 font-light font-num">·</span>`;
+              if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+                canEditThisRow = true;
+              }
             }
+          }
+
+          let dayCellsHtml = '';
+          data.dayCols.forEach((dc, cIdx) => {
+            const rawVal = t.dailyValues[dc.colIndex] !== undefined ? String(t.dailyValues[dc.colIndex]).trim() : '';
+            const isToday = dc.isToday;
+            const dateObj = new Date(currentSelectedYear, currentSelectedMonth - 1, dc.dayNum);
+            const isSunday = (dateObj.getDay() === 0);
 
             let cellBgClass = "";
             if (isToday) {
@@ -3080,9 +3157,56 @@
               cellBgClass = "col-sunday-cell bg-rose-50/25";
             }
 
+            let cellContentHtml = '';
+            if (canEditThisRow && !currentPeriodLocked) {
+              // Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN
+              const displayVal = (rawVal === '-' || rawVal === '·') ? '' : rawVal;
+              cellContentHtml = `
+                <input type="text" 
+                  class="matrix-input-cell font-num" 
+                  data-row="${currentRowIndex}" 
+                  data-col="${cIdx}" 
+                  data-task-id="${t.taskId}" 
+                  data-user-id="${grp.userId}" 
+                  data-day="${dc.dayNum}" 
+                  data-old-value="${displayVal}"
+                  value="${displayVal}" 
+                  placeholder="·" 
+                  onkeydown="handleMatrixCellKeydown(event, ${currentRowIndex}, ${cIdx})" 
+                  onblur="handleMatrixCellBlur(this)" 
+                  oninput="formatNumberInputLive(this)" />
+              `;
+            } else {
+              // CHẾ ĐỘ CHỈ XEM (HIỂN THỊ BADGE ĐẸP MẮT)
+              if (rawVal !== '' && rawVal !== '-') {
+                const sym = rawVal.toUpperCase();
+                if (['X', 'P', 'Đ', 'C'].includes(sym)) {
+                  let colorCls = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                  if (sym === 'P') colorCls = "bg-amber-50 text-amber-700 border-amber-200";
+                  if (sym === 'Đ') colorCls = "bg-teal-50 text-teal-700 border-teal-200";
+                  if (sym === 'C') colorCls = "bg-rose-50 text-rose-700 border-rose-200";
+                  cellContentHtml = `<span class="inline-block w-6 py-0.5 rounded font-black text-xs border ${colorCls}">${sym}</span>`;
+                } else {
+                  let clean = rawVal.replace(/,/g, '');
+                  if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
+                    cellContentHtml = `<span class="font-num font-bold text-slate-900 text-xs">${formatNumberWithCommas(rawVal)}</span>`;
+                  } else {
+                    let lowVal = removeAccents(rawVal).toLowerCase();
+                    let tagCls = "bg-slate-100 text-slate-700 border-slate-200";
+                    if (lowVal.includes('nghi') || lowVal.includes('om') || lowVal.includes('phep')) tagCls = "bg-rose-50 text-rose-700 border-rose-200";
+                    else if (lowVal.includes('hop')) tagCls = "bg-sky-50 text-sky-700 border-sky-200";
+                    else if (lowVal.includes('cong tac')) tagCls = "bg-purple-50 text-purple-700 border-purple-200";
+                    cellContentHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border ${tagCls} max-w-[70px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
+                  }
+                }
+              } else {
+                cellContentHtml = `<span class="text-slate-300 font-light font-num">·</span>`;
+              }
+            }
+
             dayCellsHtml += `
-              <td class="py-2 px-1 border-r border-b border-slate-200 text-center ${cellBgClass}">
-                ${badgeHtml}
+              <td class="py-1 px-1 border-r border-b border-slate-200 text-center ${cellBgClass} relative">
+                ${cellContentHtml}
               </td>
             `;
           });
@@ -3122,6 +3246,124 @@
       });
 
       setTimeout(() => { scrollToToday(); }, 250);
+    }
+
+    /**
+     * ĐIỀU HƯỚNG BẰNG CÁC PHÍM MŨI TÊN (LÊN, XUỐNG, TRÁI, PHẢI, ENTER)
+     */
+    function handleMatrixCellKeydown(e, rIdx, cIdx) {
+      let targetR = rIdx;
+      let targetC = cIdx;
+      let moved = false;
+
+      if (e.key === 'ArrowUp') {
+        targetR = rIdx - 1;
+        moved = true;
+      } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        targetR = rIdx + 1;
+        moved = true;
+      } else if (e.key === 'ArrowLeft') {
+        if (e.target.selectionStart === 0 && e.target.selectionEnd === 0) {
+          targetC = cIdx - 1;
+          moved = true;
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (e.target.selectionStart === e.target.value.length) {
+          targetC = cIdx + 1;
+          moved = true;
+        }
+      }
+
+      if (moved) {
+        const nextCell = document.querySelector(`.matrix-input-cell[data-row="${targetR}"][data-col="${targetC}"]`);
+        if (nextCell) {
+          e.preventDefault();
+          nextCell.focus();
+          nextCell.select();
+        }
+      }
+    }
+
+    /**
+     * TỰ ĐỘNG LƯU BÁO CÁO KHI RỜI Ô TRÊN MA TRẬN
+     */
+    async function handleMatrixCellBlur(inputElem) {
+      const oldVal = (inputElem.dataset.oldValue || "").trim();
+      const newVal = inputElem.value.trim().replace(/,/g, '');
+
+      if (oldVal === newVal) return; // Nếu không có thay đổi thì không lưu
+
+      const taskId = parseInt(inputElem.dataset.taskId, 10);
+      const userId = parseInt(inputElem.dataset.userId, 10);
+      const dayNum = parseInt(inputElem.dataset.day, 10);
+
+      await saveSingleMatrixCellReport(taskId, userId, dayNum, newVal, inputElem);
+    }
+
+    async function saveSingleMatrixCellReport(taskId, userId, dayNum, val, inputElem) {
+      inputElem.classList.add('cell-saving');
+      const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+      const dFormatted = (dayNum < 10 ? '0' : '') + dayNum;
+      const reportDate = `${currentSelectedYear}-${mFormatted}-${dFormatted}`;
+
+      let numV = null, symV = null, textV = null;
+      if (val !== '' && !isNaN(val) && !isNaN(parseFloat(val))) {
+        numV = parseFloat(val);
+      } else if (['X', 'P', 'Đ', 'C'].includes((val || '').toUpperCase())) {
+        symV = (val || '').toUpperCase();
+      } else if (val) {
+        textV = val;
+      }
+
+      const dbRecord = {
+        task_id: taskId,
+        user_id: userId,
+        report_date: reportDate,
+        num_val: numV,
+        sym_val: symV,
+        text_val: textV,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        const { error } = await supabase
+          .from('daily_reports')
+          .upsert([dbRecord], { onConflict: 'task_id,user_id,report_date' });
+
+        if (error) throw error;
+
+        inputElem.dataset.oldValue = val;
+        inputElem.classList.remove('cell-saving');
+
+        // Cập nhật RAM Cache và tính lại tổng cột
+        const activeData = fullPeriodMatrixCache || currentMatrixData;
+        if (activeData && activeData.staffGroups) {
+          activeData.staffGroups.forEach(grp => {
+            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+            if (matchedTask) {
+              matchedTask.dailyValues[dayNum] = val;
+              matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, activeData.dayCols);
+              
+              const rowTr = inputElem.closest('tr');
+              if (rowTr) {
+                const totalTd = rowTr.querySelector('.col-fixed-total');
+                if (totalTd) {
+                  let totalDisplay = '-';
+                  if (matchedTask.monthTotal !== undefined && matchedTask.monthTotal !== null && matchedTask.monthTotal !== '' && matchedTask.monthTotal !== '-') {
+                    totalDisplay = (typeof matchedTask.monthTotal === 'number') ? formatNumberWithCommas(matchedTask.monthTotal) : String(matchedTask.monthTotal);
+                  }
+                  totalTd.innerText = totalDisplay;
+                }
+              }
+            }
+          });
+        }
+
+        showToast("Cập nhật báo cáo thành công!");
+      } catch (err) {
+        inputElem.classList.remove('cell-saving');
+        showToast("Lỗi cập nhật: " + err.message, true);
+      }
     }
 
     function scrollToToday() {
@@ -3849,7 +4091,7 @@
         let allTaskList = [];
 
         let isShared = isSharedGroupDeptClient(currentUser.department);
-        let isLead = !isShared || /chinh|truong|to truong|leader/i.test(removeAccents(currentUser.role || ""));
+        let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
@@ -3939,7 +4181,7 @@
         let targetUserId = 1;
 
         let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
-        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|leader/i.test(removeAccents(currentUser.role || ""));
+        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
@@ -4221,7 +4463,7 @@
     }
 
     /**
-     * LƯU BÁO CÁO CÔNG VIỆC TRỰC TIẾP LÊN SUPABASE
+     * LƯU BÁO CÁO CÔNG VIỆC TRỰC TIẾP LÊN SUPABASE (TỪ MODAL)
      */
     async function submitDayReport() {
       if (currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username)) {
@@ -4263,7 +4505,7 @@
         });
       }
 
-      // Cập nhật tức thì vào RAM
+      // Cập nhật tức thì vào RAM Cache
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4315,7 +4557,7 @@
           hideProgressHud(250);
           clearLocalDraft();
           updateSyncStatusUI('synced');
-          showToast("Đã lưu báo cáo thành công lên đám mây!");
+          showToast("Cập nhật báo cáo thành công!");
           closeDayEntryModal();
         });
       } catch (err) {
@@ -4581,7 +4823,7 @@
       }
     }
 
-    // ================= QUẢN LÝ NHÂN SỰ & ĐIỀU CHUYỂN =================
+    // ================= QUẢN LÝ NHÂN SỰ, TÀI KHOẢN & ĐIỀU CHUYỂN =================
     function openUserManagerModal() {
       document.getElementById('userManagerModal').classList.remove('hidden');
       loadAllUsersManagementData();
@@ -4605,7 +4847,7 @@
         loading.classList.add('hidden');
         if (uErr) throw uErr;
 
-        // LỌC SẠCH 100% CÁC BẢN GHI GROUP ẢO, CHỈ HIỂN THỊ ĐÚNG 73 NHÂN SỰ THẬT
+        // LỌC SẠCH CÁC BẢN GHI GROUP ẢO, CHỈ HIỂN THỊ ĐÚNG 73 NHÂN SỰ THẬT
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -4670,6 +4912,9 @@
       renderUsersManagementTable(filtered);
     }
 
+    /**
+     * RENDER BẢNG NHÂN SỰ VỚI CẢ 2 NÚT: "QL TÀI KHOẢN" & "ĐIỀU CHUYỂN"
+     */
     function renderUsersManagementTable(users) {
       const tbody = document.getElementById('userManagementTableBody');
       tbody.innerHTML = '';
@@ -4712,16 +4957,115 @@
           <td class="py-2.5 px-3 text-center">${roleBadge}</td>
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
           <td class="py-2.5 px-3 text-center">
-            <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 mx-auto shadow-2xs border border-slate-200 cursor-pointer">
-              <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i>
-              <span>Điều chuyển</span>
-            </button>
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold transition flex items-center gap-1 border border-teal-200 shadow-2xs cursor-pointer" title="Sửa thông tin tài khoản đăng nhập & mật khẩu">
+                <i class="fa-solid fa-user-pen text-[11px]"></i>
+                <span>QL Tài khoản</span>
+              </button>
+              <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer" title="Điều chuyển bộ phận & phân vai trò">
+                <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i>
+                <span>Điều chuyển</span>
+              </button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    // ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (MỚI) =================
+    function openAccountEditModal(username) {
+      if (!adminManageUsersCache || !adminManageUsersCache.users) return;
+      const user = adminManageUsersCache.users.find(u => u.username === username);
+      if (!user) return;
+
+      document.getElementById('accEditOriginalUsername').value = user.username;
+      document.getElementById('accEditFullNameInput').value = user.fullName;
+      document.getElementById('accEditUsernameInput').value = user.username;
+      document.getElementById('accEditPasswordInput').value = '';
+      document.getElementById('accEditRoleSelect').value = user.role;
+      
+      const st = removeAccents(user.status || "").toLowerCase();
+      let statusVal = "Hoạt động";
+      if (st.includes("tam")) statusVal = "Tạm khóa";
+      else if (st.includes("khoa")) statusVal = "Khóa";
+      document.getElementById('accEditStatusSelect').value = statusVal;
+
+      document.getElementById('accountEditModal').classList.remove('hidden');
+    }
+
+    function closeAccountEditModal() {
+      document.getElementById('accountEditModal').classList.add('hidden');
+    }
+
+    function toggleAccEditPasswordVisibility() {
+      const pInput = document.getElementById('accEditPasswordInput');
+      const icon = document.getElementById('accEyeIcon');
+      if (pInput.type === 'password') {
+        pInput.type = 'text';
+        icon.className = "fa-regular fa-eye-slash text-xs";
+      } else {
+        pInput.type = 'password';
+        icon.className = "fa-regular fa-eye text-xs";
+      }
+    }
+
+    async function submitAccountEdit() {
+      const origUsername = document.getElementById('accEditOriginalUsername').value.trim();
+      const fullName = document.getElementById('accEditFullNameInput').value.trim();
+      const newUsername = document.getElementById('accEditUsernameInput').value.trim();
+      const newPass = document.getElementById('accEditPasswordInput').value.trim();
+      const role = document.getElementById('accEditRoleSelect').value;
+      const status = document.getElementById('accEditStatusSelect').value;
+
+      if (!fullName || !newUsername) {
+        showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
+        return;
+      }
+
+      showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-pen animate-pulse");
+      autoSimulateProgress(10, 85, "Cập nhật dữ liệu vào Supabase...", 25);
+
+      try {
+        const updatePayload = {
+          full_name: fullName,
+          username: newUsername,
+          role: role,
+          status: status
+        };
+
+        if (newPass) {
+          updatePayload.password_hash = newPass;
+        }
+
+        const { error } = await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('username', origUsername);
+
+        if (error) throw error;
+
+        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
+          hideProgressHud(250);
+          showToast(`Đã cập nhật thông tin tài khoản ${fullName} thành công!`);
+          closeAccountEditModal();
+          
+          cachedPreloadMatrix = null;
+          fullPeriodMatrixCache = null;
+
+          loadAllUsersManagementData();
+          loadInitialData(() => {
+            setupRoleControls();
+            loadMatrixData(true);
+          });
+        });
+      } catch (err) {
+        hideProgressHud(100);
+        showToast("Lỗi cập nhật tài khoản: " + err.message, true);
+      }
+    }
+
+    // ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ =================
     function onTransferStatusSelectChange(val) {
       const lockWarningBox = document.getElementById('transferLockWarningBox');
       const pauseNoticeBox = document.getElementById('transferPausedNoticeBox');
@@ -4764,17 +5108,11 @@
       }
     }
 
-    /**
-     * ĐÓNG CỬA SỔ ĐIỀU CHUYỂN
-     */
     function closeTransferModal() {
       const modal = document.getElementById('transferModal');
       if (modal) modal.classList.add('hidden');
     }
 
-    /**
-     * MỞ CỬA SỔ ĐIỀU CHUYỂN & GHI NHẬN VAI TRÒ
-     */
     function openTransferModal(username) {
       if (!adminManageUsersCache) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
@@ -4810,7 +5148,6 @@
       onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
 
-      // Tự động tích chọn vai trò Kho chính hoặc Phụ kho
       const isLead = /chinh|truong|to truong|leader/i.test(removeAccents(user.role || ""));
       const rKhoChinh = document.getElementById('roleKhoChinh');
       const rPhuKho = document.getElementById('rolePhuKho');
@@ -4820,11 +5157,6 @@
       }
     }
 
-    /**
-     * KHI CHUYỂN BỘ PHẬN: 
-     * - NẾU LÀ KHO -> HIỆN NÚT CHỌN KHO CHÍNH/PHỤ KHO
-     * - NẾU LÀ BỘ PHẬN CÁ NHÂN -> HIỆN DROPDOWN SAO CHÉP VIỆC TỪ ĐỒNG NGHIỆP CÙNG BỘ PHẬN
-     */
     function onTransferDeptChange(selectedDept) {
       if (!selectedDept) return;
       const isShared = isSharedGroupDeptClient(selectedDept);
@@ -4851,7 +5183,6 @@
         if (roleContainer) roleContainer.classList.add('hidden');
         if (normalContainer) normalContainer.classList.remove('hidden');
 
-        // Nạp danh sách đồng nghiệp trong bộ phận mới để sao chép danh mục việc
         if (copySelect && adminManageUsersCache && adminManageUsersCache.users) {
           copySelect.innerHTML = '<option value="">-- Không sao chép (Giữ danh mục đầu việc cũ) --</option>';
           
@@ -4878,9 +5209,6 @@
       }
     }
 
-    /**
-     * BẤM NÚT LƯU ĐIỀU CHUYỂN
-     */
     function submitUserTransfer() {
       const username = document.getElementById('transferUsernameInput').value.trim();
       const fullName = document.getElementById('transferFullNameInput').value.trim();
