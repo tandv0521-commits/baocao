@@ -1354,13 +1354,31 @@
         .trim();
     }
 
+    /**
+     * CHUẨN HÓA BỘ PHẬN ĐẶC TRỊ 6 KHO:
+     * Kho nhập trả, Kho ống nhỏ, Kho ống PE, Kho Phụ tùng lớn, Kho phụ tùng nhỏ, Kho phụ tùng PPR
+     */
+    function normalizeDeptKey(d) {
+      if (!d) return "";
+      let s = removeAccents(d).replace(/📁/g, '').replace(/^(bo phan|to|phong|nhom)\s+/i, '').replace(/\s+/g, ' ').trim();
+      if (s.includes("nhap tra")) return "kho nhap tra";
+      if (s.includes("ong nho")) return "kho ong nho";
+      if (s.includes("ong to")) return "kho ong to";
+      if (s.includes("pepp") || s.includes("pe pp") || s.includes("ong pe") || s === "pe" || s.includes("pe")) return "kho ong pe";
+      if (s.includes("phu tung lon")) return "kho phu tung lon";
+      if (s.includes("phu tung nho")) return "kho phu tung nho";
+      if (s.includes("phu tung ppr") || s.includes("ppr")) return "kho phu tung ppr";
+      if (s.includes("boc xep")) return "kho boc xep";
+      return s;
+    }
+
     function isDeptEquivalent(dept1, dept2) {
       if (!dept1 || !dept2) return false;
       if (dept1 === dept2) return true;
-      var s1 = removeAccents(dept1).replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-      var s2 = removeAccents(dept2).replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-      if (s1 === s2) return true;
-      if (s1.includes(s2) || s2.includes(s1)) return true;
+      let n1 = normalizeDeptKey(dept1);
+      let n2 = normalizeDeptKey(dept2);
+      if (n1 === n2) return true;
+      if (n1.includes(n2) || n2.includes(n1)) return true;
       return false;
     }
 
@@ -1368,7 +1386,8 @@
       if (!deptName) return false;
       const d = removeAccents(deptName);
       if (d.includes("tiep lieu") || d.includes("phan xe")) return false;
-      return d.includes("kho") || d.includes("to kho") || d.includes("ong to") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
+      const norm = normalizeDeptKey(deptName);
+      return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
     }
 
     function isDirectorOrAdmin(roleStr, usernameStr) {
@@ -1675,7 +1694,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch không lấy các tài khoản nhóm ảo
+        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1693,10 +1712,12 @@
           const dName = d ? d.name : "Chưa phân bộ phận";
           if (!deptMap[dName]) deptMap[dName] = [];
           deptMap[dName].push({
+            id: u.id,
             username: u.username,
             fullName: u.full_name,
             role: u.role,
-            status: u.status
+            status: u.status,
+            department_id: u.department_id
           });
         });
 
@@ -1871,7 +1892,7 @@
         }
       }
 
-      // HIỆN LẠI NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
+      // HIỆN NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
       if (btn) {
         if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
           btn.classList.remove('hidden');
@@ -2334,7 +2355,7 @@
       try {
         const { data: users, error } = await supabase
           .from('users')
-          .select('*, departments(name)')
+          .select('*, departments(id, name)')
           .eq('username', username)
           .limit(1);
 
@@ -2368,6 +2389,7 @@
             username: user.username,
             fullName: user.full_name,
             department: user.departments ? user.departments.name : "Chưa phân",
+            department_id: user.department_id,
             role: user.role,
             status: user.status
           };
@@ -2469,7 +2491,6 @@
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
       }
 
-      // Đảm bảo cập nhật trạng thái hiển thị của nút Khóa sổ
       updatePeriodLockUI(currentPeriodLocked);
     }
 
@@ -2593,12 +2614,23 @@
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
+      // 1. Lọc theo bộ phận (Hỗ trợ chuẩn hóa 6 kho)
       if (currentSelectedDept !== "TẤT CẢ") {
-        filteredGroups = filteredGroups.filter(grp => isDeptEquivalent(grp.department, currentSelectedDept));
+        filteredGroups = filteredGroups.filter(grp => 
+          isDeptEquivalent(grp.department, currentSelectedDept) ||
+          (currentUser && currentUser.department_id && grp.departmentId === currentUser.department_id)
+        );
       }
 
+      // 2. Lọc theo nhân sự: Nếu là tổ kho gộp, mọi thành viên trong kho đều thấy toàn bộ đầu việc của kho
       if (currentSelectedStaff !== "TẤT CẢ") {
-        filteredGroups = filteredGroups.filter(grp => isStaffMatchedInCell(currentSelectedStaff, grp.staffName));
+        filteredGroups = filteredGroups.filter(grp => {
+          const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+          if (isShared && isDeptEquivalent(grp.department, currentSelectedDept)) {
+            return true;
+          }
+          return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
+        });
       }
 
       const filteredViewData = Object.assign({}, fullPeriodMatrixCache, {
@@ -2718,7 +2750,7 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP NHÓM KHO TỪ 73 NHÂN SỰ THẬT =================
+    // ================= TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP NHÓM 6 KHO TỪ 73 NHÂN SỰ THẬT =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2742,7 +2774,7 @@
 
       const { data: tasks, error: tErr } = await supabase
         .from('tasks')
-        .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role)')
+        .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id)')
         .order('id', { ascending: true });
 
       if (tErr) throw tErr;
@@ -2775,22 +2807,32 @@
       const staffGroupsMap = {};
 
       tasks.forEach(t => {
-        const deptName = t.departments ? t.departments.name : "Chưa phân bộ phận";
-        const deptId = t.department_id;
-        const isShared = (t.departments && t.departments.is_shared_group) || isSharedGroupDeptClient(deptName);
+        // Tìm thông tin bộ phận tương ứng
+        let dObj = t.departments;
+        if (!dObj && t.department_id) {
+          dObj = (dbDepts || []).find(d => d.id === t.department_id);
+        }
+        if (!dObj && t.users && t.users.department_id) {
+          dObj = (dbDepts || []).find(d => d.id === t.users.department_id);
+        }
+
+        const deptName = dObj ? dObj.name : "Chưa phân bộ phận";
+        const deptId = dObj ? dObj.id : t.department_id;
+        const isShared = (dObj && dObj.is_shared_group) || isSharedGroupDeptClient(deptName);
 
         let groupKey = "";
         let displayStaffName = "";
         let groupUserId = t.assigned_user_id;
 
         if (isShared) {
-          groupKey = `DEPT_GROUP_${deptId}_${deptName}`;
+          // BỘ PHẬN NHÓM KHO: Gom tất cả việc của kho lại theo ID bộ phận chuẩn
+          groupKey = `DEPT_GROUP_${deptId}_${normalizeDeptKey(deptName)}`;
 
-          const deptMembers = (dbUsers || []).filter(u => u.department_id === deptId);
+          const deptMembers = (dbUsers || []).filter(u => u.department_id === deptId || isDeptEquivalent(dObj ? dObj.name : "", currentUser ? currentUser.department : ""));
 
           deptMembers.sort((a, b) => {
-            const aLead = /chinh|truong|to truong|leader/i.test(a.role || "");
-            const bLead = /chinh|truong|to truong|leader/i.test(b.role || "");
+            const aLead = /chinh|truong|to truong|leader/i.test(removeAccents(a.role || ""));
+            const bLead = /chinh|truong|to truong|leader/i.test(removeAccents(b.role || ""));
             if (aLead && !bLead) return -1;
             if (!aLead && bLead) return 1;
             return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
@@ -2808,6 +2850,7 @@
             displayStaffName = t.users ? t.users.full_name : deptName;
           }
         } else {
+          // BỘ PHẬN CÁ NHÂN: Hiển thị riêng từng cá nhân
           displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
           groupKey = `${deptName}___${displayStaffName}`;
         }
@@ -2815,6 +2858,8 @@
         if (!staffGroupsMap[groupKey]) {
           staffGroupsMap[groupKey] = {
             department: deptName,
+            departmentId: deptId,
+            isShared: isShared,
             staffName: displayStaffName,
             userId: groupUserId,
             tasks: []
@@ -3749,10 +3794,11 @@
     }
 
     /**
-     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY
+     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY:
+     * Khắc phục triệt để cho 6 kho (Kho nhập trả, Kho ống nhỏ, Kho ống PE, Kho Phụ tùng lớn, Kho phụ tùng nhỏ, Kho phụ tùng PPR)
      */
     function fetchDayEntryTasks() {
-      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? currentUser.fullName : currentSelectedStaff;
+      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
       const targetDate = document.getElementById('modalEntryDate').value;
       const parts = targetDate.split('-');
       const targetDay = parseInt(parts[2], 10);
@@ -3765,6 +3811,7 @@
       if (badge) badge.classList.add('hidden');
       backupDayValuesBeforeReason = null;
 
+      // Ưu tiên nạp từ kho dữ liệu thô toàn kỳ (chưa qua bộ lọc giao diện)
       const activeData = fullPeriodMatrixCache || currentMatrixData;
 
       if (activeData && activeData.staffGroups) {
@@ -3774,12 +3821,23 @@
         let tasksForDay = [];
         let allTaskList = [];
 
-        // KIỂM TRA PHÂN QUYỀN: KHO CHÍNH / TRƯỞNG NHÓM ĐƯỢC LƯU, PHỤ KHO CHỈ XEM
         let isShared = isSharedGroupDeptClient(currentUser.department);
         let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
-          let isMatch = isShared ? isDeptEquivalent(grp.department, currentUser.department) : isStaffMatchedInCell(targetStaff, grp.staffName);
+          let isMatch = false;
+
+          // Nhận diện đa tầng: ID bộ phận, tên chuẩn hóa 6 kho hoặc tên nhân sự có trong tổ
+          if (currentUser.department_id && grp.departmentId === currentUser.department_id) {
+            isMatch = true;
+          } else if (isShared && isDeptEquivalent(grp.department, currentUser.department)) {
+            isMatch = true;
+          } else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+            isMatch = true;
+          } else if (!isShared && isStaffMatchedInCell(targetStaff, grp.staffName)) {
+            isMatch = true;
+          }
+
           if (isMatch) {
             grp.tasks.forEach(t => {
               tasksForDay.push({
@@ -3835,10 +3893,11 @@
     }
 
     /**
-     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO CÔNG VIỆC
+     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO CÔNG VIỆC:
+     * Khắc phục triệt để cho 6 kho
      */
     function fetchTaskEntryDays(targetRowIndex) {
-      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? currentUser.fullName : currentSelectedStaff;
+      let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
       const activeData = fullPeriodMatrixCache || currentMatrixData;
 
       if (activeData && activeData.staffGroups) {
@@ -3850,7 +3909,18 @@
         let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
-          let isMatch = isSharedTaskMode ? isDeptEquivalent(grp.department, currentUser.department) : isStaffMatchedInCell(targetStaff, grp.staffName);
+          let isMatch = false;
+
+          if (currentUser.department_id && grp.departmentId === currentUser.department_id) {
+            isMatch = true;
+          } else if (isSharedTaskMode && isDeptEquivalent(grp.department, currentUser.department)) {
+            isMatch = true;
+          } else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+            isMatch = true;
+          } else if (!isSharedTaskMode && isStaffMatchedInCell(targetStaff, grp.staffName)) {
+            isMatch = true;
+          }
+
           if (isMatch) {
             targetUserId = grp.userId || currentUser.id || 1;
             grp.tasks.forEach(t => {
@@ -4160,7 +4230,7 @@
         });
       }
 
-      // 1. Cập nhật tức thì vào bộ nhớ đệm RAM để giao diện mượt 0 giây
+      // Cập nhật tức thì vào bộ nhớ đệm RAM để phản hồi 0 giây
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4176,7 +4246,6 @@
         applyClientFilterAndRender();
       }
 
-      // 2. Ghi nhận dữ liệu vào Supabase
       showProgressHud("LƯU BÁO CÁO", "Đang lưu số liệu trực tiếp lên Supabase...", "fa-solid fa-cloud-arrow-up animate-pulse");
       autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
       updateSyncStatusUI('saving');
@@ -4497,7 +4566,7 @@
       loading.classList.remove('hidden');
 
       try {
-        const { data: users, error: uErr } = await supabase.from('users').select('*, departments(name)').order('full_name');
+        const { data: users, error: uErr } = await supabase.from('users').select('*, departments(id, name)').order('full_name');
         const { data: depts, error: dErr } = await supabase.from('departments').select('name').order('name');
 
         loading.classList.add('hidden');
@@ -4522,6 +4591,7 @@
             username: u.username,
             fullName: u.full_name,
             dept: u.departments ? u.departments.name : "Chưa phân",
+            department_id: u.department_id,
             role: u.role,
             status: u.status
           })),
@@ -4555,7 +4625,7 @@
 
       const filtered = adminManageUsersCache.users.filter(u => {
         const matchName = u.fullName.toLowerCase().includes(query) || u.username.toLowerCase().includes(query);
-        const matchDept = filterDept ? u.dept === filterDept : true;
+        const matchDept = filterDept ? isDeptEquivalent(u.dept, filterDept) : true;
         return matchName && matchDept;
       });
 
@@ -4692,7 +4762,7 @@
         const opt = document.createElement('option');
         opt.value = d;
         opt.innerText = d;
-        if (d === user.dept) opt.selected = true;
+        if (isDeptEquivalent(d, user.dept)) opt.selected = true;
         deptSelect.appendChild(opt);
       });
 
@@ -4743,12 +4813,12 @@
         if (roleContainer) roleContainer.classList.add('hidden');
         if (normalContainer) normalContainer.classList.remove('hidden');
 
-        // Nạp danh sách nhân sự hiện có trong bộ phận mới để chọn sao chép công việc
+        // Nạp danh sách đồng nghiệp trong bộ phận mới để sao chép danh mục việc
         if (copySelect && adminManageUsersCache && adminManageUsersCache.users) {
           copySelect.innerHTML = '<option value="">-- Không sao chép (Giữ danh mục đầu việc cũ) --</option>';
           
           const peers = adminManageUsersCache.users.filter(u => 
-            u.dept === selectedDept && 
+            isDeptEquivalent(u.dept, selectedDept) && 
             u.username !== currentEditingUsername &&
             u.status === 'Hoạt động'
           );
@@ -4828,13 +4898,29 @@
     }
 
     /**
-     * THỰC THI LƯU SUPABASE, SAO CHÉP ĐẦU VIỆC VÀ TỰ ĐỘNG ĐÓNG MODAL
+     * THỰC THI LƯU SUPABASE:
+     * 1. DỌN SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC (KHÔNG BỊ SÓT LẠI VIỆC CŨ KHI CHUYỂN VÀO KHO)
+     * 2. SAO CHÉP DANH MỤC CÔNG VIỆC TỪ ĐỒNG NGHIỆP NẾU CÓ CHỌN
+     * 3. 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ VỀ PHỤ KHO)
+     * 4. TỰ ĐỘNG ĐÓNG MODAL VÀ LÀM MỚI BẢNG TIẾN ĐỘ
      */
     async function executeUserTransfer(updateData) {
       showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
       autoSimulateProgress(10, 80, "Cập nhật dữ liệu trên Supabase...", 25);
 
       try {
+        // Lấy thông tin tài khoản hiện tại trước khi điều chuyển
+        const { data: prevUserData } = await supabase
+          .from('users')
+          .select('id, department_id, role')
+          .eq('username', updateData.username)
+          .limit(1);
+
+        const prevUser = prevUserData && prevUserData[0] ? prevUserData[0] : null;
+        const oldDeptId = prevUser ? prevUser.department_id : null;
+        const currentUserId = prevUser ? prevUser.id : null;
+
+        // Lấy ID của bộ phận chuyển đến
         const { data: deptData, error: deptErr } = await supabase
           .from('departments')
           .select('id, is_shared_group')
@@ -4843,6 +4929,23 @@
           
         if (deptErr) throw deptErr;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
+
+        // 1. DỌN SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC (NẾU CÓ ĐỔI BỘ PHẬN):
+        if (oldDeptId && dId && oldDeptId !== dId && currentUserId) {
+          const { data: oldTasks } = await supabase
+            .from('tasks')
+            .select('id')
+            .eq('assigned_user_id', currentUserId)
+            .eq('department_id', oldDeptId);
+
+          if (oldTasks && oldTasks.length > 0) {
+            const oldTaskIds = oldTasks.map(t => t.id);
+            // Xóa báo cáo của các task đó nếu có
+            await supabase.from('daily_reports').delete().in('task_id', oldTaskIds);
+            // Xóa các task cá nhân cũ
+            await supabase.from('tasks').delete().in('id', oldTaskIds);
+          }
+        }
 
         const updatePayload = {
           full_name: updateData.fullName,
@@ -4855,17 +4958,15 @@
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 1. Cập nhật hồ sơ tài khoản nhân sự
-        const { data: updatedUser, error } = await supabase
+        // 2. Cập nhật hồ sơ tài khoản nhân sự
+        const { error } = await supabase
           .from('users')
           .update(updatePayload)
-          .eq('username', updateData.username)
-          .select('id, full_name, department_id, role');
+          .eq('username', updateData.username);
 
         if (error) throw error;
-        const currentUserId = updatedUser && updatedUser[0] ? updatedUser[0].id : null;
 
-        // 2. NẾU CHỌN SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP CÙNG BỘ PHẬN:
+        // 3. NẾU CHỌN SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP:
         let copiedTasksCount = 0;
         if (updateData.copyFromUserId && currentUserId && dId) {
           const { data: sourceTasks, error: sErr } = await supabase
@@ -4887,7 +4988,7 @@
           }
         }
 
-        // 3. NGUYÊN TẮC: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO)
+        // 4. QUY TẮC NHÓM KHO: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO)
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
           const { data: otherMembers } = await supabase
@@ -4916,16 +5017,15 @@
             .eq('department_id', dId);
         }
 
-        // 4. ĐÓNG MODAL VÀ LÀM MỚI BẢNG MA TRẬN
+        // 5. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
         autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
           
-          // Tự động đóng modal điều chuyển
           closeTransferModal(); 
 
-          let msg = `Đã điều chuyển ${updateData.fullName} thành công!`;
+          let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
           if (copiedTasksCount > 0) {
-            msg += ` (Đã sao chép ${copiedTasksCount} đầu việc từ đồng nghiệp)`;
+            msg += ` (Đã sao chép ${copiedTasksCount} đầu việc)`;
           }
           showToast(msg);
 
