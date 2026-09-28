@@ -4591,49 +4591,18 @@
     }
 
     function onTransferStatusSelectChange(val) {
-      const lockWarningBox = document.getElementById('transferLockWarningBox');
-      const pauseNoticeBox = document.getElementById('transferPausedNoticeBox');
-      const wrapper = document.getElementById('transferAssignmentWrapper');
-      const btn = document.getElementById('btnSubmitTransfer');
+      // ================= QUẢN LÝ ĐIỀU CHUYỂN NHÂN SỰ CHUẨN XÁC =================
 
-      if (val === 'Khóa') {
-        if (lockWarningBox) lockWarningBox.classList.remove('hidden');
-        if (pauseNoticeBox) pauseNoticeBox.classList.add('hidden');
-        if (wrapper) {
-          wrapper.classList.add('opacity-30', 'pointer-events-none');
-          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
-        }
-        if (btn) {
-          btn.className = "px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa & Xóa Báo Cáo</span>';
-        }
-      } else if (val === 'Tạm khóa') {
-        if (lockWarningBox) lockWarningBox.classList.add('hidden');
-        if (pauseNoticeBox) pauseNoticeBox.classList.remove('hidden');
-        if (wrapper) {
-          wrapper.classList.add('opacity-40', 'pointer-events-none');
-          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
-        }
-        if (btn) {
-          btn.className = "px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Bảo Toàn Số Liệu)</span>';
-        }
-      } else {
-        if (lockWarningBox) lockWarningBox.classList.add('hidden');
-        if (pauseNoticeBox) pauseNoticeBox.classList.add('hidden');
-        if (wrapper) {
-          wrapper.classList.remove('opacity-30', 'opacity-40', 'pointer-events-none');
-          wrapper.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = false);
-        }
-        if (btn) {
-          btn.className = "px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition cursor-pointer";
-          btn.innerHTML = 'Lưu Cập Nhật';
-        }
-      }
+    /**
+     * ĐÓNG CỬA SỔ ĐIỀU CHUYỂN (SỬA LỖI MODAL KHÔNG TỰ MẤT)
+     */
+    function closeTransferModal() {
+      const modal = document.getElementById('transferModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     /**
-     * MỞ CỬA SỔ ĐIỀU CHUYỂN: TỰ ĐỘNG GHI NHẬN CHỨC DANH KHO CHÍNH / PHỤ KHO
+     * MỞ CỬA SỔ ĐIỀU CHUYỂN & GHI NHẬN VAI TRÒ
      */
     function openTransferModal(username) {
       if (!adminManageUsersCache) return;
@@ -4670,7 +4639,7 @@
       onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
 
-      // TỰ ĐỘNG TÍCH CHỌN CHỨC DANH KHO CHÍNH HOẶC PHỤ KHO
+      // TỰ ĐỘNG TÍCH CHỌN VAI TRÒ HIỆN TẠI (KHO CHÍNH HOẶC PHỤ KHO)
       const isLead = /chinh|truong|to truong|leader/i.test(removeAccents(user.role || ""));
       const rKhoChinh = document.getElementById('roleKhoChinh');
       const rPhuKho = document.getElementById('rolePhuKho');
@@ -4718,7 +4687,6 @@
         return;
       }
 
-      // ĐỌC CHUẨN XÁC VAI TRÒ TỪ NÚT RADIO NẾU THUỘC NHÓM KHO
       let role = document.getElementById('transferRoleSelect').value;
       const isShared = isSharedGroupDeptClient(dept);
       if (isShared) {
@@ -4764,14 +4732,22 @@
     }
 
     /**
-     * THỰC HIỆN ĐIỀU CHUYỂN: TỰ ĐỘNG CHUYỂN GIAO QUYỀN ĐẠI DIỆN KHO CHÍNH VÀ CÔNG VIỆC
+     * THỰC THI ĐIỀU CHUYỂN: 
+     * 1. NẾU LÊN LÀM KHO CHÍNH -> TẤT CẢ NGƯỜI CŨ TRONG KHO TỰ ĐỘNG XUỐNG PHỤ KHO
+     * 2. CHUYỂN GIAO CÔNG VIỆC SANG KHO CHÍNH MỚI
+     * 3. TỰ ĐỘNG TẮT CỬA SỔ ĐIỀU CHUYỂN NGAY KHI LƯU XONG
      */
     async function executeUserTransfer(updateData) {
       showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
       autoSimulateProgress(10, 85, "Cập nhật dữ liệu trên Supabase...", 25);
 
       try {
-        const { data: deptData, error: deptErr } = await supabase.from('departments').select('id, is_shared_group').eq('name', updateData.dept).limit(1);
+        const { data: deptData, error: deptErr } = await supabase
+          .from('departments')
+          .select('id, is_shared_group')
+          .eq('name', updateData.dept)
+          .limit(1);
+          
         if (deptErr) throw deptErr;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
 
@@ -4786,7 +4762,7 @@
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 1. Cập nhật hồ sơ tài khoản nhân sự
+        // 1. Cập nhật tài khoản của nhân sự được chọn
         const { data: updatedUser, error } = await supabase
           .from('users')
           .update(updatePayload)
@@ -4796,30 +4772,52 @@
         if (error) throw error;
         const currentUserId = updatedUser && updatedUser[0] ? updatedUser[0].id : null;
 
-        // 2. NẾU ĐƯỢC CHỈ ĐỊNH LÀM "KHO CHÍNH" / "TRƯỞNG NHÓM"
+        // 2. NGUYÊN TẮC: 1 KHO CHỈ CÓ 1 KHO CHÍNH
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
-          // A. Tự động chuyển các Kho chính cũ của kho đó về làm "Phụ kho"
-          await supabase
+          
+          // Lấy danh sách tất cả các thành viên khác trong kho này
+          const { data: otherMembers } = await supabase
             .from('users')
-            .update({ role: 'Phụ kho' })
+            .select('id, role')
             .eq('department_id', dId)
-            .neq('id', currentUserId)
-            .ilike('role', '%chinh%');
+            .neq('id', currentUserId);
 
-          // B. Chuyển giao toàn bộ đầu việc của kho sang cho Kho chính mới đại diện
+          if (otherMembers && otherMembers.length > 0) {
+            // Lọc ra tất cả những ai đang giữ vai trò Kho chính hoặc Trưởng nhóm cũ
+            const oldLeadIds = otherMembers
+              .filter(u => /chinh|truong|leader/i.test(removeAccents(u.role || "")))
+              .map(u => u.id);
+
+            // Tự động đẩy tất cả người cũ xuống làm "Phụ kho"
+            if (oldLeadIds.length > 0) {
+              await supabase
+                .from('users')
+                .update({ role: 'Phụ kho' })
+                .in('id', oldLeadIds);
+            }
+          }
+
+          // Chuyển quyền đại diện các đầu việc trong kho sang cho Kho chính mới
           await supabase
             .from('tasks')
             .update({ assigned_user_id: currentUserId })
             .eq('department_id', dId);
         }
 
+        // 3. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
-          showToast(`Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`);
-          closeTransferModal();
+          
+          // Đóng ngay cửa sổ popup điều chuyển
+          closeTransferModal(); 
+
+          showToast(`Đã điều chuyển ${updateData.fullName} thành công!`);
+
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
+
+          // Tải lại bảng nhân sự và bảng ma trận công việc
           loadAllUsersManagementData();
           loadInitialData(() => {
             setupRoleControls();
@@ -4831,7 +4829,6 @@
         showToast("Lỗi xử lý: " + err.message, true);
       }
     }
-
     // ================= THÊM MỚI NHÂN SỰ =================
     function openAddUserModal() {
       const modal = document.getElementById('addUserModal');
