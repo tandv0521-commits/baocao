@@ -61,7 +61,7 @@
       .col-fixed-total { width: 120px; min-width: 120px; max-width: 120px; }
     }
 
-    /* Tiêu đề bảng công thái học chống lóa */
+    /* Tiêu đề bảng chống lóa */
     thead .col-fixed-tt { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
@@ -128,7 +128,7 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (TIÊU ĐỀ: BÁO CÁO CÔNG VIỆC) ================= -->
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-8">
       <div class="text-center mb-6">
@@ -1015,6 +1015,7 @@
             <select id="transferDeptSelect" onchange="onTransferDeptChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"></select>
           </div>
 
+          <!-- KHỐI 1: VAI TRÒ DÀNH CHO BỘ PHẬN TỔ KHO (NHÓM GỘP) -->
           <div id="transferWarehouseRoleContainer" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2.5">
             <label class="block text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
               <i class="fa-solid fa-users-viewfinder text-amber-600"></i>
@@ -1037,6 +1038,29 @@
                   <p class="text-[10px] text-slate-400">Xem số liệu đồng bộ</p>
                 </div>
               </label>
+            </div>
+          </div>
+
+          <!-- KHỐI 2: TÙY CHỌN SAO CHÉP CÔNG VIỆC CHO BỘ PHẬN CÁ NHÂN -->
+          <div id="transferNormalTasksContainer" class="hidden bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-950 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-copy text-emerald-600"></i>
+                <span>Sao chép danh mục công việc</span>
+              </span>
+              <span class="text-[10px] text-emerald-700 font-semibold lowercase">(tùy chọn)</span>
+            </label>
+            
+            <div>
+              <p class="text-[11px] text-slate-500 mb-1.5 leading-relaxed">
+                Chọn một nhân sự trong bộ phận mới để sao chép toàn bộ danh mục đầu việc sang cho nhân sự này:
+              </p>
+              <div class="relative">
+                <select id="transferCopyFromStaffSelect" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+                  <option value="">-- Không sao chép (Giữ danh mục đầu việc cũ) --</option>
+                </select>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+              </div>
             </div>
           </div>
         </div>
@@ -1651,7 +1675,7 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch 100% không lấy các tài khoản nhóm ảo
+        // Lọc sạch không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1847,7 +1871,7 @@
         }
       }
 
-      // HIỆN NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
+      // HIỆN LẠI NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
       if (btn) {
         if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
           btn.classList.remove('hidden');
@@ -2445,7 +2469,7 @@
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
       }
 
-      // Cập nhật trạng thái nút Khóa sổ cho Admin / Quản lý
+      // Đảm bảo cập nhật trạng thái hiển thị của nút Khóa sổ
       updatePeriodLockUI(currentPeriodLocked);
     }
 
@@ -4678,26 +4702,32 @@
       onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
 
-      // TỰ ĐỘNG TÍCH CHỌN VAI TRÒ HIỆN TẠI (KHO CHÍNH HOẶC PHỤ KHO)
+      // Tự động tích chọn vai trò Kho chính hoặc Phụ kho
       const isLead = /chinh|truong|to truong|leader/i.test(removeAccents(user.role || ""));
       const rKhoChinh = document.getElementById('roleKhoChinh');
       const rPhuKho = document.getElementById('rolePhuKho');
       if (rKhoChinh && rPhuKho) {
-        if (isLead) {
-          rKhoChinh.checked = true;
-        } else {
-          rPhuKho.checked = true;
-        }
+        if (isLead) rKhoChinh.checked = true;
+        else rPhuKho.checked = true;
       }
     }
 
+    /**
+     * KHI CHUYỂN BỘ PHẬN: 
+     * - NẾU LÀ KHO -> HIỆN NÚT CHỌN KHO CHÍNH/PHỤ KHO
+     * - NẾU LÀ BỘ PHẬN CÁ NHÂN -> HIỆN DROPDOWN SAO CHÉP VIỆC TỪ NHÂN SỰ TRONG BỘ PHẬN ĐÓ
+     */
     function onTransferDeptChange(selectedDept) {
       if (!selectedDept) return;
       const isShared = isSharedGroupDeptClient(selectedDept);
       const roleContainer = document.getElementById('transferWarehouseRoleContainer');
+      const normalContainer = document.getElementById('transferNormalTasksContainer');
+      const copySelect = document.getElementById('transferCopyFromStaffSelect');
+      const currentEditingUsername = document.getElementById('transferUsernameInput').value.trim();
 
       if (isShared) {
         if (roleContainer) roleContainer.classList.remove('hidden');
+        if (normalContainer) normalContainer.classList.add('hidden');
         
         const isWarehouse = removeAccents(selectedDept).includes("kho");
         const lblLead = document.getElementById('labelRoleLead');
@@ -4711,15 +4741,45 @@
         if (rPhuKho) rPhuKho.value = isWarehouse ? "Phụ kho" : "Thành viên";
       } else {
         if (roleContainer) roleContainer.classList.add('hidden');
+        if (normalContainer) normalContainer.classList.remove('hidden');
+
+        // Nạp danh sách nhân sự hiện có trong bộ phận mới để chọn sao chép công việc
+        if (copySelect && adminManageUsersCache && adminManageUsersCache.users) {
+          copySelect.innerHTML = '<option value="">-- Không sao chép (Giữ danh mục đầu việc cũ) --</option>';
+          
+          const peers = adminManageUsersCache.users.filter(u => 
+            u.dept === selectedDept && 
+            u.username !== currentEditingUsername &&
+            u.status === 'Hoạt động'
+          );
+
+          if (peers.length > 0) {
+            peers.forEach(p => {
+              const opt = document.createElement('option');
+              opt.value = p.id;
+              opt.innerText = `Sao chép việc từ: ${p.fullName} (@${p.username})`;
+              copySelect.appendChild(opt);
+            });
+          } else {
+            const opt = document.createElement('option');
+            opt.value = "";
+            opt.innerText = "(Bộ phận này chưa có nhân sự nào khác để sao chép)";
+            copySelect.appendChild(opt);
+          }
+        }
       }
     }
 
+    /**
+     * BẤM NÚT LƯU ĐIỀU CHUYỂN
+     */
     function submitUserTransfer() {
       const username = document.getElementById('transferUsernameInput').value.trim();
       const fullName = document.getElementById('transferFullNameInput').value.trim();
       const dept = document.getElementById('transferDeptSelect').value.trim();
       const status = document.getElementById('transferStatusSelect').value;
       const newPassword = document.getElementById('transferNewPassInput').value.trim();
+      const copyFromUserId = document.getElementById('transferCopyFromStaffSelect')?.value || null;
 
       if (!fullName) {
         showToast("Vui lòng điền họ và tên hợp lệ!", true);
@@ -4730,12 +4790,8 @@
       const isShared = isSharedGroupDeptClient(dept);
       if (isShared) {
         const checkedRadio = document.querySelector('input[name="transferWarehouseRole"]:checked');
-        if (checkedRadio) {
-          role = checkedRadio.value;
-        }
+        if (checkedRadio) role = checkedRadio.value;
       }
-
-      const isLocking = (status === "Khóa");
 
       const updateData = {
         username: username,
@@ -4744,10 +4800,11 @@
         role: role,
         status: status,
         newPassword: newPassword,
-        isWarehouse: isShared
+        isWarehouse: isShared,
+        copyFromUserId: copyFromUserId
       };
 
-      if (isLocking) {
+      if (status === "Khóa") {
         pendingTransferData = updateData;
         document.getElementById('lockConfirmFullName').innerText = fullName;
         document.getElementById('lockConfirmUsername').innerText = '@' + username;
@@ -4771,14 +4828,11 @@
     }
 
     /**
-     * THỰC THI ĐIỀU CHUYỂN:
-     * 1. 1 KHO CHỈ CÓ 1 KHO CHÍNH -> TẤT CẢ NGƯỜI CŨ TỰ ĐỘNG XUỐNG PHỤ KHO
-     * 2. CHUYỂN GIAO CÔNG VIỆC SANG KHO CHÍNH MỚI
-     * 3. TỰ ĐỘNG ĐÓNG POPUP ĐIỀU CHUYỂN KHI LƯU THÀNH CÔNG
+     * THỰC THI LƯU SUPABASE, SAO CHÉP ĐẦU VIỆC VÀ TỰ ĐỘNG ĐÓNG MODAL
      */
     async function executeUserTransfer(updateData) {
       showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu trên Supabase...", 25);
+      autoSimulateProgress(10, 80, "Cập nhật dữ liệu trên Supabase...", 25);
 
       try {
         const { data: deptData, error: deptErr } = await supabase
@@ -4801,7 +4855,7 @@
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 1. Cập nhật hồ sơ tài khoản nhân sự được chọn
+        // 1. Cập nhật hồ sơ tài khoản nhân sự
         const { data: updatedUser, error } = await supabase
           .from('users')
           .update(updatePayload)
@@ -4811,11 +4865,31 @@
         if (error) throw error;
         const currentUserId = updatedUser && updatedUser[0] ? updatedUser[0].id : null;
 
-        // 2. NGUYÊN TẮC: 1 KHO CHỈ CÓ 1 KHO CHÍNH
+        // 2. NẾU CHỌN SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP CÙNG BỘ PHẬN:
+        let copiedTasksCount = 0;
+        if (updateData.copyFromUserId && currentUserId && dId) {
+          const { data: sourceTasks, error: sErr } = await supabase
+            .from('tasks')
+            .select('task_name, guide, mode')
+            .eq('assigned_user_id', updateData.copyFromUserId);
+
+          if (!sErr && sourceTasks && sourceTasks.length > 0) {
+            const newTasksPayload = sourceTasks.map(st => ({
+              department_id: dId,
+              assigned_user_id: currentUserId,
+              task_name: st.task_name,
+              guide: st.guide,
+              mode: st.mode
+            }));
+
+            const { error: insErr } = await supabase.from('tasks').insert(newTasksPayload);
+            if (!insErr) copiedTasksCount = newTasksPayload.length;
+          }
+        }
+
+        // 3. NGUYÊN TẮC: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO)
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
-          
-          // Lấy tất cả thành viên khác trong kho này
           const { data: otherMembers } = await supabase
             .from('users')
             .select('id, role')
@@ -4823,12 +4897,10 @@
             .neq('id', currentUserId);
 
           if (otherMembers && otherMembers.length > 0) {
-            // Lọc ra tất cả những ai đang giữ chức danh Kho chính hoặc Trưởng nhóm cũ
             const oldLeadIds = otherMembers
               .filter(u => /chinh|truong|leader/i.test(removeAccents(u.role || "")))
               .map(u => u.id);
 
-            // Tự động đẩy tất cả người cũ xuống làm "Phụ kho"
             if (oldLeadIds.length > 0) {
               await supabase
                 .from('users')
@@ -4844,19 +4916,22 @@
             .eq('department_id', dId);
         }
 
-        // 3. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
+        // 4. ĐÓNG MODAL VÀ LÀM MỚI BẢNG MA TRẬN
+        autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
           
-          // Tự động đóng hoàn toàn popup điều chuyển
+          // Tự động đóng modal điều chuyển
           closeTransferModal(); 
 
-          showToast(`Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`);
+          let msg = `Đã điều chuyển ${updateData.fullName} thành công!`;
+          if (copiedTasksCount > 0) {
+            msg += ` (Đã sao chép ${copiedTasksCount} đầu việc từ đồng nghiệp)`;
+          }
+          showToast(msg);
 
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
 
-          // Nạp lại dữ liệu
           loadAllUsersManagementData();
           loadInitialData(() => {
             setupRoleControls();
