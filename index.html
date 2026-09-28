@@ -4,56 +4,34 @@
   <meta charset="UTF-8">
   <title>Báo Cáo Công Việc & Trung Tâm Điều Hành Năng Suất - Nhựa Tiền Phong</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Thư viện Supabase JS Client độc lập -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Thư viện ExcelJS & FileSaver -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
     .font-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
-    
     .hidden { display: none !important; }
 
-    /* Thanh cuộn mảnh dịu mắt */
     .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
-    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH 4 CỘT ================= */
-    .sheet-table { 
-      border-collapse: separate !important; 
-      border-spacing: 0 !important; 
-    }
-    
-    .col-fixed-task { 
-      white-space: normal !important; 
-      word-break: break-word !important; 
-      line-height: 1.45 !important; 
-    }
-    
-    .col-fixed-name { 
-      white-space: normal !important; 
-      word-break: break-word !important; 
-      line-height: 1.35 !important; 
-      overflow: hidden !important; 
-    }
+    .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
+    .col-fixed-task { white-space: normal !important; word-break: break-word !important; line-height: 1.45 !important; }
+    .col-fixed-name { white-space: normal !important; word-break: break-word !important; line-height: 1.35 !important; overflow: hidden !important; }
 
-    /* Kích thước cột trên di động (< 768px) */
     .col-fixed-tt { position: sticky !important; left: 0; width: 38px; min-width: 38px; max-width: 38px; }
     .col-fixed-name { position: sticky !important; left: 38px; width: 165px; min-width: 165px; max-width: 165px; }
     .col-fixed-task { position: sticky !important; left: 203px; width: 210px; min-width: 210px; max-width: 210px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); }
     .col-fixed-total { position: sticky !important; right: 0; width: 105px; min-width: 105px; max-width: 105px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); }
 
-    /* Kích thước cột trên máy tính (>= 768px) */
     @media (min-width: 768px) {
       .col-fixed-tt { width: 44px; min-width: 44px; max-width: 44px; }
       .col-fixed-name { left: 44px; width: 240px; min-width: 240px; max-width: 240px; }
@@ -61,7 +39,6 @@
       .col-fixed-total { width: 120px; min-width: 120px; max-width: 120px; }
     }
 
-    /* Tiêu đề bảng chống lóa */
     thead .col-fixed-tt { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
@@ -91,20 +68,13 @@
     tbody tr:hover td.col-fixed-tt, tbody tr:hover td.col-fixed-task { background-color: #f8fafc !important; }
     tbody td.col-fixed-total { background-color: #f8fafc !important; z-index: 20 !important; }
 
-    /* Màu nhận diện cột ngày Chủ nhật (CN) */
-    .col-sunday-header {
-      background-color: #fff1f2 !important;
-      color: #be123c !important;
-      border-bottom-color: #fda4af !important;
-    }
-    .col-sunday-cell {
-      background-color: #fff1f2/40 !important;
-    }
+    .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
+    .col-sunday-cell { background-color: #fff1f2/40 !important; }
   </style>
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
 
-  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH (SYSTEM PROGRESS HUD) ================= -->
+  <!-- HUD TIẾN TRÌNH % -->
   <div id="systemProgressHud" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-7 max-w-sm w-full space-y-4 text-center animate-in fade-in zoom-in-95 duration-200">
       <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner border border-emerald-100">
@@ -114,7 +84,6 @@
         <h3 id="progressHudTitle" class="text-sm sm:text-base font-black text-slate-800 tracking-tight">ĐANG XỬ LÝ...</h3>
         <p id="progressHudDesc" class="text-xs text-slate-500 font-medium">Hệ thống đang kết nối dữ liệu Supabase...</p>
       </div>
-      <!-- Dải đếm phần trăm động -->
       <div class="space-y-1.5 pt-1">
         <div class="flex items-center justify-between text-xs font-bold text-slate-600 font-num">
           <span id="progressHudStep" class="text-[11px] text-slate-400">Tiến trình</span>
@@ -127,8 +96,7 @@
     </div>
   </div>
 
-
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
+  <!-- MÀN HÌNH ĐĂNG NHẬP -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-8">
       <div class="text-center mb-6">
@@ -199,10 +167,8 @@
     </div>
   </div>
 
-
-  <!-- ================= DASHBOARD CHÍNH ================= -->
+  <!-- DASHBOARD CHÍNH -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
-    <!-- Header -->
     <header class="h-16 bg-white border-b border-slate-200 px-3.5 sm:px-6 flex items-center justify-between sticky top-0 z-50 shadow-2xs">
       <div class="flex items-center gap-2.5 sm:gap-3.5">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-600 flex items-center justify-center font-black text-white text-sm sm:text-base shadow-xs">
@@ -217,7 +183,6 @@
         </div>
       </div>
 
-      <!-- Nút chức năng Header -->
       <div class="flex items-center gap-1 sm:gap-2">
         <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" class="hidden px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
@@ -258,12 +223,8 @@
       </div>
     </header>
 
-    <!-- Thân điều khiển bảng ma trận & Thống kê -->
     <main class="flex-1 p-2.5 sm:p-5 w-full mx-auto space-y-4 flex flex-col">
-      
-      <!-- BỘ LỌC ĐA KỲ BÁO CÁO, KHÓA SỔ & THANH ĐIỀU HƯỚNG BẢNG -->
       <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2.5 shadow-2xs">
-        
         <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <div class="flex items-center gap-1.5 bg-emerald-50/70 border border-emerald-200 px-3 py-1.5 rounded-xl shadow-2xs">
             <i class="fa-solid fa-calendar-check text-emerald-700 text-xs"></i>
@@ -277,7 +238,6 @@
             <span>Đang kiểm tra...</span>
           </span>
 
-          <!-- Nút Khóa Sổ / Mở Khóa Sổ dành riêng cho Admin và Quản lý -->
           <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" class="hidden px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
             <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
             <span id="btnTogglePeriodLockText">Khóa sổ</span>
@@ -320,7 +280,7 @@
         </div>
       </div>
 
-      <!-- ================= 1. BẢNG MA TRẬN NỘI DUNG CÔNG VIỆC ================= -->
+      <!-- BẢNG MA TRẬN TIẾN ĐỘ CÔNG VIỆC -->
       <div class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
         <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll max-h-[540px]">
           <table class="sheet-table text-left text-xs whitespace-nowrap min-w-full">
@@ -342,9 +302,8 @@
         </div>
       </div>
 
-      <!-- ================= 2. TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC & NĂNG SUẤT THÁNG ================= -->
+      <!-- TRUNG TÂM PHÂN TÍCH KPI NĂNG SUẤT -->
       <section id="analyticsSection" class="hidden space-y-3.5 pt-1">
-        
         <div class="bg-gradient-to-r from-slate-50 via-teal-50/40 to-emerald-50/70 border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center text-lg shadow-2xs">
@@ -363,7 +322,6 @@
           </div>
         </div>
 
-        <!-- 4 Thẻ KPI Phân tích Đầu việc Chuyên sâu -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
           <div class="bg-white border border-slate-200/90 p-4 rounded-3xl shadow-2xs relative overflow-hidden group hover:border-emerald-300 transition">
             <div class="flex items-center justify-between text-slate-400">
@@ -409,7 +367,6 @@
           </div>
         </div>
 
-        <!-- Khối Đọc hiểu Ngữ nghĩa & Nhận định Chuyên môn -->
         <div id="taskSemanticInsightCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2">
@@ -450,16 +407,13 @@
             </div>
           </div>
         </div>
-
       </section>
     </main>
   </div>
 
-
-  <!-- ================= MODAL ĐIỀU KHIỂN KHÓA SỔ ================= -->
+  <!-- MODAL ĐIỀU KHIỂN KHÓA SỔ -->
   <div id="periodLockModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div class="flex items-center gap-3">
           <div id="lockModalIconBox" class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg shadow-2xs">
@@ -520,11 +474,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC ================= -->
+  <!-- MODAL ĐIỀN BÁO CÁO CÔNG VIỆC -->
   <div id="dayEntryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[94vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
-      
       <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-sm shadow-2xs">
@@ -535,7 +487,6 @@
             <p id="modalStaffLabel" class="text-[11px] text-slate-400 font-medium">Nhân sự: ---</p>
           </div>
         </div>
-
         <button onclick="closeDayEntryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
           <i class="fa-solid fa-xmark"></i>
         </button>
@@ -592,7 +543,6 @@
       </div>
 
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
-        <!-- Banner chế độ chỉ xem dành cho Phụ kho hoặc kỳ khóa sổ -->
         <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
           <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
           <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Trưởng nhóm / Kho chính</b> đại diện làm báo cáo chung.</span>
@@ -656,11 +606,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL QUẢN LÝ BỘ PHẬN ================= -->
+  <!-- MODAL QUẢN LÝ BỘ PHẬN -->
   <div id="deptManagerModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-base shadow-2xs">
@@ -705,9 +653,7 @@
           <span>Danh sách bộ phận hiện tại</span>
           <span id="deptListCountBadge" class="text-emerald-700 font-num font-black">0 bộ phận</span>
         </div>
-
         <div id="deptManagementTableList" class="space-y-2"></div>
-
         <div id="loadingDeptsBox" class="py-12 text-center hidden">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
           <p class="text-xs text-slate-400">Đang tải danh sách bộ phận...</p>
@@ -720,8 +666,7 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL CHỈNH SỬA BỘ PHẬN ================= -->
+  <!-- MODAL CHỈNH SỬA BỘ PHẬN -->
   <div id="deptEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -773,8 +718,7 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL XÁC NHẬN XÓA BỘ PHẬN ================= -->
+  <!-- MODAL XÁC NHẬN XÓA BỘ PHẬN -->
   <div id="deptDeleteModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -837,8 +781,7 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL ĐỔI TÊN BỘ PHẬN ================= -->
+  <!-- MODAL ĐỔI TÊN BỘ PHẬN -->
   <div id="renameDeptModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -869,11 +812,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC ================= -->
+  <!-- MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC -->
   <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
         <div class="flex items-center gap-2.5 text-slate-800 font-bold text-base">
           <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
@@ -924,11 +865,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL QUẢN LÝ NHÂN SỰ ================= -->
+  <!-- MODAL QUẢN LÝ NHÂN SỰ -->
   <div id="userManagerModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
-      
       <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-base shadow-2xs">
@@ -982,11 +921,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ ================= -->
+  <!-- MODAL ĐIỀU CHUYỂN NHÂN SỰ -->
   <div id="transferModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
         <h4 class="text-slate-800 font-bold text-base flex items-center gap-2">
           <i class="fa-solid fa-arrows-split-up-and-left text-emerald-600"></i>
@@ -1100,11 +1037,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL XÁC NHẬN KHÓA TÀI KHOẢN ================= -->
+  <!-- MODAL XÁC NHẬN KHÓA TÀI KHOẢN -->
   <div id="lockConfirmModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-      
       <div class="flex items-center gap-3.5 pb-3 border-b border-slate-100">
         <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
           <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
@@ -1138,11 +1073,9 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL THÊM MỚI NHÂN SỰ ================= -->
+  <!-- MODAL THÊM MỚI NHÂN SỰ -->
   <div id="addUserModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
         <h4 class="text-slate-800 font-bold text-base flex items-center gap-2">
           <i class="fa-solid fa-user-plus text-emerald-600"></i>
@@ -1196,8 +1129,7 @@
     </div>
   </div>
 
-
-  <!-- ================= MODAL ĐỔI MẬT KHẨU ================= -->
+  <!-- MODAL ĐỔI MẬT KHẨU -->
   <div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1232,7 +1164,7 @@
     </div>
   </div>
 
-  <!-- Toast Thông báo -->
+  <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
       <i id="toastIcon" class="fa-solid fa-check text-emerald-600 text-base"></i>
@@ -1355,7 +1287,7 @@
     }
 
     /**
-     * CHUẨN HÓA BỘ PHẬN ĐẶC TRỊ 6 KHO:
+     * CHUẨN HÓA BỘ PHẬN CHO 6 KHO:
      * Kho nhập trả, Kho ống nhỏ, Kho ống PE, Kho Phụ tùng lớn, Kho phụ tùng nhỏ, Kho phụ tùng PPR
      */
     function normalizeDeptKey(d) {
@@ -1364,10 +1296,10 @@
       if (s.includes("nhap tra")) return "kho nhap tra";
       if (s.includes("ong nho")) return "kho ong nho";
       if (s.includes("ong to")) return "kho ong to";
-      if (s.includes("pepp") || s.includes("pe pp") || s.includes("ong pe") || s === "pe" || s.includes("pe")) return "kho ong pe";
-      if (s.includes("phu tung lon")) return "kho phu tung lon";
-      if (s.includes("phu tung nho")) return "kho phu tung nho";
-      if (s.includes("phu tung ppr") || s.includes("ppr")) return "kho phu tung ppr";
+      if (s.includes("ong pe") || s.includes("pepp") || s.includes("pe pp") || s.includes("kho pe")) return "kho ong pe";
+      if (s.includes("phu tung lon") || s.includes("pt lon")) return "kho phu tung lon";
+      if (s.includes("phu tung nho") || s.includes("pt nho")) return "kho phu tung nho";
+      if (s.includes("phu tung ppr") || s.includes("pt ppr") || s.includes("ppr")) return "kho phu tung ppr";
       if (s.includes("boc xep")) return "kho boc xep";
       return s;
     }
@@ -1385,9 +1317,9 @@
     function isSharedGroupDeptClient(deptName) {
       if (!deptName) return false;
       const d = removeAccents(deptName);
-      if (d.includes("tiep lieu") || d.includes("phan xe")) return false;
+      if (d.includes("tiep lieu") || d.includes("phan xe") || d.includes("kcs") || d.includes("van phong") || d.includes("ke toan")) return false;
       const norm = normalizeDeptKey(deptName);
-      return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
+      return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho") || d.includes("phu tung") || d.includes("ong to") || d.includes("ong nho") || d.includes("nhap tra");
     }
 
     function isDirectorOrAdmin(roleStr, usernameStr) {
@@ -1868,7 +1800,7 @@
       updatePeriodLockUI(currentPeriodLocked);
     }
 
-    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH RIÊNG CHO ADMIN & QUẢN LÝ =================
+    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH CHO ADMIN & QUẢN LÝ =================
     function updatePeriodLockUI(isLocked) {
       currentPeriodLocked = isLocked;
       const badge = document.getElementById('periodLockBadge');
@@ -1892,7 +1824,6 @@
         }
       }
 
-      // HIỆN NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
       if (btn) {
         if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
           btn.classList.remove('hidden');
@@ -2614,7 +2545,7 @@
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
-      // 1. Lọc theo bộ phận (Hỗ trợ chuẩn hóa 6 kho)
+      // 1. Lọc theo bộ phận
       if (currentSelectedDept !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => 
           isDeptEquivalent(grp.department, currentSelectedDept) ||
@@ -2622,12 +2553,13 @@
         );
       }
 
-      // 2. Lọc theo nhân sự: Nếu là tổ kho gộp, mọi thành viên trong kho đều thấy toàn bộ đầu việc của kho
+      // 2. Lọc theo nhân sự: Nếu là tổ kho, thành viên trong kho luôn nhìn thấy toàn bộ công việc của kho
       if (currentSelectedStaff !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => {
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
-          if (isShared && isDeptEquivalent(grp.department, currentSelectedDept)) {
-            return true;
+          if (isShared) {
+            if (isDeptEquivalent(grp.department, currentSelectedDept)) return true;
+            return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
           }
           return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
         });
@@ -2750,7 +2682,7 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP NHÓM 6 KHO TỪ 73 NHÂN SỰ THẬT =================
+    // ================= TRUY VẤN MA TRẬN: SỬA TRIỆT ĐỂ LỖI GOM 69 NGƯỜI =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2807,28 +2739,44 @@
       const staffGroupsMap = {};
 
       tasks.forEach(t => {
-        // Tìm thông tin bộ phận tương ứng
-        let dObj = t.departments;
-        if (!dObj && t.department_id) {
-          dObj = (dbDepts || []).find(d => d.id === t.department_id);
-        }
-        if (!dObj && t.users && t.users.department_id) {
-          dObj = (dbDepts || []).find(d => d.id === t.users.department_id);
+        let deptId = t.department_id;
+        let deptName = "";
+
+        if (t.departments && t.departments.name) {
+          deptName = t.departments.name;
+          deptId = t.departments.id;
+        } else if (deptId) {
+          const foundD = (dbDepts || []).find(d => d.id === deptId);
+          if (foundD) deptName = foundD.name;
         }
 
-        const deptName = dObj ? dObj.name : "Chưa phân bộ phận";
-        const deptId = dObj ? dObj.id : t.department_id;
-        const isShared = (dObj && dObj.is_shared_group) || isSharedGroupDeptClient(deptName);
+        if (!deptName && t.assigned_user_id) {
+          const assignedU = (dbUsers || []).find(u => u.id === t.assigned_user_id);
+          if (assignedU && assignedU.department_id) {
+            deptId = assignedU.department_id;
+            const foundD = (dbDepts || []).find(d => d.id === deptId);
+            if (foundD) deptName = foundD.name;
+          }
+        }
+
+        if (!deptName) deptName = "Chưa phân bộ phận";
+
+        const isShared = (t.departments && t.departments.is_shared_group) || isSharedGroupDeptClient(deptName);
 
         let groupKey = "";
         let displayStaffName = "";
         let groupUserId = t.assigned_user_id;
 
         if (isShared) {
-          // BỘ PHẬN NHÓM KHO: Gom tất cả việc của kho lại theo ID bộ phận chuẩn
-          groupKey = `DEPT_GROUP_${deptId}_${normalizeDeptKey(deptName)}`;
+          groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          const deptMembers = (dbUsers || []).filter(u => u.department_id === deptId || isDeptEquivalent(dObj ? dObj.name : "", currentUser ? currentUser.department : ""));
+          // CHỈ LỌC THÀNH VIÊN THỰC SỰ THUỘC KHO NÀY (ĐÃ LOẠI BỎ LỖI GOM 69 NGƯỜI)
+          const deptMembers = (dbUsers || []).filter(u => {
+            if (deptId && u.department_id && u.department_id === deptId) return true;
+            const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
+            const uDeptName = uDeptObj ? uDeptObj.name : "";
+            return isDeptEquivalent(uDeptName, deptName);
+          });
 
           deptMembers.sort((a, b) => {
             const aLead = /chinh|truong|to truong|leader/i.test(removeAccents(a.role || ""));
@@ -2844,13 +2792,12 @@
               return `${i + 1}. ${u.full_name}${rStr}`;
             }).join('\n');
 
-            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader/i.test(u.role || ""));
+            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader/i.test(removeAccents(u.role || "")));
             groupUserId = leadUser ? leadUser.id : deptMembers[0].id;
           } else {
             displayStaffName = t.users ? t.users.full_name : deptName;
           }
         } else {
-          // BỘ PHẬN CÁ NHÂN: Hiển thị riêng từng cá nhân
           displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
           groupKey = `${deptName}___${displayStaffName}`;
         }
@@ -3749,7 +3696,7 @@
         targetStaff = currentUser.fullName;
       }
 
-      document.getElementById('modalStaffLabel').innerText = `Nhân sự đại diện: ${currentUser.fullName}`;
+      document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
       document.getElementById('dayEntryModal').classList.remove('hidden');
 
       switchReportInputMode('day');
@@ -3795,7 +3742,7 @@
 
     /**
      * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY:
-     * Khắc phục triệt để cho 6 kho (Kho nhập trả, Kho ống nhỏ, Kho ống PE, Kho Phụ tùng lớn, Kho phụ tùng nhỏ, Kho phụ tùng PPR)
+     * Khắc phục triệt để cho cả 6 kho (Kho nhập trả, Kho ống nhỏ, Kho ống PE, Kho Phụ tùng lớn, Kho phụ tùng nhỏ, Kho phụ tùng PPR)
      */
     function fetchDayEntryTasks() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
@@ -3811,7 +3758,7 @@
       if (badge) badge.classList.add('hidden');
       backupDayValuesBeforeReason = null;
 
-      // Ưu tiên nạp từ kho dữ liệu thô toàn kỳ (chưa qua bộ lọc giao diện)
+      // Nạp từ bộ nhớ thô toàn kỳ
       const activeData = fullPeriodMatrixCache || currentMatrixData;
 
       if (activeData && activeData.staffGroups) {
@@ -3827,14 +3774,20 @@
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
-          // Nhận diện đa tầng: ID bộ phận, tên chuẩn hóa 6 kho hoặc tên nhân sự có trong tổ
-          if (currentUser.department_id && grp.departmentId === currentUser.department_id) {
+          // 1. Nếu cùng department_id
+          if (currentUser.department_id && grp.departmentId && grp.departmentId === currentUser.department_id) {
             isMatch = true;
-          } else if (isShared && isDeptEquivalent(grp.department, currentUser.department)) {
+          } 
+          // 2. Nếu là kho và tên tương đương
+          else if (isShared && isDeptEquivalent(grp.department, currentUser.department)) {
             isMatch = true;
-          } else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+          } 
+          // 3. Nếu họ tên người dùng nằm trong danh sách nhóm kho
+          else if (isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
             isMatch = true;
-          } else if (!isShared && isStaffMatchedInCell(targetStaff, grp.staffName)) {
+          } 
+          // 4. Nếu là bộ phận cá nhân
+          else if (!isShared && isStaffMatchedInCell(targetStaff, grp.staffName)) {
             isMatch = true;
           }
 
@@ -3894,7 +3847,7 @@
 
     /**
      * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO CÔNG VIỆC:
-     * Khắc phục triệt để cho 6 kho
+     * Khắc phục triệt để cho cả 6 kho
      */
     function fetchTaskEntryDays(targetRowIndex) {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
@@ -3911,7 +3864,7 @@
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
-          if (currentUser.department_id && grp.departmentId === currentUser.department_id) {
+          if (currentUser.department_id && grp.departmentId && grp.departmentId === currentUser.department_id) {
             isMatch = true;
           } else if (isSharedTaskMode && isDeptEquivalent(grp.department, currentUser.department)) {
             isMatch = true;
@@ -4230,7 +4183,7 @@
         });
       }
 
-      // Cập nhật tức thì vào bộ nhớ đệm RAM để phản hồi 0 giây
+      // Cập nhật tức thì vào RAM
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4785,7 +4738,7 @@
     /**
      * KHI CHUYỂN BỘ PHẬN: 
      * - NẾU LÀ KHO -> HIỆN NÚT CHỌN KHO CHÍNH/PHỤ KHO
-     * - NẾU LÀ BỘ PHẬN CÁ NHÂN -> HIỆN DROPDOWN SAO CHÉP VIỆC TỪ NHÂN SỰ TRONG BỘ PHẬN ĐÓ
+     * - NẾU LÀ BỘ PHẬN CÁ NHÂN -> HIỆN DROPDOWN SAO CHÉP VIỆC TỪ ĐỒNG NGHIỆP CÙNG BỘ PHẬN
      */
     function onTransferDeptChange(selectedDept) {
       if (!selectedDept) return;
@@ -4909,7 +4862,6 @@
       autoSimulateProgress(10, 80, "Cập nhật dữ liệu trên Supabase...", 25);
 
       try {
-        // Lấy thông tin tài khoản hiện tại trước khi điều chuyển
         const { data: prevUserData } = await supabase
           .from('users')
           .select('id, department_id, role')
@@ -4920,7 +4872,6 @@
         const oldDeptId = prevUser ? prevUser.department_id : null;
         const currentUserId = prevUser ? prevUser.id : null;
 
-        // Lấy ID của bộ phận chuyển đến
         const { data: deptData, error: deptErr } = await supabase
           .from('departments')
           .select('id, is_shared_group')
@@ -4940,9 +4891,7 @@
 
           if (oldTasks && oldTasks.length > 0) {
             const oldTaskIds = oldTasks.map(t => t.id);
-            // Xóa báo cáo của các task đó nếu có
             await supabase.from('daily_reports').delete().in('task_id', oldTaskIds);
-            // Xóa các task cá nhân cũ
             await supabase.from('tasks').delete().in('id', oldTaskIds);
           }
         }
