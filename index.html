@@ -173,7 +173,7 @@
       <div id="userLoginForm" class="space-y-4 hidden">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên đăng nhập (Username)</label>
-          <input type="text" id="loginUsernameInput" placeholder="Ví dụ: giamdoc, admin, a, thuan.bd..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="text" id="loginUsernameInput" placeholder="Ví dụ: giamdoc, admin, thuan.bd..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
         </div>
       </div>
 
@@ -277,6 +277,7 @@
             <span>Đang kiểm tra...</span>
           </span>
 
+          <!-- Nút Khóa Sổ / Mở Khóa Sổ dành riêng cho Admin và Quản lý -->
           <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" class="hidden px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
             <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
             <span id="btnTogglePeriodLockText">Khóa sổ</span>
@@ -520,6 +521,142 @@
   </div>
 
 
+  <!-- ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC ================= -->
+  <div id="dayEntryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[94vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+      
+      <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-sm shadow-2xs">
+            <i class="fa-solid fa-pen-nib"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-sm sm:text-base leading-tight">Điền Báo Cáo Công Việc</h3>
+            <p id="modalStaffLabel" class="text-[11px] text-slate-400 font-medium">Nhân sự: ---</p>
+          </div>
+        </div>
+
+        <button onclick="closeDayEntryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs">
+          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
+            <i class="fa-regular fa-calendar-days text-xs"></i>
+            <span>Điền theo ngày</span>
+          </button>
+          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
+            <i class="fa-solid fa-list-check text-xs"></i>
+            <span>Điền theo công việc</span>
+          </button>
+        </div>
+
+        <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
+          <input type="date" id="modalEntryDate" onchange="fetchDayEntryTasks()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
+        </div>
+
+        <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
+          <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+        </div>
+      </div>
+
+      <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
+            <i class="fa-solid fa-clone text-[11px]"></i>
+            <span>Chép ngày trước</span>
+          </button>
+
+          <button type="button" onclick="quickFillCompleteX()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-check-double text-[11px]"></i>
+            <span>Đánh dấu X</span>
+          </button>
+
+          <button type="button" id="btnRestoreDraft" onclick="restoreLocalDraft()" class="hidden px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer">
+            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
+            <span>Phục hồi nháp</span>
+          </button>
+
+          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+            <i class="fa-solid fa-eraser"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 ml-auto text-[11px]">
+          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="syncStatusLabel" class="font-semibold text-slate-500 font-num">Đã đồng bộ</span>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
+        <!-- Banner chế độ chỉ xem dành cho Phụ kho hoặc kỳ khóa sổ -->
+        <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+          <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
+          <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Trưởng nhóm / Kho chính</b> đại diện làm báo cáo chung.</span>
+        </div>
+
+        <div id="noReportDayCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-3.5 transition">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+              <span class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-xmark text-slate-400"></i>
+                <span>Ngày này không có báo cáo số liệu (Nghỉ phép, Nghỉ ốm, Đi họp...)</span>
+              </span>
+            </label>
+            <span id="noReportBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">Đang kích hoạt</span>
+          </div>
+
+          <div id="noReportReasonContainer" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-2.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 mr-1">Gợi ý nhanh:</span>
+              <button type="button" onclick="setQuickReason('Nghỉ phép')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ phép</button>
+              <button type="button" onclick="setQuickReason('Nghỉ ốm')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ ốm</button>
+              <button type="button" onclick="setQuickReason('Đi họp')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Đi họp</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do vắng mặt hoặc công tác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+              <button type="button" onclick="applyReasonToAllTasks(document.getElementById('noReportReasonInput').value)" class="px-3.5 h-10 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs flex-shrink-0 cursor-pointer">
+                <i class="fa-solid fa-check"></i>
+                <span>Điền tất cả</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="taskHeaderInfoCard" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1">
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-thumbtack text-[10px]"></i></span>
+            <h4 id="modeTaskCurrentTitle" class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">---</h4>
+          </div>
+          <p id="modeTaskCurrentGuide" class="text-[11px] text-slate-400 italic ml-7">---</p>
+        </div>
+
+        <div id="modalLoadingTasks" class="py-12 text-center hidden">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
+          <p class="text-xs text-slate-400">Đang tải số liệu báo cáo...</p>
+        </div>
+
+        <div id="modalTasksListContainer" class="space-y-2.5"></div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
+        <p class="text-xs text-slate-400 hidden sm:inline"><i class="fa-solid fa-keyboard mr-1"></i> Nhấn <b>Enter</b> hoặc <b>Mũi tên lên / xuống</b> để chuyển ô</p>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="closeDayEntryModal()" class="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-600 transition cursor-pointer">Đóng</button>
+          <button onclick="submitDayReport()" id="btnSubmitDayReport" class="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Lưu báo cáo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ================= MODAL QUẢN LÝ BỘ PHẬN ================= -->
   <div id="deptManagerModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -558,7 +695,7 @@
         <div class="flex items-center gap-2 pt-1">
           <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 font-semibold">
             <input type="checkbox" id="chkNewDeptIsShared" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
-            <span>Bộ phận có đại diện báo cáo (gộp chung các thành viên vào 1 ô như tổ Kho, Tiếp liệu...)</span>
+            <span>Bộ phận có đại diện báo cáo (gộp chung các thành viên vào 1 ô như tổ Kho...)</span>
           </label>
         </div>
       </div>
@@ -618,7 +755,7 @@
             <input type="checkbox" id="chkEditDeptIsShared" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer mt-0.5" />
             <div class="text-xs">
               <span class="font-bold text-slate-800 block">Đại diện làm báo cáo (Nhóm gộp)</span>
-              <span class="text-[11px] text-slate-500 leading-relaxed block mt-0.5">Gộp các thành viên vào 1 ô (như tổ Kho, Tiếp liệu...) để Trưởng nhóm / Kho chính đại diện ghi nhận số liệu.</span>
+              <span class="text-[11px] text-slate-500 leading-relaxed block mt-0.5">Gộp các thành viên vào 1 ô để Trưởng nhóm / Kho chính đại diện ghi nhận số liệu.</span>
             </div>
           </label>
         </div>
@@ -696,139 +833,6 @@
           <i class="fa-solid fa-trash-can text-xs"></i>
           <span>Xác Nhận Xóa</span>
         </button>
-      </div>
-    </div>
-  </div>
-<!-- ================= MODAL ĐIỀN BÁO CÁO ================= -->
-  <div id="dayEntryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[94vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
-      
-      <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-sm shadow-2xs">
-            <i class="fa-solid fa-pen-nib"></i>
-          </div>
-          <div>
-            <h3 class="text-slate-800 font-black text-sm sm:text-base leading-tight">Điền Báo Cáo Công Việc</h3>
-            <p id="modalStaffLabel" class="text-[11px] text-slate-400 font-medium">Nhân sự: ---</p>
-          </div>
-        </div>
-
-        <button onclick="closeDayEntryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
-        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs">
-          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
-            <i class="fa-regular fa-calendar-days text-xs"></i>
-            <span>Điền theo ngày</span>
-          </button>
-          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
-            <i class="fa-solid fa-list-check text-xs"></i>
-            <span>Điền theo công việc</span>
-          </button>
-        </div>
-
-        <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
-          <input type="date" id="modalEntryDate" onchange="fetchDayEntryTasks()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
-        </div>
-
-        <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
-          <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
-        </div>
-      </div>
-
-      <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
-            <i class="fa-solid fa-clone text-[11px]"></i>
-            <span>Chép ngày trước</span>
-          </button>
-
-          <button type="button" onclick="quickFillCompleteX()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
-            <i class="fa-solid fa-check-double text-[11px]"></i>
-            <span>Đánh dấu X</span>
-          </button>
-
-          <button type="button" id="btnRestoreDraft" onclick="restoreLocalDraft()" class="hidden px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer">
-            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
-            <span>Phục hồi nháp</span>
-          </button>
-
-          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer">
-            <i class="fa-solid fa-eraser"></i>
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1.5 ml-auto text-[11px]">
-          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span id="syncStatusLabel" class="font-semibold text-slate-500 font-num">Đã đồng bộ</span>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
-        <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
-          <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
-          <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Trưởng nhóm / Kho chính</b> đại diện làm báo cáo chung.</span>
-        </div>
-
-        <div id="noReportDayCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-3.5 transition">
-          <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none">
-              <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
-              <span class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-calendar-xmark text-slate-400"></i>
-                <span>Ngày này không có báo cáo số liệu (Nghỉ phép, Nghỉ ốm, Đi họp...)</span>
-              </span>
-            </label>
-            <span id="noReportBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">Đang kích hoạt</span>
-          </div>
-
-          <div id="noReportReasonContainer" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-2.5">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <span class="text-[11px] font-semibold text-slate-400 mr-1">Gợi ý nhanh:</span>
-              <button type="button" onclick="setQuickReason('Nghỉ phép')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ phép</button>
-              <button type="button" onclick="setQuickReason('Nghỉ ốm')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ ốm</button>
-              <button type="button" onclick="setQuickReason('Đi họp')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Đi họp</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do vắng mặt hoặc công tác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-              <button type="button" onclick="applyReasonToAllTasks(document.getElementById('noReportReasonInput').value)" class="px-3.5 h-10 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs flex-shrink-0 cursor-pointer">
-                <i class="fa-solid fa-check"></i>
-                <span>Điền tất cả</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="taskHeaderInfoCard" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1">
-          <div class="flex items-start gap-2">
-            <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-thumbtack text-[10px]"></i></span>
-            <h4 id="modeTaskCurrentTitle" class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">---</h4>
-          </div>
-          <p id="modeTaskCurrentGuide" class="text-[11px] text-slate-400 italic ml-7">---</p>
-        </div>
-
-        <div id="modalLoadingTasks" class="py-12 text-center hidden">
-          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
-          <p class="text-xs text-slate-400">Đang tải số liệu báo cáo...</p>
-        </div>
-
-        <div id="modalTasksListContainer" class="space-y-2.5"></div>
-      </div>
-
-      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
-        <p class="text-xs text-slate-400 hidden sm:inline"><i class="fa-solid fa-keyboard mr-1"></i> Nhấn <b>Enter</b> hoặc <b>Mũi tên lên / xuống</b> để chuyển ô</p>
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button onclick="closeDayEntryModal()" class="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-600 transition cursor-pointer">Đóng</button>
-          <button onclick="submitDayReport()" id="btnSubmitDayReport" class="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span>Lưu báo cáo</span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -932,7 +936,7 @@
           </div>
           <div>
             <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý & Điều Chuyển Nhân Sự</h3>
-            <p class="text-xs text-slate-400">Danh sách nhân sự và trạng thái hoạt động</p>
+            <p class="text-xs text-slate-400">Danh sách 73 nhân sự và trạng thái hoạt động thực tế</p>
           </div>
         </div>
         <button onclick="closeUserManagerModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
@@ -1014,14 +1018,14 @@
           <div id="transferWarehouseRoleContainer" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2.5">
             <label class="block text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
               <i class="fa-solid fa-users-viewfinder text-amber-600"></i>
-              <span id="transferWarehouseRoleTitle">Phân công vai trò trong nhóm</span>
+              <span id="transferWarehouseRoleTitle">Phân công vai trò trong nhóm kho</span>
             </label>
             
             <div class="grid grid-cols-2 gap-2">
               <label class="flex items-center gap-2 p-2.5 bg-white border border-amber-200 rounded-xl cursor-pointer hover:border-amber-400 transition shadow-2xs">
                 <input type="radio" name="transferWarehouseRole" id="roleKhoChinh" value="Kho chính" class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
                 <div class="text-xs">
-                  <p id="labelRoleLead" class="font-black text-amber-950">Trưởng nhóm / Kho chính</p>
+                  <p id="labelRoleLead" class="font-black text-amber-950">Kho chính</p>
                   <p class="text-[10px] text-slate-400">Đại diện nhập báo cáo</p>
                 </div>
               </label>
@@ -1029,7 +1033,7 @@
               <label class="flex items-center gap-2 p-2.5 bg-white border border-amber-200 rounded-xl cursor-pointer hover:border-amber-400 transition shadow-2xs">
                 <input type="radio" name="transferWarehouseRole" id="rolePhuKho" value="Phụ kho" checked class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
                 <div class="text-xs">
-                  <p id="labelRoleMember" class="font-bold text-slate-800">Thành viên / Phụ kho</p>
+                  <p id="labelRoleMember" class="font-bold text-slate-800">Phụ kho</p>
                   <p class="text-[10px] text-slate-400">Xem số liệu đồng bộ</p>
                 </div>
               </label>
@@ -1039,7 +1043,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò</label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
             <select id="transferRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
@@ -1203,13 +1207,15 @@
       </div>
     </div>
   </div>
+
   <!-- Toast Thông báo -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
       <i id="toastIcon" class="fa-solid fa-check text-emerald-600 text-base"></i>
       <span id="toastMsg" class="font-semibold">Thông báo</span>
     </div>
-  </div><!-- ================= BẮT ĐẦU KHỐI JAVASCRIPT ================= -->
+  </div>
+  <!-- ================= BẮT ĐẦU KHỐI JAVASCRIPT ================= -->
   <script>
     // ================= KHỞI TẠO SUPABASE CLIENT AN TOÀN =================
     const SUPABASE_URL = "https://pyyjgtzwvkphoxcjvgpl.supabase.co";
@@ -1295,7 +1301,7 @@
       }, delayMs);
     }
 
-   window.onload = function() {
+    window.onload = function() {
       const today = new Date().toISOString().split('T')[0];
       const entryDateEl = document.getElementById('modalEntryDate');
       if (entryDateEl) {
@@ -1316,7 +1322,7 @@
 
     function removeAccents(str) {
       if (!str) return "";
-      return String(str).replace(/[\u00A0\s]+/g, " ")
+      return String(str).replace(/[\u0300-\u036f]/g, "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/đ/g, "d").replace(/Đ/g, "D")
@@ -1334,10 +1340,9 @@
       return false;
     }
 
-   function isSharedGroupDeptClient(deptName) {
+    function isSharedGroupDeptClient(deptName) {
       if (!deptName) return false;
       const d = removeAccents(deptName);
-      // Tuyệt đối không gộp nhóm Phân xe và Tiếp liệu giao hàng (làm việc cá nhân)
       if (d.includes("tiep lieu") || d.includes("phan xe")) return false;
       return d.includes("kho") || d.includes("to kho") || d.includes("ong to") || d.includes("phu tung") || d.includes("ppr") || d.includes("pepp");
     }
@@ -1463,15 +1468,15 @@
         let rLower = role.toLowerCase();
         if (rLower.includes('chính') || rLower.includes('trưởng')) {
           isLead = true;
-          role = role || "Trưởng nhóm / Kho chính";
+          role = role || "Kho chính";
         } else if (rLower.includes('phụ') || rLower.includes('thành viên')) {
           isLead = false;
-          role = role || "Thành viên / Phụ kho";
+          role = role || "Phụ kho";
         } else if (num === 1 && lines.length > 1) {
           isLead = true;
-          role = "Trưởng nhóm / Kho chính";
+          role = "Kho chính";
         } else if (lines.length > 1) {
-          role = "Thành viên / Phụ kho";
+          role = "Phụ kho";
         }
 
         if (name) {
@@ -1642,12 +1647,24 @@
         const { data: users, error: uErr } = await supabase
           .from('users')
           .select('*')
+          .eq('status', 'Hoạt động')
           .order('full_name');
         if (uErr) throw uErr;
 
+        // Lọc sạch không lấy các tài khoản nhóm ảo
+        const validUsers = (users || []).filter(u => {
+          const uName = (u.username || '').toLowerCase();
+          const fName = (u.full_name || '').trim();
+          const role = (u.role || '').toLowerCase();
+          if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
+          if (role.includes('nhom gop')) return false;
+          if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+          return true;
+        });
+
         const deptMap = {};
         depts.forEach(d => { deptMap[d.name] = []; });
-        users.forEach(u => {
+        validUsers.forEach(u => {
           const d = depts.find(x => x.id === u.department_id);
           const dName = d ? d.name : "Chưa phân bộ phận";
           if (!deptMap[dName]) deptMap[dName] = [];
@@ -1707,7 +1724,6 @@
       }
     }
 
-    // TẢI NGẦM DỮ LIỆU MA TRẬN TOÀN BAN TỪ SUPABASE (0s CHỜ)
     async function preloadMatrixDataInBackground() {
       if (cachedPreloadMatrix) return;
       const now = new Date();
@@ -1736,8 +1752,18 @@
           const { data: users, error: uErr } = await supabase.from('users').select('*, departments(name)');
           const { data: depts, error: dErr } = await supabase.from('departments').select('name');
           if (!uErr && !dErr) {
+            const validUsers = (users || []).filter(u => {
+              const uName = (u.username || '').toLowerCase();
+              const fName = (u.full_name || '').trim();
+              const role = (u.role || '').toLowerCase();
+              if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
+              if (role.includes('nhom gop')) return false;
+              if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+              return true;
+            });
+
             adminManageUsersCache = {
-              users: users.map(u => ({
+              users: validUsers.map(u => ({
                 id: u.id,
                 username: u.username,
                 fullName: u.full_name,
@@ -1797,6 +1823,7 @@
       updatePeriodLockUI(currentPeriodLocked);
     }
 
+    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH RIÊNG CHO ADMIN & QUẢN LÝ =================
     function updatePeriodLockUI(isLocked) {
       currentPeriodLocked = isLocked;
       const badge = document.getElementById('periodLockBadge');
@@ -1820,19 +1847,22 @@
         }
       }
 
-      if (btn && currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
-        btn.classList.remove('hidden');
-        if (isLocked) {
-          btn.className = "px-3 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
-          if (icon) icon.className = "fa-solid fa-lock-open text-[10px]";
-          if (text) text.innerText = "Mở khóa sổ";
+      // HIỆN LẠI NÚT KHÓA SỔ / MỞ KHÓA CHO ADMIN VÀ QUẢN LÝ
+      if (btn) {
+        if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
+          btn.classList.remove('hidden');
+          if (isLocked) {
+            btn.className = "px-3 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
+            if (icon) icon.className = "fa-solid fa-lock-open text-[10px]";
+            if (text) text.innerText = "Mở khóa sổ";
+          } else {
+            btn.className = "px-3 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
+            if (icon) icon.className = "fa-solid fa-lock text-[10px]";
+            if (text) text.innerText = "Khóa sổ";
+          }
         } else {
-          btn.className = "px-3 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
-          if (icon) icon.className = "fa-solid fa-lock text-[10px]";
-          if (text) text.innerText = "Khóa sổ";
+          btn.classList.add('hidden');
         }
-      } else if (btn) {
-        btn.classList.add('hidden');
       }
 
       if (btnDayEntry && currentUser) {
@@ -1943,7 +1973,7 @@
     }
 
     function confirmTogglePeriodLock() {
-      showProgressHud("CẬP NHẬT KHÓA SỔ", "Đang xử lý trạng thái kỳ báo cáo...", "fa-solid fa-shield-halved animate-pulse");
+      showProgressHud("CẬP NHẬT KHÓA SỔ", "Đang cập nhật trạng thái kỳ báo cáo...", "fa-solid fa-shield-halved animate-pulse");
       autoSimulateProgress(10, 80, "Cập nhật dữ liệu Supabase...", 30);
 
       const newLockState = !currentPeriodLocked;
@@ -2414,6 +2444,9 @@
         if (btnUserManager) btnUserManager.classList.add('hidden');
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
       }
+
+      // Đảm bảo cập nhật trạng thái hiển thị của nút Khóa sổ
+      updatePeriodLockUI(currentPeriodLocked);
     }
 
     function populateStaffDropdown(dept) {
@@ -2560,6 +2593,7 @@
       renderMatrixTable(filteredViewData);
       renderAnalyticsSection(filteredViewData);
     }
+
     function openRenameDeptModal() {
       const currentDept = document.getElementById('adminDeptSelect').value;
       if (!currentDept || currentDept === "TẤT CẢ") {
@@ -2617,9 +2651,6 @@
       }
     }
 
-    /**
-     * TÍNH TỔNG CỘNG THÔNG MINH TRÊN CLIENT
-     */
     function calculateSmartRowTotalClient(dailyValues, dayCols) {
       let calculatedSum = 0;
       let hasNumber = false;
@@ -2663,12 +2694,7 @@
       return "-";
     }
 
-    /**
-     * TRUY VẤN MA TRẬN BÁO CÁO TRỰC TIẾP TỪ SUPABASE
-     */
-  /**
-     * TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP CÁC THÀNH VIÊN TỔ KHO TỪ 73 NHÂN SỰ THẬT
-     */
+    // ================= TRUY VẤN MA TRẬN: TỰ ĐỘNG GỘP NHÓM KHO TỪ 73 NHÂN SỰ THẬT =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2687,11 +2713,9 @@
         });
       }
 
-      // 1. Tải danh sách bộ phận và toàn bộ 73 nhân sự thật
       const { data: dbDepts } = await supabase.from('departments').select('*');
       const { data: dbUsers } = await supabase.from('users').select('*').eq('status', 'Hoạt động');
 
-      // 2. Tải toàn bộ danh mục công việc
       const { data: tasks, error: tErr } = await supabase
         .from('tasks')
         .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role)')
@@ -2699,7 +2723,6 @@
 
       if (tErr) throw tErr;
 
-      // 3. Tải nhật ký số liệu tháng đang chọn
       const mFormatted = (month < 10 ? '0' : '') + month;
       const startDate = `${year}-${mFormatted}-01`;
       const endDate = `${year}-${mFormatted}-${daysInMonth < 10 ? '0' + daysInMonth : daysInMonth}`;
@@ -2737,14 +2760,10 @@
         let groupUserId = t.assigned_user_id;
 
         if (isShared) {
-          // ================= ĐỐI VỚI BỘ PHẬN NHÓM KHO =================
-          // Gom tất cả các đầu việc của kho này vào chung 1 khối
           groupKey = `DEPT_GROUP_${deptId}_${deptName}`;
 
-          // Tự động tìm toàn bộ thành viên thuộc kho này từ danh sách 73 nhân sự
           const deptMembers = (dbUsers || []).filter(u => u.department_id === deptId);
 
-          // Sắp xếp: Trưởng nhóm / Kho chính đứng STT 1, các Phụ kho / Thành viên xếp sau
           deptMembers.sort((a, b) => {
             const aLead = /chinh|truong|to truong|leader/i.test(a.role || "");
             const bLead = /chinh|truong|to truong|leader/i.test(b.role || "");
@@ -2754,7 +2773,6 @@
           });
 
           if (deptMembers.length > 0) {
-            // Tạo chuỗi danh sách đầy đủ thành viên để hệ thống tự vẽ khung nhóm gộp
             displayStaffName = deptMembers.map((u, i) => {
               let rStr = u.role ? ` - ${u.role}` : "";
               return `${i + 1}. ${u.full_name}${rStr}`;
@@ -2766,8 +2784,6 @@
             displayStaffName = t.users ? t.users.full_name : deptName;
           }
         } else {
-          // ================= ĐỐI VỚI BỘ PHẬN CÁ NHÂN =================
-          // (Nhóm phân xe - AT, Tiếp liệu giao hàng, v.v.): Hiển thị từng cá nhân riêng biệt
           displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
           groupKey = `${deptName}___${displayStaffName}`;
         }
@@ -2813,9 +2829,6 @@
       };
     }
 
-    /**
-     * TẢI DỮ LIỆU MA TRẬN BÁO CÁO (TỐI ƯU HÓA LỌC TỨC THÌ TRÊN RAM)
-     */
     async function loadMatrixData(forceServerFetch = false) {
       if (!forceServerFetch && fullPeriodMatrixCache && fullPeriodMatrixCache.queryMonth === currentSelectedMonth && fullPeriodMatrixCache.queryYear === currentSelectedYear) {
         applyClientFilterAndRender();
@@ -2845,9 +2858,6 @@
       }
     }
 
-    /**
-     * VẼ BẢNG MA TRẬN
-     */
     function renderMatrixTable(data) {
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
@@ -3017,6 +3027,27 @@
       setTimeout(() => { scrollToToday(); }, 250);
     }
 
+    function scrollToToday() {
+      if (todayColThElement) {
+        const container = document.getElementById('tableScrollContainer');
+        const stickyTaskHeader = document.querySelector('.col-fixed-task');
+        let stickyOffset = 376;
+        if (stickyTaskHeader) {
+          stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
+        }
+        const targetScroll = todayColThElement.offsetLeft - stickyOffset;
+        container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+      } else {
+        scrollToStartOfMonth();
+      }
+    }
+
+    function scrollToStartOfMonth() {
+      const container = document.getElementById('tableScrollContainer');
+      if (container) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    }
     // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU =================
     function renderAnalyticsSection(data) {
       const section = document.getElementById('analyticsSection');
@@ -3230,28 +3261,6 @@
       }
     }
 
-    function scrollToToday() {
-      if (todayColThElement) {
-        const container = document.getElementById('tableScrollContainer');
-        const stickyTaskHeader = document.querySelector('.col-fixed-task');
-        let stickyOffset = 376;
-        if (stickyTaskHeader) {
-          stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
-        }
-        const targetScroll = todayColThElement.offsetLeft - stickyOffset;
-        container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
-      } else {
-        scrollToStartOfMonth();
-      }
-    }
-
-    function scrollToStartOfMonth() {
-      const container = document.getElementById('tableScrollContainer');
-      if (container) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
-      }
-    }
-
     // ================= XUẤT EXCEL =================
     async function exportToExcel() {
       if (!currentMatrixData || !currentMatrixData.staffGroups || currentMatrixData.staffGroups.length === 0) {
@@ -3462,6 +3471,7 @@
       }
     }
 
+    // ================= QUẢN LÝ BẢN NHÁP CỤC BỘ (AUTOSAVE) =================
     function getDraftStorageKey() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
       let targetDate = document.getElementById('modalEntryDate').value;
@@ -3663,7 +3673,7 @@
       }
     }
 
-    // ================= MỞ MODAL ĐIỀN BÁO CÁO TỨC THÌ (0 GIÂY CHỜ) =================
+    // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
     function openDayEntryModal() {
       let targetStaff = currentSelectedStaff;
       if (!targetStaff || targetStaff === "TẤT CẢ") {
@@ -3715,7 +3725,7 @@
     }
 
     /**
-     * NẠP CÔNG VIỆC THEO NGÀY TỨC THÌ
+     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY
      */
     function fetchDayEntryTasks() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? currentUser.fullName : currentSelectedStaff;
@@ -3739,12 +3749,13 @@
 
         let tasksForDay = [];
         let allTaskList = [];
+
+        // KIỂM TRA PHÂN QUYỀN CHÍNH XÁC: KHO CHÍNH / TRƯỞNG NHÓM ĐƯỢC LƯU, PHỤ KHO CHỈ XEM
         let isShared = isSharedGroupDeptClient(currentUser.department);
-// Kiểm tra: Nếu là nhóm kho, chỉ ai có vai trò Kho chính/Trưởng nhóm/Quản lý mới có quyền Lưu
-let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+        let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
 
         activeData.staffGroups.forEach(grp => {
-          let isMatch = isStaffMatchedInCell(targetStaff, grp.staffName);
+          let isMatch = isShared ? isDeptEquivalent(grp.department, currentUser.department) : isStaffMatchedInCell(targetStaff, grp.staffName);
           if (isMatch) {
             grp.tasks.forEach(t => {
               tasksForDay.push({
@@ -3800,7 +3811,7 @@ let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAcc
     }
 
     /**
-     * NẠP CÁC NGÀY CHO ĐẦU VIỆC TỨC THÌ
+     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO CÔNG VIỆC
      */
     function fetchTaskEntryDays(targetRowIndex) {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? currentUser.fullName : currentSelectedStaff;
@@ -3811,8 +3822,12 @@ let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAcc
         let targetTask = null;
         let targetUserId = 1;
 
+        let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
+        let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
+
         activeData.staffGroups.forEach(grp => {
-          if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
+          let isMatch = isSharedTaskMode ? isDeptEquivalent(grp.department, currentUser.department) : isStaffMatchedInCell(targetStaff, grp.staffName);
+          if (isMatch) {
             targetUserId = grp.userId || currentUser.id || 1;
             grp.tasks.forEach(t => {
               allTaskList.push(t);
@@ -3844,15 +3859,12 @@ let isLead = !isShared || /chinh|truong|to truong|admin|quan ly/i.test(removeAcc
           }));
 
           currentTaskEntryDays = days;
-          let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
-let isLeadTaskMode = !isSharedTaskMode || /chinh|truong|to truong|admin|quan ly/i.test(removeAccents(currentUser.role || ""));
-
-renderTaskEntryDays({
-  task: targetTask,
-  days: days,
-  isWarehouse: isSharedTaskMode,
-  isLead: isLeadTaskMode
-});
+          renderTaskEntryDays({
+            task: targetTask,
+            days: days,
+            isWarehouse: isSharedTaskMode,
+            isLead: isLeadTaskMode
+          });
           checkAndShowDraftRestoreButton();
           updateSyncStatusUI('synced');
         }
@@ -3879,11 +3891,11 @@ renderTaskEntryDays({
         if (isLocked) {
           banner.classList.remove('hidden');
           banner.className = "p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5";
-          banner.innerHTML = `<i class="fa-solid fa-lock text-rose-600 text-sm flex-shrink-0"></i><span><b>Kỳ báo cáo đã khóa sổ:</b> Dữ liệu chỉ ở chế độ xem.</span>`;
+          banner.innerHTML = `<i class="fa-solid fa-lock text-rose-600 text-sm flex-shrink-0"></i><span><b>Kỳ báo cáo đã khóa sổ:</b> Dữ liệu đang ở chế độ xem, không được phép chỉnh sửa.</span>`;
         } else if (res.isWarehouse && !res.isLead) {
           banner.classList.remove('hidden');
           banner.className = "p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5";
-          banner.innerHTML = `<i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i><span><b>Chế độ chỉ xem:</b> Đại diện bộ phận làm báo cáo chung.</span>`;
+          banner.innerHTML = `<i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i><span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>`;
         } else {
           banner.classList.add('hidden');
         }
@@ -3953,11 +3965,11 @@ renderTaskEntryDays({
         if (isLocked) {
           banner.classList.remove('hidden');
           banner.className = "p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5";
-          banner.innerHTML = `<i class="fa-solid fa-lock text-rose-600 text-sm flex-shrink-0"></i><span><b>Kỳ báo cáo đã khóa sổ:</b> Dữ liệu chỉ ở chế độ xem.</span>`;
+          banner.innerHTML = `<i class="fa-solid fa-lock text-rose-600 text-sm flex-shrink-0"></i><span><b>Kỳ báo cáo đã khóa sổ:</b> Dữ liệu đang ở chế độ xem, không được phép chỉnh sửa.</span>`;
         } else if (res.isWarehouse && !res.isLead) {
           banner.classList.remove('hidden');
           banner.className = "p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5";
-          banner.innerHTML = `<i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i><span><b>Chế độ chỉ xem:</b> Đại diện bộ phận làm báo cáo chung.</span>`;
+          banner.innerHTML = `<i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i><span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>`;
         } else {
           banner.classList.add('hidden');
         }
@@ -4124,7 +4136,7 @@ renderTaskEntryDays({
         });
       }
 
-      // 1. CẬP NHẬT TRỰC TIẾP VÀO RAM VÀ VẼ LẠI BẢNG NGAY TỨC THÌ (0 GIÂY)
+      // 1. Cập nhật ngay tức thì vào bộ nhớ đệm RAM để giao diện phản hồi 0 giây
       const targetCache = fullPeriodMatrixCache || currentMatrixData;
       if (targetCache && targetCache.staffGroups) {
         updates.forEach(u => {
@@ -4140,7 +4152,7 @@ renderTaskEntryDays({
         applyClientFilterAndRender();
       }
 
-      // 2. GHI LÊN SUPABASE (UPSERT VÀO BẢNG daily_reports)
+      // 2. Ghi nhận dữ liệu vào Supabase
       showProgressHud("LƯU BÁO CÁO", "Đang lưu số liệu trực tiếp lên Supabase...", "fa-solid fa-cloud-arrow-up animate-pulse");
       autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
       updateSyncStatusUI('saving');
@@ -4453,7 +4465,7 @@ renderTaskEntryDays({
       document.getElementById('userManagerModal').classList.add('hidden');
     }
 
-   async function loadAllUsersManagementData() {
+    async function loadAllUsersManagementData() {
       const tbody = document.getElementById('userManagementTableBody');
       const loading = document.getElementById('loadingUsersBox');
       
@@ -4467,7 +4479,7 @@ renderTaskEntryDays({
         loading.classList.add('hidden');
         if (uErr) throw uErr;
 
-        // LỌC BỎ 100% CÁC DÒNG GROUP ẢO, CHỈ GIỮ LẠI NHÂN SỰ CÁ NHÂN THẬT
+        // LỌC SẠCH 100% CÁC BẢN GHI GROUP ẢO, CHỈ HIỂN THỊ ĐÚNG 73 NHÂN SỰ THẬT
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -4620,6 +4632,9 @@ renderTaskEntryDays({
       }
     }
 
+    /**
+     * MỞ CỬA SỔ ĐIỀU CHUYỂN: TỰ ĐỘNG GHI NHẬN CHỨC DANH KHO CHÍNH / PHỤ KHO
+     */
     function openTransferModal(username) {
       if (!adminManageUsersCache) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
@@ -4655,7 +4670,7 @@ renderTaskEntryDays({
       onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
 
-      // TỰ ĐỘNG TÍCH CHỌN CHỨC DANH KHO CHÍNH HOẶC PHỤ KHO THEO VAI TRÒ HIỆN TẠI
+      // TỰ ĐỘNG TÍCH CHỌN CHỨC DANH KHO CHÍNH HOẶC PHỤ KHO
       const isLead = /chinh|truong|to truong|leader/i.test(removeAccents(user.role || ""));
       const rKhoChinh = document.getElementById('roleKhoChinh');
       const rPhuKho = document.getElementById('rolePhuKho');
@@ -4672,13 +4687,9 @@ renderTaskEntryDays({
       if (!selectedDept) return;
       const isShared = isSharedGroupDeptClient(selectedDept);
       const roleContainer = document.getElementById('transferWarehouseRoleContainer');
-      const sharedNotice = document.getElementById('transferWarehouseSharedNotice');
-      const normalContainer = document.getElementById('transferNormalTasksContainer');
 
       if (isShared) {
         if (roleContainer) roleContainer.classList.remove('hidden');
-        if (sharedNotice) sharedNotice.classList.remove('hidden');
-        if (normalContainer) normalContainer.classList.add('hidden');
         
         const isWarehouse = removeAccents(selectedDept).includes("kho");
         const lblLead = document.getElementById('labelRoleLead');
@@ -4692,8 +4703,6 @@ renderTaskEntryDays({
         if (rPhuKho) rPhuKho.value = isWarehouse ? "Phụ kho" : "Thành viên";
       } else {
         if (roleContainer) roleContainer.classList.add('hidden');
-        if (sharedNotice) sharedNotice.classList.add('hidden');
-        if (normalContainer) normalContainer.classList.remove('hidden');
       }
     }
 
@@ -4709,7 +4718,7 @@ renderTaskEntryDays({
         return;
       }
 
-      // ĐỌC CHUẨN XÁC VAI TRÒ: NẾU LÀ NHÓM KHO THÌ LẤY TỪ NÚT CHỌN (KHO CHÍNH / PHỤ KHO)
+      // ĐỌC CHUẨN XÁC VAI TRÒ TỪ NÚT RADIO NẾU THUỘC NHÓM KHO
       let role = document.getElementById('transferRoleSelect').value;
       const isShared = isSharedGroupDeptClient(dept);
       if (isShared) {
@@ -4742,6 +4751,21 @@ renderTaskEntryDays({
       executeUserTransfer(updateData);
     }
 
+    function closeLockConfirmModal() {
+      pendingTransferData = null;
+      document.getElementById('lockConfirmModal').classList.add('hidden');
+    }
+
+    function proceedConfirmLockUser() {
+      if (!pendingTransferData) return;
+      const dataToLock = pendingTransferData;
+      closeLockConfirmModal();
+      executeUserTransfer(dataToLock);
+    }
+
+    /**
+     * THỰC HIỆN ĐIỀU CHUYỂN: TỰ ĐỘNG CHUYỂN GIAO QUYỀN ĐẠI DIỆN KHO CHÍNH VÀ CÔNG VIỆC
+     */
     async function executeUserTransfer(updateData) {
       showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
       autoSimulateProgress(10, 85, "Cập nhật dữ liệu trên Supabase...", 25);
@@ -4762,7 +4786,7 @@ renderTaskEntryDays({
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 1. Cập nhật thông tin người được điều chuyển
+        // 1. Cập nhật hồ sơ tài khoản nhân sự
         const { data: updatedUser, error } = await supabase
           .from('users')
           .update(updatePayload)
@@ -4772,10 +4796,10 @@ renderTaskEntryDays({
         if (error) throw error;
         const currentUserId = updatedUser && updatedUser[0] ? updatedUser[0].id : null;
 
-        // 2. NẾU BỔ NHIỆM LÀM "KHO CHÍNH" / "TRƯỞNG NHÓM":
+        // 2. NẾU ĐƯỢC CHỈ ĐỊNH LÀM "KHO CHÍNH" / "TRƯỞNG NHÓM"
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
-          // A. Tự động chuyển các Kho chính cũ trong kho đó về làm "Phụ kho"
+          // A. Tự động chuyển các Kho chính cũ của kho đó về làm "Phụ kho"
           await supabase
             .from('users')
             .update({ role: 'Phụ kho' })
@@ -4783,7 +4807,7 @@ renderTaskEntryDays({
             .neq('id', currentUserId)
             .ilike('role', '%chinh%');
 
-          // B. Chuyển giao toàn bộ đầu mục công việc sang cho Kho chính mới đại diện
+          // B. Chuyển giao toàn bộ đầu việc của kho sang cho Kho chính mới đại diện
           await supabase
             .from('tasks')
             .update({ assigned_user_id: currentUserId })
@@ -4808,99 +4832,7 @@ renderTaskEntryDays({
       }
     }
 
-    function onTransferSampleStaffChange(selectedStaff) {}
-    function onWarehouseRoleRadioChange(roleVal) {}
-
-    function submitUserTransfer() {
-      const username = document.getElementById('transferUsernameInput').value.trim();
-      const fullName = document.getElementById('transferFullNameInput').value.trim();
-      const dept = document.getElementById('transferDeptSelect').value.trim();
-      const role = document.getElementById('transferRoleSelect').value;
-      const status = document.getElementById('transferStatusSelect').value;
-      const newPassword = document.getElementById('transferNewPassInput').value.trim();
-
-      if (!fullName) {
-        showToast("Vui lòng điền họ và tên hợp lệ!", true);
-        return;
-      }
-
-      const isLocking = (status === "Khóa");
-
-      const updateData = {
-        username: username,
-        fullName: fullName,
-        dept: dept,
-        role: role,
-        status: status,
-        newPassword: newPassword
-      };
-
-      if (isLocking) {
-        pendingTransferData = updateData;
-        document.getElementById('lockConfirmFullName').innerText = fullName;
-        document.getElementById('lockConfirmUsername').innerText = '@' + username;
-        document.getElementById('lockConfirmModal').classList.remove('hidden');
-        return;
-      }
-
-      executeUserTransfer(updateData);
-    }
-
-    function closeLockConfirmModal() {
-      pendingTransferData = null;
-      document.getElementById('lockConfirmModal').classList.add('hidden');
-    }
-
-    function proceedConfirmLockUser() {
-      if (!pendingTransferData) return;
-      const dataToLock = pendingTransferData;
-      closeLockConfirmModal();
-      executeUserTransfer(dataToLock);
-    }
-
-    async function executeUserTransfer(updateData) {
-      showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật tài khoản trong Supabase...", 25);
-
-      try {
-        const { data: dept } = await supabase.from('departments').select('id').eq('name', updateData.dept).limit(1);
-        const dId = dept && dept[0] ? dept[0].id : null;
-
-        const updatePayload = {
-          full_name: updateData.fullName,
-          department_id: dId,
-          role: updateData.role,
-          status: updateData.status
-        };
-
-        if (updateData.newPassword) {
-          updatePayload.password_hash = updateData.newPassword;
-        }
-
-        const { error } = await supabase
-          .from('users')
-          .update(updatePayload)
-          .eq('username', updateData.username);
-
-        if (error) throw error;
-
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
-          showToast(`Đã cập nhật hồ sơ cho ${updateData.fullName} thành công!`);
-          closeTransferModal();
-          loadAllUsersManagementData();
-          loadInitialData(() => {
-            setupRoleControls();
-            loadMatrixData(true);
-          });
-        });
-      } catch (err) {
-        hideProgressHud(100);
-        showToast("Lỗi xử lý: " + err.message, true);
-      }
-    }
-
-    // ================= THÊM NHÂN SỰ MỚI =================
+    // ================= THÊM MỚI NHÂN SỰ =================
     function openAddUserModal() {
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.remove('hidden');
@@ -4923,7 +4855,6 @@ renderTaskEntryDays({
 
       if (depts.length > 0) {
         deptSelect.selectedIndex = 1;
-        onAddDeptSelectChange(deptSelect.value);
       }
     }
 
@@ -4931,27 +4862,6 @@ renderTaskEntryDays({
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.add('hidden');
     }
-
-    function onAddDeptSelectChange(val) {
-      if (!val) return;
-      const isShared = isSharedGroupDeptClient(val);
-      const roleBox = document.getElementById('addWarehouseRoleContainer');
-      const sharedNotice = document.getElementById('addWarehouseSharedNotice');
-      const normalContainer = document.getElementById('addNormalTasksContainer');
-
-      if (isShared) {
-        roleBox.classList.remove('hidden');
-        sharedNotice.classList.remove('hidden');
-        normalContainer.classList.add('hidden');
-      } else {
-        roleBox.classList.add('hidden');
-        sharedNotice.classList.add('hidden');
-        normalContainer.classList.remove('hidden');
-      }
-    }
-
-    function onAddSampleStaffChange(selectedStaff) {}
-    function onAddWarehouseRoleRadioChange(roleVal) {}
 
     async function submitCreateUser() {
       const fullName = document.getElementById('addFullNameInput').value.trim();
@@ -5001,6 +4911,7 @@ renderTaskEntryDays({
       }
     }
 
+    // ================= ĐỔI MẬT KHẨU =================
     function openChangePasswordModal() {
       document.getElementById('modalOldPass').value = '';
       document.getElementById('modalNewPass').value = '';
@@ -5048,6 +4959,7 @@ renderTaskEntryDays({
       }
     }
 
+    // ================= ĐĂNG XUẤT =================
     function handleLogout() {
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
