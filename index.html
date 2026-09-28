@@ -4651,12 +4651,21 @@ renderTaskEntryDays({
 
       document.getElementById('transferModal').classList.remove('hidden');
 
-      onTransferDeptChange(deptSelect.value || user.dept);
+      const currentDept = deptSelect.value || user.dept;
+      onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
-    }
 
-    function closeTransferModal() {
-      document.getElementById('transferModal').classList.add('hidden');
+      // TỰ ĐỘNG TÍCH CHỌN CHỨC DANH KHO CHÍNH HOẶC PHỤ KHO THEO VAI TRÒ HIỆN TẠI
+      const isLead = /chinh|truong|to truong|leader/i.test(removeAccents(user.role || ""));
+      const rKhoChinh = document.getElementById('roleKhoChinh');
+      const rPhuKho = document.getElementById('rolePhuKho');
+      if (rKhoChinh && rPhuKho) {
+        if (isLead) {
+          rKhoChinh.checked = true;
+        } else {
+          rPhuKho.checked = true;
+        }
+      }
     }
 
     function onTransferDeptChange(selectedDept) {
@@ -4667,19 +4676,135 @@ renderTaskEntryDays({
       const normalContainer = document.getElementById('transferNormalTasksContainer');
 
       if (isShared) {
-        roleContainer.classList.remove('hidden');
-        sharedNotice.classList.remove('hidden');
-        normalContainer.classList.add('hidden');
+        if (roleContainer) roleContainer.classList.remove('hidden');
+        if (sharedNotice) sharedNotice.classList.remove('hidden');
+        if (normalContainer) normalContainer.classList.add('hidden');
         
         const isWarehouse = removeAccents(selectedDept).includes("kho");
-        document.getElementById('labelRoleLead').innerText = isWarehouse ? "Kho chính" : "Trưởng nhóm";
-        document.getElementById('labelRoleMember').innerText = isWarehouse ? "Phụ kho" : "Thành viên";
-        document.getElementById('roleKhoChinh').value = isWarehouse ? "Kho chính" : "Trưởng nhóm";
-        document.getElementById('rolePhuKho').value = isWarehouse ? "Phụ kho" : "Thành viên";
+        const lblLead = document.getElementById('labelRoleLead');
+        const lblMember = document.getElementById('labelRoleMember');
+        const rKhoChinh = document.getElementById('roleKhoChinh');
+        const rPhuKho = document.getElementById('rolePhuKho');
+
+        if (lblLead) lblLead.innerText = isWarehouse ? "Kho chính" : "Trưởng nhóm";
+        if (lblMember) lblMember.innerText = isWarehouse ? "Phụ kho" : "Thành viên";
+        if (rKhoChinh) rKhoChinh.value = isWarehouse ? "Kho chính" : "Trưởng nhóm";
+        if (rPhuKho) rPhuKho.value = isWarehouse ? "Phụ kho" : "Thành viên";
       } else {
-        roleContainer.classList.add('hidden');
-        sharedNotice.classList.add('hidden');
-        normalContainer.classList.remove('hidden');
+        if (roleContainer) roleContainer.classList.add('hidden');
+        if (sharedNotice) sharedNotice.classList.add('hidden');
+        if (normalContainer) normalContainer.classList.remove('hidden');
+      }
+    }
+
+    function submitUserTransfer() {
+      const username = document.getElementById('transferUsernameInput').value.trim();
+      const fullName = document.getElementById('transferFullNameInput').value.trim();
+      const dept = document.getElementById('transferDeptSelect').value.trim();
+      const status = document.getElementById('transferStatusSelect').value;
+      const newPassword = document.getElementById('transferNewPassInput').value.trim();
+
+      if (!fullName) {
+        showToast("Vui lòng điền họ và tên hợp lệ!", true);
+        return;
+      }
+
+      // ĐỌC CHUẨN XÁC VAI TRÒ: NẾU LÀ NHÓM KHO THÌ LẤY TỪ NÚT CHỌN (KHO CHÍNH / PHỤ KHO)
+      let role = document.getElementById('transferRoleSelect').value;
+      const isShared = isSharedGroupDeptClient(dept);
+      if (isShared) {
+        const checkedRadio = document.querySelector('input[name="transferWarehouseRole"]:checked');
+        if (checkedRadio) {
+          role = checkedRadio.value;
+        }
+      }
+
+      const isLocking = (status === "Khóa");
+
+      const updateData = {
+        username: username,
+        fullName: fullName,
+        dept: dept,
+        role: role,
+        status: status,
+        newPassword: newPassword,
+        isWarehouse: isShared
+      };
+
+      if (isLocking) {
+        pendingTransferData = updateData;
+        document.getElementById('lockConfirmFullName').innerText = fullName;
+        document.getElementById('lockConfirmUsername').innerText = '@' + username;
+        document.getElementById('lockConfirmModal').classList.remove('hidden');
+        return;
+      }
+
+      executeUserTransfer(updateData);
+    }
+
+    async function executeUserTransfer(updateData) {
+      showProgressHud("ĐIỀU CHUYỂN NHÂN SỰ", `Đang cập nhật nhân sự ${updateData.fullName}...`, "fa-solid fa-user-gear animate-pulse");
+      autoSimulateProgress(10, 85, "Cập nhật dữ liệu trên Supabase...", 25);
+
+      try {
+        const { data: deptData, error: deptErr } = await supabase.from('departments').select('id, is_shared_group').eq('name', updateData.dept).limit(1);
+        if (deptErr) throw deptErr;
+        const dId = deptData && deptData[0] ? deptData[0].id : null;
+
+        const updatePayload = {
+          full_name: updateData.fullName,
+          department_id: dId,
+          role: updateData.role,
+          status: updateData.status
+        };
+
+        if (updateData.newPassword) {
+          updatePayload.password_hash = updateData.newPassword;
+        }
+
+        // 1. Cập nhật thông tin người được điều chuyển
+        const { data: updatedUser, error } = await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('username', updateData.username)
+          .select('id, full_name, department_id, role');
+
+        if (error) throw error;
+        const currentUserId = updatedUser && updatedUser[0] ? updatedUser[0].id : null;
+
+        // 2. NẾU BỔ NHIỆM LÀM "KHO CHÍNH" / "TRƯỞNG NHÓM":
+        const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
+        if (updateData.isWarehouse && isLeadRole && currentUserId && dId) {
+          // A. Tự động chuyển các Kho chính cũ trong kho đó về làm "Phụ kho"
+          await supabase
+            .from('users')
+            .update({ role: 'Phụ kho' })
+            .eq('department_id', dId)
+            .neq('id', currentUserId)
+            .ilike('role', '%chinh%');
+
+          // B. Chuyển giao toàn bộ đầu mục công việc sang cho Kho chính mới đại diện
+          await supabase
+            .from('tasks')
+            .update({ assigned_user_id: currentUserId })
+            .eq('department_id', dId);
+        }
+
+        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
+          hideProgressHud(250);
+          showToast(`Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`);
+          closeTransferModal();
+          cachedPreloadMatrix = null;
+          fullPeriodMatrixCache = null;
+          loadAllUsersManagementData();
+          loadInitialData(() => {
+            setupRoleControls();
+            loadMatrixData(true);
+          });
+        });
+      } catch (err) {
+        hideProgressHud(100);
+        showToast("Lỗi xử lý: " + err.message, true);
       }
     }
 
