@@ -699,7 +699,510 @@
       </div>
     </div>
   </div>
+<!-- ================= MODAL ĐIỀN BÁO CÁO ================= -->
+  <div id="dayEntryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[94vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+      
+      <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold text-sm shadow-2xs">
+            <i class="fa-solid fa-pen-nib"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-sm sm:text-base leading-tight">Điền Báo Cáo Công Việc</h3>
+            <p id="modalStaffLabel" class="text-[11px] text-slate-400 font-medium">Nhân sự: ---</p>
+          </div>
+        </div>
 
+        <button onclick="closeDayEntryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs">
+          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
+            <i class="fa-regular fa-calendar-days text-xs"></i>
+            <span>Điền theo ngày</span>
+          </button>
+          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
+            <i class="fa-solid fa-list-check text-xs"></i>
+            <span>Điền theo công việc</span>
+          </button>
+        </div>
+
+        <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
+          <input type="date" id="modalEntryDate" onchange="fetchDayEntryTasks()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
+        </div>
+
+        <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
+          <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+        </div>
+      </div>
+
+      <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
+            <i class="fa-solid fa-clone text-[11px]"></i>
+            <span>Chép ngày trước</span>
+          </button>
+
+          <button type="button" onclick="quickFillCompleteX()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-check-double text-[11px]"></i>
+            <span>Đánh dấu X</span>
+          </button>
+
+          <button type="button" id="btnRestoreDraft" onclick="restoreLocalDraft()" class="hidden px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer">
+            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
+            <span>Phục hồi nháp</span>
+          </button>
+
+          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+            <i class="fa-solid fa-eraser"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 ml-auto text-[11px]">
+          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="syncStatusLabel" class="font-semibold text-slate-500 font-num">Đã đồng bộ</span>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
+        <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+          <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
+          <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Trưởng nhóm / Kho chính</b> đại diện làm báo cáo chung.</span>
+        </div>
+
+        <div id="noReportDayCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-3.5 transition">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+              <span class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-xmark text-slate-400"></i>
+                <span>Ngày này không có báo cáo số liệu (Nghỉ phép, Nghỉ ốm, Đi họp...)</span>
+              </span>
+            </label>
+            <span id="noReportBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">Đang kích hoạt</span>
+          </div>
+
+          <div id="noReportReasonContainer" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-2.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 mr-1">Gợi ý nhanh:</span>
+              <button type="button" onclick="setQuickReason('Nghỉ phép')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ phép</button>
+              <button type="button" onclick="setQuickReason('Nghỉ ốm')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ ốm</button>
+              <button type="button" onclick="setQuickReason('Đi họp')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Đi họp</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do vắng mặt hoặc công tác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+              <button type="button" onclick="applyReasonToAllTasks(document.getElementById('noReportReasonInput').value)" class="px-3.5 h-10 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs flex-shrink-0 cursor-pointer">
+                <i class="fa-solid fa-check"></i>
+                <span>Điền tất cả</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="taskHeaderInfoCard" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1">
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-thumbtack text-[10px]"></i></span>
+            <h4 id="modeTaskCurrentTitle" class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">---</h4>
+          </div>
+          <p id="modeTaskCurrentGuide" class="text-[11px] text-slate-400 italic ml-7">---</p>
+        </div>
+
+        <div id="modalLoadingTasks" class="py-12 text-center hidden">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
+          <p class="text-xs text-slate-400">Đang tải số liệu báo cáo...</p>
+        </div>
+
+        <div id="modalTasksListContainer" class="space-y-2.5"></div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
+        <p class="text-xs text-slate-400 hidden sm:inline"><i class="fa-solid fa-keyboard mr-1"></i> Nhấn <b>Enter</b> hoặc <b>Mũi tên lên / xuống</b> để chuyển ô</p>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="closeDayEntryModal()" class="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-600 transition cursor-pointer">Đóng</button>
+          <button onclick="submitDayReport()" id="btnSubmitDayReport" class="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Lưu báo cáo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL ĐỔI TÊN BỘ PHẬN ================= -->
+  <div id="renameDeptModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h4 class="text-slate-800 font-bold text-sm sm:text-base flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+          <span>Chỉnh Sửa Tên Bộ Phận</span>
+        </h4>
+        <button onclick="closeRenameDeptModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tên bộ phận hiện tại</label>
+          <input type="text" id="renameDeptCurrentInput" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 cursor-not-allowed" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Tên bộ phận mới <span class="text-rose-500">*</span></label>
+          <input type="text" id="renameDeptNewInput" placeholder="Ví dụ: Kho Ống TO, Tiếp Liệu..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 flex justify-end gap-2">
+        <button onclick="closeRenameDeptModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Hủy</button>
+        <button onclick="submitRenameDept()" id="btnSubmitRenameDept" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm cursor-pointer">Cập nhật tên</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC ================= -->
+  <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
+        <div class="flex items-center gap-2.5 text-slate-800 font-bold text-base">
+          <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+            <i class="fa-solid fa-list-check text-sm"></i>
+          </div>
+          <span>Phân Công & Quản Lý Công Việc</span>
+        </div>
+        <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">1. Lọc theo Bộ phận</label>
+            <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">2. Nhân viên phân công <span class="text-rose-500">*</span></label>
+            <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-emerald-800 focus:outline-none cursor-pointer"></select>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-tasks text-emerald-700"></i>
+              <span class="text-xs font-bold text-slate-800 uppercase tracking-tight">Danh mục công việc:</span>
+            </div>
+            <button type="button" onclick="addNewAssignTaskRow()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              <span>Thêm việc</span>
+            </button>
+          </div>
+
+          <div id="assignTasksListEditor" class="space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1"></div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0">
+        <button onclick="closeAssignModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy</button>
+        <button onclick="submitAdminAssign()" id="btnSubmitAssign" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check"></i>
+          <span>Lưu phân công</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL QUẢN LÝ NHÂN SỰ ================= -->
+  <div id="userManagerModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+      
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-base shadow-2xs">
+            <i class="fa-solid fa-users-gear"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý & Điều Chuyển Nhân Sự</h3>
+            <p class="text-xs text-slate-400">Danh sách nhân sự và trạng thái hoạt động</p>
+          </div>
+        </div>
+        <button onclick="closeUserManagerModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+          <div class="relative w-full max-w-xs">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          </div>
+          <select id="userFilterDeptSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"></select>
+        </div>
+
+        <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+          <i class="fa-solid fa-user-plus text-xs"></i>
+          <span>Thêm nhân sự</span>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-x-auto overflow-y-auto custom-scroll p-4">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+          <thead class="sticky top-0 bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider z-10 border-b border-slate-200">
+            <tr>
+              <th class="py-2.5 px-3 text-center">STT</th>
+              <th class="py-2.5 px-3">Họ và tên / Username</th>
+              <th class="py-2.5 px-3">Bộ phận</th>
+              <th class="py-2.5 px-3 text-center">Vai trò</th>
+              <th class="py-2.5 px-3 text-center">Trạng thái</th>
+              <th class="py-2.5 px-3 text-center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="userManagementTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+        </table>
+
+        <div id="loadingUsersBox" class="py-16 text-center">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
+          <p class="text-xs text-slate-400">Đang tải danh sách nhân sự...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ ================= -->
+  <div id="transferModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
+        <h4 class="text-slate-800 font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-arrows-split-up-and-left text-emerald-600"></i>
+          <span>Điều Chuyển & Phân Công Nhân Sự</span>
+        </h4>
+        <button onclick="closeTransferModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Họ và tên nhân sự</label>
+            <input type="text" id="transferFullNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Username</label>
+            <input type="text" id="transferUsernameInput" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-400 font-semibold cursor-not-allowed" />
+          </div>
+        </div>
+
+        <div id="transferAssignmentWrapper" class="space-y-3.5 transition-all duration-200">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Bộ phận công tác mới <span class="text-rose-500">*</span></label>
+            <select id="transferDeptSelect" onchange="onTransferDeptChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"></select>
+          </div>
+
+          <div id="transferWarehouseRoleContainer" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3.5 space-y-2.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+              <i class="fa-solid fa-users-viewfinder text-amber-600"></i>
+              <span id="transferWarehouseRoleTitle">Phân công vai trò trong nhóm</span>
+            </label>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 p-2.5 bg-white border border-amber-200 rounded-xl cursor-pointer hover:border-amber-400 transition shadow-2xs">
+                <input type="radio" name="transferWarehouseRole" id="roleKhoChinh" value="Kho chính" class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                <div class="text-xs">
+                  <p id="labelRoleLead" class="font-black text-amber-950">Trưởng nhóm / Kho chính</p>
+                  <p class="text-[10px] text-slate-400">Đại diện nhập báo cáo</p>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2.5 bg-white border border-amber-200 rounded-xl cursor-pointer hover:border-amber-400 transition shadow-2xs">
+                <input type="radio" name="transferWarehouseRole" id="rolePhuKho" value="Phụ kho" checked class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                <div class="text-xs">
+                  <p id="labelRoleMember" class="font-bold text-slate-800">Thành viên / Phụ kho</p>
+                  <p class="text-[10px] text-slate-400">Xem số liệu đồng bộ</p>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò</label>
+            <select id="transferRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
+              <option value="Nhân viên">Nhân viên</option>
+              <option value="Quản lý">Quản lý</option>
+              <option value="Giám đốc ban">Giám đốc ban</option>
+              <option value="Admin">Quản trị viên (Admin)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Trạng thái tài khoản <span class="text-rose-500">*</span></label>
+            <select id="transferStatusSelect" onchange="onTransferStatusSelectChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+              <option value="Hoạt động">🟢 Hoạt động</option>
+              <option value="Tạm khóa">🟡 Tạm khóa</option>
+              <option value="Khóa">🔴 Khóa</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Đặt lại mật khẩu (Để trống nếu giữ nguyên)</label>
+          <input type="password" id="transferNewPassInput" placeholder="Nhập mật khẩu mới từ 4 ký tự..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2 flex-shrink-0">
+        <button onclick="closeTransferModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Hủy</button>
+        <button onclick="submitUserTransfer()" id="btnSubmitTransfer" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+          Lưu Cập Nhật
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL XÁC NHẬN KHÓA TÀI KHOẢN ================= -->
+  <div id="lockConfirmModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center gap-3.5 pb-3 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
+          <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-800 font-black text-base leading-tight">Xác Nhận Khóa</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Thao tác này sẽ vô hiệu hóa quyền truy cập</p>
+        </div>
+      </div>
+
+      <div class="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-500 font-semibold">Nhân sự:</span>
+          <span id="lockConfirmFullName" class="font-bold text-slate-900">---</span>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-500 font-semibold">Tài khoản:</span>
+          <span id="lockConfirmUsername" class="font-mono font-bold text-rose-700">---</span>
+        </div>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeLockConfirmModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="proceedConfirmLockUser()" id="btnProceedLockConfirm" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-user-slash"></i>
+          <span>Xác nhận Khóa</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL THÊM MỚI NHÂN SỰ ================= -->
+  <div id="addUserModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
+        <h4 class="text-slate-800 font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-emerald-600"></i>
+          <span>Thêm Nhân Sự Mới</span>
+        </h4>
+        <button type="button" onclick="closeAddUserModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Họ và tên nhân sự <span class="text-rose-500">*</span></label>
+            <input type="text" id="addFullNameInput" placeholder="Ví dụ: Nguyễn Văn A..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
+            <input type="text" id="addUsernameInput" placeholder="Ví dụ: a.nv, nguyen.va..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Mật khẩu ban đầu</label>
+            <input type="text" id="addPasswordInput" value="123456" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-700 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
+            <select id="addRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
+              <option value="Nhân viên">Nhân viên</option>
+              <option value="Quản lý">Quản lý</option>
+              <option value="Giám đốc ban">Giám đốc ban</option>
+              <option value="Admin">Quản trị viên (Admin)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Bộ phận công tác <span class="text-rose-500">*</span></label>
+          <select id="addDeptSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"></select>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2 flex-shrink-0">
+        <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Hủy</button>
+        <button type="button" onclick="submitCreateUser()" id="btnSubmitCreateUser" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+          Tạo Tài Khoản
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL ĐỔI MẬT KHẨU ================= -->
+  <div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-slate-800 font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-key text-emerald-600"></i>
+          <span>Đổi mật khẩu</span>
+        </h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Mật khẩu hiện tại</label>
+          <input type="password" id="modalOldPass" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Mật khẩu mới</label>
+          <input type="password" id="modalNewPass" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Xác nhận mật khẩu mới</label>
+          <input type="password" id="modalConfirmPass" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+        <button onclick="closeChangePasswordModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Hủy</button>
+        <button onclick="submitChangePassword()" id="btnSubmitChangePass" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer">Xác nhận đổi</button>
+      </div>
+    </div>
+  </div>
   <!-- Toast Thông báo -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
@@ -792,9 +1295,12 @@
       }, delayMs);
     }
 
-    window.onload = function() {
+   window.onload = function() {
       const today = new Date().toISOString().split('T')[0];
-      document.getElementById('modalEntryDate').value = today;
+      const entryDateEl = document.getElementById('modalEntryDate');
+      if (entryDateEl) {
+        entryDateEl.value = today;
+      }
       loadInitialData();
     };
 
