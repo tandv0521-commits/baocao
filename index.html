@@ -4397,7 +4397,7 @@
       document.getElementById('userManagerModal').classList.add('hidden');
     }
 
-    async function loadAllUsersManagementData() {
+   async function loadAllUsersManagementData() {
       const tbody = document.getElementById('userManagementTableBody');
       const loading = document.getElementById('loadingUsersBox');
       
@@ -4411,8 +4411,21 @@
         loading.classList.add('hidden');
         if (uErr) throw uErr;
 
+        // LỌC BỎ 100% CÁC DÒNG GROUP ẢO, CHỈ GIỮ LẠI NHÂN SỰ CÁ NHÂN THẬT
+        const validUsers = (users || []).filter(u => {
+          const uName = (u.username || '').toLowerCase();
+          const fName = (u.full_name || '').trim();
+          const role = (u.role || '').toLowerCase();
+
+          if (uName.startsWith('group_') || uName.startsWith('nhom_kho_') || uName.startsWith('nhom_')) return false;
+          if (role.includes('nhom gop')) return false;
+          if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+
+          return true;
+        });
+
         adminManageUsersCache = {
-          users: users.map(u => ({
+          users: validUsers.map(u => ({
             id: u.id,
             username: u.username,
             fullName: u.full_name,
