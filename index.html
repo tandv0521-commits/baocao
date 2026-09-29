@@ -31,6 +31,58 @@
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
+    /* ================= THẺ GỢI Ý (TOOLTIP) BẮT MẮT & HIỆN ĐẠI ================= */
+    [data-tooltip] {
+      position: relative;
+    }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-2px) scale(0.96);
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      border-radius: 9px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    [data-tooltip]::before {
+      content: '';
+      position: absolute;
+      top: calc(100% + 1px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-2px);
+      border-width: 0 5px 5px 5px;
+      border-style: solid;
+      border-color: transparent transparent rgba(15, 23, 42, 0.94) transparent;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+    [data-tooltip]:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    [data-tooltip]:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT TRÊN ĐIỆN THOẠI ================= */
     .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
     .col-fixed-task { white-space: normal !important; word-break: break-word !important; line-height: 1.45 !important; }
@@ -154,7 +206,7 @@
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
 
-  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH (CHUYÊN NGHIỆP - BỎ TỪ SUPABASE) ================= -->
+  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH ================= -->
   <div id="systemProgressHud" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-7 max-w-sm w-full space-y-4 text-center animate-in fade-in zoom-in-95 duration-200">
       <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner border border-emerald-100">
@@ -223,7 +275,7 @@
       <div id="userLoginForm" class="space-y-4 hidden">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên đăng nhập (Username)</label>
-          <input type="text" id="loginUsernameInput" placeholder="Ví dụ: thuan.bd, tan.dv..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
         </div>
       </div>
 
@@ -258,9 +310,9 @@
   </div>
 
 
-  <!-- ================= DASHBOARD CHÍNH (BỐ CỤC ĐIỆN THOẠI CHUYÊN NGHIỆP & GHI CHÚ NÚT RÕ RÀNG) ================= -->
+  <!-- ================= DASHBOARD CHÍNH ================= -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
-    <!-- Header: Tối ưu hiển thị thoáng đãng trên cả Di động & Máy tính, kèm Tooltip chi tiết -->
+    <!-- Header: Thẻ gợi ý bắt mắt, ngắn gọn khi rê chuột -->
     <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
       <!-- Thông tin nhân sự đăng nhập -->
       <div class="flex items-center gap-2.5 min-w-0">
@@ -276,42 +328,42 @@
         </div>
       </div>
 
-      <!-- Khối nút chức năng kèm GHI CHÚ (Tooltip) chi tiết khi di chuột -->
+      <!-- Khối nút chức năng: Thẻ gợi ý ngắn gọn, bắt mắt -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
-        <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" title="Quản lý bộ phận: Tạo bộ phận mới, chỉnh sửa tên hoặc cấu hình nhóm đại diện làm việc" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
+        <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" data-tooltip="Quản lý bộ phận" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
           <span class="hidden md:inline">QL Bộ phận</span>
         </button>
 
-        <button id="btnAdminUserManager" onclick="openUserManagerModal()" title="Quản lý nhân sự: Tra cứu danh sách nhân sự, phân quyền vai trò, điều chuyển và quản lý tài khoản" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
+        <button id="btnAdminUserManager" onclick="openUserManagerModal()" data-tooltip="Quản lý nhân sự" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-users-gear text-slate-600 text-xs"></i>
           <span class="hidden md:inline">QL Nhân sự</span>
         </button>
 
-        <button id="btnAdminAssign" onclick="openAssignModal()" title="Phân công giao việc: Gán danh mục đầu việc theo từng bộ phận và chuyên viên cụ thể" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
+        <button id="btnAdminAssign" onclick="openAssignModal()" data-tooltip="Phân công công việc" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
           <span class="hidden md:inline">Giao việc</span>
         </button>
 
-        <button id="btnExportExcel" onclick="exportToExcel()" title="Tải file Excel: Xuất báo cáo chuẩn in Landscape A4, tự động ẩn toàn bộ ô có số liệu bằng 0" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer">
+        <button id="btnExportExcel" onclick="exportToExcel()" data-tooltip="Tải Excel" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
           <span class="hidden sm:inline">Tải Excel</span>
         </button>
 
-        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" title="Điền báo cáo: Mở cửa sổ ghi nhận số liệu công việc theo ngày hoặc theo từng đầu việc" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
+        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
         </button>
 
-        <button onclick="loadMatrixData(true)" title="Làm mới dữ liệu: Tải lại toàn bộ dữ liệu bảng ma trận mới nhất từ hệ thống" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
+        <button onclick="loadMatrixData(true)" data-tooltip="Làm mới dữ liệu" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
           <i class="fa-solid fa-arrows-rotate text-xs"></i>
         </button>
 
-        <button onclick="openChangePasswordModal()" title="Đổi mật khẩu: Cập nhật mật khẩu mới với cảnh báo độ mạnh yếu an toàn" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
+        <button onclick="openChangePasswordModal()" data-tooltip="Đổi mật khẩu" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
           <i class="fa-solid fa-key text-xs"></i>
         </button>
 
-        <button onclick="handleLogout()" title="Đăng xuất: Thoát tài khoản làm việc hiện tại khỏi thiết bị" class="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer">
+        <button onclick="handleLogout()" data-tooltip="Đăng xuất" class="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer">
           <i class="fa-solid fa-power-off text-xs"></i>
         </button>
       </div>
@@ -319,9 +371,8 @@
 
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
     <main class="flex-1 p-2 sm:p-5 w-full mx-auto space-y-3.5 flex flex-col">
-      <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (BỐ CỤC 2 HÀNG RÕ RÀNG TRÊN ĐIỆN THOẠI) -->
+      <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG -->
       <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
-        <!-- Hàng 1: Chọn kỳ báo cáo, trạng thái khóa sổ và lọc quản lý -->
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
@@ -336,7 +387,7 @@
               <span>Đang kiểm tra...</span>
             </span>
 
-            <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" title="Khóa/Mở kỳ báo cáo hiện tại" class="hidden px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+            <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" data-tooltip="Khóa sổ báo cáo" class="hidden px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
               <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
               <span id="btnTogglePeriodLockText">Khóa sổ</span>
             </button>
@@ -354,7 +405,7 @@
               <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"></select>
             </div>
 
-            <button type="button" onclick="selectViewAllCompanyStaff()" title="Xem tất cả nhân sự toàn ban DVKH" class="px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
               <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
               <span class="hidden sm:inline">Tất cả ban DVKH</span>
             </button>
@@ -371,11 +422,11 @@
           </div>
 
           <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
-            <button type="button" onclick="scrollToStartOfMonth()" title="Cuộn nhanh về ngày mùng 1 đầu tháng" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs cursor-pointer">
+            <button type="button" onclick="scrollToStartOfMonth()" data-tooltip="Ngày 01 đầu tháng" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs cursor-pointer">
               <i class="fa-solid fa-angles-left text-[10px] text-slate-400"></i>
               <span>Ngày 01</span>
             </button>
-            <button type="button" onclick="scrollToToday()" title="Cuộn nhanh về cột ngày hôm nay" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 transition flex items-center gap-1 shadow-2xs cursor-pointer">
+            <button type="button" onclick="scrollToToday()" data-tooltip="Hôm nay" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 transition flex items-center gap-1 shadow-2xs cursor-pointer">
               <i class="fa-solid fa-location-dot text-[10px] text-emerald-600"></i>
               <span>Hôm nay</span>
             </button>
@@ -621,7 +672,7 @@
 
       <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
+          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
             <i class="fa-solid fa-clone text-[11px]"></i>
             <span>Chép ngày trước</span>
           </button>
@@ -1040,7 +1091,7 @@
   </div>
 
 
-  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
+  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ================= -->
   <div id="accountEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1102,7 +1153,6 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
-            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="accEditRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
@@ -1130,7 +1180,7 @@
   </div>
 
 
-  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
+  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ ================= -->
   <div id="transferModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
@@ -1223,7 +1273,6 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
-            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="transferRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
@@ -1292,7 +1341,7 @@
   </div>
 
 
-  <!-- ================= MODAL THÊM MỚI NHÂN SỰ (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
+  <!-- ================= MODAL THÊM MỚI NHÂN SỰ ================= -->
   <div id="addUserModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
@@ -1330,7 +1379,6 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
-            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="addRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
@@ -1354,7 +1402,7 @@
   </div>
 
 
-  <!-- ================= MODAL ĐỔI MẬT KHẨU (NÂNG CẤP CHUYÊN NGHIỆP & CẢNH BÁO MẠNH/YẾU) ================= -->
+  <!-- ================= MODAL ĐỔI MẬT KHẨU ================= -->
   <div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1373,7 +1421,6 @@
       </div>
 
       <div class="space-y-3.5">
-        <!-- Mật khẩu hiện tại -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Mật khẩu hiện tại <span class="text-rose-500">*</span></label>
           <div class="relative">
@@ -1384,7 +1431,6 @@
           </div>
         </div>
 
-        <!-- Mật khẩu mới -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Mật khẩu mới <span class="text-rose-500">*</span></label>
           <div class="relative">
@@ -1395,13 +1441,12 @@
           </div>
         </div>
 
-        <!-- Thanh đo độ mạnh mật khẩu trực quan -->
+        <!-- Thanh đo độ mạnh mật khẩu -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
           <div class="flex items-center justify-between text-xs">
             <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight">Độ an toàn mật khẩu:</span>
             <span id="passStrengthLabel" class="text-xs font-black text-slate-400">Chưa nhập</span>
           </div>
-          <!-- Dải màu 4 phân đoạn -->
           <div class="grid grid-cols-4 gap-1.5 h-1.5 w-full">
             <div id="strBar1" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
             <div id="strBar2" class="h-full rounded-full bg-slate-200 transition-all duration-300"></div>
@@ -1413,7 +1458,6 @@
           </p>
         </div>
 
-        <!-- Xác nhận mật khẩu mới -->
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Xác nhận mật khẩu mới <span class="text-rose-500">*</span></label>
           <div class="relative">
@@ -1619,7 +1663,6 @@
 
       if (!b1 || !b2 || !b3 || !b4) return;
 
-      // Đặt lại trạng thái thanh đo
       [b1, b2, b3, b4].forEach(b => {
         b.className = "h-full rounded-full bg-slate-200 transition-all duration-300";
       });
@@ -2922,6 +2965,10 @@
       updatePeriodLockUI(currentPeriodLocked);
     }
 
+    /**
+     * NẠP DANH SÁCH NHÂN SỰ VÀO BỘ LỌC MA TRẬN:
+     * Nâng cấp icon và định danh cho tài khoản quản lý thể hiện chuyên nghiệp
+     */
     function populateStaffDropdown(dept) {
       const staffSelect = document.getElementById('adminStaffSelect');
       const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
@@ -2946,10 +2993,11 @@
           }
         }
       } else {
+        // TÙY BIẾN ICON VÀ ĐỊNH DANH CHUYÊN NGHIỆP CHO CÔNG VIỆC CỦA QUẢN LÝ
         if (!isLead && dept === currentUser.department) {
           const meOpt = document.createElement('option');
           meOpt.value = currentUser.fullName;
-          meOpt.innerText = `👤 Công việc của tôi (${currentUser.fullName})`;
+          meOpt.innerText = `🎯 Nhiệm vụ phụ trách trực tiếp • ${currentUser.fullName}`;
           if (currentSelectedStaff === currentUser.fullName) meOpt.selected = true;
           staffSelect.appendChild(meOpt);
         }
@@ -3286,7 +3334,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
           const deptMembers = (dbUsers || []).filter(u => {
             if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -3737,7 +3785,7 @@
       if (todayColThElement) {
         const container = document.getElementById('tableScrollContainer');
         const stickyTaskHeader = document.querySelector('.col-fixed-task');
-        let stickyOffset = 162;
+        let stickyOffset = 164;
         if (stickyTaskHeader) {
           stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
         }
@@ -5240,10 +5288,10 @@
     }
 
     /**
-     * NẠP DỮ LIỆU NHÂN SỰ & SẮP XẾP ƯU TIÊN:
-     * 1. Admin và Quản lý đưa lên đầu tiên
-     * 2. Sắp xếp theo Bộ phận
-     * 3. Sắp xếp theo Họ tên theo bảng chữ cái tiếng Việt
+     * NẠP DỮ LIỆU NHÂN SỰ & SẮP XẾP ƯU TIÊN CHUẨN XÁC:
+     * 1. Giám đốc ban đưa lên đầu tiên
+     * 2. Đến Quản lý
+     * 3. Tất cả nhân viên còn lại sắp xếp theo Tên bộ phận -> Họ và tên
      */
     async function loadAllUsersManagementData() {
       const tbody = document.getElementById('userManagementTableBody');
@@ -5271,14 +5319,21 @@
           return true;
         });
 
-        // Hàm xếp bậc vai trò: Admin (1) -> Giám đốc (2) -> Quản lý (3) -> Nhân viên (4)
+        // XẾP BẬC VAI TRÒ CHUẨN XÁC: GIÁM ĐỐC (1) -> QUẢN LÝ (2) -> CÒN LẠI (3)
         function getUserRolePriority(u) {
-          const r = removeAccents(u.role || "").toLowerCase();
-          const un = removeAccents(u.username || "").toLowerCase();
-          if (r.includes("admin") || un.includes("admin")) return 1;
-          if (r.includes("giamdoc") || r.includes("lanhdao") || un.includes("giamdoc")) return 2;
-          if (r.includes("quanly") || r.includes("truongphong") || r.includes("phophong") || r.includes("manager") || r.includes("leader") || r === "ql") return 3;
-          return 4;
+          const r = removeAccents(u.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
+          const un = removeAccents(u.username || "").toLowerCase().replace(/[\s\-_]+/g, "");
+
+          // 1. Giám đốc ban / Ban Giám đốc / Lãnh đạo / Admin đưa lên đầu
+          if (r.includes("giamdoc") || un.includes("giamdoc") || r.includes("lanhdao") || un.includes("lanhdao") || r.includes("admin") || un.includes("admin")) {
+            return 1;
+          }
+          // 2. Đến Quản lý / Trưởng phòng / Phó phòng / Leader / Manager
+          if (r.includes("quanly") || r.includes("truongphong") || r.includes("phophong") || r.includes("manager") || r.includes("leader") || r === "ql") {
+            return 2;
+          }
+          // 3. Toàn bộ nhân sự còn lại
+          return 3;
         }
 
         const mappedUsers = validUsers.map(u => ({
@@ -5292,12 +5347,13 @@
           password_hash: u.password_hash
         }));
 
-        // SẮP XẾP ƯU TIÊN: ADMIN & QUẢN LÝ LÊN ĐẦU -> SẮP XẾP THEO BỘ PHẬN -> HỌ VÀ TÊN
+        // SẮP XẾP: GIÁM ĐỐC LÊN ĐẦU -> QUẢN LÝ -> CÒN LẠI SẮP THEO TÊN BỘ PHẬN -> HỌ VÀ TÊN
         mappedUsers.sort((a, b) => {
           const pA = getUserRolePriority(a);
           const pB = getUserRolePriority(b);
           if (pA !== pB) return pA - pB;
 
+          // Còn lại cùng thứ hạng (hoặc nhân viên) thì sắp xếp theo Tên bộ phận
           const dComp = (a.dept || "").localeCompare(b.dept || "", 'vi');
           if (dComp !== 0) return dComp;
 
@@ -5436,7 +5492,7 @@
       // Gán vai trò (chỉ chấp nhận Nhân viên hoặc Quản lý)
       const roleSel = document.getElementById('accEditRoleSelect');
       if (roleSel) {
-        let rNorm = removeAccents(user.role || "").toLowerCase();
+        let rNorm = removeAccents(user.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
         roleSel.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
       }
       
@@ -5618,7 +5674,7 @@
       
       const roleSelect = document.getElementById('transferRoleSelect');
       if (roleSelect) {
-        let rNorm = removeAccents(user.role || "").toLowerCase();
+        let rNorm = removeAccents(user.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
         roleSelect.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
       }
       
