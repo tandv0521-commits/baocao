@@ -187,7 +187,7 @@
       <div class="mt-4">
         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mật khẩu</label>
         <div class="relative">
-          <input type="password" id="loginPasswordInput" value="123456" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
           <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
             <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
           </button>
@@ -1365,7 +1365,7 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
       } catch(e) {
-        console.warn("Audio alarm policy:", e);
+        console.warn("Audio policy:", e);
       }
     }
 
@@ -1795,7 +1795,7 @@
       }
     }
 
-    // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU QUA SUPABASE =================
+    // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU & TẠO KỲ BÁO CÁO CHUẨN =================
     async function loadInitialData(callback) {
       try {
         const { data: depts, error: dErr } = await supabase
@@ -1811,7 +1811,6 @@
           .order('full_name');
         if (uErr) throw uErr;
 
-        // Lọc sạch không lấy các tài khoản nhóm ảo
         const validUsers = (users || []).filter(u => {
           const uName = (u.username || '').toLowerCase();
           const fName = (u.full_name || '').trim();
@@ -1843,17 +1842,45 @@
         const now = new Date();
         const curM = now.getMonth() + 1;
         const curY = now.getFullYear();
+        const curDay = now.getDate();
+
+        // Kiểm tra xem hôm nay có phải ngày cuối cùng của tháng hiện tại hay không
+        const lastDayOfCurMonth = new Date(curY, curM, 0).getDate();
+        const isLastDay = (curDay === lastDayOfCurMonth);
 
         const availablePeriods = [];
-        for (let i = 0; i < 12; i++) {
-          let d = new Date(curY, curM - 1 - i, 1);
-          let m = d.getMonth() + 1;
-          let y = d.getFullYear();
+
+        // 1. Chỉ tạo kỳ tiếp theo NẾU HÔM NAY LÀ NGÀY CUỐI CÙNG CỦA THÁNG HIỆN TẠI
+        if (isLastDay) {
+          let nextD = new Date(curY, curM, 1);
+          let nm = nextD.getMonth() + 1;
+          let ny = nextD.getFullYear();
           availablePeriods.push({
-            month: m,
-            year: y,
-            label: `Tháng ${m < 10 ? '0' + m : m} / ${y}`,
+            month: nm,
+            year: ny,
+            label: `Tháng ${nm < 10 ? '0' + nm : nm} / ${ny} (Kỳ mới)`,
             isLocked: false
+          });
+        }
+
+        // 2. Kỳ hiện tại: Đang mở (trừ khi có lệnh khóa sổ thủ công)
+        availablePeriods.push({
+          month: curM,
+          year: curY,
+          label: `Tháng ${curM < 10 ? '0' + curM : curM} / ${curY} (Hiện tại)`,
+          isLocked: false
+        });
+
+        // 3. Các kỳ quá khứ: Mặc định luôn ở chế độ ĐÃ KHÓA SỔ (isLocked = true)
+        for (let i = 1; i <= 11; i++) {
+          let pastD = new Date(curY, curM - 1 - i, 1);
+          let pm = pastD.getMonth() + 1;
+          let py = pastD.getFullYear();
+          availablePeriods.push({
+            month: pm,
+            year: py,
+            label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}`,
+            isLocked: true // Kỳ trước tháng hiện tại luôn khóa sổ tự động
           });
         }
 
@@ -2441,6 +2468,9 @@
       }
     }
 
+    /**
+     * ĐĂNG NHẬP: BỎ HOÀN TOÀN CỬA SAU 123456, BẮT BUỘC KHỚP 100% MẬT KHẨU THẬT
+     */
     async function handleLogin() {
       const isDeptTab = !document.getElementById('deptLoginForm').classList.contains('hidden');
       let username = "";
@@ -2492,7 +2522,8 @@
           return;
         }
 
-        if (user.password_hash !== password && password !== '123456') {
+        // BỎ HOÀN TOÀN CỬA SAU (&& password !== '123456')
+        if (user.password_hash !== password) {
           hideProgressHud(100);
           errMsg.innerText = "Mật khẩu không chính xác!";
           errBox.classList.remove('hidden');
@@ -2869,7 +2900,7 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: LOẠI BỎ VIỆC GIÁM ĐỐC & ẨN CÔNG VIỆC TẠM KHÓA =================
+    // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ & ẨN CÔNG VIỆC TẠM KHÓA =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -2950,7 +2981,7 @@
 
         const assignedUser = t.users || (dbUsers || []).find(u => u.id === t.assigned_user_id);
 
-        // 1. TUYỆT ĐỐI KHÔNG CÓ CÔNG VIỆC CỦA GIÁM ĐỐC BAN (GIÁM ĐỐC CHỈ XEM)
+        // 1. TUYỆT ĐỐI KHÔNG CÓ DÒNG CÔNG VIỆC CỦA GIÁM ĐỐC BAN TRÊN MA TRẬN
         if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username) || normalizeDeptKey(deptName).includes("giam doc")) {
           return;
         }
@@ -2958,7 +2989,7 @@
         // Tách biệt rõ Hàng nhập trả vs Tổ kho
         const isShared = isSharedGroupDeptClient(deptName);
 
-        // 2. NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN
+        // 2. NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN KỲ HIỆN TẠI
         if (!isShared && assignedUser) {
           const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
           if (uStatus.includes("tam") || uStatus.includes("khoa")) {
@@ -2973,7 +3004,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ BỎ LỖI GOM 69 NGƯỜI)
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
           const deptMembers = (dbUsers || []).filter(u => {
             if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -4060,13 +4091,13 @@
 
     // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
     function openDayEntryModal() {
-      // Giám đốc ban không bao giờ được phép điền báo cáo
+      // Giám đốc ban tuyệt đối không được mở modal điền báo cáo
       if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
-        showToast("Giám đốc ban chỉ có quyền xem, không điền báo cáo!", true);
+        showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
         return;
       }
 
-      // Quản lý hoặc nhân viên: CHỈ ĐIỀN CÔNG VIỆC CỦA CHÍNH MÌNH
+      // Quản lý hoặc nhân viên: CHỈ ĐƯỢC PHÉP ĐIỀN BÁO CÁO CÔNG VIỆC CỦA CHÍNH MÌNH
       let targetStaff = currentUser.fullName;
 
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
@@ -4115,7 +4146,7 @@
 
     /**
      * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY:
-     * Quản lý/Nhân viên chỉ điền công việc của chính mình; Kho chính điền cho kho
+     * Quản lý & Nhân viên chỉ điền công việc của chính mình; Kho chính điền cho kho
      */
     function fetchDayEntryTasks() {
       let targetStaff = currentUser.fullName;
@@ -4153,7 +4184,7 @@
               isMatch = true;
             }
           } else {
-            // Bộ phận thường: CHỈ TẢI ĐÚNG CÔNG VIỆC CỦA CHÍNH MÌNH (kể cả là Quản lý)
+            // Bộ phận thường (kể cả Quản lý): CHỈ TẢI CÔNG VIỆC CỦA CHÍNH MÌNH
             if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
               isMatch = true;
             }
@@ -5087,7 +5118,7 @@
           .limit(1);
 
         if (!dupErr && dupUser && dupUser.length > 0) {
-          playAlarmSound(); // Bật âm thanh báo động
+          playAlarmSound();
           if (errBox && errMsg) {
             errMsg.innerText = `CẢNH BÁO: Tên đăng nhập "${newUsername}" đã tồn tại trên hệ thống!`;
             errBox.classList.remove('hidden');
@@ -5487,6 +5518,7 @@
         // 6. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
         autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
+          
           closeTransferModal(); 
 
           let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
@@ -5575,7 +5607,7 @@
         .limit(1);
 
       if (!dupErr && dupUser && dupUser.length > 0) {
-        playAlarmSound(); // Bật âm thanh báo động
+        playAlarmSound();
         if (errBox && errMsg) {
           errMsg.innerText = `CẢNH BÁO: Tên đăng nhập "${username}" đã tồn tại trên hệ thống!`;
           errBox.classList.remove('hidden');
@@ -5646,6 +5678,23 @@
         return;
       }
 
+      // Xác thực mật khẩu cũ trước khi đổi
+      const { data: curUserRecord, error: checkErr } = await supabase
+        .from('users')
+        .select('password_hash')
+        .eq('username', currentUser.username)
+        .limit(1);
+
+      if (checkErr || !curUserRecord || curUserRecord.length === 0) {
+        showToast("Không tìm thấy thông tin tài khoản!", true);
+        return;
+      }
+
+      if (curUserRecord[0].password_hash !== oldP) {
+        showToast("Mật khẩu hiện tại không chính xác!", true);
+        return;
+      }
+
       showProgressHud("ĐỔI MẬT KHẨU", "Đang cập nhật mật khẩu mới...", "fa-solid fa-key animate-pulse");
       autoSimulateProgress(10, 85, "Lưu vào Supabase...", 25);
 
@@ -5659,7 +5708,7 @@
 
         autoSimulateProgress(85, 100, "Đổi mật khẩu thành công!", 15, () => {
           hideProgressHud(250);
-          showToast("Đổi mật khẩu thành công!");
+          showToast("Đổi mật khẩu thành công! Mật khẩu cũ không còn hiệu lực.");
           closeChangePasswordModal();
         });
       } catch (err) {
