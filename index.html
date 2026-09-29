@@ -27,22 +27,21 @@
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
-    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT ================= */
+    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT TRÊN ĐIỆN THOẠI ================= */
     .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
     .col-fixed-task { white-space: normal !important; word-break: break-word !important; line-height: 1.45 !important; }
     .col-fixed-name { white-space: normal !important; word-break: break-word !important; line-height: 1.35 !important; overflow: hidden !important; }
 
-    /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Khắc phục lỗi che khuất ngày */
+    /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Tối ưu chống che lấp ngày */
     @media (max-width: 767px) {
       .col-fixed-tt { 
         position: sticky !important; 
         left: 0 !important; 
-        width: 30px !important; 
-        min-width: 30px !important; 
-        max-width: 30px !important; 
+        width: 32px !important; 
+        min-width: 32px !important; 
+        max-width: 32px !important; 
         z-index: 25 !important; 
       }
-      /* Trên di động: Cột Họ tên cuộn tự nhiên, không ghim để nhường không gian cho cột ngày */
       .col-fixed-name { 
         position: static !important; 
         width: 125px !important; 
@@ -50,17 +49,15 @@
         max-width: 125px !important; 
         box-shadow: none !important; 
       }
-      /* Cột công việc ghim sát cạnh cột TT, chiều rộng tối ưu 130px để chừa 200px+ cho các cột ngày */
       .col-fixed-task { 
         position: sticky !important; 
-        left: 30px !important; 
-        width: 130px !important; 
-        min-width: 130px !important; 
-        max-width: 130px !important; 
+        left: 32px !important; 
+        width: 132px !important; 
+        min-width: 132px !important; 
+        max-width: 132px !important; 
         box-shadow: 3px 0 8px -2px rgba(15, 23, 42, 0.12) !important; 
         z-index: 25 !important; 
       }
-      /* Cột Tổng cộng cuộn ở cuối bảng, không dính đè lên các ngày */
       .col-fixed-total { 
         position: static !important; 
         width: 75px !important; 
@@ -71,7 +68,7 @@
 
       thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 45 !important; }
       thead .col-fixed-name { position: static !important; z-index: 30 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 30px !important; top: 0 !important; z-index: 45 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 45 !important; }
       thead .col-fixed-total { position: static !important; z-index: 30 !important; }
     }
 
@@ -118,7 +115,7 @@
     .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
     .col-sunday-cell { background-color: #fff1f2/40 !important; }
 
-    /* ================= Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN ================= */
+    /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN */
     .matrix-input-cell {
       width: 100%;
       height: 100%;
@@ -146,7 +143,6 @@
       color: #047857 !important;
     }
 
-    /* Hiệu ứng nổi bật cho cột Họ và Tên */
     .staff-avatar-glow {
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
     }
@@ -154,15 +150,15 @@
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
 
-  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH (SYSTEM PROGRESS HUD) ================= -->
+  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH (CHUYÊN NGHIỆP - BỎ TỪ SUPABASE) ================= -->
   <div id="systemProgressHud" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-7 max-w-sm w-full space-y-4 text-center animate-in fade-in zoom-in-95 duration-200">
       <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner border border-emerald-100">
         <i id="progressHudIcon" class="fa-solid fa-cloud-arrow-up animate-bounce"></i>
       </div>
       <div class="space-y-1">
-        <h3 id="progressHudTitle" class="text-sm sm:text-base font-black text-slate-800 tracking-tight">ĐANG XỬ LÝ...</h3>
-        <p id="progressHudDesc" class="text-xs text-slate-500 font-medium">Hệ thống đang kết nối dữ liệu Supabase...</p>
+        <h3 id="progressHudTitle" class="text-sm sm:text-base font-black text-slate-800 tracking-tight">ĐANG XỬ LÝ HỆ THỐNG...</h3>
+        <p id="progressHudDesc" class="text-xs text-slate-500 font-medium">Hệ thống đang đồng bộ dữ liệu thời gian thực...</p>
       </div>
       <!-- Dải đếm phần trăm động -->
       <div class="space-y-1.5 pt-1">
@@ -223,7 +219,7 @@
       <div id="userLoginForm" class="space-y-4 hidden">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên đăng nhập (Username)</label>
-          <input type="text" id="loginUsernameInput" placeholder="Ví dụ: giamdoc, admin, thuan.bd..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="text" id="loginUsernameInput" placeholder="Ví dụ: thuan.bd, tan.dv..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
         </div>
       </div>
 
@@ -258,121 +254,128 @@
   </div>
 
 
-  <!-- ================= DASHBOARD CHÍNH ================= -->
+  <!-- ================= DASHBOARD CHÍNH (BỐ CỤC ĐIỆN THOẠI CHUYÊN NGHIỆP) ================= -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="h-16 bg-white border-b border-slate-200 px-3.5 sm:px-6 flex items-center justify-between sticky top-0 z-50 shadow-2xs">
-      <div class="flex items-center gap-2.5 sm:gap-3.5">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-600 flex items-center justify-center font-black text-white text-sm sm:text-base shadow-xs">
+    <!-- Header: Tối ưu hiển thị thoáng đãng trên cả Di động & Máy tính -->
+    <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
+      <!-- Thông tin nhân sự đăng nhập -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center font-black text-white text-sm sm:text-base shadow-xs flex-shrink-0">
           <span id="userAvatarChar">P</span>
         </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h2 id="userFullnameLabel" class="font-bold text-slate-800 text-xs sm:text-sm md:text-base leading-tight">Họ và tên</h2>
-            <span id="userRoleBadge" class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">NHÂN VIÊN</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h2 id="userFullnameLabel" class="font-black text-slate-900 text-xs sm:text-sm md:text-base leading-tight truncate">Họ và tên</h2>
+            <span id="userRoleBadge" class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300">NHÂN VIÊN</span>
           </div>
-          <p id="userDeptLabel" class="text-[11px] text-slate-400 font-medium truncate max-w-[130px] sm:max-w-none">Bộ phận</p>
+          <p id="userDeptLabel" class="text-[10px] sm:text-[11px] text-slate-400 font-semibold truncate">Bộ phận</p>
         </div>
       </div>
 
-      <!-- Nút chức năng Header -->
-      <div class="flex items-center gap-1 sm:gap-2">
-        <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" class="hidden px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+      <!-- Khối nút chức năng: Tự động sắp xếp đẹp mắt trên di động -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
+        <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
           <span class="hidden md:inline">QL Bộ phận</span>
         </button>
 
-        <button id="btnAdminUserManager" onclick="openUserManagerModal()" class="hidden px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <button id="btnAdminUserManager" onclick="openUserManagerModal()" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-users-gear text-slate-600 text-xs"></i>
           <span class="hidden md:inline">QL Nhân sự</span>
         </button>
 
-        <button id="btnAdminAssign" onclick="openAssignModal()" class="hidden px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <button id="btnAdminAssign" onclick="openAssignModal()" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
           <span class="hidden md:inline">Giao việc</span>
         </button>
 
-        <button id="btnExportExcel" onclick="exportToExcel()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <button id="btnExportExcel" onclick="exportToExcel()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
-          <span>Tải Excel</span>
+          <span class="hidden sm:inline">Tải Excel</span>
         </button>
 
-        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" class="px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1.5 cursor-pointer">
+        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
         </button>
 
-        <button onclick="loadMatrixData(true)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer" title="Tải lại bảng">
+        <button onclick="loadMatrixData(true)" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer" title="Tải lại bảng">
           <i class="fa-solid fa-arrows-rotate text-xs"></i>
         </button>
 
-        <button onclick="openChangePasswordModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer" title="Đổi mật khẩu">
+        <button onclick="openChangePasswordModal()" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer" title="Đổi mật khẩu">
           <i class="fa-solid fa-key text-xs"></i>
         </button>
 
-        <button onclick="handleLogout()" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer" title="Đăng xuất">
+        <button onclick="handleLogout()" class="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer" title="Đăng xuất">
           <i class="fa-solid fa-power-off text-xs"></i>
         </button>
       </div>
     </header>
 
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
-    <main class="flex-1 p-2.5 sm:p-5 w-full mx-auto space-y-4 flex flex-col">
-      <!-- BỘ LỌC ĐA KỲ BÁO CÁO, KHÓA SỔ & THANH ĐIỀU HƯỚNG BẢNG -->
-      <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2.5 shadow-2xs">
-        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          <div class="flex items-center gap-1.5 bg-emerald-50/70 border border-emerald-200 px-3 py-1.5 rounded-xl shadow-2xs">
-            <i class="fa-solid fa-calendar-check text-emerald-700 text-xs"></i>
-            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Kỳ báo cáo:</span>
-            <select id="reportPeriodSelect" onchange="onPeriodChange()" class="bg-transparent text-xs font-black text-emerald-900 focus:outline-none cursor-pointer">
-            </select>
+    <main class="flex-1 p-2 sm:p-5 w-full mx-auto space-y-3.5 flex flex-col">
+      <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (BỐ CỤC 2 HÀNG RÕ RÀNG TRÊN ĐIỆN THOẠI) -->
+      <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
+        <!-- Hàng 1: Chọn kỳ báo cáo, trạng thái khóa sổ và lọc quản lý -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
+              <i class="fa-solid fa-calendar-check text-emerald-700 text-xs"></i>
+              <span class="text-[10px] sm:text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Kỳ báo cáo:</span>
+              <select id="reportPeriodSelect" onchange="onPeriodChange()" class="bg-transparent text-xs font-black text-emerald-900 focus:outline-none cursor-pointer">
+              </select>
+            </div>
+
+            <span id="periodLockBadge" class="px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-black uppercase flex items-center gap-1.5 border shadow-2xs">
+              <i class="fa-solid fa-lock text-[10px]"></i>
+              <span>Đang kiểm tra...</span>
+            </span>
+
+            <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" class="hidden px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+              <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
+              <span id="btnTogglePeriodLockText">Khóa sổ</span>
+            </button>
           </div>
 
-          <span id="periodLockBadge" class="px-2.5 py-1 rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5 border shadow-2xs">
-            <i class="fa-solid fa-lock text-[10px]"></i>
-            <span>Đang kiểm tra...</span>
-          </span>
-
-          <!-- Nút Khóa Sổ / Mở Khóa Sổ dành riêng cho Admin và Quản lý -->
-          <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()" class="hidden px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
-            <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
-            <span id="btnTogglePeriodLockText">Khóa sổ</span>
-          </button>
-
-          <div id="adminFilterContainer" class="hidden flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
-              <select id="adminDeptSelect" onchange="onAdminDeptChange()" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer max-w-[160px] sm:max-w-none truncate"></select>
+          <!-- Bộ lọc Admin/Quản lý -->
+          <div id="adminFilterContainer" class="hidden flex flex-wrap items-center gap-1.5">
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ phận:</span>
+              <select id="adminDeptSelect" onchange="onAdminDeptChange()" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer max-w-[130px] sm:max-w-none truncate"></select>
             </div>
 
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nhân sự:</span>
-              <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer max-w-[210px] sm:max-w-none truncate"></select>
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Nhân sự:</span>
+              <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"></select>
             </div>
 
-            <button type="button" onclick="selectViewAllCompanyStaff()" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Xem báo cáo của tất cả nhân viên">
+            <button type="button" onclick="selectViewAllCompanyStaff()" class="px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
               <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
-              <span>Tất cả ban DVKH</span>
+              <span class="hidden sm:inline">Tất cả ban DVKH</span>
             </button>
           </div>
         </div>
 
-        <div id="staffTitleContainer" class="flex items-center gap-2 px-1">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-xs sm:text-sm font-bold text-slate-700">
-            <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
-          </span>
-        </div>
+        <!-- Hàng 2: Đối tượng đang xem & Nút nhảy ngày thông minh -->
+        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+          <div id="staffTitleContainer" class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+            <span class="text-xs sm:text-sm font-bold text-slate-700 truncate">
+              <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
+            </span>
+          </div>
 
-        <div class="flex items-center gap-1.5 ml-auto">
-          <button type="button" onclick="scrollToStartOfMonth()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs cursor-pointer">
-            <i class="fa-solid fa-angles-left text-[11px] text-slate-400"></i>
-            <span>Ngày 01</span>
-          </button>
-          <button type="button" onclick="scrollToToday()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 transition flex items-center gap-1 shadow-2xs cursor-pointer">
-            <i class="fa-solid fa-location-dot text-[11px] text-emerald-600"></i>
-            <span>Hôm nay</span>
-          </button>
+          <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
+            <button type="button" onclick="scrollToStartOfMonth()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs cursor-pointer">
+              <i class="fa-solid fa-angles-left text-[10px] text-slate-400"></i>
+              <span>Ngày 01</span>
+            </button>
+            <button type="button" onclick="scrollToToday()" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 transition flex items-center gap-1 shadow-2xs cursor-pointer">
+              <i class="fa-solid fa-location-dot text-[10px] text-emerald-600"></i>
+              <span>Hôm nay</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -384,8 +387,8 @@
               <tr id="tableHeaderRow" class="text-slate-700 font-bold uppercase text-[11px] tracking-wider">
                 <th class="col-fixed-tt py-3.5 px-2 text-center border-r">TT</th>
                 <th class="col-fixed-name py-3.5 px-2.5 text-center border-r">Họ và tên</th>
-                <th class="col-fixed-task py-3.5 px-3 text-left border-r">Nội dung công việc</th>
-                <th class="col-fixed-total py-3.5 px-3 text-center border-l font-bold">Tổng cộng</th>
+                <th class="col-fixed-task py-3.5 px-2.5 sm:px-3 text-left border-r">Nội dung công việc</th>
+                <th class="col-fixed-total py-3.5 px-2.5 sm:px-3 text-center border-l font-bold">Tổng cộng</th>
               </tr>
             </thead>
             <tbody id="sheetTableBody" class="font-medium text-slate-700 divide-y divide-slate-100"></tbody>
@@ -394,7 +397,7 @@
 
         <div id="loadingTasksBox" class="py-24 text-center">
           <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-600 mb-3"></i>
-          <p class="text-sm text-slate-400 font-medium">Đang tải dữ liệu tiến độ công việc từ Supabase...</p>
+          <p class="text-sm text-slate-400 font-medium">Đang đồng bộ dữ liệu tiến độ công việc...</p>
         </div>
       </div>
 
@@ -463,7 +466,6 @@
           </div>
         </div>
 
-        <!-- Khối Đọc hiểu Ngữ nghĩa & Nhận định Chuyên môn -->
         <div id="taskSemanticInsightCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2">
@@ -686,7 +688,7 @@
 
         <div id="modalLoadingTasks" class="py-12 text-center hidden">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
-          <p class="text-xs text-slate-400">Đang tải số liệu báo cáo...</p>
+          <p class="text-xs text-slate-400">Đang đồng bộ số liệu báo cáo...</p>
         </div>
 
         <div id="modalTasksListContainer" class="space-y-2.5"></div>
@@ -756,7 +758,7 @@
         <div id="deptManagementTableList" class="space-y-2"></div>
         <div id="loadingDeptsBox" class="py-12 text-center hidden">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
-          <p class="text-xs text-slate-400">Đang tải danh sách bộ phận...</p>
+          <p class="text-xs text-slate-400">Đang đồng bộ danh sách bộ phận...</p>
         </div>
       </div>
 
@@ -980,7 +982,7 @@
           </div>
           <div>
             <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý & Điều Chuyển Nhân Sự</h3>
-            <p class="text-xs text-slate-400">Danh sách 73 nhân sự và trạng thái hoạt động thực tế</p>
+            <p class="text-xs text-slate-400">Danh sách nhân sự và trạng thái hoạt động thực tế</p>
           </div>
         </div>
         <button onclick="closeUserManagerModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
@@ -1027,14 +1029,14 @@
 
         <div id="loadingUsersBox" class="py-16 text-center">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-600 mb-2"></i>
-          <p class="text-xs text-slate-400">Đang tải danh sách nhân sự...</p>
+          <p class="text-xs text-slate-400">Đang đồng bộ danh sách nhân sự...</p>
         </div>
       </div>
     </div>
   </div>
 
 
-  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP (HIỆN MẬT KHẨU HIỆN TẠI) ================= -->
+  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
   <div id="accountEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1092,14 +1094,14 @@
             </button>
           </div>
         </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
+            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="accEditRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
-              <option value="Giám đốc ban">Giám đốc ban</option>
-              <option value="Admin">Admin</option>
             </select>
           </div>
           <div>
@@ -1124,7 +1126,7 @@
   </div>
 
 
-  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ & CHỈNH TÊN CHỨC DANH NHÓM GỘP ================= -->
+  <!-- ================= MODAL ĐIỀU CHUYỂN NHÂN SỰ (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
   <div id="transferModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
@@ -1217,11 +1219,10 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
+            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="transferRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
-              <option value="Giám đốc ban">Giám đốc ban</option>
-              <option value="Admin">Quản trị viên (Admin)</option>
             </select>
           </div>
           <div>
@@ -1287,7 +1288,7 @@
   </div>
 
 
-  <!-- ================= MODAL THÊM MỚI NHÂN SỰ (CÓ BÁO ĐỘNG TRÙNG LẶP) ================= -->
+  <!-- ================= MODAL THÊM MỚI NHÂN SỰ (CHỈ CÒN NHÂN VIÊN & QUẢN LÝ) ================= -->
   <div id="addUserModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
@@ -1325,11 +1326,10 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
+            <!-- LƯỢC BỎ ADMIN & GIÁM ĐỐC, CHỈ CÒN NHÂN VIÊN VÀ QUẢN LÝ -->
             <select id="addRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
               <option value="Quản lý">Quản lý</option>
-              <option value="Giám đốc ban">Giám đốc ban</option>
-              <option value="Admin">Quản trị viên (Admin)</option>
             </select>
           </div>
         </div>
@@ -1394,7 +1394,7 @@
   </div>
   <!-- ================= BẮT ĐẦU KHỐI JAVASCRIPT ================= -->
   <script>
-    // ================= KHỞI TẠO SUPABASE CLIENT AN TOÀN =================
+    // ================= KHỞI TẠO CLIENT KẾT NỐI AN TOÀN =================
     const SUPABASE_URL = "https://pyyjgtzwvkphoxcjvgpl.supabase.co";
     const SUPABASE_KEY = "sb_publishable_5oH-P1_iwO8MsLiGTZodYg_WuPw-l4f";
     var supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -1451,8 +1451,8 @@
     function showProgressHud(title, desc, iconCls = "fa-solid fa-cloud-arrow-up animate-bounce") {
       const hud = document.getElementById('systemProgressHud');
       if (!hud) return;
-      document.getElementById('progressHudTitle').innerText = title || "ĐANG XỬ LÝ...";
-      document.getElementById('progressHudDesc').innerText = desc || "Hệ thống đang kết nối dữ liệu Supabase...";
+      document.getElementById('progressHudTitle').innerText = title || "ĐANG XỬ LÝ HỆ THỐNG...";
+      document.getElementById('progressHudDesc').innerText = desc || "Hệ thống đang đồng bộ dữ liệu thời gian thực...";
       document.getElementById('progressHudIcon').className = iconCls;
       
       currentHudPercent = 5;
@@ -1510,7 +1510,7 @@
       });
     };
 
-    // ================= XỬ LÝ GHI NHỚ MẬT KHẨU =================
+    // ================= XỬ LÝ GHI NHỚ MẬT KHẨU TỰ ĐỘNG =================
     function checkAndFillRememberedPassword() {
       try {
         const rememberedRaw = localStorage.getItem('ops_portal_remembered_auth_v49');
@@ -1540,7 +1540,7 @@
           if (pInput) pInput.value = authData.password || '';
         }
       } catch (e) {
-        console.warn("Lỗi đọc mật khẩu ghi nhớ:", e);
+        console.warn("Lỗi đọc thông tin ghi nhớ:", e);
       }
     }
 
@@ -2287,7 +2287,7 @@
 
     function confirmTogglePeriodLock() {
       showProgressHud("CẬP NHẬT KHÓA SỔ", "Đang cập nhật trạng thái kỳ báo cáo...", "fa-solid fa-shield-halved animate-pulse");
-      autoSimulateProgress(10, 80, "Cập nhật dữ liệu Supabase...", 30);
+      autoSimulateProgress(10, 80, "Cập nhật dữ liệu hệ thống...", 30);
 
       const newLockState = !currentPeriodLocked;
       setTimeout(() => {
@@ -2410,7 +2410,7 @@
       }
 
       showProgressHud("TẠO BỘ PHẬN MỚI", `Đang khởi tạo bộ phận "${dName}"...`, "fa-solid fa-sitemap animate-pulse");
-      autoSimulateProgress(10, 85, "Lưu vào Supabase Database...", 25);
+      autoSimulateProgress(10, 85, "Lưu vào cơ sở dữ liệu...", 25);
 
       try {
         const { error } = await supabase
@@ -2460,7 +2460,7 @@
       }
 
       showProgressHud("CẬP NHẬT BỘ PHẬN", `Đang đổi tên "${oldName}" sang "${newName}"...`, "fa-solid fa-pen-to-square animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu trên Supabase...", 25);
+      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
         const { error } = await supabase
@@ -2528,7 +2528,7 @@
       if (!deptName) return;
 
       showProgressHud("XÓA BỘ PHẬN", `Đang xóa bộ phận "${deptName}"...`, "fa-solid fa-trash-can animate-pulse");
-      autoSimulateProgress(10, 85, "Xóa bản ghi trên Supabase...", 25);
+      autoSimulateProgress(10, 85, "Xử lý dữ liệu hệ thống...", 25);
 
       try {
         const { error } = await supabase
@@ -2620,7 +2620,7 @@
         }
       }
 
-      showProgressHud("ĐĂNG NHẬP HỆ THỐNG", "Đang xác thực tài khoản qua Supabase...", "fa-solid fa-user-shield animate-pulse");
+      showProgressHud("ĐĂNG NHẬP HỆ THỐNG", "Đang xác thực thông tin tài khoản...", "fa-solid fa-user-shield animate-pulse");
       autoSimulateProgress(10, 85, "Kiểm tra quyền truy cập...", 30);
 
       try {
@@ -2646,7 +2646,7 @@
           return;
         }
 
-        // BỎ HOÀN TOÀN CỬA SAU (&& password !== '123456')
+        // BỎ HOÀN TOÀN CỬA SAU
         if (user.password_hash !== password) {
           hideProgressHud(100);
           errMsg.innerText = "Mật khẩu không chính xác!";
@@ -2684,7 +2684,7 @@
         });
       } catch (err) {
         hideProgressHud(100);
-        errMsg.innerText = "Lỗi kết nối: " + err.message;
+        errMsg.innerText = "Lỗi kết nối máy chủ: " + err.message;
         errBox.classList.remove('hidden');
       }
     }
@@ -2968,7 +2968,7 @@
       }
 
       showProgressHud("CẬP NHẬT TÊN BỘ PHẬN", `Đang đổi tên "${oldDept}" thành "${newDept}"...`, "fa-solid fa-pen-to-square animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật cơ sở dữ liệu Supabase...", 25);
+      autoSimulateProgress(10, 85, "Cập nhật cơ sở dữ liệu...", 25);
 
       try {
         const { error } = await supabase
@@ -3248,7 +3248,7 @@
         applyClientFilterAndRender();
       } catch (err) {
         loading.classList.add('hidden');
-        showToast("Lỗi tải tiến độ: " + err.message, true);
+        showToast("Lỗi đồng bộ dữ liệu: " + err.message, true);
         tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-rose-500 font-bold">Không thể tải dữ liệu: ${err.message}</td></tr>`;
       }
     }
@@ -3263,7 +3263,7 @@
       theadRow.innerHTML = `
         <th class="col-fixed-tt py-3.5 px-2 text-center border-r">TT</th>
         <th class="col-fixed-name py-3.5 px-2.5 text-center border-r">Họ và tên</th>
-        <th class="col-fixed-task py-3.5 px-2.5 sm:px-3 text-left border-r">Nội dung công việc</th>
+        <th class="col-fixed-task py-3.5 px-2 sm:px-3 text-left border-r">Nội dung công việc</th>
       `;
 
       data.dayCols.forEach((dc, cIdx) => {
@@ -3282,7 +3282,7 @@
           headerStyle = "col-sunday-header bg-rose-50 text-rose-700 font-black border-b-2 border-rose-300";
         }
 
-        th.className = `py-2 px-1.5 min-w-[54px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
+        th.className = `py-2 px-1.5 min-w-[52px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
             <span class="text-xs font-black font-num">${dc.label}</span>
@@ -3296,7 +3296,7 @@
       });
 
       const thTotal = document.createElement('th');
-      thTotal.className = "col-fixed-total py-3.5 px-2.5 sm:px-3 text-center border-l font-bold";
+      thTotal.className = "col-fixed-total py-3.5 px-2 sm:px-3 text-center border-l font-bold";
       thTotal.innerText = "Tổng cộng";
       theadRow.appendChild(thTotal);
 
@@ -3326,12 +3326,12 @@
           let nameCellHtml = '';
           if (tIdx === 0) {
             ttCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-tt py-2 sm:py-3 px-1.5 sm:px-2 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-200 align-middle bg-white font-num">
+              <td rowspan="${totalStaffRows}" class="col-fixed-tt py-2 sm:py-3 px-1 sm:px-2 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-200 align-middle bg-white font-num">
                 ${autoSTT}
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name py-2 sm:py-3 px-2 sm:px-2.5 text-left font-bold text-slate-900 border-r border-b border-slate-200 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name py-2 sm:py-3 px-1.5 sm:px-2.5 text-left font-bold text-slate-900 border-r border-b border-slate-200 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
                   ${formatStaffNameHtml(grp.staffName, grp.department)}
                 </div>
@@ -3354,7 +3354,7 @@
                 canEditThisRow = true;
               }
             } else {
-              // Chỉ được sửa nếu là công việc của chính mình!
+              // Chỉ được sửa nếu là công việc của chính mình (kể cả Quản lý)!
               if (isStaffMatchedInCell(currentUser.fullName, grp.staffName) || (t.assigned_user_id && t.assigned_user_id === currentUser.id)) {
                 canEditThisRow = true;
               }
@@ -3596,7 +3596,7 @@
       if (todayColThElement) {
         const container = document.getElementById('tableScrollContainer');
         const stickyTaskHeader = document.querySelector('.col-fixed-task');
-        let stickyOffset = 160;
+        let stickyOffset = 162;
         if (stickyTaskHeader) {
           stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
         }
@@ -3833,7 +3833,7 @@
         return;
       }
 
-      showProgressHud("XUẤT EXCEL", "Đang kết xuất và định dạng bảng Excel chuyên nghiệp...", "fa-solid fa-file-excel animate-pulse");
+      showProgressHud("XUẤT BẢNG EXCEL", "Đang kết xuất và định dạng bảng Excel chuyên nghiệp...", "fa-solid fa-file-excel animate-pulse");
       autoSimulateProgress(10, 85, "Tổng hợp chỉ số, ẩn số 0 và tạo mẫu in...", 25);
 
       try {
@@ -3968,11 +3968,11 @@
                 if (val !== undefined && val !== null && String(val).trim() !== '') {
                   let strVal = String(val).trim();
                   if (strVal === '0' || strVal === '-' || strVal === '·') {
-                    rowData.push(''); // Tự động ẩn số 0
+                    rowData.push('');
                   } else {
                     const num = parseFloat(strVal.replace(/,/g, ''));
                     if (!isNaN(num) && !t.isTextMode) {
-                      if (num === 0) rowData.push(''); // Tự động ẩn số 0
+                      if (num === 0) rowData.push('');
                       else rowData.push(num);
                     } else {
                       rowData.push(strVal.toUpperCase());
@@ -4357,10 +4357,12 @@
           let isMatch = false;
 
           if (isShared) {
+            // Tổ kho: Kho chính đại diện điền cho toàn kho
             if (isDeptEquivalent(grp.department, currentUser.department)) {
               isMatch = true;
             }
           } else {
+            // Bộ phận thường (kể cả Quản lý): CHỈ TẢI CÔNG VIỆC CỦA CHÍNH MÌNH
             if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
               isMatch = true;
             }
@@ -4724,11 +4726,11 @@
     }
 
     /**
-     * LƯU BÁO CÁO CÔNG VIỆC TRỰC TIẾP LÊN SUPABASE (TỪ MODAL)
+     * LƯU BÁO CÁO CÔNG VIỆC TRỰC TIẾP LÊN MÁY CHỦ (TỪ MODAL)
      */
     async function submitDayReport() {
       if (currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username)) {
-        showToast("Kỳ báo cáo này đã khóa sổ. Vui lòng liên hệ Quản lý/Admin!", true);
+        showToast("Kỳ báo cáo này đã khóa sổ. Vui lòng liên hệ Quản lý!", true);
         return;
       }
 
@@ -4783,7 +4785,7 @@
         applyClientFilterAndRender();
       }
 
-      showProgressHud("LƯU BÁO CÁO", "Đang lưu số liệu trực tiếp lên Supabase...", "fa-solid fa-cloud-arrow-up animate-pulse");
+      showProgressHud("LƯU BÁO CÁO", "Đang lưu số liệu báo cáo lên máy chủ...", "fa-solid fa-cloud-arrow-up animate-pulse");
       autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
       updateSyncStatusUI('saving');
 
@@ -4826,11 +4828,11 @@
       } catch (err) {
         hideProgressHud(100);
         updateSyncStatusUI('draft');
-        showToast("Lỗi lưu Supabase: " + err.message, true);
+        showToast("Lỗi lưu trữ dữ liệu: " + err.message, true);
       }
     }
 
-    // ================= PHÂN CÔNG GIAO VIỆC TRÊN SUPABASE =================
+    // ================= PHÂN CÔNG GIAO VIỆC TRÊN MÁY CHỦ =================
     function openAssignModal() {
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.remove('hidden');
@@ -5015,7 +5017,7 @@
       const row = btnElem.closest('.assign-task-row');
       const taskId = row.dataset.taskId;
       if (taskId) {
-        if (!confirm("⚠️ Bạn có chắc chắn muốn xóa đầu việc này khỏi Supabase?")) return;
+        if (!confirm("⚠️ Bạn có chắc chắn muốn xóa đầu việc này khỏi hệ thống?")) return;
         try {
           await supabase.from('tasks').delete().eq('id', taskId);
         } catch(e) {}
@@ -5054,7 +5056,7 @@
       }
 
       showProgressHud("LƯU PHÂN CÔNG", `Đang lưu phân công cho nhân sự ${staffName}...`, "fa-solid fa-list-check animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu vào Supabase...", 25);
+      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
         const { data: dept } = await supabase.from('departments').select('id').eq('name', deptName).limit(1);
@@ -5170,7 +5172,7 @@
         renderUsersManagementTable(adminManageUsersCache.users);
       } catch (err) {
         loading.classList.add('hidden');
-        showToast("Lỗi tải nhân sự: " + err.message, true);
+        showToast("Lỗi nạp danh sách nhân sự: " + err.message, true);
       }
     }
 
@@ -5289,7 +5291,13 @@
       if (curEyeIcon) curEyeIcon.className = "fa-regular fa-eye text-xs mr-0.5";
 
       document.getElementById('accEditPasswordInput').value = '';
-      document.getElementById('accEditRoleSelect').value = user.role;
+      
+      // Gán vai trò (chỉ chấp nhận Nhân viên hoặc Quản lý)
+      const roleSel = document.getElementById('accEditRoleSelect');
+      if (roleSel) {
+        let rNorm = removeAccents(user.role || "").toLowerCase();
+        roleSel.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
+      }
       
       const st = removeAccents(user.status || "").toLowerCase();
       let statusVal = "Hoạt động";
@@ -5349,7 +5357,7 @@
         return;
       }
 
-      // 1. KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP (USERNAME)
+      // KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP (USERNAME)
       if (newUsername !== origUsername.toLowerCase()) {
         const { data: dupUser, error: dupErr } = await supabase
           .from('users')
@@ -5369,7 +5377,7 @@
       }
 
       showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-pen animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu vào Supabase...", 25);
+      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
         const updatePayload = {
@@ -5467,7 +5475,10 @@
       document.getElementById('transferUsernameInput').value = user.username;
       
       const roleSelect = document.getElementById('transferRoleSelect');
-      if (roleSelect) roleSelect.value = user.role;
+      if (roleSelect) {
+        let rNorm = removeAccents(user.role || "").toLowerCase();
+        roleSelect.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
+      }
       
       const st = removeAccents(user.status || "").toLowerCase();
       let statusVal = "Hoạt động";
@@ -5626,7 +5637,7 @@
     }
 
     /**
-     * THỰC THI LƯU SUPABASE:
+     * THỰC THI LƯU DỮ LIỆU:
      * 1. PHÂN NHÁNH THÔNG BÁO CHUẨN XÁC KHI KHÓA / TẠM KHÓA / ĐIỀU CHUYỂN
      * 2. XÓA SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC HOẶC KHI KHÓA TÀI KHOẢN BỘ PHẬN THƯỜNG
      * 3. SAO CHÉP DANH MỤC CÔNG VIỆC TỪ ĐỒNG NGHIỆP NẾU CÓ CHỌN
@@ -5652,7 +5663,7 @@
       }
 
       showProgressHud(hudTitle, hudDesc, hudIcon);
-      autoSimulateProgress(10, 80, isLock ? "Vô hiệu hóa tài khoản trên Supabase..." : "Cập nhật dữ liệu trên Supabase...", 25);
+      autoSimulateProgress(10, 80, isLock ? "Vô hiệu hóa tài khoản trên hệ thống..." : "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
         const { data: prevUserData } = await supabase
@@ -5874,7 +5885,7 @@
       }
 
       showProgressHud("TẠO NHÂN SỰ MỚI", `Đang khởi tạo tài khoản cho ${fullName}...`, "fa-solid fa-user-plus animate-pulse");
-      autoSimulateProgress(10, 85, "Ghi nhận vào Supabase...", 25);
+      autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
 
       try {
         const { data: dData } = await supabase.from('departments').select('id').eq('name', dept).limit(1);
@@ -5953,7 +5964,7 @@
       }
 
       showProgressHud("ĐỔI MẬT KHẨU", "Đang cập nhật mật khẩu mới...", "fa-solid fa-key animate-pulse");
-      autoSimulateProgress(10, 85, "Lưu vào Supabase...", 25);
+      autoSimulateProgress(10, 85, "Lưu vào cơ sở dữ liệu...", 25);
 
       try {
         const { error } = await supabase
