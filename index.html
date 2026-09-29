@@ -672,7 +672,7 @@
 
       <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
+          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
             <i class="fa-solid fa-clone text-[11px]"></i>
             <span>Chép ngày trước</span>
           </button>
@@ -2994,7 +2994,7 @@
         }
       } else {
         // TÙY BIẾN ICON VÀ ĐỊNH DANH CHUYÊN NGHIỆP CHO CÔNG VIỆC CỦA QUẢN LÝ
-        if (!isLead && dept === currentUser.department) {
+        if (!isLead && isDeptEquivalent(dept, currentUser.department)) {
           const meOpt = document.createElement('option');
           meOpt.value = currentUser.fullName;
           meOpt.innerText = `🎯 Nhiệm vụ phụ trách trực tiếp • ${currentUser.fullName}`;
@@ -3022,6 +3022,10 @@
       }
     }
 
+    /**
+     * BỘ LỌC ĐỔI BỘ PHẬN:
+     * Khắc phục triệt để lỗi Quản lý bị dính công việc cá nhân khi chọn bộ phận khác
+     */
     function onAdminDeptChange() {
       const selected = document.getElementById('adminDeptSelect').value;
       if (!selected) return;
@@ -3031,7 +3035,8 @@
       if (isLead || currentSelectedDept === "TẤT CẢ") {
         currentSelectedStaff = "TẤT CẢ";
       } else {
-        currentSelectedStaff = (currentSelectedDept === currentUser.department) ? currentUser.fullName : "TẤT CẢ";
+        // CHỈ MẶC ĐỊNH CHỌN QUẢN LÝ NẾU ĐANG CHỌN CHÍNH BỘ PHẬN CỦA QUẢN LÝ
+        currentSelectedStaff = isDeptEquivalent(currentSelectedDept, currentUser.department) ? currentUser.fullName : "TẤT CẢ";
       }
 
       populateStaffDropdown(currentSelectedDept);
@@ -3069,6 +3074,10 @@
       }
     }
 
+    /**
+     * ÁP DỤNG BỘ LỌC MA TRẬN:
+     * ĐÃ SỬA DỨT ĐIỂM: Loại bỏ điều kiện gộp dư thừa khiến tài khoản Quản lý luôn bị hiển thị
+     */
     function applyClientFilterAndRender() {
       if (!fullPeriodMatrixCache) {
         if (currentMatrixData) {
@@ -3090,11 +3099,10 @@
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
-      // 1. Lọc theo bộ phận
+      // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)
       if (currentSelectedDept !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => 
-          isDeptEquivalent(grp.department, currentSelectedDept) ||
-          (currentUser && currentUser.department_id && grp.departmentId === currentUser.department_id)
+          isDeptEquivalent(grp.department, currentSelectedDept)
         );
       }
 
