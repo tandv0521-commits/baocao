@@ -27,23 +27,65 @@
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
-    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH 4 CỘT ================= */
+    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT ================= */
     .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
     .col-fixed-task { white-space: normal !important; word-break: break-word !important; line-height: 1.45 !important; }
     .col-fixed-name { white-space: normal !important; word-break: break-word !important; line-height: 1.35 !important; overflow: hidden !important; }
 
-    /* Kích thước cột trên di động (< 768px) */
-    .col-fixed-tt { position: sticky !important; left: 0; width: 38px; min-width: 38px; max-width: 38px; }
-    .col-fixed-name { position: sticky !important; left: 38px; width: 175px; min-width: 175px; max-width: 175px; }
-    .col-fixed-task { position: sticky !important; left: 213px; width: 210px; min-width: 210px; max-width: 210px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); }
-    .col-fixed-total { position: sticky !important; right: 0; width: 105px; min-width: 105px; max-width: 105px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); }
+    /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Khắc phục lỗi che khuất ngày */
+    @media (max-width: 767px) {
+      .col-fixed-tt { 
+        position: sticky !important; 
+        left: 0 !important; 
+        width: 30px !important; 
+        min-width: 30px !important; 
+        max-width: 30px !important; 
+        z-index: 25 !important; 
+      }
+      /* Trên di động: Cột Họ tên cuộn tự nhiên, không ghim để nhường không gian cho cột ngày */
+      .col-fixed-name { 
+        position: static !important; 
+        width: 125px !important; 
+        min-width: 125px !important; 
+        max-width: 125px !important; 
+        box-shadow: none !important; 
+      }
+      /* Cột công việc ghim sát cạnh cột TT, chiều rộng tối ưu 130px để chừa 200px+ cho các cột ngày */
+      .col-fixed-task { 
+        position: sticky !important; 
+        left: 30px !important; 
+        width: 130px !important; 
+        min-width: 130px !important; 
+        max-width: 130px !important; 
+        box-shadow: 3px 0 8px -2px rgba(15, 23, 42, 0.12) !important; 
+        z-index: 25 !important; 
+      }
+      /* Cột Tổng cộng cuộn ở cuối bảng, không dính đè lên các ngày */
+      .col-fixed-total { 
+        position: static !important; 
+        width: 75px !important; 
+        min-width: 75px !important; 
+        max-width: 75px !important; 
+        box-shadow: none !important; 
+      }
 
-    /* Kích thước cột trên máy tính (>= 768px) */
+      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 45 !important; }
+      thead .col-fixed-name { position: static !important; z-index: 30 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 30px !important; top: 0 !important; z-index: 45 !important; }
+      thead .col-fixed-total { position: static !important; z-index: 30 !important; }
+    }
+
+    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn */
     @media (min-width: 768px) {
-      .col-fixed-tt { width: 44px; min-width: 44px; max-width: 44px; }
-      .col-fixed-name { left: 44px; width: 255px; min-width: 255px; max-width: 255px; }
-      .col-fixed-task { left: 299px; width: 310px; min-width: 310px; max-width: 310px; }
-      .col-fixed-total { width: 125px; min-width: 125px; max-width: 125px; }
+      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 20; }
+      .col-fixed-name { position: sticky !important; left: 44px; width: 255px; min-width: 255px; max-width: 255px; z-index: 20; }
+      .col-fixed-task { position: sticky !important; left: 299px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 20; }
+      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 20; }
+
+      thead .col-fixed-tt { position: sticky !important; left: 0; z-index: 40 !important; }
+      thead .col-fixed-name { position: sticky !important; left: 44px; z-index: 40 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 299px; z-index: 40 !important; }
+      thead .col-fixed-total { position: sticky !important; right: 0; z-index: 40 !important; }
     }
 
     /* Tiêu đề bảng công thái học chống lóa */
@@ -51,30 +93,26 @@
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
       border-bottom: 2px solid #cbd5e1 !important; 
-      z-index: 40 !important; 
     }
     thead .col-fixed-name { 
       background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important; 
       color: #065f46 !important; 
       border-bottom: 2px solid #86efac !important; 
-      z-index: 40 !important; 
     }
     thead .col-fixed-task { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
       color: #334155 !important; 
       border-bottom: 2px solid #cbd5e1 !important; 
-      z-index: 40 !important; 
     }
     thead .col-fixed-total { 
       background: linear-gradient(180deg, #f8fafc 0%, #ecfdf5 100%) !important; 
       color: #047857 !important; 
       border-bottom: 2px solid #6ee7b7 !important; 
-      z-index: 40 !important; 
     }
 
-    tbody td.col-fixed-tt, tbody td.col-fixed-name, tbody td.col-fixed-task { background-color: #ffffff !important; z-index: 20 !important; }
+    tbody td.col-fixed-tt, tbody td.col-fixed-name, tbody td.col-fixed-task { background-color: #ffffff !important; }
     tbody tr:hover td.col-fixed-tt, tbody tr:hover td.col-fixed-task { background-color: #f8fafc !important; }
-    tbody td.col-fixed-total { background-color: #f8fafc !important; z-index: 20 !important; }
+    tbody td.col-fixed-total { background-color: #f8fafc !important; }
 
     /* Màu nhận diện cột ngày Chủ nhật (CN) */
     .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
@@ -140,7 +178,7 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (CÓ GHI NHỚ MẬT KHẨU) ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-8">
       <div class="text-center mb-6">
@@ -199,12 +237,20 @@
         </div>
       </div>
 
+      <!-- Ô TÍCH CHỌN GHI NHỚ MẬT KHẨU -->
+      <div class="flex items-center justify-between mt-3 px-1">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" id="rememberPasswordChk" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" checked />
+          <span class="text-xs font-semibold text-slate-600">Ghi nhớ mật khẩu đăng nhập</span>
+        </label>
+      </div>
+
       <div id="loginErrorBox" class="hidden mt-3 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
         <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
         <span id="loginErrorMsg"></span>
       </div>
 
-      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
+      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
         <span>Đăng Nhập Vào Hệ Thống</span>
         <i class="fa-solid fa-arrow-right text-xs"></i>
       </button>
@@ -598,7 +644,7 @@
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
         <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
           <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
-          <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Trưởng nhóm / Kho chính</b> đại diện làm báo cáo chung.</span>
+          <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>
         </div>
 
         <div id="noReportDayCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-3.5 transition">
@@ -1459,8 +1505,44 @@
       if (entryDateEl) {
         entryDateEl.value = today;
       }
-      loadInitialData();
+      loadInitialData(() => {
+        checkAndFillRememberedPassword();
+      });
     };
+
+    // ================= XỬ LÝ GHI NHỚ MẬT KHẨU =================
+    function checkAndFillRememberedPassword() {
+      try {
+        const rememberedRaw = localStorage.getItem('ops_portal_remembered_auth_v49');
+        if (rememberedRaw) {
+          const authData = JSON.parse(rememberedRaw);
+          const chk = document.getElementById('rememberPasswordChk');
+          if (chk) chk.checked = true;
+
+          if (authData.type === 'dept') {
+            switchLoginTab('dept');
+            const deptSel = document.getElementById('loginDeptSelect');
+            if (deptSel) {
+              deptSel.value = authData.dept || '';
+              onDepartmentChange();
+              setTimeout(() => {
+                const staffSel = document.getElementById('loginStaffSelect');
+                if (staffSel) staffSel.value = authData.username || '';
+              }, 200);
+            }
+          } else {
+            switchLoginTab('user');
+            const uInput = document.getElementById('loginUsernameInput');
+            if (uInput) uInput.value = authData.username || '';
+          }
+
+          const pInput = document.getElementById('loginPasswordInput');
+          if (pInput) pInput.value = authData.password || '';
+        }
+      } catch (e) {
+        console.warn("Lỗi đọc mật khẩu ghi nhớ:", e);
+      }
+    }
 
     function escapeHtml(text) {
       if (!text) return '';
@@ -1696,13 +1778,13 @@
       if (members.length <= 1) {
         const single = members[0] || { name: nameStr };
         return `
-          <div class="flex items-center gap-2.5 p-2 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border border-emerald-300 rounded-2xl shadow-xs transition hover:border-emerald-500">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-sm flex items-center justify-center staff-avatar-glow flex-shrink-0 shadow-sm">
+          <div class="flex items-center gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border border-emerald-300 rounded-2xl shadow-xs transition hover:border-emerald-500">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xs sm:text-sm flex items-center justify-center staff-avatar-glow flex-shrink-0 shadow-sm">
               ${escapeHtml(single.name.charAt(0))}
             </div>
             <div class="text-left overflow-hidden flex-1 min-w-0">
               <span class="text-xs font-black text-slate-900 leading-tight block truncate">${escapeHtml(single.name)}</span>
-              <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-tight block mt-0.5 truncate">${escapeHtml(deptName || '')}</span>
+              <span class="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-tight block mt-0.5 truncate">${escapeHtml(deptName || '')}</span>
             </div>
           </div>
         `;
@@ -1759,12 +1841,12 @@
     function formatNumberWithCommas(val) {
       if (val === undefined || val === null || val === '') return '';
       let s = String(val).trim();
-      if (s === '0' || s === 0) return ''; // TỰ ĐỘNG ẨN SỐ 0
+      if (s === '0' || s === 0) return '';
       if (['X', 'P', 'Đ', 'C', '-', '·'].includes(s.toUpperCase())) return s;
       let clean = s.replace(/,/g, '');
       let num = parseFloat(clean);
       if (isNaN(num)) return s;
-      if (num === 0) return ''; // TỰ ĐỘNG ẨN SỐ 0
+      if (num === 0) return '';
       return num.toLocaleString('en-US');
     }
 
@@ -1774,7 +1856,7 @@
       if (/^\d+$/.test(clean)) {
         let num = parseInt(clean, 10);
         if (num === 0) {
-          input.value = ''; // Nếu người dùng nhập 0 thì để trống
+          input.value = '';
         } else {
           input.value = num.toLocaleString('en-US');
         }
@@ -1921,7 +2003,7 @@
             month: pm,
             year: py,
             label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}`,
-            isLocked: true // Các kỳ quá khứ luôn khóa tự động
+            isLocked: true
           });
         }
 
@@ -2390,7 +2472,7 @@
 
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
-          showToast(`Đã đổi tên bộ phận sang "${newDept}"!`);
+          showToast(`Đã đổi tên bộ phận sang "${newName}"!`);
           closeDeptEditModal();
           loadDepartmentsDetailed();
           loadInitialData(() => {
@@ -2511,7 +2593,7 @@
     }
 
     /**
-     * ĐĂNG NHẬP: BỎ HOÀN TOÀN CỬA SAU 123456, BẮT BUỘC KHỚP 100% MẬT KHẨU THẬT
+     * ĐĂNG NHẬP: BỎ HOÀN TOÀN CỬA SAU 123456, GHI NHỚ MẬT KHẨU KHI ĐƯỢC TÍCH CHỌN
      */
     async function handleLogin() {
       const isDeptTab = !document.getElementById('deptLoginForm').classList.contains('hidden');
@@ -2570,6 +2652,20 @@
           errMsg.innerText = "Mật khẩu không chính xác!";
           errBox.classList.remove('hidden');
           return;
+        }
+
+        // LƯU HOẶC XÓA MẬT KHẨU GHI NHỚ
+        const rememberChk = document.getElementById('rememberPasswordChk');
+        if (rememberChk && rememberChk.checked) {
+          const authData = {
+            type: isDeptTab ? 'dept' : 'user',
+            dept: isDeptTab ? document.getElementById('loginDeptSelect').value : '',
+            username: username,
+            password: password
+          };
+          localStorage.setItem('ops_portal_remembered_auth_v49', JSON.stringify(authData));
+        } else {
+          localStorage.removeItem('ops_portal_remembered_auth_v49');
         }
 
         autoSimulateProgress(85, 100, "Xác thực thành công! Đang vào hệ thống...", 15, () => {
@@ -3167,7 +3263,7 @@
       theadRow.innerHTML = `
         <th class="col-fixed-tt py-3.5 px-2 text-center border-r">TT</th>
         <th class="col-fixed-name py-3.5 px-2.5 text-center border-r">Họ và tên</th>
-        <th class="col-fixed-task py-3.5 px-3 text-left border-r">Nội dung công việc</th>
+        <th class="col-fixed-task py-3.5 px-2.5 sm:px-3 text-left border-r">Nội dung công việc</th>
       `;
 
       data.dayCols.forEach((dc, cIdx) => {
@@ -3186,7 +3282,7 @@
           headerStyle = "col-sunday-header bg-rose-50 text-rose-700 font-black border-b-2 border-rose-300";
         }
 
-        th.className = `py-2 px-1.5 min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
+        th.className = `py-2 px-1.5 min-w-[54px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
             <span class="text-xs font-black font-num">${dc.label}</span>
@@ -3200,7 +3296,7 @@
       });
 
       const thTotal = document.createElement('th');
-      thTotal.className = "col-fixed-total py-3.5 px-3 text-center border-l font-bold";
+      thTotal.className = "col-fixed-total py-3.5 px-2.5 sm:px-3 text-center border-l font-bold";
       thTotal.innerText = "Tổng cộng";
       theadRow.appendChild(thTotal);
 
@@ -3230,12 +3326,12 @@
           let nameCellHtml = '';
           if (tIdx === 0) {
             ttCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-tt py-3 px-2 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-200 align-middle bg-white font-num">
+              <td rowspan="${totalStaffRows}" class="col-fixed-tt py-2 sm:py-3 px-1.5 sm:px-2 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-200 align-middle bg-white font-num">
                 ${autoSTT}
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name py-3 px-2 text-left font-bold text-slate-900 border-r border-b border-slate-200 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name py-2 sm:py-3 px-2 sm:px-2.5 text-left font-bold text-slate-900 border-r border-b border-slate-200 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
                   ${formatStaffNameHtml(grp.staffName, grp.department)}
                 </div>
@@ -3355,14 +3451,14 @@
           tr.innerHTML = `
             ${ttCellHtml}
             ${nameCellHtml}
-            <td class="col-fixed-task py-2.5 px-3 font-semibold text-slate-900 border-r border-b border-slate-200">
+            <td class="col-fixed-task py-2.5 px-2 sm:px-3 font-semibold text-slate-900 border-r border-b border-slate-200">
               <div class="w-full whitespace-normal break-words text-xs leading-relaxed" title="${escapeHtml(t.taskName)}">
                 <span class="font-bold text-slate-800">${escapeHtml(t.taskName)}</span>
                 ${guideHtml}
               </div>
             </td>
             ${dayCellsHtml}
-            <td class="col-fixed-total py-3 px-2 text-center font-num font-bold ${totalDisplay === '-' ? 'text-slate-400' : 'text-emerald-700'} border-l border-b border-slate-200">
+            <td class="col-fixed-total py-3 px-1.5 sm:px-2 text-center font-num font-bold ${totalDisplay === '-' ? 'text-slate-400' : 'text-emerald-700'} border-l border-b border-slate-200">
               ${isSmartBadge 
                 ? `<span class="inline-block px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black tracking-tight shadow-2xs">${escapeHtml(totalDisplay)}</span>`
                 : totalDisplay}
@@ -3418,7 +3514,6 @@
       const oldVal = (inputElem.dataset.oldValue || "").trim();
       let newVal = inputElem.value.trim().replace(/,/g, '');
 
-      // Nếu nhập 0 thì coi như xóa số liệu
       if (newVal === '0') newVal = '';
 
       if (oldVal === newVal) return;
@@ -3501,7 +3596,7 @@
       if (todayColThElement) {
         const container = document.getElementById('tableScrollContainer');
         const stickyTaskHeader = document.querySelector('.col-fixed-task');
-        let stickyOffset = 376;
+        let stickyOffset = 160;
         if (stickyTaskHeader) {
           stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
         }
@@ -5254,7 +5349,7 @@
         return;
       }
 
-      // KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP (USERNAME)
+      // 1. KIỂM TRA TRÙNG LẶP TÊN ĐĂNG NHẬP (USERNAME)
       if (newUsername !== origUsername.toLowerCase()) {
         const { data: dupUser, error: dupErr } = await supabase
           .from('users')
