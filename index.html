@@ -202,6 +202,53 @@
     .staff-avatar-glow {
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
     }
+
+    /* ================= PHONG CÁCH BIỂU ĐỒ CỘT NƯỚC (FLUID COLUMN GAUGE) ================= */
+    .water-tube {
+      position: relative;
+      width: 38px;
+      height: 150px;
+      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid #cbd5e1;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+    .water-tube:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px -4px rgba(5, 150, 105, 0.25), inset 0 2px 4px rgba(0,0,0,0.05);
+      border-color: #10b981;
+    }
+    .water-fluid {
+      width: 100%;
+      background: linear-gradient(180deg, #34d399 0%, #059669 65%, #047857 100%);
+      border-radius: 0 0 16px 16px;
+      transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+    .water-fluid::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 50%;
+    }
+    .water-tube.today-tube {
+      border-color: #059669;
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2), inset 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .water-tube.sunday-tube {
+      background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+      border-color: #fda4af;
+    }
   </style>
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
@@ -289,7 +336,7 @@
       <div class="mt-4">
         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mật khẩu</label>
         <div class="relative">
-          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
+          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs" />
           <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
             <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
           </button>
@@ -335,16 +382,17 @@
         </div>
       </div>
 
-      <!-- Khối nút chức năng: Thẻ gợi ý ngắn gọn, bắt mắt (ĐÃ BỎ 1 GHI CHÚ TRÙNG LẶP Ở NÚT ĐIỀN BÁO CÁO) -->
+      <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & ĐỔI TÊN CHUYÊN NGHIỆP "QUẢN TRỊ NHÂN SỰ" -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
         <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" data-tooltip="Quản lý bộ phận" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
           <span class="hidden md:inline">QL Bộ phận</span>
         </button>
 
-        <button id="btnAdminUserManager" onclick="openUserManagerModal()" data-tooltip="Quản lý nhân sự" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-users-gear text-slate-600 text-xs"></i>
-          <span class="hidden md:inline">QL Nhân sự</span>
+        <!-- Nút Quản trị Nhân sự thiết kế Gradient hiện đại -->
+        <button id="btnAdminUserManager" onclick="openUserManagerModal()" data-tooltip="Quản trị nhân sự" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white hover:from-emerald-100 hover:to-teal-100 text-emerald-900 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+          <i class="fa-solid fa-id-card-clip text-emerald-700 text-xs"></i>
+          <span class="hidden md:inline">Quản Trị Nhân Sự</span>
         </button>
 
         <button id="btnAdminAssign" onclick="openAssignModal()" data-tooltip="Phân công công việc" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
@@ -357,7 +405,7 @@
           <span class="hidden sm:inline">Tải Excel</span>
         </button>
 
-        <!-- Nút Điền báo cáo: ĐÃ KHẮC PHỤC CHỈ CÒN DUY NHẤT 1 THẺ GỢI Ý CHUYÊN NGHIỆP -->
+        <!-- Nút Điền báo cáo: DUY NHẤT 1 THẺ GỢI Ý CHUYÊN NGHIỆP -->
         <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
@@ -379,7 +427,7 @@
 
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
     <main class="flex-1 p-2 sm:p-5 w-full mx-auto space-y-3.5 flex flex-col">
-      <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG -->
+      <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (CÓ THÊM Ô TÌM KIẾM NHÂN SỰ) -->
       <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
@@ -401,7 +449,7 @@
             </button>
           </div>
 
-          <!-- Bộ lọc Admin/Quản lý -->
+          <!-- Bộ lọc Admin/Quản lý: CÓ THÊM Ô NHẬP TÌM KIẾM THEO TÊN NHÂN VIÊN -->
           <div id="adminFilterContainer" class="hidden flex flex-wrap items-center gap-1.5">
             <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
               <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ phận:</span>
@@ -411,6 +459,15 @@
             <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
               <span class="text-[10px] font-bold text-slate-400 uppercase">Nhân sự:</span>
               <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"></select>
+            </div>
+
+            <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ -->
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
+              <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-28 sm:w-36 transition" />
+              <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
             </div>
 
             <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
@@ -526,6 +583,32 @@
             </div>
             <p id="kpiTopDeptName" class="text-base sm:text-lg font-black text-slate-800 mt-2 truncate" title="Bộ phận có chỉ số chấp hành đầu việc tốt nhất">---</p>
             <p id="kpiTopDeptMetric" class="text-[11px] font-bold text-amber-800 mt-1 font-num">Độ phủ: 0% · Tuân thủ: 0%</p>
+          </div>
+        </div>
+
+        <!-- ================= BIỂU ĐỒ CỘT NƯỚC NHỊP ĐỘ CÔNG VIỆC THEO NGÀY ================= -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-sm shadow-2xs">
+                <i class="fa-solid fa-chart-simple text-xs"></i>
+              </span>
+              <div>
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Biểu Đồ Cột Nước Phân Tích Nhịp Độ Điền Báo Cáo Theo Ngày</h4>
+                <p class="text-[11px] text-slate-400">Trực quan hóa thể tích phát sinh công việc hàng ngày trong tháng</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="flex items-center gap-1 text-slate-600 font-semibold"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Đạt nhịp</span>
+              <span class="flex items-center gap-1 text-slate-600 font-semibold"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Chủ nhật</span>
+              <span class="flex items-center gap-1 text-slate-600 font-semibold"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Ít phát sinh</span>
+            </div>
+          </div>
+          <!-- Vùng cuộn ngang chứa các cột nước -->
+          <div class="overflow-x-auto custom-scroll pt-2 pb-2">
+            <div id="fluidDailyVolumeChartContainer" class="flex items-end gap-2 sm:gap-2.5 min-w-max h-48 px-1 py-1">
+              <!-- Render tự động các cột nước bằng Javascript -->
+            </div>
           </div>
         </div>
 
@@ -914,7 +997,7 @@
           Bộ phận <b id="deleteDeptBlockedName" class="text-slate-900 font-black">---</b> hiện vẫn còn <b id="deleteDeptActiveCount" class="text-rose-700 font-black font-num">0</b> nhân sự đang <b>HOẠT ĐỘNG</b>.
         </p>
         <p class="text-[11px] text-slate-600 italic leading-relaxed pt-1 border-t border-amber-200/70">
-          👉 Vui lòng vào mục <b>"QL Nhân sự"</b> để điều chuyển hoặc tạm khóa toàn bộ nhân viên thuộc bộ phận này trước khi thực hiện xóa.
+          👉 Vui lòng vào mục <b>"Quản Trị Nhân Sự"</b> để điều chuyển hoặc tạm khóa toàn bộ nhân viên thuộc bộ phận này trước khi thực hiện xóa.
         </p>
       </div>
 
@@ -1041,11 +1124,11 @@
       <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-base shadow-2xs">
-            <i class="fa-solid fa-users-gear"></i>
+            <i class="fa-solid fa-id-card-clip"></i>
           </div>
           <div>
-            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý & Điều Chuyển Nhân Sự</h3>
-            <p class="text-xs text-slate-400">Danh sách nhân sự và trạng thái hoạt động thực tế</p>
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Trị Hồ Sơ & Điều Chuyển Nhân Sự</h3>
+            <p class="text-xs text-slate-400">Danh sách nhân sự, phân quyền vai trò và trạng thái hoạt động thực tế</p>
           </div>
         </div>
         <button onclick="closeUserManagerModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
@@ -1772,7 +1855,7 @@
       if (s.includes("phu tung lon") || s.includes("pt lon")) return "kho phu tung lon";
       if (s.includes("phu tung nho") || s.includes("pt nho")) return "kho phu tung nho";
       if (s.includes("phu tung ppr") || s.includes("pt ppr") || s.includes("ppr")) return "kho phu tung ppr";
-      if (s.includes("boc xep")) return "kho boc xep";
+      if (s.includes("boc xep")) return "kho昆boc xep";
       return s;
     }
 
@@ -2377,7 +2460,7 @@
         if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
-          btnDayEntry.removeAttribute('title'); // GỠ BỎ HOÀN TOÀN TITLE TRÁNH 2 TOOLTIP
+          btnDayEntry.removeAttribute('title'); // GỠ BỎ HOÀN TOÀN TITLE TRÁNH 2 TOOLTIP[cite: 8]
           if (isLocked) {
             btnDayEntry.classList.add('opacity-40', 'cursor-not-allowed');
             btnDayEntry.setAttribute('data-tooltip', 'Kỳ báo cáo này đã khóa sổ');
@@ -3046,9 +3129,15 @@
       if (isLead || currentSelectedDept === "TẤT CẢ") {
         currentSelectedStaff = "TẤT CẢ";
       } else {
-        // CHỈ MẶC ĐỊNH CHỌN QUẢN LÝ NẾU ĐANG CHỌN CHÍNH BỘ PHẬN CỦA QUẢN LÝ
+        // CHỈ MẶC ĐỊNH CHỌN QUẢN LÝ NẾU ĐANG CHỌN CHÍNH BỘ PHẬN CỦA QUẢN LÝ[cite: 7]
         currentSelectedStaff = isDeptEquivalent(currentSelectedDept, currentUser.department) ? currentUser.fullName : "TẤT CẢ";
       }
+
+      // Xóa từ khóa tìm kiếm khi đổi bộ phận
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
 
       populateStaffDropdown(currentSelectedDept);
 
@@ -3064,6 +3153,12 @@
       if (!selected) return;
       currentSelectedStaff = selected;
 
+      // Xóa ô tìm kiếm nếu chọn từ danh sách dropdown
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
       if (fullPeriodMatrixCache) {
         applyClientFilterAndRender();
       } else {
@@ -3071,11 +3166,49 @@
       }
     }
 
+    /**
+     * BỘ TÌM KIẾM NHÂN SỰ TỨC THÌ DÀNH CHO ADMIN VÀ QUẢN LÝ
+     */
+    function onAdminStaffSearchInput(query) {
+      const q = removeAccents(query || "").trim().toLowerCase();
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) {
+        if (q) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      if (!q) {
+        const sel = document.getElementById('adminStaffSelect');
+        currentSelectedStaff = sel ? sel.value : "TẤT CẢ";
+        applyClientFilterAndRender();
+        return;
+      }
+
+      currentSelectedStaff = "SEARCH_" + q;
+      applyClientFilterAndRender();
+    }
+
+    function clearAdminStaffSearch() {
+      const inp = document.getElementById('adminStaffSearchInput');
+      if (inp) inp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      const sel = document.getElementById('adminStaffSelect');
+      currentSelectedStaff = sel ? sel.value : "TẤT CẢ";
+      applyClientFilterAndRender();
+    }
+
     function selectViewAllCompanyStaff() {
       currentSelectedDept = "TẤT CẢ";
       currentSelectedStaff = "TẤT CẢ";
       const deptSelect = document.getElementById('adminDeptSelect');
       if (deptSelect) deptSelect.value = "TẤT CẢ";
+      
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
       populateStaffDropdown("TẤT CẢ");
 
       if (fullPeriodMatrixCache) {
@@ -3099,7 +3232,10 @@
       }
 
       let titleName = "";
-      if (currentSelectedDept === "TẤT CẢ" && currentSelectedStaff === "TẤT CẢ") {
+      if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
+        const rawSearch = document.getElementById('adminStaffSearchInput')?.value || '';
+        titleName = `Tìm kiếm: "${rawSearch}"`;
+      } else if (currentSelectedDept === "TẤT CẢ" && currentSelectedStaff === "TẤT CẢ") {
         titleName = "Tất cả nhân viên trong ban DVKH";
       } else if (currentSelectedStaff === "TẤT CẢ") {
         titleName = `Tất cả nhân sự • ${currentSelectedDept}`;
@@ -3110,15 +3246,21 @@
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
-      // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)
+      // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)[cite: 7]
       if (currentSelectedDept !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => 
           isDeptEquivalent(grp.department, currentSelectedDept)
         );
       }
 
-      // 2. Lọc theo nhân sự
-      if (currentSelectedStaff !== "TẤT CẢ") {
+      // 2. Lọc theo nhân sự hoặc tìm kiếm
+      if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
+        const searchWord = currentSelectedStaff.replace("SEARCH_", "");
+        filteredGroups = filteredGroups.filter(grp => {
+          const cleanGroupStaff = removeAccents(grp.staffName || "").toLowerCase();
+          return cleanGroupStaff.includes(searchWord);
+        });
+      } else if (currentSelectedStaff !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => {
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
           if (isShared) {
@@ -3353,7 +3495,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (ĐÃ SỬA LỖI GOM 69 NGƯỜI)[cite: 1]
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY[cite: 1]
           const deptMembers = (dbUsers || []).filter(u => {
             if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -3831,7 +3973,10 @@
       section.classList.remove('hidden');
 
       let staffTitle = "";
-      if (currentSelectedDept === "TẤT CẢ" && currentSelectedStaff === "TẤT CẢ") {
+      if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
+        const rawSearch = document.getElementById('adminStaffSearchInput')?.value || '';
+        titleName = `Tìm kiếm: "${rawSearch}"`;
+      } else if (currentSelectedDept === "TẤT CẢ" && currentSelectedStaff === "TẤT CẢ") {
         staffTitle = "Toàn ban DVKH";
       } else if (currentSelectedStaff === "TẤT CẢ") {
         staffTitle = `Bộ phận: ${currentSelectedDept}`;
@@ -3969,7 +4114,75 @@
         ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
         : `Chưa có phát sinh`;
 
+      // Render biểu đồ cột nước nhịp độ công việc theo ngày
+      renderFluidWaterChart(data, dailyActiveTasksMap, totalTasksCount);
+
+      // Render nhận định chuyên môn
       renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length);
+    }
+
+    /**
+     * RENDER BIỂU ĐỒ CỘT NƯỚC NHỊP ĐỘ ĐẦU VIỆC THEO NGÀY TRỰC QUAN & CHUYÊN NGHIỆP
+     */
+    function renderFluidWaterChart(data, dailyActiveTasksMap, totalTasksCount) {
+      const chartContainer = document.getElementById('fluidDailyVolumeChartContainer');
+      if (!chartContainer) return;
+      chartContainer.innerHTML = '';
+
+      if (!data || !data.dayCols || data.dayCols.length === 0) {
+        chartContainer.innerHTML = '<p class="text-xs text-slate-400 italic py-6 text-center w-full">Chưa có dữ liệu ngày</p>';
+        return;
+      }
+
+      // Tìm ngày có số lượng đầu việc phát sinh lớn nhất để làm mốc tỷ lệ 100% cột nước
+      let maxTasksInDay = 0;
+      data.dayCols.forEach(dc => {
+        const count = dailyActiveTasksMap[dc.label] || 0;
+        if (count > maxTasksInDay) maxTasksInDay = count;
+      });
+      if (maxTasksInDay === 0) maxTasksInDay = Math.max(1, totalTasksCount);
+
+      data.dayCols.forEach(dc => {
+        const count = dailyActiveTasksMap[dc.label] || 0;
+        const dateObj = new Date(currentSelectedYear, currentSelectedMonth - 1, dc.dayNum);
+        const dayOfWeekIndex = dateObj.getDay();
+        const isSunday = (dayOfWeekIndex === 0);
+        const dayOfWeekStr = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][dayOfWeekIndex];
+        const isToday = dc.isToday;
+
+        // Tính toán chiều cao cột nước (tối thiểu 12% nếu có phát sinh để hiển thị bong bóng nước)
+        let fillPct = 0;
+        if (count > 0) {
+          fillPct = Math.min(100, Math.max(12, Math.round((count / maxTasksInDay) * 100)));
+        }
+
+        let fluidGradient = "linear-gradient(180deg, #34d399 0%, #059669 65%, #047857 100%)";
+        if (isSunday) {
+          fluidGradient = "linear-gradient(180deg, #fb7185 0%, #e11d48 100%)";
+        } else if (fillPct === 0) {
+          fluidGradient = "transparent";
+        } else if (fillPct < 35) {
+          fluidGradient = "linear-gradient(180deg, #93c5fd 0%, #3b82f6 100%)";
+        }
+
+        const colWrap = document.createElement('div');
+        colWrap.className = "flex flex-col items-center gap-1.5 flex-shrink-0 group cursor-pointer";
+        colWrap.setAttribute('data-tooltip', `Ngày ${dc.label} (${dayOfWeekStr}): ${count} đầu việc ghi nhận`);
+
+        colWrap.innerHTML = `
+          <div class="water-tube ${isToday ? 'today-tube' : ''} ${isSunday ? 'sunday-tube' : ''}">
+            <span class="text-[9px] font-black font-num z-10 mb-1 transition-all ${
+              count > 0 ? (fillPct > 45 ? 'text-white' : 'text-slate-700') : 'text-slate-300'
+            }">${count > 0 ? count : '·'}</span>
+            <div class="water-fluid" style="height: ${fillPct}%; background: ${fluidGradient};"></div>
+          </div>
+          <div class="text-center leading-tight">
+            <span class="text-[11px] font-black font-num block ${isToday ? 'text-emerald-700 font-extrabold' : (isSunday ? 'text-rose-600' : 'text-slate-700')}">${dc.dayNum}</span>
+            <span class="text-[9px] font-bold block ${isSunday ? 'text-rose-500 font-black' : (isToday ? 'text-emerald-600' : 'text-slate-400')}">${dayOfWeekStr}</span>
+          </div>
+        `;
+        chartContainer.appendChild(colWrap);
+      });
     }
 
     function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod) {
@@ -5305,12 +5518,10 @@
     function closeUserManagerModal() {
       document.getElementById('userManagerModal').classList.add('hidden');
     }
-
     /**
      * NẠP DỮ LIỆU NHÂN SỰ & SẮP XẾP ƯU TIÊN CHUẨN XÁC:
-     * 1. Giám đốc ban đưa lên đầu tiên
-     * 2. Đến Quản lý
-     * 3. Tất cả nhân viên còn lại sắp xếp theo Tên bộ phận -> Họ và tên
+     * 1. ƯU TIÊN TRẠNG THÁI: Nhân sự "Hoạt động" lên đầu, "Tạm khóa" và "Khóa" đẩy xuống cuối cùng
+     * 2. XẾP BẬC VAI TRÒ: Giám đốc ban -> Quản lý -> Bộ phận (A-Z) -> Họ và tên (A-Z)
      */
     async function loadAllUsersManagementData() {
       const tbody = document.getElementById('userManagementTableBody');
@@ -5337,6 +5548,14 @@
 
           return true;
         });
+
+        // ĐÁNH GIÁ ƯU TIÊN TRẠNG THÁI: HOẠT ĐỘNG (1) -> TẠM KHÓA (2) -> KHÓA (3)
+        function getStatusPriority(u) {
+          const s = removeAccents(u.status || "").toLowerCase();
+          if (s.includes("tam")) return 2; // Tạm khóa đẩy xuống dưới
+          if (s.includes("khoa")) return 3; // Khóa đẩy xuống cuối cùng
+          return 1; // Hoạt động ưu tiên lên đầu
+        }
 
         // XẾP BẬC VAI TRÒ CHUẨN XÁC: GIÁM ĐỐC (1) -> QUẢN LÝ (2) -> CÒN LẠI (3)
         function getUserRolePriority(u) {
@@ -5366,13 +5585,19 @@
           password_hash: u.password_hash
         }));
 
-        // SẮP XẾP: GIÁM ĐỐC LÊN ĐẦU -> QUẢN LÝ -> CÒN LẠI SẮP THEO TÊN BỘ PHẬN -> HỌ VÀ TÊN
+        // SẮP XẾP TOÀN DIỆN:
+        // Bước 1: Nhân sự Hoạt động lên trước, Tạm khóa & Khóa xuống cuối danh sách
+        // Bước 2: Trong cùng trạng thái: Giám đốc ban -> Quản lý -> Tên bộ phận -> Họ và tên
         mappedUsers.sort((a, b) => {
+          const sA = getStatusPriority(a);
+          const sB = getStatusPriority(b);
+          if (sA !== sB) return sA - sB;
+
           const pA = getUserRolePriority(a);
           const pB = getUserRolePriority(b);
           if (pA !== pB) return pA - pB;
 
-          // Còn lại cùng thứ hạng (hoặc nhân viên) thì sắp xếp theo Tên bộ phận
+          // Còn lại cùng thứ hạng sắp xếp theo Tên bộ phận
           const dComp = (a.dept || "").localeCompare(b.dept || "", 'vi');
           if (dComp !== 0) return dComp;
 
