@@ -230,15 +230,22 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (CÓ GHI NHỚ MẬT KHẨU) ================= -->
-  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-8">
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (THIẾT KẾ DOANH NGHIỆP NHỰA TIỀN PHONG & CÓ GHI NHỚ MẬT KHẨU) ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(6, 78, 59, 0.85) 50%, rgba(15, 23, 42, 0.90) 100%), url('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;">
+    <div class="relative w-full max-w-md bg-white/95 backdrop-blur-2xl border border-white/60 rounded-3xl shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Huy hiệu thương hiệu Nhựa Tiền Phong -->
       <div class="text-center mb-6">
-        <div class="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md shadow-emerald-600/20">
-          <i class="fa-solid fa-clipboard-check text-white text-2xl"></i>
+        <div class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 mb-3 shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+          <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-800">TIEN PHONG PLASTIC • HẢI PHÒNG</span>
+        </div>
+        
+        <div class="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-700/25 border border-white/40">
+          <i class="fa-solid fa-industry text-white text-2xl"></i>
         </div>
         <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">BÁO CÁO CÔNG VIỆC</h1>
-        <p class="text-slate-500 text-xs mt-1 font-medium">Ban Dịch Vụ Khách Hàng - Nhựa Tiền Phong</p>
+        <p class="text-slate-500 text-xs mt-1 font-semibold">Ban Dịch Vụ Khách Hàng - Nhựa Tiền Phong</p>
       </div>
 
       <div class="flex border-b border-slate-200 mb-5">
@@ -254,7 +261,7 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">1. Bộ phận / Nhóm tác nghiệp</label>
           <div class="relative">
-            <select id="loginDeptSelect" onchange="onDepartmentChange()" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition">
+            <select id="loginDeptSelect" onchange="onDepartmentChange()" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
               <option value="">-- Đang nạp danh sách bộ phận... --</option>
             </select>
             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
@@ -264,7 +271,7 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">2. Họ và tên nhân sự</label>
           <div class="relative">
-            <select id="loginStaffSelect" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition">
+            <select id="loginStaffSelect" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
               <option value="">-- Hãy chọn bộ phận trước --</option>
             </select>
             <i class="fa-solid fa-user absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
@@ -275,14 +282,14 @@
       <div id="userLoginForm" class="space-y-4 hidden">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên đăng nhập (Username)</label>
-          <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
         </div>
       </div>
 
       <div class="mt-4">
         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mật khẩu</label>
         <div class="relative">
-          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition" />
+          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
           <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
             <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
           </button>
@@ -302,7 +309,7 @@
         <span id="loginErrorMsg"></span>
       </div>
 
-      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
+      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-5 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-700/25 transition flex items-center justify-center gap-2 cursor-pointer">
         <span>Đăng Nhập Vào Hệ Thống</span>
         <i class="fa-solid fa-arrow-right text-xs"></i>
       </button>
@@ -328,7 +335,7 @@
         </div>
       </div>
 
-      <!-- Khối nút chức năng: Thẻ gợi ý ngắn gọn, bắt mắt -->
+      <!-- Khối nút chức năng: Thẻ gợi ý ngắn gọn, bắt mắt (ĐÃ BỎ 1 GHI CHÚ TRÙNG LẶP Ở NÚT ĐIỀN BÁO CÁO) -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
         <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" data-tooltip="Quản lý bộ phận" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
@@ -350,6 +357,7 @@
           <span class="hidden sm:inline">Tải Excel</span>
         </button>
 
+        <!-- Nút Điền báo cáo: ĐÃ KHẮC PHỤC CHỈ CÒN DUY NHẤT 1 THẺ GỢI Ý CHUYÊN NGHIỆP -->
         <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
@@ -2320,7 +2328,9 @@
       updatePeriodLockUI(currentPeriodLocked);
     }
 
-    // ================= ĐIỀU KHIỂN NÚT KHÓA SỔ DÀNH CHO ADMIN & QUẢN LÝ =================
+    /**
+     * ĐIỀU KHIỂN NÚT KHÓA SỔ & GỠ BỎ HOÀN TOÀN THUỘC TÍNH TITLE ĐỂ TRÁNH 2 TOOLTIP ĐÈ NHAU
+     */
     function updatePeriodLockUI(isLocked) {
       currentPeriodLocked = isLocked;
       const badge = document.getElementById('periodLockBadge');
@@ -2361,18 +2371,19 @@
         }
       }
 
-      // Giám đốc ban tuyệt đối không hiện nút điền báo cáo
+      // Giám đốc ban tuyệt đối không hiện nút điền báo cáo; gỡ hoàn toàn thuộc tính title mặc định
       if (btnDayEntry && currentUser) {
         const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
         if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
+          btnDayEntry.removeAttribute('title'); // GỠ BỎ HOÀN TOÀN TITLE TRÁNH 2 TOOLTIP
           if (isLocked) {
             btnDayEntry.classList.add('opacity-40', 'cursor-not-allowed');
-            btnDayEntry.title = "Kỳ báo cáo này đã khóa sổ";
+            btnDayEntry.setAttribute('data-tooltip', 'Kỳ báo cáo này đã khóa sổ');
           } else {
             btnDayEntry.classList.remove('opacity-40', 'cursor-not-allowed', 'hidden');
-            btnDayEntry.title = "Điền báo cáo";
+            btnDayEntry.setAttribute('data-tooltip', 'Điền báo cáo');
           }
         }
       }
