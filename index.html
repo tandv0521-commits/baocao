@@ -230,7 +230,7 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (THIẾT KẾ DOANH NGHIỆP NHỰA TIỀN PHONG & CÓ GHI NHỚ MẬT KHẨU) ================= -->
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(6, 78, 59, 0.85) 50%, rgba(15, 23, 42, 0.90) 100%), url('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;">
     <div class="relative w-full max-w-md bg-white/95 backdrop-blur-2xl border border-white/60 rounded-3xl shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
       
@@ -321,14 +321,14 @@
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
     <!-- Header: Thẻ gợi ý bắt mắt, ngắn gọn khi rê chuột -->
     <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
-      <!-- Thông tin nhân sự đăng nhập -->
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center font-black text-white text-sm sm:text-base shadow-xs flex-shrink-0">
+      <!-- Thông tin nhân sự đăng nhập: BẤM VÀO ĐỂ XEM BẢNG THÔNG TIN TÀI KHOẢN -->
+      <div onclick="openUserProfileModal()" data-tooltip="Xem hồ sơ tài khoản" class="flex items-center gap-2.5 min-w-0 cursor-pointer group p-1 -m-1 rounded-2xl hover:bg-slate-50 transition">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center font-black text-white text-sm sm:text-base shadow-xs flex-shrink-0 group-hover:scale-105 transition">
           <span id="userAvatarChar">P</span>
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <h2 id="userFullnameLabel" class="font-black text-slate-900 text-xs sm:text-sm md:text-base leading-tight truncate">Họ và tên</h2>
+            <h2 id="userFullnameLabel" class="font-black text-slate-900 text-xs sm:text-sm md:text-base leading-tight truncate group-hover:text-emerald-700 transition">Họ và tên</h2>
             <span id="userRoleBadge" class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300">NHÂN VIÊN</span>
           </div>
           <p id="userDeptLabel" class="text-[10px] sm:text-[11px] text-slate-400 font-semibold truncate">Bộ phận</p>
@@ -474,7 +474,7 @@
         </div>
       </div>
 
-      <!-- ================= 2. TRUNG TÂM PHÂN TÍCH KPI NĂNG SUẤT (ĐÃ BỎ BIỂU ĐỒ CỘT NƯỚC) ================= -->
+      <!-- ================= 2. TRUNG TÂM PHÂN TÍCH KPI NĂNG SUẤT (ĐÃ GỠ BỎ BIỂU ĐỒ CỘT NƯỚC) ================= -->
       <section id="analyticsSection" class="hidden space-y-3.5 pt-1">
         <div class="bg-gradient-to-r from-slate-50 via-teal-50/40 to-emerald-50/70 border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
@@ -1043,6 +1043,8 @@
       </div>
     </div>
   </div>
+
+
   <!-- ================= MODAL QUẢN LÝ NHÂN SỰ ================= -->
   <div id="userManagerModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
@@ -1496,6 +1498,76 @@
     </div>
   </div>
 
+
+  <!-- ================= MODAL THÔNG TIN TÀI KHOẢN CÁ NHÂN ================= -->
+  <div id="userProfileModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-lg shadow-sm">
+            <i class="fa-solid fa-address-card"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Hồ Sơ Cá Nhân</h3>
+            <p class="text-xs text-slate-400">Thông tin chi tiết tài khoản đang đăng nhập</p>
+          </div>
+        </div>
+        <button onclick="closeUserProfileModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 pt-1">
+        <!-- Avatar lớn & tên -->
+        <div class="flex items-center gap-3 p-3.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white rounded-2xl border border-emerald-200">
+          <div id="profileModalAvatar" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xl flex items-center justify-center shadow-md flex-shrink-0">
+            P
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 id="profileModalFullName" class="font-black text-slate-900 text-sm sm:text-base truncate">Họ và tên</h4>
+            <p id="profileModalUsername" class="text-xs text-emerald-700 font-bold font-num truncate">@username</p>
+          </div>
+        </div>
+
+        <!-- Chi tiết thông tin -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500 font-semibold flex items-center gap-2">
+              <i class="fa-solid fa-user-tag text-emerald-600 w-4 text-center"></i>
+              <span>Vị trí chức danh:</span>
+            </span>
+            <span id="profileModalRole" class="font-black text-slate-900">Nhân viên</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-2.5 border-t border-slate-200/80">
+            <span class="text-slate-500 font-semibold flex items-center gap-2">
+              <i class="fa-solid fa-sitemap text-emerald-600 w-4 text-center"></i>
+              <span>Bộ phận / Nhóm:</span>
+            </span>
+            <span id="profileModalDept" class="font-bold text-slate-800 text-right truncate max-w-[200px]">Bộ phận</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-2.5 border-t border-slate-200/80">
+            <span class="text-slate-500 font-semibold flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-600 w-4 text-center"></i>
+              <span>Trạng thái tài khoản:</span>
+            </span>
+            <span id="profileModalStatus" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">Hoạt động</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+        <button type="button" onclick="closeUserProfileModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">Đóng</button>
+        <button type="button" onclick="closeUserProfileModal(); openChangePasswordModal();" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-key text-xs"></i>
+          <span>Đổi mật khẩu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
@@ -1621,6 +1693,32 @@
       });
     };
 
+    // ================= XỬ LÝ XEM THÔNG TIN TÀI KHOẢN CÁ NHÂN =================
+    function openUserProfileModal() {
+      if (!currentUser) return;
+      const av = document.getElementById('profileModalAvatar');
+      const fn = document.getElementById('profileModalFullName');
+      const un = document.getElementById('profileModalUsername');
+      const rl = document.getElementById('profileModalRole');
+      const dp = document.getElementById('profileModalDept');
+      const st = document.getElementById('profileModalStatus');
+
+      if (av) av.innerText = (currentUser.fullName || "P").charAt(0);
+      if (fn) fn.innerText = currentUser.fullName || "---";
+      if (un) un.innerText = "@" + (currentUser.username || "---");
+      if (rl) rl.innerText = currentUser.role || "---";
+      if (dp) dp.innerText = currentUser.department || "---";
+      if (st) st.innerText = currentUser.status || "Hoạt động";
+
+      const modal = document.getElementById('userProfileModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeUserProfileModal() {
+      const modal = document.getElementById('userProfileModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     // ================= XỬ LÝ GHI NHỚ MẬT KHẨU TỰ ĐỘNG =================
     function checkAndFillRememberedPassword() {
       try {
@@ -1711,11 +1809,11 @@
         if (strLabel) { strLabel.innerText = "Trung bình"; strLabel.className = "text-xs font-black text-amber-500"; }
         if (strFeedback) strFeedback.innerText = "Nên thêm chữ hoa, chữ số hoặc ký tự đặc biệt để an toàn hơn.";
       } else if (level === 3) {
-        b1.className = b2.className = b3.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
+        b1.className = b2.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Khá an toàn"; strLabel.className = "text-xs font-black text-teal-600"; }
         if (strFeedback) strFeedback.innerText = "Mật khẩu tốt, đáp ứng chuẩn an ninh hệ thống doanh nghiệp.";
       } else if (level === 4) {
-        b1.className = b2.className = b3.className = b4.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
+        b1.className = b2.className = b3.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Rất mạnh & An toàn"; strLabel.className = "text-xs font-black text-emerald-600"; }
         if (strFeedback) strFeedback.innerText = "Tuyệt vời! Mật khẩu đạt độ bảo mật cấp cao.";
       }
@@ -2118,6 +2216,7 @@
     }
 
     // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU & TẠO KỲ BÁO CÁO CHUẨN =================
+    // ĐIỀU CHỈNH: ĐÚNG 00:00 NGÀY 05 CỦA THÁNG MỚI MỚI KHÓA SỔ KỲ BÁO CÁO CỦA THÁNG TRƯỚC
     async function loadInitialData(callback) {
       try {
         const { data: depts, error: dErr } = await supabase
@@ -2194,16 +2293,24 @@
           isLocked: false
         });
 
-        // 3. Các kỳ quá khứ: Mặc định luôn ở chế độ ĐÃ KHÓA SỔ (isLocked = true)
+        // 3. Các kỳ quá khứ:
+        // ĐIỀU CHỈNH: THÁNG TRƯỚC LIỀN KỀ (i === 1) CHỈ KHÓA KHI curDay >= 5
+        // NẾU TỪ NGÀY 01 - 04 CỦA THÁNG MỚI THÌ THÁNG TRƯỚC VẪN MỞ ĐỂ HOÀN TẤT SỐ LIỆU
         for (let i = 1; i <= 11; i++) {
           let pastD = new Date(curY, curM - 1 - i, 1);
           let pm = pastD.getMonth() + 1;
           let py = pastD.getFullYear();
+          
+          let lockedState = true;
+          if (i === 1) {
+            lockedState = (curDay >= 5); // Sang ngày 5 mới khóa tháng cũ!
+          }
+
           availablePeriods.push({
             month: pm,
             year: py,
-            label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}`,
-            isLocked: true
+            label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}${i === 1 && !lockedState ? ' (Mở đến hết ngày 04)' : ''}`,
+            isLocked: lockedState
           });
         }
 
@@ -2235,7 +2342,6 @@
         showToast("Lỗi nạp dữ liệu: " + err.message, true);
       }
     }
-
     async function preloadMatrixDataInBackground() {
       if (cachedPreloadMatrix) return;
       const now = new Date();
@@ -3888,7 +3994,7 @@
         container.scrollTo({ left: 0, behavior: 'smooth' });
       }
     }
-    // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU =================
+    // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU (ĐÃ BỎ BIỂU ĐỒ CỘT NƯỚC) =================
     function renderAnalyticsSection(data) {
       const section = document.getElementById('analyticsSection');
       if (!data || !data.staffGroups || data.staffGroups.length === 0) {
@@ -3896,13 +4002,6 @@
         return;
       }
       section.classList.remove('hidden');
-
-      // Tự động ẩn khung chứa biểu đồ cột nước nếu có trong giao diện
-      const waterChartContainer = document.getElementById('fluidDailyVolumeChartContainer');
-      if (waterChartContainer) {
-        const chartCard = waterChartContainer.closest('.bg-white');
-        if (chartCard) chartCard.classList.add('hidden');
-      }
 
       let staffTitle = "";
       if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
@@ -4046,7 +4145,6 @@
         ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
         : `Chưa có phát sinh`;
 
-      // Render nhận định nghiệp vụ chuyên sâu
       renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length);
     }
 
@@ -5407,7 +5505,7 @@
           const fName = (u.full_name || '').trim();
           const role = (u.role || '').toLowerCase();
 
-          if (uName.startsWith('group_') || uName.startsWith('nhom_kho_') || uName.startsWith('nhom_')) return false;
+          if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
           if (role.includes('nhom gop')) return false;
           if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
 
