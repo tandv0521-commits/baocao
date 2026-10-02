@@ -1052,6 +1052,52 @@
   </div>
 
 
+  <!-- ================= MODAL XÁC NHẬN XÓA CÔNG VIỆC (THIẾT KẾ HIỆN ĐẠI & CHUYÊN NGHIỆP) ================= -->
+  <div id="taskDeleteConfirmModal" class="fixed inset-0 z-[65] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+      <div class="flex items-center gap-3.5 pb-3 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
+          <i class="fa-solid fa-trash-can animate-bounce"></i>
+        </div>
+        <div>
+          <h3 class="text-slate-800 font-black text-base leading-tight">Xác Nhận Xóa Công Việc</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Quản lý danh mục phân công tác nghiệp</p>
+        </div>
+        <button type="button" onclick="closeTaskDeleteConfirmModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center ml-auto transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="deleteTargetTaskId" value="" />
+
+      <div class="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 text-xs space-y-3">
+        <p class="font-bold text-rose-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+          <span>Bạn có chắc chắn muốn xóa đầu việc này?</span>
+        </p>
+        <div class="bg-white/95 p-3 rounded-xl border border-rose-200 text-xs space-y-1 shadow-2xs">
+          <span class="text-slate-500 font-semibold block text-[11px] uppercase tracking-wider">Tên nội dung công việc:</span>
+          <span id="deleteTargetTaskName" class="font-black text-slate-900 block text-xs leading-snug">---</span>
+        </div>
+        <ul class="space-y-1 pl-4 list-disc text-[11px] text-rose-800 leading-relaxed">
+          <li>Đầu việc sẽ được gỡ bỏ khỏi danh mục phân công hiện tại.</li>
+          <li>Dữ liệu lịch sử đã báo cáo các tháng trước vẫn được bảo lưu an toàn.</li>
+        </ul>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeTaskDeleteConfirmModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" id="btnConfirmDeleteTaskAction" onclick="proceedExecuteDeleteTask()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Xác Nhận Xóa</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ================= MODAL QUẢN LÝ NHÂN SỰ ================= -->
   <div id="userManagerModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
@@ -1612,6 +1658,7 @@
 
     let draftSaveTimeout = null;
     let pendingTransferData = null;
+    let pendingDeleteTaskRowElem = null;
 
     // ================= ÂM THANH BÁO ĐỘNG KHI PHÁT HIỆN TRÙNG LẶP =================
     function playAlarmSound() {
@@ -1861,7 +1908,7 @@
         if (strLabel) { strLabel.innerText = "Khá an toàn"; strLabel.className = "text-xs font-black text-teal-600"; }
         if (strFeedback) strFeedback.innerText = "Mật khẩu tốt, đáp ứng chuẩn an ninh hệ thống doanh nghiệp.";
       } else if (level === 4) {
-        b1.className = b2.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
+        b1.className = b2.className = b3.className = b4.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Rất mạnh & An toàn"; strLabel.className = "text-xs font-black text-emerald-600"; }
         if (strFeedback) strFeedback.innerText = "Tuyệt vời! Mật khẩu đạt độ bảo mật cấp cao.";
       }
@@ -4528,7 +4575,7 @@
         showToast("Lỗi xuất Excel: " + err.message, true);
       }
     }
-  <!-- HẾT PHẦN 3 / 4 (Tiếp theo: Phần 4 / 4 cuối cùng) -->
+  <!-- HẾT PHẦN 3 / 4 -->
     // ================= QUẢN LÝ BẢN NHÁP CỤC BỘ (AUTOSAVE) =================
     function getDraftStorageKey() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
@@ -5460,16 +5507,54 @@
       }
     }
 
-    async function deleteAssignTaskRow(btnElem) {
+    // ================= XỬ LÝ XÓA ĐẦU VIỆC VỚI BẢNG THÔNG BÁO HIỆN ĐẠI =================
+    function deleteAssignTaskRow(btnElem) {
       const row = btnElem.closest('.assign-task-row');
+      if (!row) return;
+
       const taskId = row.dataset.taskId;
-      if (taskId) {
-        if (!confirm("⚠️ Bạn có chắc chắn muốn xóa đầu việc này khỏi hệ thống?")) return;
-        try {
-          await supabase.from('tasks').delete().eq('id', taskId);
-        } catch(e) {}
+      const nameInput = row.querySelector('.assign-task-name');
+      const taskName = nameInput ? nameInput.value.trim() : "Công việc chưa đặt tên";
+
+      if (!taskId) {
+        row.remove();
+        return;
       }
-      row.remove();
+
+      pendingDeleteTaskRowElem = row;
+      document.getElementById('deleteTargetTaskId').value = taskId;
+      document.getElementById('deleteTargetTaskName').innerText = taskName || "Công việc này";
+      document.getElementById('taskDeleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeTaskDeleteConfirmModal() {
+      pendingDeleteTaskRowElem = null;
+      const modal = document.getElementById('taskDeleteConfirmModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function proceedExecuteDeleteTask() {
+      const taskId = document.getElementById('deleteTargetTaskId').value;
+      const btn = document.getElementById('btnConfirmDeleteTaskAction');
+      if (btn) btn.disabled = true;
+
+      try {
+        if (taskId) {
+          const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+          if (error) throw error;
+        }
+
+        if (pendingDeleteTaskRowElem) {
+          pendingDeleteTaskRowElem.remove();
+        }
+
+        showToast("Đã xóa công việc khỏi danh mục thành công!");
+        closeTaskDeleteConfirmModal();
+      } catch (err) {
+        showToast("Lỗi khi xóa công việc: " + err.message, true);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     async function submitAdminAssign() {
