@@ -582,8 +582,6 @@
       </section>
     </main>
   </div>
-
-
   <!-- ================= MODAL ĐIỀU KHIỂN KHÓA SỔ ================= -->
   <div id="periodLockModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
@@ -840,6 +838,8 @@
       </div>
     </div>
   </div>
+
+
   <!-- ================= MODAL CHỈNH SỬA BỘ PHẬN ================= -->
   <div id="deptEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
@@ -955,6 +955,8 @@
       </div>
     </div>
   </div>
+
+
   <!-- ================= MODAL ĐỔI TÊN BỘ PHẬN ================= -->
   <div id="renameDeptModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -1105,7 +1107,7 @@
   </div>
 
 
-  <!-- ================= MODAL QUẢN LÝ TÀI KHOẢN ================= -->
+  <!-- ================= MODAL THIẾT LẬP TÀI KHOẢN (ĐÃ ĐỔI TÊN & ICON CHUẨN) ================= -->
   <div id="accountEditModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1805,7 +1807,7 @@
         if (strLabel) { strLabel.innerText = "Trung bình"; strLabel.className = "text-xs font-black text-amber-500"; }
         if (strFeedback) strFeedback.innerText = "Nên thêm chữ hoa, chữ số hoặc ký tự đặc biệt để an toàn hơn.";
       } else if (level === 3) {
-        b1.className = b2.className = b3.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
+        b1.className = b2.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Khá an toàn"; strLabel.className = "text-xs font-black text-teal-600"; }
         if (strFeedback) strFeedback.innerText = "Mật khẩu tốt, đáp ứng chuẩn an ninh hệ thống doanh nghiệp.";
       } else if (level === 4) {
@@ -1923,8 +1925,8 @@
       if (!str) return "";
       return removeAccents(str)
         .replace(/^(?:[ivxlcdm]+[\.\,\-\)\:\s]+|\d+[\.\,\-\)\:\s]+)/i, '')
-        .replace(/[\s\-\–\:\(\,]+(kho chính\vert{}phụ kho\vert{}thủ kho\vert{}tổ trưởng\vert{}nhóm trưởng\vert{}phụ nhóm\vert{}phụ\vert{}chính\vert{}nv\vert{}nhân viên\vert{}kế toán\vert{}chuyên viên\vert{}trưởng nhóm\vert{}thành viên\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i, '')
-        .replace(/[\s\-\–\:\(\,]+(kho chinh\vert{}phu kho\vert{}thu kho\vert{}to truong\vert{}nhom truong\vert{}phu nhom\vert{}phu\vert{}chinh\vert{}nv\vert{}nhan vien\vert{}ke toan\vert{}chuyen vien\vert{}truong nhom\vert{}thanh vien\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i, '')
+        .replace(/[\s\-\–\:\(\,]+(kho chính|phụ kho|thủ kho|tổ trưởng|nhóm trưởng|phụ nhóm|phụ|chính|nv|nhân viên|kế toán|chuyên viên|trưởng nhóm|thành viên|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i, '')
+        .replace(/[\s\-\–\:\(\,]+(kho chinh|phu kho|thu kho|to truong|nhom truong|phu nhom|phu|chinh|nv|nhan vien|ke toan|chuyen vien|truong nhom|thanh vien|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i, '')
         .replace(/\([^\)]*\)/g, '')
         .replace(/[^\w\s]/g, ' ')
         .replace(/\s+/g, ' ')
@@ -2481,7 +2483,6 @@
         }
       }
 
-      // Giám đốc ban tuyệt đối không hiện nút điền báo cáo; gỡ hoàn toàn thuộc tính title mặc định
       if (btnDayEntry && currentUser) {
         const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
         if (isDir) {
@@ -2951,7 +2952,6 @@
           return;
         }
 
-        // BỎ HOÀN TOÀN CỬA SAU
         if (user.password_hash !== password) {
           hideProgressHud(100);
           errMsg.innerText = "Mật khẩu không chính xác!";
@@ -2959,7 +2959,6 @@
           return;
         }
 
-        // LƯU HOẶC XÓA MẬT KHẨU GHI NHỚ
         const rememberChk = document.getElementById('rememberPasswordChk');
         if (rememberChk && rememberChk.checked) {
           const authData = {
@@ -3006,7 +3005,6 @@
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
       const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
 
-      // Giám đốc ban không bao giờ hiển thị nút "Điền báo cáo"
       if (btnDayEntry) {
         if (isDir) btnDayEntry.classList.add('hidden');
         else btnDayEntry.classList.remove('hidden');
@@ -3114,7 +3112,6 @@
           }
         }
       } else {
-        // TÙY BIẾN ICON VÀ ĐỊNH DANH CHUYÊN NGHIỆP CHO CÔNG VIỆC CỦA QUẢN LÝ
         if (!isLead && isDeptEquivalent(dept, currentUser.department)) {
           const meOpt = document.createElement('option');
           meOpt.value = currentUser.fullName;
@@ -3159,7 +3156,6 @@
         currentSelectedStaff = isDeptEquivalent(currentSelectedDept, currentUser.department) ? currentUser.fullName : "TẤT CẢ";
       }
 
-      // Xóa từ khóa tìm kiếm khi đổi bộ phận
       const searchInp = document.getElementById('adminStaffSearchInput');
       if (searchInp) searchInp.value = '';
       const clearBtn = document.getElementById('btnClearStaffSearch');
@@ -3179,7 +3175,6 @@
       if (!selected) return;
       currentSelectedStaff = selected;
 
-      // Xóa ô tìm kiếm nếu chọn từ danh sách dropdown
       const searchInp = document.getElementById('adminStaffSearchInput');
       if (searchInp) searchInp.value = '';
       const clearBtn = document.getElementById('btnClearStaffSearch');
@@ -3246,7 +3241,7 @@
 
     /**
      * ÁP DỤNG BỘ LỌC MA TRẬN:
-     * ĐÃ SỬA DỨT ĐIỂM: Loại bỏ điều kiện gộp dư thừa khiến tài khoản Quản lý luôn bị hiển thị
+     * Loại bỏ điều kiện gộp dư thừa khiến tài khoản Quản lý luôn bị hiển thị
      */
     function applyClientFilterAndRender() {
       if (!fullPeriodMatrixCache) {
@@ -3715,7 +3710,6 @@
             `;
           }
 
-          // PHÂN QUYỀN CHỈNH SỬA TRỰC TIẾP Ô MA TRẬN
           const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
           let canEditThisRow = false;
 
@@ -3984,7 +3978,7 @@
       }
     }
 
-    // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU (ĐÃ BỎ BIỂU ĐỒ CỘT NƯỚC) =================
+    // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU =================
     function renderAnalyticsSection(data) {
       const section = document.getElementById('analyticsSection');
       if (!data || !data.staffGroups || data.staffGroups.length === 0) {
@@ -4332,7 +4326,6 @@
             grp.tasks.forEach((t) => {
               const rowData = [personSTT, grp.staffName, t.taskName];
 
-              // TỰ ĐỘNG ẨN TẤT CẢ CÁC Ô CÓ SỐ LIỆU BẰNG 0
               dayCols.forEach(dc => {
                 const val = t.dailyValues[dc.colIndex];
                 if (val !== undefined && val !== null && String(val).trim() !== '') {
@@ -4643,8 +4636,6 @@
         return;
       }
 
-      let targetStaff = currentUser.fullName;
-
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
       document.getElementById('dayEntryModal').classList.remove('hidden');
 
@@ -4689,10 +4680,6 @@
       }
     }
 
-    /**
-     * PHÂN QUYỀN ĐẠI DIỆN ĐIỀN BÁO CÁO THEO NGÀY:
-     * Quản lý & Nhân viên chỉ điền công việc của chính mình; Kho chính điền cho kho
-     */
     function fetchDayEntryTasks() {
       let targetStaff = currentUser.fullName;
       const targetDate = document.getElementById('modalEntryDate').value;
@@ -4790,10 +4777,6 @@
       });
     }
 
-    /**
-     * PHÂN QUYỀN ĐIỀN BÁO CÁO THEO CÔNG VIỆC:
-     * Quản lý/Nhân viên chỉ điền công việc của chính mình
-     */
     function fetchTaskEntryDays(targetRowIndex) {
       let targetStaff = currentUser.fullName;
       const activeData = fullPeriodMatrixCache || currentMatrixData;
@@ -5090,9 +5073,6 @@
       if (nextInput) setTimeout(() => { nextInput.focus(); nextInput.select(); }, 100);
     }
 
-    /**
-     * LƯU BÁO CÁO CÔNG VIỆC TRỰC TIẾP LÊN MÁY CHỦ (TỪ MODAL)
-     */
     async function submitDayReport() {
       if (currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username)) {
         showToast("Kỳ báo cáo này đã khóa sổ. Vui lòng liên hệ Quản lý!", true);
@@ -5196,6 +5176,7 @@
         showToast("Lỗi lưu trữ dữ liệu: " + err.message, true);
       }
     }
+
     // ================= PHÂN CÔNG GIAO VIỆC TRÊN MÁY CHỦ =================
     function openAssignModal() {
       const modal = document.getElementById('assignModal');
@@ -5451,7 +5432,6 @@
         showToast("Lỗi phân công: " + err.message, true);
       }
     }
-
     // ================= QUẢN LÝ NHÂN SỰ, TÀI KHOẢN & ĐIỀU CHUYỂN =================
     function openUserManagerModal() {
       document.getElementById('userManagerModal').classList.remove('hidden');
@@ -5531,7 +5511,7 @@
 
         // SẮP XẾP TOÀN DIỆN:
         // Bước 1: Nhân sự Hoạt động lên trước, Tạm khóa & Khóa xuống cuối danh sách
-        // Bước 2: Trong cùng trạng thái: Giám đốc ban -> Quản lý -> Tên bộ phận -> Họ và tên[cite: 7]
+        // Bước 2: Trong cùng trạng thái: Giám đốc ban -> Quản lý -> Tên bộ phận -> Họ và tên
         mappedUsers.sort((a, b) => {
           const sA = getStatusPriority(a);
           const sB = getStatusPriority(b);
