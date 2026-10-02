@@ -957,8 +957,6 @@
       </div>
     </div>
   </div>
-
-
   <!-- ================= MODAL ĐỔI TÊN BỘ PHẬN ================= -->
   <div id="renameDeptModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -1115,11 +1113,11 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center font-bold text-base shadow-2xs">
-            <i class="fa-solid fa-user-pen"></i>
+            <i class="fa-solid fa-user-gear"></i>
           </div>
           <div>
-            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Quản Lý Tài Khoản</h3>
-            <p class="text-xs text-slate-400">Sửa đổi thông tin và xem mật khẩu tài khoản</p>
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight">Thiết Lập Tài Khoản & Bảo Mật</h3>
+            <p class="text-xs text-slate-400">Quản trị thông tin xác thực và mật khẩu truy cập</p>
           </div>
         </div>
         <button onclick="closeAccountEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
@@ -1809,11 +1807,11 @@
         if (strLabel) { strLabel.innerText = "Trung bình"; strLabel.className = "text-xs font-black text-amber-500"; }
         if (strFeedback) strFeedback.innerText = "Nên thêm chữ hoa, chữ số hoặc ký tự đặc biệt để an toàn hơn.";
       } else if (level === 3) {
-        b1.className = b2.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
+        b1.className = b2.className = b3.className = "h-full rounded-full bg-teal-500 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Khá an toàn"; strLabel.className = "text-xs font-black text-teal-600"; }
         if (strFeedback) strFeedback.innerText = "Mật khẩu tốt, đáp ứng chuẩn an ninh hệ thống doanh nghiệp.";
       } else if (level === 4) {
-        b1.className = b2.className = b3.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
+        b1.className = b2.className = b3.className = b4.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Rất mạnh & An toàn"; strLabel.className = "text-xs font-black text-emerald-600"; }
         if (strFeedback) strFeedback.innerText = "Tuyệt vời! Mật khẩu đạt độ bảo mật cấp cao.";
       }
@@ -1927,8 +1925,8 @@
       if (!str) return "";
       return removeAccents(str)
         .replace(/^(?:[ivxlcdm]+[\.\,\-\)\:\s]+|\d+[\.\,\-\)\:\s]+)/i, '')
-        .replace(/[\s\-\–\:\(\,]+(kho chính|phụ kho|thủ kho|tổ trưởng|nhóm trưởng|phụ nhóm|phụ|chính|nv|nhân viên|kế toán|chuyên viên|trưởng nhóm|thành viên|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i, '')
-        .replace(/[\s\-\–\:\(\,]+(kho chinh|phu kho|thu kho|to truong|nhom truong|phu nhom|phu|chinh|nv|nhan vien|ke toan|chuyen vien|truong nhom|thanh vien|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i, '')
+        .replace(/[\s\-\–\:\(\,]+(kho chính\vert{}phụ kho\vert{}thủ kho\vert{}tổ trưởng\vert{}nhóm trưởng\vert{}phụ nhóm\vert{}phụ\vert{}chính\vert{}nv\vert{}nhân viên\vert{}kế toán\vert{}chuyên viên\vert{}trưởng nhóm\vert{}thành viên\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i, '')
+        .replace(/[\s\-\–\:\(\,]+(kho chinh\vert{}phu kho\vert{}thu kho\vert{}to truong\vert{}nhom truong\vert{}phu nhom\vert{}phu\vert{}chinh\vert{}nv\vert{}nhan vien\vert{}ke toan\vert{}chuyen vien\vert{}truong nhom\vert{}thanh vien\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i, '')
         .replace(/\([^\)]*\)/g, '')
         .replace(/[^\w\s]/g, ' ')
         .replace(/\s+/g, ' ')
@@ -2021,7 +2019,7 @@
           clean = clean.replace(/\s*\(.*?\)\s*$/, '').trim();
         }
 
-        let suffixMatch = clean.match(/[\s\-\–\:\(\,]+(kho chính|phụ kho|thủ kho|tổ trưởng|nhóm trưởng|phụ nhóm|phụ|chính|nv|nhân viên|kế toán|chuyên viên|trưởng nhóm|thành viên|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i);
+        let suffixMatch = clean.match(/[\s\-\–\:\(\,]+(kho chính\vert{}phụ kho\vert{}thủ kho\vert{}tổ trưởng\vert{}nhóm trưởng\vert{}phụ nhóm\vert{}phụ\vert{}chính\vert{}nv\vert{}nhân viên\vert{}kế toán\vert{}chuyên viên\vert{}trưởng nhóm\vert{}thành viên\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i);
         if (suffixMatch) {
           if (!role) role = suffixMatch[1].trim();
           clean = clean.substring(0, suffixMatch.index).trim();
@@ -2113,7 +2111,7 @@
                       ${m.index}
                     </span>
                     <span class="text-[11px] font-bold ${isCurrent ? 'text-emerald-950 font-black' : (m.isLead ? 'text-amber-950 font-black' : 'text-slate-800')} leading-snug break-words flex-1">
-                      ${escapeHtml(m.name)} ${isCurrent ? '<span class="text-[9px] text-emerald-700 font-black ml-0.5">(Tôi)</span>' : ''}
+                      ${escapeHtml(m.name)}${isCurrent ? '<span class="text-[9px] text-emerald-700 font-black ml-0.5">(Tôi)</span>' : ''}
                     </span>
                   </div>
                   ${m.role ? `
@@ -2491,7 +2489,7 @@
         if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
-          btnDayEntry.removeAttribute('title'); // GỠ BỎ HOÀN TOÀN TITLE TRÁNH 2 TOOLTIP
+          btnDayEntry.removeAttribute('title');
           if (isLocked) {
             btnDayEntry.classList.add('opacity-40', 'cursor-not-allowed');
             btnDayEntry.setAttribute('data-tooltip', 'Kỳ báo cáo này đã khóa sổ');
@@ -3160,7 +3158,6 @@
       if (isLead || currentSelectedDept === "TẤT CẢ") {
         currentSelectedStaff = "TẤT CẢ";
       } else {
-        // CHỈ MẶC ĐỊNH CHỌN QUẢN LÝ NẾU ĐANG CHỌN CHÍNH BỘ PHẬN CỦA QUẢN LÝ[cite: 7]
         currentSelectedStaff = isDeptEquivalent(currentSelectedDept, currentUser.department) ? currentUser.fullName : "TẤT CẢ";
       }
 
@@ -3277,7 +3274,7 @@
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
-      // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)[cite: 7]
+      // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)
       if (currentSelectedDept !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => 
           isDeptEquivalent(grp.department, currentSelectedDept)
@@ -3526,7 +3523,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY[cite: 1]
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY
           const deptMembers = (dbUsers || []).filter(u => {
             if (u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -3720,9 +3717,7 @@
             `;
           }
 
-          // ================= PHÂN QUYỀN CHỈNH SỬA TRỰC TIẾP Ô MA TRẬN =================
-          // 1. Giám đốc ban: CHỈ XEM, không sửa bất kỳ ô nào
-          // 2. Quản lý / Nhân viên: CHỈ ĐƯỢC ĐIỀN VÀO CÔNG VIỆC CỦA CHÍNH MÌNH (hoặc Kho chính điền cho kho của mình)
+          // PHÂN QUYỀN CHỈNH SỬA TRỰC TIẾP Ô MA TRẬN
           const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
           let canEditThisRow = false;
 
@@ -3735,7 +3730,6 @@
                 canEditThisRow = true;
               }
             } else {
-              // Chỉ được sửa nếu là công việc của chính mình (kể cả Quản lý)!
               if (isStaffMatchedInCell(currentUser.fullName, grp.staffName) || (t.assigned_user_id && t.assigned_user_id === currentUser.id)) {
                 canEditThisRow = true;
               }
@@ -3758,7 +3752,6 @@
 
             let cellContentHtml = '';
             if (canEditThisRow && !currentPeriodLocked) {
-              // Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN: TỰ ĐỘNG ẨN SỐ 0
               let displayVal = (rawVal === '-' || rawVal === '·' || rawVal === '0') ? '' : rawVal;
               cellContentHtml = `
                 <input type="text" 
@@ -3776,7 +3769,6 @@
                   oninput="formatNumberInputLive(this)" />
               `;
             } else {
-              // CHẾ ĐỘ CHỈ XEM: NẾU BẰNG 0 THÌ HIỂN THỊ DẤU CHẤM MỜ (ẨN)
               if (rawVal !== '' && rawVal !== '-' && rawVal !== '0') {
                 const sym = rawVal.toUpperCase();
                 if (['X', 'P', 'Đ', 'C'].includes(sym)) {
@@ -3942,7 +3934,6 @@
         inputElem.dataset.oldValue = val;
         inputElem.classList.remove('cell-saving');
 
-        // Cập nhật RAM Cache và tính lại tổng dòng
         const activeData = fullPeriodMatrixCache || currentMatrixData;
         if (activeData && activeData.staffGroups) {
           activeData.staffGroups.forEach(grp => {
@@ -3994,6 +3985,7 @@
         container.scrollTo({ left: 0, behavior: 'smooth' });
       }
     }
+
     // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU (ĐÃ BỎ BIỂU ĐỒ CỘT NƯỚC) =================
     function renderAnalyticsSection(data) {
       const section = document.getElementById('analyticsSection');
@@ -4247,21 +4239,18 @@
           right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
         };
 
-        // Header công ty
         const compRow = ws.addRow(['CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG - BAN DỊCH VỤ KHÁCH HÀNG']);
         compRow.height = 22;
         ws.mergeCells(1, 1, 1, 4);
         compRow.getCell(1).font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF065F46' } };
         compRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
-        // Tiêu đề bảng
         const titleRow = ws.addRow(['BẢNG THEO DÕI VÀ TỔNG HỢP TIẾN ĐỘ CÔNG VIỆC']);
         titleRow.height = 30;
         ws.mergeCells(2, 1, 2, totalColumns);
         titleRow.getCell(1).font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF047857' } };
         titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        // Phụ đề báo cáo
         const subTitleRow = ws.addRow([`Kỳ báo cáo: Tháng ${mStr} / Năm ${currentYear}   |   Bộ phận: ${deptTitle.toUpperCase()}   |   Đối tượng: ${staffTitle}`]);
         subTitleRow.height = 20;
         ws.mergeCells(3, 1, 3, totalColumns);
@@ -4271,7 +4260,6 @@
         ws.addRow([]);
         ws.getRow(4).height = 6;
 
-        // Tiêu đề cột
         const headerTitles = ['TT', 'Họ và tên / Tổ', 'Nội dung công việc'];
         dayCols.forEach(dc => headerTitles.push(dc.dayNum));
         headerTitles.push('Tổng cộng');
@@ -4367,7 +4355,6 @@
                 }
               });
 
-              // Tổng cộng: Ẩn số 0
               if (typeof t.monthTotal === 'number') {
                 if (t.monthTotal === 0) rowData.push('');
                 else rowData.push(t.monthTotal);
@@ -4653,13 +4640,11 @@
 
     // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
     function openDayEntryModal() {
-      // Giám đốc ban tuyệt đối không được mở modal điền báo cáo
       if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
         showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
         return;
       }
 
-      // Quản lý hoặc nhân viên: CHỈ ĐƯỢC PHÉP ĐIỀN BÁO CÁO CÔNG VIỆC CỦA CHÍNH MÌNH
       let targetStaff = currentUser.fullName;
 
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
@@ -4741,12 +4726,10 @@
           let isMatch = false;
 
           if (isShared) {
-            // Tổ kho: Kho chính đại diện điền cho toàn kho
             if (isDeptEquivalent(grp.department, currentUser.department)) {
               isMatch = true;
             }
           } else {
-            // Bộ phận thường (kể cả Quản lý): CHỈ TẢI CÔNG VIỆC CỦA CHÍNH MÌNH
             if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
               isMatch = true;
             }
@@ -5612,7 +5595,7 @@
     }
 
     /**
-     * RENDER BẢNG NHÂN SỰ VỚI CẢ 2 NÚT: "QL TÀI KHOẢN" & "ĐIỀU CHUYỂN"
+     * RENDER BẢNG NHÂN SỰ VỚI NÚT "TÀI KHOẢN" CHUẨN HIỆN ĐẠI & CHUYÊN NGHIỆP
      */
     function renderUsersManagementTable(users) {
       const tbody = document.getElementById('userManagementTableBody');
@@ -5657,11 +5640,12 @@
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
           <td class="py-2.5 px-3 text-center">
             <div class="flex items-center justify-center gap-1.5">
-              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold transition flex items-center gap-1 border border-teal-200 shadow-2xs cursor-pointer" title="Sửa thông tin tài khoản đăng nhập & xem mật khẩu">
-                <i class="fa-solid fa-user-pen text-[11px]"></i>
-                <span>QL Tài khoản</span>
+              <!-- Nút chức năng "Tài khoản" chuẩn nhận diện doanh nghiệp -->
+              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
+                <i class="fa-solid fa-user-gear text-[11px]"></i>
+                <span>Tài khoản</span>
               </button>
-              <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer" title="Điều chuyển bộ phận & phân vai trò">
+              <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs active:scale-95 cursor-pointer" title="Điều chuyển bộ phận & phân vai trò">
                 <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i>
                 <span>Điều chuyển</span>
               </button>
@@ -5781,7 +5765,7 @@
         }
       }
 
-      showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-pen animate-pulse");
+      showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-gear animate-pulse");
       autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
