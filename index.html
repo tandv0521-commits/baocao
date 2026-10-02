@@ -83,13 +83,23 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT TRÊN ĐIỆN THOẠI ================= */
+    /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT ================= */
     .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
     .col-fixed-task { white-space: normal !important; word-break: break-word !important; line-height: 1.45 !important; }
     .col-fixed-name { white-space: normal !important; word-break: break-word !important; line-height: 1.35 !important; overflow: hidden !important; }
 
+    /* Khoảng đệm cuộn an toàn chống che khuất ô bởi các cột cố định */
+    #tableScrollContainer {
+      scroll-padding-left: 615px;
+      scroll-padding-right: 130px;
+    }
+
     /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Tối ưu chống che lấp ngày */
     @media (max-width: 767px) {
+      #tableScrollContainer {
+        scroll-padding-left: 168px;
+        scroll-padding-right: 10px;
+      }
       .col-fixed-tt { 
         position: sticky !important; 
         left: 0 !important; 
@@ -128,17 +138,17 @@
       thead .col-fixed-total { position: static !important; z-index: 30 !important; }
     }
 
-    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn */
+    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn với z-index cao hơn ô nhập */
     @media (min-width: 768px) {
-      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 20; }
-      .col-fixed-name { position: sticky !important; left: 44px; width: 255px; min-width: 255px; max-width: 255px; z-index: 20; }
-      .col-fixed-task { position: sticky !important; left: 299px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 20; }
-      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 20; }
+      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 25 !important; }
+      .col-fixed-name { position: sticky !important; left: 44px; width: 255px; min-width: 255px; max-width: 255px; z-index: 25 !important; }
+      .col-fixed-task { position: sticky !important; left: 299px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 25 !important; }
+      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 25 !important; }
 
-      thead .col-fixed-tt { position: sticky !important; left: 0; z-index: 40 !important; }
-      thead .col-fixed-name { position: sticky !important; left: 44px; z-index: 40 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 299px; z-index: 40 !important; }
-      thead .col-fixed-total { position: sticky !important; right: 0; z-index: 40 !important; }
+      thead .col-fixed-tt { position: sticky !important; left: 0; z-index: 50 !important; }
+      thead .col-fixed-name { position: sticky !important; left: 44px; z-index: 50 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 299px; z-index: 50 !important; }
+      thead .col-fixed-total { position: sticky !important; right: 0; z-index: 50 !important; }
     }
 
     /* Tiêu đề bảng công thái học chống lóa */
@@ -171,7 +181,7 @@
     .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
     .col-sunday-cell { background-color: #fff1f2/40 !important; }
 
-    /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN */
+    /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN: z-index được điều chỉnh thấp hơn cột cố định (10 < 25) */
     .matrix-input-cell {
       width: 100%;
       height: 100%;
@@ -191,7 +201,7 @@
       background-color: #ffffff !important;
       border-color: #059669 !important;
       box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25) !important;
-      z-index: 30;
+      z-index: 10 !important;
       position: relative;
     }
     .matrix-input-cell.cell-saving {
@@ -777,8 +787,7 @@
       </div>
     </div>
   </div>
-
-
+  <!-- HẾT PHẦN 1 / 4 (Tiếp theo: Phần 2 gồm toàn bộ Modal Quản lý bộ phận, Nhân sự, Phân công và Đổi mật khẩu) -->
   <!-- ================= MODAL QUẢN LÝ BỘ PHẬN ================= -->
   <div id="deptManagerModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -1680,6 +1689,47 @@
       }, delayMs);
     }
 
+    // ================= TỰ ĐỘNG ĐẨY Ô CUỘN RA NGOÀI VÙNG CHE KHUẤT CỦA CỘT CỐ ĐỊNH =================
+    function scrollMatrixCellIntoView(inputElem) {
+      if (!inputElem) return;
+      const container = document.getElementById('tableScrollContainer');
+      if (!container) return;
+
+      const cell = inputElem.closest('td') || inputElem;
+      const stickyTaskHeader = document.querySelector('thead .col-fixed-task');
+      const stickyTotalHeader = document.querySelector('thead .col-fixed-total');
+
+      const containerRect = container.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+
+      // Xác định mép phải của nhóm cột cố định bên trái (TT + Họ tên + Nội dung việc)
+      let stickyLeftEdge = 0;
+      if (stickyTaskHeader) {
+        stickyLeftEdge = stickyTaskHeader.getBoundingClientRect().right;
+      } else {
+        stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 610);
+      }
+
+      // Xác định mép trái của cột cố định Tổng cộng bên phải
+      let stickyRightEdge = containerRect.right;
+      if (stickyTotalHeader && window.innerWidth >= 768) {
+        stickyRightEdge = stickyTotalHeader.getBoundingClientRect().left;
+      }
+
+      const padding = 16; // Khoảng đệm thoáng mắt chống sát mép cột cố định
+
+      // 1. Nếu ô bị che hoặc chạm sát mép cột Nội dung việc bên trái -> Đẩy sang phải
+      if (cellRect.left < stickyLeftEdge + padding) {
+        const diff = (stickyLeftEdge + padding) - cellRect.left;
+        container.scrollBy({ left: -diff, behavior: 'smooth' });
+      }
+      // 2. Nếu ô bị che hoặc chạm sát mép cột Tổng cộng bên phải -> Đẩy sang trái
+      else if (cellRect.right > stickyRightEdge - padding) {
+        const diff = cellRect.right - (stickyRightEdge - padding);
+        container.scrollBy({ left: diff, behavior: 'smooth' });
+      }
+    }
+
     window.onload = function() {
       const today = new Date().toISOString().split('T')[0];
       const entryDateEl = document.getElementById('modalEntryDate');
@@ -1859,7 +1909,7 @@
         .toLowerCase()
         .trim();
     }
-
+  <!-- HẾT PHẦN 2 / 4 (Tiếp theo: Phần 3 gồm toàn bộ Logic xử lý nạp ma trận, Phân tích KPI, và Khởi tạo Dashboard) -->
     /**
      * CHUẨN HÓA BỘ PHẬN:
      * TÁCH BIỆT RÕ: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
@@ -2019,7 +2069,7 @@
           clean = clean.replace(/\s*\(.*?\)\s*$/, '').trim();
         }
 
-        let suffixMatch = clean.match(/[\s\-\–\:\(\,]+(kho chính\vert{}phụ kho\vert{}thủ kho\vert{}tổ trưởng\vert{}nhóm trưởng\vert{}phụ nhóm\vert{}phụ\vert{}chính\vert{}nv\vert{}nhân viên\vert{}kế toán\vert{}chuyên viên\vert{}trưởng nhóm\vert{}thành viên\vert{}khochinh\vert{}phukho\vert{}truongnhom\vert{}nhanvien)[\s\)\.\,]*$/i);
+        let suffixMatch = clean.match(/[\s\-\–\:\(\,]+(kho chính|phụ kho|thủ kho|tổ trưởng|nhóm trưởng|phụ nhóm|phụ|chính|nv|nhân viên|kế toán|chuyên viên|trưởng nhóm|thành viên|khochinh|phukho|truongnhom|nhanvien)[\s\)\.\,]*$/i);
         if (suffixMatch) {
           if (!role) role = suffixMatch[1].trim();
           clean = clean.substring(0, suffixMatch.index).trim();
@@ -2140,10 +2190,12 @@
       if (s === '0' || s === 0) return '';
       if (['X', 'P', 'Đ', 'C', '-', '·'].includes(s.toUpperCase())) return s;
       let clean = s.replace(/,/g, '');
-      let num = parseFloat(clean);
-      if (isNaN(num)) return s;
-      if (num === 0) return '';
-      return num.toLocaleString('en-US');
+      if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
+        let num = parseFloat(clean);
+        if (num === 0) return '';
+        return num.toLocaleString('en-US');
+      }
+      return s;
     }
 
     function formatNumberInputLive(input) {
@@ -2340,6 +2392,7 @@
         showToast("Lỗi nạp dữ liệu: " + err.message, true);
       }
     }
+
     async function preloadMatrixDataInBackground() {
       if (cachedPreloadMatrix) return;
       const now = new Date();
@@ -3021,7 +3074,26 @@
       setupRoleControls();
       preloadAdminDataInBackground();
 
-      document.getElementById('tableScrollContainer').classList.remove('hidden');
+      const scrollContainer = document.getElementById('tableScrollContainer');
+      if (scrollContainer) {
+        scrollContainer.classList.remove('hidden');
+        
+        // Tự động đẩy cột hiển thị khi người dùng click hoặc focus ô trên bảng
+        if (!scrollContainer.dataset.listenerBound) {
+          scrollContainer.dataset.listenerBound = "true";
+          scrollContainer.addEventListener('focusin', (e) => {
+            if (e.target && e.target.classList.contains('matrix-input-cell')) {
+              scrollMatrixCellIntoView(e.target);
+            }
+          });
+          scrollContainer.addEventListener('click', (e) => {
+            const cell = e.target.closest('td');
+            if (cell && !cell.classList.contains('col-fixed-tt') && !cell.classList.contains('col-fixed-name') && !cell.classList.contains('col-fixed-task') && !cell.classList.contains('col-fixed-total')) {
+              scrollMatrixCellIntoView(cell);
+            }
+          });
+        }
+      }
 
       if (cachedPreloadMatrix && (isDir || currentSelectedDept === "TẤT CẢ")) {
         fullPeriodMatrixCache = cachedPreloadMatrix;
@@ -3756,6 +3828,7 @@
                   data-old-value="${displayVal}"
                   value="${displayVal}" 
                   placeholder="·" 
+                  onfocus="scrollMatrixCellIntoView(this)"
                   onkeydown="handleMatrixCellKeydown(event, ${currentRowIndex}, ${cIdx})" 
                   onblur="handleMatrixCellBlur(this)" 
                   oninput="formatNumberInputLive(this)" />
@@ -3838,6 +3911,7 @@
 
     /**
      * ĐIỀU HƯỚNG BẰNG CÁC PHÍM MŨI TÊN (LÊN, XUỐNG, TRÁI, PHẢI, ENTER)
+     * ĐÃ TÍCH HỢP TỰ ĐỘNG CUỘN ĐẨY Ô RA NGOÀI VÙNG CHE KHUẤT
      */
     function handleMatrixCellKeydown(e, rIdx, cIdx) {
       let targetR = rIdx;
@@ -3868,6 +3942,7 @@
           e.preventDefault();
           nextCell.focus();
           nextCell.select();
+          scrollMatrixCellIntoView(nextCell);
         }
       }
     }
@@ -4426,7 +4501,7 @@
         showToast("Lỗi xuất Excel: " + err.message, true);
       }
     }
-
+  <!-- HẾT PHẦN 3 / 4 (Tiếp theo: Phần 4 gồm toàn bộ Quản lý bản nháp, Modal Điền báo cáo, Phân công giao việc, Quản trị nhân sự và Kết thúc tệp HTML) -->
     // ================= QUẢN LÝ BẢN NHÁP CỤC BỘ (AUTOSAVE) =================
     function getDraftStorageKey() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
@@ -5432,6 +5507,7 @@
         showToast("Lỗi phân công: " + err.message, true);
       }
     }
+
     // ================= QUẢN LÝ NHÂN SỰ, TÀI KHOẢN & ĐIỀU CHUYỂN =================
     function openUserManagerModal() {
       document.getElementById('userManagerModal').classList.remove('hidden');
@@ -6390,3 +6466,4 @@
   </script>
 </body>
 </html>
+  
