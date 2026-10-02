@@ -787,7 +787,7 @@
       </div>
     </div>
   </div>
-  <!-- HẾT PHẦN 1 / 4 (Tiếp theo: Phần 2 gồm toàn bộ Modal Quản lý bộ phận, Nhân sự, Phân công và Đổi mật khẩu) -->
+  <!-- HẾT PHẦN 1 / 4 -->
   <!-- ================= MODAL QUẢN LÝ BỘ PHẬN ================= -->
   <div id="deptManagerModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
@@ -1861,7 +1861,7 @@
         if (strLabel) { strLabel.innerText = "Khá an toàn"; strLabel.className = "text-xs font-black text-teal-600"; }
         if (strFeedback) strFeedback.innerText = "Mật khẩu tốt, đáp ứng chuẩn an ninh hệ thống doanh nghiệp.";
       } else if (level === 4) {
-        b1.className = b2.className = b3.className = b4.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
+        b1.className = b2.className = "h-full rounded-full bg-emerald-600 transition-all duration-300";
         if (strLabel) { strLabel.innerText = "Rất mạnh & An toàn"; strLabel.className = "text-xs font-black text-emerald-600"; }
         if (strFeedback) strFeedback.innerText = "Tuyệt vời! Mật khẩu đạt độ bảo mật cấp cao.";
       }
@@ -1909,7 +1909,7 @@
         .toLowerCase()
         .trim();
     }
-  <!-- HẾT PHẦN 2 / 4 (Tiếp theo: Phần 3 gồm toàn bộ Logic xử lý nạp ma trận, Phân tích KPI, và Khởi tạo Dashboard) -->
+  <!-- HẾT PHẦN 2 / 4 -->
     /**
      * CHUẨN HÓA BỘ PHẬN:
      * TÁCH BIỆT RÕ: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
@@ -3484,12 +3484,15 @@
       return "-";
     }
 
-    // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ & ẨN CÔNG VIỆC TẠM KHÓA =================
+    // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ THÁNG CŨ & LỌC CÔNG VIỆC THEO THỜI GIAN =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
       const todayDate = new Date();
-      const isCurrentPeriod = (todayDate.getMonth() + 1 === month && todayDate.getFullYear() === year);
+      const curM = todayDate.getMonth() + 1;
+      const curY = todayDate.getFullYear();
+      const isCurrentPeriod = (curM === month && curY === year);
+      const isPastPeriod = (year < curY) || (year === curY && month < curM);
       const todayDayNum = todayDate.getDate();
 
       for (let d = 1; d <= daysInMonth; d++) {
@@ -3573,11 +3576,41 @@
         // Tách biệt rõ Hàng nhập trả vs Tổ kho
         const isShared = isSharedGroupDeptClient(deptName);
 
-        // 2. NẾU LÀ BỘ PHẬN THƯỜNG (CÁ NHÂN): TẠM KHÓA HOẶC KHÓA THÌ ẨN HOÀN TOÀN KHỎI BẢNG MA TRẬN KỲ HIỆN TẠI
+        // Kiểm tra xem công việc này có phát sinh dữ liệu trong tháng đang xem hay không
+        let hasAnyDataInMonth = false;
+        const dailyValues = {};
+        dayCols.forEach(dc => {
+          const val = reportLookup[`${t.id}_${dc.dayNum}`];
+          if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
+            hasAnyDataInMonth = true;
+          }
+          dailyValues[dc.colIndex] = (val !== undefined && val !== null) ? val : "";
+        });
+
+        // BẢO TOÀN LỊCH SỬ & LỌC CÔNG VIỆC MỚI:
+        // Nếu xem kỳ quá khứ (tháng cũ) và công việc hoàn toàn KHÔNG có số liệu phát sinh trong tháng cũ đó
+        // (do vừa được thêm ở tháng mới) -> Bỏ qua, không hiển thị trong tháng cũ!
+        if (t.created_at) {
+          const taskCreated = new Date(t.created_at);
+          const endOfQueriedMonth = new Date(year, month, 0, 23, 59, 59);
+          if (taskCreated > endOfQueriedMonth && !hasAnyDataInMonth) {
+            return;
+          }
+        }
+        if (isPastPeriod && !hasAnyDataInMonth) {
+          return;
+        }
+
+        // 2. XỬ LÝ TRẠNG THÁI NHÂN SỰ:
+        // Nếu nhân sự bị Tạm khóa hoặc Khóa:
+        // - Ở kỳ hiện tại/tương lai: Ẩn đi để không phải báo cáo
+        // - Nhưng ở KỲ QUÁ KHỨ (tháng cũ) nếu nhân sự đó ĐÃ CÓ SỐ LIỆU BÁO CÁO: VẪN GIỮ ĐỂ BẢO TOÀN NGUYÊN VẸN LỊCH SỬ!
         if (!isShared && assignedUser) {
           const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
           if (uStatus.includes("tam") || uStatus.includes("khoa")) {
-            return;
+            if (!isPastPeriod || !hasAnyDataInMonth) {
+              return;
+            }
           }
         }
 
@@ -3588,9 +3621,9 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY
+          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (HOẶC ĐÃ CÓ SỐ LIỆU TRONG KỲ QUÁ KHỨ)
           const deptMembers = (dbUsers || []).filter(u => {
-            if (u.status !== 'Hoạt động') return false;
+            if (!isPastPeriod && u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
             const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
             const uDeptName = uDeptObj ? uDeptObj.name : "";
@@ -3634,12 +3667,6 @@
             tasks: []
           };
         }
-
-        const dailyValues = {};
-        dayCols.forEach(dc => {
-          const val = reportLookup[`${t.id}_${dc.dayNum}`];
-          dailyValues[dc.colIndex] = (val !== undefined && val !== null) ? val : "";
-        });
 
         const monthTotal = calculateSmartRowTotalClient(dailyValues, dayCols);
 
@@ -4501,7 +4528,7 @@
         showToast("Lỗi xuất Excel: " + err.message, true);
       }
     }
-  <!-- HẾT PHẦN 3 / 4 (Tiếp theo: Phần 4 gồm toàn bộ Quản lý bản nháp, Modal Điền báo cáo, Phân công giao việc, Quản trị nhân sự và Kết thúc tệp HTML) -->
+  <!-- HẾT PHẦN 3 / 4 (Tiếp theo: Phần 4 / 4 cuối cùng) -->
     // ================= QUẢN LÝ BẢN NHÁP CỤC BỘ (AUTOSAVE) =================
     function getDraftStorageKey() {
       let targetStaff = currentSelectedStaff === "TẤT CẢ" ? (currentUser ? currentUser.fullName : "") : currentSelectedStaff;
@@ -5877,7 +5904,7 @@
         }
         if (btn) {
           btn.className = "px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa & Xóa Danh Mục Việc</span>';
+          btn.innerHTML = '<i class="fa-solid fa-user-slash"></i><span>Khóa Tài Khoản (Bảo Lưu Báo Cáo Cũ)</span>';
         }
       } else if (val === 'Tạm khóa') {
         if (lockWarningBox) lockWarningBox.classList.add('hidden');
@@ -5888,7 +5915,7 @@
         }
         if (btn) {
           btn.className = "px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer";
-          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Ẩn Báo Cáo)</span>';
+          btn.innerHTML = '<i class="fa-solid fa-pause-circle"></i><span>Lưu Tạm Khóa (Ẩn Báo Cáo Mới)</span>';
         }
       } else {
         if (lockWarningBox) lockWarningBox.classList.add('hidden');
@@ -6080,12 +6107,8 @@
     }
 
     /**
-     * THỰC THI LƯU DỮ LIỆU:
-     * 1. PHÂN NHÁNH THÔNG BÁO CHUẨN XÁC KHI KHÓA / TẠM KHÓA / ĐIỀU CHUYỂN
-     * 2. XÓA SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC HOẶC KHI KHÓA TÀI KHOẢN BỘ PHẬN THƯỜNG
-     * 3. SAO CHÉP DANH MỤC CÔNG VIỆC TỪ ĐỒNG NGHIỆP NẾU CÓ CHỌN
-     * 4. QUY TẮC NHÓM GỘP: 1 TỔ CHỈ CÓ 1 ĐẠI DIỆN (ĐẨY NGƯỜI CŨ VỀ THÀNH VIÊN)
-     * 5. TỰ ĐỘNG ĐÓNG MODAL VÀ LÀM MỚI BẢNG TIẾN ĐỘ
+     * THỰC THI LƯU DỮ LIỆU: BẢO TOÀN NGUYÊN VẸN LỊCH SỬ KỲ BÁO CÁO CŨ
+     * TUYỆT ĐỐI KHÔNG XÓA DAILY_REPORTS HAY TASKS CỦA KỲ TRƯỚC ĐỂ BẢO VỆ DỮ LIỆU ĐỐI SOÁT
      */
     async function executeUserTransfer(updateData) {
       const isLock = (updateData.status === "Khóa");
@@ -6097,7 +6120,7 @@
 
       if (isLock) {
         hudTitle = "KHÓA TÀI KHOẢN";
-        hudDesc = `Đang vô hiệu hóa tài khoản và xóa dữ liệu việc của ${updateData.fullName}...`;
+        hudDesc = `Đang vô hiệu hóa tài khoản của ${updateData.fullName}...`;
         hudIcon = "fa-solid fa-user-slash animate-pulse text-rose-500";
       } else if (isPause) {
         hudTitle = "TẠM KHÓA TÀI KHOẢN";
@@ -6128,35 +6151,6 @@
         if (deptErr) throw deptErr;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
 
-        // 1. NẾU KHÓA NHÂN SỰ BỘ PHẬN THƯỜNG -> XÓA SẠCH HOÀN TOÀN CÔNG VIỆC VÀ BÁO CÁO CỦA NHÂN SỰ ĐÓ
-        if (isLock && currentUserId && !updateData.isWarehouse) {
-          const { data: userTasks } = await supabase
-            .from('tasks')
-            .select('id')
-            .eq('assigned_user_id', currentUserId);
-
-          if (userTasks && userTasks.length > 0) {
-            const tIds = userTasks.map(t => t.id);
-            await supabase.from('daily_reports').delete().in('task_id', tIds);
-            await supabase.from('tasks').delete().in('id', tIds);
-          }
-        }
-
-        // 2. DỌN SẠCH CÔNG VIỆC CŨ Ở BỘ PHẬN TRƯỚC (NẾU CÓ ĐỔI BỘ PHẬN CÔNG TÁC):
-        if (oldDeptId && dId && oldDeptId !== dId && currentUserId) {
-          const { data: oldTasks } = await supabase
-            .from('tasks')
-            .select('id')
-            .eq('assigned_user_id', currentUserId)
-            .eq('department_id', oldDeptId);
-
-          if (oldTasks && oldTasks.length > 0) {
-            const oldTaskIds = oldTasks.map(t => t.id);
-            await supabase.from('daily_reports').delete().in('task_id', oldTaskIds);
-            await supabase.from('tasks').delete().in('id', oldTaskIds);
-          }
-        }
-
         const updatePayload = {
           full_name: updateData.fullName,
           department_id: dId,
@@ -6168,7 +6162,7 @@
           updatePayload.password_hash = updateData.newPassword;
         }
 
-        // 3. Cập nhật hồ sơ tài khoản nhân sự
+        // Cập nhật hồ sơ tài khoản nhân sự
         const { error } = await supabase
           .from('users')
           .update(updatePayload)
@@ -6176,7 +6170,7 @@
 
         if (error) throw error;
 
-        // 4. NẾU CHỌN SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP:
+        // NẾU CHỌN SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP TRONG BỘ PHẬN MỚI
         let copiedTasksCount = 0;
         if (updateData.copyFromUserId && currentUserId && dId && !isLock) {
           const { data: sourceTasks, error: sErr } = await supabase
@@ -6198,7 +6192,7 @@
           }
         }
 
-        // 5. QUY TẮC NHÓM KHO: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO HOẶC DANH XƯNG THÀNH VIÊN)
+        // QUY TẮC NHÓM KHO: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO HOẶC DANH XƯNG THÀNH VIÊN)
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
         if (updateData.isWarehouse && isLeadRole && currentUserId && dId && !isLock && !isPause) {
           const { data: otherMembers } = await supabase
@@ -6227,16 +6221,16 @@
             .eq('department_id', dId);
         }
 
-        // 6. ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
+        // ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
         autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
           closeTransferModal(); 
 
           let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
           if (isLock) {
-            msg = `Đã khóa tài khoản và xóa danh mục công việc của ${updateData.fullName} thành công!`;
+            msg = `Đã khóa tài khoản của ${updateData.fullName} (dữ liệu báo cáo lịch sử vẫn được bảo toàn nguyên vẹn)!`;
           } else if (isPause) {
-            msg = `Đã tạm khóa tài khoản của ${updateData.fullName} (công việc đã được ẩn khỏi bảng)!`;
+            msg = `Đã tạm khóa tài khoản của ${updateData.fullName} (công việc mới đã được ẩn, dữ liệu lịch sử vẫn lưu giữ)!`;
           } else if (copiedTasksCount > 0) {
             msg += ` (Đã sao chép ${copiedTasksCount} đầu việc)`;
           }
@@ -6466,4 +6460,3 @@
   </script>
 </body>
 </html>
-  
