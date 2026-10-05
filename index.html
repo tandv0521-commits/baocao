@@ -212,6 +212,82 @@
     .staff-avatar-glow {
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
     }
+
+    /* ================= CẢI THIỆN GIAO DIỆN (UI/UX) DI ĐỘNG & LÀM ĐẸP MODAL / BẢNG BIỂU ================= */
+    #tableScrollContainer {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* Tối ưu hiệu ứng ô nhập liệu trực quan */
+    .matrix-input-cell {
+      border-radius: 7px !important;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+    }
+    .matrix-input-cell:focus {
+      background-color: #ffffff !important;
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.3) !important;
+    }
+
+    /* Tối ưu Modal trên Di Động: Tự động chuyển thành Bottom Sheet hiện đại */
+    @media (max-width: 767px) {
+      /* Căn modal xuống chân màn hình trên điện thoại */
+      .fixed.inset-0.z-50,
+      .fixed.inset-0.z-\[65\],
+      .fixed.inset-0.z-\[70\],
+      .fixed.inset-0.z-\[100\] {
+        padding: 0 !important;
+        align-items: flex-end !important;
+      }
+
+      /* Hộp thoại Modal bo tròn phía trên, mở rộng tối đa vùng chạm */
+      .fixed.inset-0 > .relative.w-full,
+      .fixed.inset-0 > div.bg-white,
+      .fixed.inset-0 > div > .relative.w-full {
+        border-top-left-radius: 26px !important;
+        border-top-right-radius: 26px !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        max-height: 90dvh !important;
+        max-height: 90vh !important;
+        padding-bottom: max(1.25rem, env(safe-area-inset-bottom)) !important;
+        animation: mobileSheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* Thanh gạt cảm ứng ở đỉnh modal trên mobile */
+      .fixed.inset-0 > .relative.w-full::before,
+      .fixed.inset-0 > div.bg-white::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4.5px;
+        background-color: #cbd5e1;
+        border-radius: 9999px;
+        margin: -6px auto 12px auto;
+      }
+
+      /* Tăng kích thước vùng bấm cho các nút trên di động */
+      button, select, input[type="text"], input[type="password"], input[type="date"] {
+        touch-action: manipulation;
+      }
+
+      /* Header thanh công cụ không bị dính sát mép */
+      header {
+        padding-top: max(0.5rem, env(safe-area-inset-top));
+      }
+    }
+
+    @keyframes mobileSheetSlideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0.8;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
