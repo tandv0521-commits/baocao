@@ -1957,7 +1957,7 @@
         .trim();
     }
   <!-- HẾT PHẦN 2 / 4 -->
-    /**
+  /**
      * CHUẨN HÓA BỘ PHẬN:
      * TÁCH BIỆT RÕ: "Hàng nhập trả" (cá nhân) KHÔNG ĐƯỢC GỘP NHƯ "Kho nhập trả"
      */
@@ -5557,6 +5557,7 @@
       }
     }
 
+    // ================= KHẮC PHỤC LỖI NULL VALUE TRONG CỘT ID CỦA BẢNG TASKS =================
     async function submitAdminAssign() {
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       const staffName = staffSelect ? staffSelect.value.trim() : "";
@@ -5568,7 +5569,8 @@
       }
 
       const rows = document.querySelectorAll('#assignTasksListEditor .assign-task-row');
-      const taskList = [];
+      const tasksToUpdate = [];
+      const tasksToInsert = [];
 
       rows.forEach(r => {
         const nameInput = r.querySelector('.assign-task-name');
@@ -5578,11 +5580,22 @@
         const taskId = r.dataset.taskId;
 
         if (tName) {
-          taskList.push({ id: taskId || undefined, task_name: tName, guide: tGuide });
+          if (taskId && taskId !== "" && taskId !== "null" && taskId !== "undefined") {
+            tasksToUpdate.push({
+              id: parseInt(taskId, 10),
+              task_name: tName,
+              guide: tGuide
+            });
+          } else {
+            tasksToInsert.push({
+              task_name: tName,
+              guide: tGuide
+            });
+          }
         }
       });
 
-      if (taskList.length === 0) {
+      if (tasksToUpdate.length === 0 && tasksToInsert.length === 0) {
         showToast("Vui lòng nhập ít nhất một nội dung công việc!", true);
         return;
       }
@@ -5596,16 +5609,30 @@
         const dId = dept && dept[0] ? dept[0].id : 1;
         const uId = user && user[0] ? user[0].id : 1;
 
-        const tasksToUpsert = taskList.map(t => ({
-          ...(t.id ? { id: t.id } : {}),
-          department_id: dId,
-          assigned_user_id: uId,
-          task_name: t.task_name,
-          guide: t.guide
-        }));
+        // 1. Cập nhật các công việc cũ đã có ID
+        if (tasksToUpdate.length > 0) {
+          const updatePayload = tasksToUpdate.map(t => ({
+            id: t.id,
+            department_id: dId,
+            assigned_user_id: uId,
+            task_name: t.task_name,
+            guide: t.guide
+          }));
+          const { error: upErr } = await supabase.from('tasks').upsert(updatePayload);
+          if (upErr) throw upErr;
+        }
 
-        const { error } = await supabase.from('tasks').upsert(tasksToUpsert);
-        if (error) throw error;
+        // 2. Thêm mới hoàn toàn các công việc chưa có ID (không truyền thuộc tính id để DB tự sinh)
+        if (tasksToInsert.length > 0) {
+          const insertPayload = tasksToInsert.map(t => ({
+            department_id: dId,
+            assigned_user_id: uId,
+            task_name: t.task_name,
+            guide: t.guide
+          }));
+          const { error: inErr } = await supabase.from('tasks').insert(insertPayload);
+          if (inErr) throw inErr;
+        }
 
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
