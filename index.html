@@ -316,38 +316,48 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
-  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(6, 78, 59, 0.85) 50%, rgba(15, 23, 42, 0.90) 100%), url('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;">
-    <div class="relative w-full max-w-md bg-white/95 backdrop-blur-2xl border border-white/60 rounded-3xl shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (HIỆN ĐẠI & SANG TRỌNG) ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto" style="background: radial-gradient(circle at 15% 20%, rgba(5, 150, 105, 0.32), transparent 45%), radial-gradient(circle at 85% 80%, rgba(13, 148, 136, 0.28), transparent 42%), radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6), transparent 70%), linear-gradient(135deg, #071018 0%, #06231c 50%, #07131b 100%);">
+    
+    <!-- Hiệu ứng quầng sáng nền (Aurora Glow) -->
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative w-full max-w-[430px] bg-white/[0.97] backdrop-blur-2xl border border-white/80 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.4)] p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200 my-auto">
       
-      <!-- Huy hiệu thương hiệu Nhựa Tiền Phong -->
+      <!-- Huy hiệu & Nhận diện thương hiệu Nhựa Tiền Phong -->
       <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 mb-3 shadow-2xs">
+        <div class="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/90 mb-3.5 shadow-2xs">
           <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
           <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-800">TIEN PHONG PLASTIC • HẢI PHÒNG</span>
         </div>
         
-        <div class="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-700/25 border border-white/40">
+        <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-700/30 border border-white/50 ring-4 ring-emerald-50">
           <i class="fa-solid fa-industry text-white text-2xl"></i>
         </div>
         <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">BÁO CÁO CÔNG VIỆC</h1>
-        <p class="text-slate-500 text-xs mt-1 font-semibold">Ban Dịch Vụ Khách Hàng - Nhựa Tiền Phong</p>
+        <p class="text-slate-500 text-xs mt-1 font-semibold">Ban Dịch Vụ Khách Hàng • Trung Tâm Năng Suất</p>
       </div>
 
-      <div class="flex border-b border-slate-200 mb-5">
-        <button id="tabDeptBtn" onclick="switchLoginTab('dept')" class="flex-1 pb-3 text-xs sm:text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 transition cursor-pointer">
-          <i class="fa-solid fa-sitemap mr-1.5"></i> Theo Bộ phận
+      <!-- Bộ chuyển đổi chế độ đăng nhập (Segmented Pill Switcher hiện đại) -->
+      <div class="p-1 bg-slate-100 rounded-2xl border border-slate-200/80 mb-5 flex gap-1">
+        <button id="tabDeptBtn" onclick="switchLoginTab('dept')" class="flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-extrabold text-emerald-800 bg-white shadow-xs border border-slate-200/60 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-sitemap text-xs"></i>
+          <span>Theo Bộ phận</span>
         </button>
-        <button id="tabUserBtn" onclick="switchLoginTab('user')" class="flex-1 pb-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition cursor-pointer">
-          <i class="fa-solid fa-user-shield mr-1.5"></i> Nhập Username
+        <button id="tabUserBtn" onclick="switchLoginTab('user')" class="flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-user-shield text-xs"></i>
+          <span>Nhập Username</span>
         </button>
       </div>
 
-      <div id="deptLoginForm" class="space-y-4">
+      <!-- Form Đăng nhập theo bộ phận -->
+      <div id="deptLoginForm" class="space-y-3.5">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">1. Bộ phận / Nhóm tác nghiệp</label>
           <div class="relative">
-            <select id="loginDeptSelect" onchange="onDepartmentChange()" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
+            <i class="fa-solid fa-layer-group absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <select id="loginDeptSelect" onchange="onDepartmentChange()" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl pl-10 pr-10 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
               <option value="">-- Đang nạp danh sách bộ phận... --</option>
             </select>
             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
@@ -357,48 +367,64 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">2. Họ và tên nhân sự</label>
           <div class="relative">
-            <select id="loginStaffSelect" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
+            <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <select id="loginStaffSelect" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl pl-10 pr-10 py-3 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white focus:outline-none appearance-none cursor-pointer transition shadow-2xs">
               <option value="">-- Hãy chọn bộ phận trước --</option>
             </select>
-            <i class="fa-solid fa-user absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
           </div>
         </div>
       </div>
 
-      <div id="userLoginForm" class="space-y-4 hidden">
+      <!-- Form Đăng nhập theo Username -->
+      <div id="userLoginForm" class="space-y-3.5 hidden">
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tên đăng nhập (Username)</label>
-          <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
+          <div class="relative">
+            <i class="fa-solid fa-user-shield absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập (VD: admin...)" class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
+          </div>
         </div>
       </div>
 
-      <div class="mt-4">
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mật khẩu</label>
+      <!-- Ô Nhập Mật Khẩu -->
+      <div class="mt-3.5">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mật khẩu truy cập</label>
         <div class="relative">
-          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
-          <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+          <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-slate-50/90 border border-slate-200 rounded-2xl pl-10 pr-11 py-3 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs" />
+          <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
             <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
           </button>
         </div>
       </div>
 
-      <!-- Ô TÍCH CHỌN GHI NHỚ MẬT KHẨU -->
+      <!-- Ghi nhớ đăng nhập -->
       <div class="flex items-center justify-between mt-3 px-1">
         <label class="flex items-center gap-2 cursor-pointer select-none">
-          <input type="checkbox" id="rememberPasswordChk" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" checked />
-          <span class="text-xs font-semibold text-slate-600">Ghi nhớ mật khẩu đăng nhập</span>
+          <input type="checkbox" id="rememberPasswordChk" class="w-4 h-4 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 cursor-pointer" checked />
+          <span class="text-xs font-semibold text-slate-600">Ghi nhớ đăng nhập</span>
         </label>
+        <span class="text-[11px] text-slate-400 font-medium">Bảo mật SSL 256-bit</span>
       </div>
 
-      <div id="loginErrorBox" class="hidden mt-3 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
+      <!-- Thông báo lỗi -->
+      <div id="loginErrorBox" class="hidden mt-3 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2 animate-in fade-in duration-150">
         <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
         <span id="loginErrorMsg"></span>
       </div>
 
-      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-5 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-700/25 transition flex items-center justify-center gap-2 cursor-pointer">
+      <!-- Nút Đăng nhập -->
+      <button onclick="handleLogin()" id="btnLogin" class="w-full mt-5 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-800 active:scale-[0.98] text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-700/25 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer group">
         <span>Đăng Nhập Vào Hệ Thống</span>
-        <i class="fa-solid fa-arrow-right text-xs"></i>
+        <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
       </button>
+
+      <!-- Chân trang bảo mật doanh nghiệp -->
+      <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
+        <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
+        <span>Hệ thống nội bộ Công ty CP Nhựa Thiếu niên Tiền Phong</span>
+      </div>
     </div>
   </div>
 
@@ -421,8 +447,21 @@
         </div>
       </div>
 
+      <!-- Chỉ số nhịp độ báo cáo hôm nay (Live Status) -->
+      <div id="headerTodayStatusBadge" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 text-xs font-bold text-emerald-900 shadow-2xs">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="headerTodayStatusText">Hôm nay: Đang đồng bộ...</span>
+      </div>
+
       <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & ĐỔI TÊN CHUYÊN NGHIỆP "QUẢN TRỊ NHÂN SỰ" -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
+        <!-- Nút Tìm kiếm thần tốc (Ctrl + K) -->
+        <button type="button" onclick="openCommandPalette()" data-tooltip="Tìm nhanh (Ctrl + K)" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+          <i class="fa-solid fa-magnifying-glass text-emerald-600 text-xs"></i>
+          <span id="headerSearchBtnText" class="hidden md:inline text-slate-600 font-semibold">Tìm nhanh</span>
+          <kbd class="hidden sm:inline px-1.5 py-0.5 text-[9px] font-num font-bold bg-white text-slate-500 border border-slate-300 rounded shadow-2xs">Ctrl K</kbd>
+        </button>
+
         <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" data-tooltip="Quản lý bộ phận" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
           <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
           <span class="hidden md:inline">QL Bộ phận</span>
@@ -465,7 +504,7 @@
     </header>
 
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
-    <main class="flex-1 p-2 sm:p-5 w-full mx-auto space-y-3.5 flex flex-col">
+    <main class="flex-1 p-2 sm:p-5 pb-20 md:pb-6 w-full mx-auto space-y-3.5 flex flex-col">
       <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (CÓ THÊM Ô TÌM KIẾM NHÂN SỰ) -->
       <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -539,7 +578,7 @@
       </div>
 
       <!-- ================= 1. BẢNG MA TRẬN NỘI DUNG CÔNG VIỆC ================= -->
-      <div class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
+      <div id="matrixCard" class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
         <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll max-h-[540px]">
           <table class="sheet-table text-left text-xs whitespace-nowrap min-w-full">
             <thead class="sticky top-0 z-40 border-b border-slate-200">
@@ -625,6 +664,104 @@
           </div>
         </div>
 
+        <!-- ================= BIỂU ĐỒ TRỰC QUAN NHỊP ĐỘ BÁO CÁO & BẢNG VINH DANH THI ĐUA ================= -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+          <!-- 1. BIỂU ĐỒ NHỊP ĐỘ BÁO CÁO THEO NGÀY (Rhythm Trend Chart) -->
+          <!-- 1. BIỂU ĐỒ NHỊP ĐỘ BÁO CÁO & SỐ LIỆU TỪNG ĐẦU VIỆC -->
+          <div id="activityRhythmCard" class="lg:col-span-2 bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3.5 flex flex-col justify-between">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-sm shadow-2xs">
+                  <i class="fa-solid fa-chart-column"></i>
+                </span>
+                <div>
+                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhịp Độ Phát Sinh & Số Liệu Từng Đầu Việc</h4>
+                  <p class="text-[11px] text-slate-400">Xem diễn biến số liệu nhập vào qua từng ngày của từng đầu việc cụ thể</p>
+                </div>
+              </div>
+              <span id="chartPeakDayBadge" class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-teal-50 text-teal-800 border border-teal-200 font-num">
+                Cao điểm: --
+              </span>
+            </div>
+
+            <!-- Thanh chọn đầu việc & Chuyển đổi nhanh -->
+            <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs">
+              <div class="flex items-center gap-2 flex-1 min-w-[260px]">
+                <label for="rhythmTaskSelect" class="text-[11px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+                  <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
+                  <span>Xem đầu việc:</span>
+                </label>
+                <div class="flex items-center gap-1 flex-1">
+                  <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)" class="flex-1 bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate shadow-2xs">
+                    <!-- Tùy chọn sẽ nạp tự động bằng JS -->
+                  </select>
+                  <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs flex-shrink-0 shadow-2xs active:scale-95">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                  </button>
+                  <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs flex-shrink-0 shadow-2xs active:scale-95">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Thẻ thống kê nhanh của đầu việc đang chọn -->
+              <div id="rhythmTaskStatBadges" class="flex items-center gap-1.5 flex-wrap text-[11px] font-bold">
+                <span id="rhythmSelectedTaskTotal" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-emerald-800 shadow-2xs font-num flex items-center gap-1">
+                  <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
+                  <span>Tổng: 0</span>
+                </span>
+                <span id="rhythmSelectedTaskDays" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-sky-800 shadow-2xs font-num flex items-center gap-1">
+                  <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
+                  <span>0 ngày</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Khung vẽ biểu đồ cột tương tác -->
+            <div class="w-full pt-1">
+              <!-- Nhãn trạng thái hiển thị trên đỉnh biểu đồ -->
+              <div class="flex items-center justify-between px-1 pb-1.5 text-xs gap-2">
+                <span id="rhythmChartViewingTaskTitle" class="font-black text-slate-800 truncate flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Tổng hợp tất cả đầu việc</span>
+                </span>
+                <span id="rhythmChartScaleMode" class="text-[10px] text-slate-400 font-semibold font-num flex-shrink-0">
+                  Số liệu: Số lượng nhập vào
+                </span>
+              </div>
+
+              <div id="rhythmBarChartSvgContainer" class="w-full h-44 flex items-end gap-1 sm:gap-1.5 px-1 pb-1 overflow-x-auto custom-scroll border-b border-slate-200">
+                <!-- Các cột biểu đồ và số liệu nhập vào sẽ được render tự động bằng JS -->
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold font-num pt-1.5 px-1">
+                <span>Ngày 01</span>
+                <span class="text-slate-500 font-medium italic"><i class="fa-solid fa-hand-pointer text-[9px] mr-1"></i>Nhấp vào cột để cuộn bảng ma trận đến ngày đó</span>
+                <span id="chartLastDayLabel">Ngày cuối</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. BẢNG VINH DANH THI ĐUA NĂNG SUẤT CÁC BỘ PHẬN (Leaderboard) -->
+          <div id="deptLeaderboardCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs">
+                  <i class="fa-solid fa-medal"></i>
+                </span>
+                <div>
+                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Thi Đua Bám Sát Tiến Độ</h4>
+                  <p class="text-[11px] text-slate-400">Xếp hạng bám sát kế hoạch theo bộ phận</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800">Thi đua</span>
+            </div>
+
+            <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-48 custom-scroll pr-1">
+              <!-- Danh sách xếp hạng sẽ render tự động bằng JS -->
+            </div>
+          </div>
+        </div>
+
         <div id="taskSemanticInsightCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
             <div class="flex items-center gap-2">
@@ -667,6 +804,33 @@
         </div>
       </section>
     </main>
+
+    <!-- ================= THANH ĐIỀU HƯỚNG DƯỚI CÙNG CHO MOBILE (BOTTOM NAV) ================= -->
+    <nav id="mobileBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/90 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around">
+      <button type="button" onclick="scrollToElement('matrixCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-emerald-700 active:scale-95 transition cursor-pointer">
+        <i class="fa-solid fa-table-cells text-base"></i>
+        <span class="text-[10px] font-bold mt-0.5">Ma trận</span>
+      </button>
+      <button type="button" onclick="scrollToElement('activityRhythmCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-teal-700 active:scale-95 transition cursor-pointer">
+        <i class="fa-solid fa-chart-simple text-base"></i>
+        <span class="text-[10px] font-bold mt-0.5">Nhịp độ</span>
+      </button>
+      <!-- Nút Điền báo cáo nổi bật ở giữa -->
+      <button type="button" onclick="openDayEntryModal()" class="flex flex-col items-center justify-center -mt-5 group active:scale-95 transition cursor-pointer">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30 group-hover:scale-105 transition">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+        <span class="text-[10px] font-black text-emerald-800 mt-1">Báo cáo</span>
+      </button>
+      <button type="button" onclick="scrollToElement('deptLeaderboardCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-amber-600 active:scale-95 transition cursor-pointer">
+        <i class="fa-solid fa-trophy text-base"></i>
+        <span class="text-[10px] font-bold mt-0.5">Thi đua</span>
+      </button>
+      <button type="button" onclick="openCommandPalette()" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-indigo-600 active:scale-95 transition cursor-pointer">
+        <i class="fa-solid fa-magnifying-glass text-base"></i>
+        <span id="mobileBottomNavSearchLabel" class="text-[10px] font-bold mt-0.5">Tìm kiếm</span>
+      </button>
+    </nav>
   </div>
   <!-- ================= MODAL ĐIỀU KHIỂN KHÓA SỔ ================= -->
   <div id="periodLockModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1697,6 +1861,53 @@
   </div>
 
 
+  <!-- ================= MODAL THANH ĐIỀU HÀNH NHANH (COMMAND PALETTE - CTRL + K) ================= -->
+  <div id="commandPaletteModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-start justify-center p-3 sm:pt-20 sm:p-4">
+    <div class="relative w-full max-w-xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
+      <!-- Search Input Header -->
+      <div class="p-3.5 sm:p-4 border-b border-slate-100 flex items-center gap-3 bg-gradient-to-r from-slate-50 to-white">
+        <i class="fa-solid fa-magnifying-glass text-emerald-600 text-base sm:text-lg"></i>
+        <input 
+          type="text" 
+          id="commandPaletteInput" 
+          oninput="onCommandPaletteSearch(this.value)" 
+          onkeydown="handleCommandPaletteKeyDown(event)"
+          placeholder="Tìm nhanh nhân viên, bộ phận, đầu việc hoặc tính năng... (ESC để đóng)" 
+          class="flex-1 bg-transparent text-sm sm:text-base font-semibold text-slate-800 placeholder-slate-400 focus:outline-none"
+          autocomplete="off"
+        />
+        <button type="button" onclick="closeCommandPalette()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Quick category filter tabs -->
+      <div class="px-4 py-2 bg-slate-50/80 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto custom-scroll text-xs">
+        <button type="button" onclick="setCommandPaletteFilter('all')" id="cmdFilterAll" class="cmd-filter-btn px-2.5 py-1 rounded-lg font-bold bg-white text-emerald-800 shadow-2xs border border-emerald-200 cursor-pointer" data-filter="all">Tất cả</button>
+        <button type="button" onclick="setCommandPaletteFilter('staff')" id="cmdFilterStaff" class="cmd-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:bg-white border border-transparent cursor-pointer" data-filter="staff">Nhân sự</button>
+        <button type="button" onclick="setCommandPaletteFilter('dept')" id="cmdFilterDept" class="cmd-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:bg-white border border-transparent cursor-pointer" data-filter="dept">Bộ phận</button>
+        <button type="button" onclick="setCommandPaletteFilter('task')" id="cmdFilterTask" class="cmd-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:bg-white border border-transparent cursor-pointer" data-filter="task">Đầu việc</button>
+        <button type="button" onclick="setCommandPaletteFilter('action')" id="cmdFilterAction" class="cmd-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:bg-white border border-transparent cursor-pointer" data-filter="action">Hành động</button>
+      </div>
+
+      <!-- Search results list -->
+      <div id="commandPaletteResults" class="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 custom-scroll max-h-[50vh]">
+        <!-- Dynamic Items rendered by JS -->
+      </div>
+
+      <!-- Footer keyboard shortcuts guide -->
+      <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-num font-bold text-slate-600 text-[10px]">↑</kbd><kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-num font-bold text-slate-600 text-[10px]">↓</kbd> Di chuyển</span>
+          <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-num font-bold text-slate-600 text-[10px]">Enter</kbd> Chọn</span>
+          <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-num font-bold text-slate-600 text-[10px]">ESC</kbd> Đóng</span>
+        </div>
+        <span id="cmdSearchRoleBadge" class="font-medium text-emerald-700 hidden sm:inline"><i class="fa-solid fa-bolt text-[10px] mr-1"></i>Điều hành tức thì</span>
+      </div>
+    </div>
+  </div>
+
+
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
@@ -2363,16 +2574,19 @@
       const tabDeptBtn = document.getElementById('tabDeptBtn');
       const tabUserBtn = document.getElementById('tabUserBtn');
 
+      const activePill = "flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-extrabold text-emerald-800 bg-white shadow-xs border border-slate-200/60 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5";
+      const inactivePill = "flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5";
+
       if (tab === 'dept') {
         deptForm.classList.remove('hidden');
         userForm.classList.add('hidden');
-        tabDeptBtn.className = "flex-1 pb-3 text-xs sm:text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 transition cursor-pointer";
-        tabUserBtn.className = "flex-1 pb-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition cursor-pointer";
+        tabDeptBtn.className = activePill;
+        tabUserBtn.className = inactivePill;
       } else {
         deptForm.classList.add('hidden');
         userForm.classList.remove('hidden');
-        tabUserBtn.className = "flex-1 pb-3 text-xs sm:text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 transition cursor-pointer";
-        tabDeptBtn.className = "flex-1 pb-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition cursor-pointer";
+        tabUserBtn.className = activePill;
+        tabDeptBtn.className = inactivePill;
       }
     }
 
@@ -3200,6 +3414,16 @@
       setupRoleControls();
       preloadAdminDataInBackground();
 
+      const isMgrOrAdmin = isAdminOrManager(currentUser.role, currentUser.username);
+      const headerSearchBtnText = document.getElementById('headerSearchBtnText');
+      if (headerSearchBtnText) {
+        headerSearchBtnText.innerText = isMgrOrAdmin ? "Tìm nhanh" : "Chức năng";
+      }
+      const mobileNavSearchLabel = document.getElementById('mobileBottomNavSearchLabel');
+      if (mobileNavSearchLabel) {
+        mobileNavSearchLabel.innerText = isMgrOrAdmin ? "Tìm kiếm" : "Chức năng";
+      }
+
       const scrollContainer = document.getElementById('tableScrollContainer');
       if (scrollContainer) {
         scrollContainer.classList.remove('hidden');
@@ -3872,6 +4096,8 @@
           headerStyle = "col-sunday-header bg-rose-50 text-rose-700 font-black border-b-2 border-rose-300";
         }
 
+        th.id = `th-col-${dc.colIndex}`;
+        th.setAttribute('data-col-index', dc.colIndex);
         th.className = `py-2 px-1.5 min-w-[52px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
@@ -4352,6 +4578,9 @@
         : `Chưa có phát sinh`;
 
       renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length);
+      renderActivityRhythmChart(data, dailyActiveTasksMap);
+      renderDeptLeaderboard(deptAggregation);
+      updateHeaderTodayStatus(data);
     }
 
     function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod) {
@@ -4413,6 +4642,512 @@
             `;
           });
         }
+      }
+    }
+
+    // ================= HƯỚNG 2: BIỂU ĐỒ NHỊP ĐỘ CÔNG VIỆC & SỐ LIỆU TỪNG ĐẦU VIỆC =================
+    let cachedRhythmData = null;
+    let cachedDailyActiveTasksMap = null;
+    let currentRhythmSelectedTaskKey = 'ALL';
+
+    function onRhythmTaskSelect(taskKey) {
+      currentRhythmSelectedTaskKey = taskKey;
+      if (cachedRhythmData) {
+        renderActivityRhythmChart(cachedRhythmData, cachedDailyActiveTasksMap);
+      }
+    }
+
+    function navigateRhythmTask(direction) {
+      const select = document.getElementById('rhythmTaskSelect');
+      if (!select || select.options.length <= 1) return;
+      let newIdx = select.selectedIndex + direction;
+      if (newIdx < 0) newIdx = select.options.length - 1;
+      if (newIdx >= select.options.length) newIdx = 0;
+      select.selectedIndex = newIdx;
+      onRhythmTaskSelect(select.value);
+    }
+
+    function renderActivityRhythmChart(dataOrDailyMap, maybeDayCols) {
+      const container = document.getElementById('rhythmBarChartSvgContainer');
+      const peakBadge = document.getElementById('chartPeakDayBadge');
+      const lastDayLabel = document.getElementById('chartLastDayLabel');
+      const taskSelect = document.getElementById('rhythmTaskSelect');
+      const titleLabel = document.getElementById('rhythmChartViewingTaskTitle');
+      const scaleModeLabel = document.getElementById('rhythmChartScaleMode');
+      const totalBadge = document.getElementById('rhythmSelectedTaskTotal');
+      const daysBadge = document.getElementById('rhythmSelectedTaskDays');
+
+      if (!container) return;
+
+      // Chuẩn hóa dữ liệu đầu vào: hỗ trợ cả (data, dailyMap) và (dailyMap, dayCols)
+      let data = null;
+      let dayCols = [];
+      let dailyMap = {};
+
+      if (dataOrDailyMap && dataOrDailyMap.dayCols) {
+        data = dataOrDailyMap;
+        dayCols = data.dayCols || [];
+        dailyMap = maybeDayCols || {};
+        cachedRhythmData = data;
+        cachedDailyActiveTasksMap = dailyMap;
+      } else if (cachedRhythmData) {
+        data = cachedRhythmData;
+        dayCols = data.dayCols || [];
+        dailyMap = dataOrDailyMap || cachedDailyActiveTasksMap || {};
+      } else {
+        dayCols = maybeDayCols || [];
+        dailyMap = dataOrDailyMap || {};
+      }
+
+      if (!dayCols || dayCols.length === 0) return;
+
+      if (lastDayLabel && dayCols.length > 0) {
+        lastDayLabel.innerText = `Ngày ${dayCols[dayCols.length - 1].label}`;
+      }
+
+      // Trích xuất toàn bộ danh sách đầu việc có trong ma trận
+      const allTasks = [];
+      if (data && data.staffGroups) {
+        data.staffGroups.forEach((grp, gIdx) => {
+          (grp.tasks || []).forEach((t, tIdx) => {
+            const tName = (t.taskName || '').trim();
+            if (!tName) return;
+            allTasks.push({
+              key: `t_${gIdx}_${tIdx}_${t.taskId || tIdx}`,
+              taskId: t.taskId,
+              taskName: tName,
+              isTextMode: !!t.isTextMode,
+              dailyValues: t.dailyValues || {},
+              monthTotal: t.monthTotal,
+              staffName: grp.staffName || '',
+              department: grp.department || ''
+            });
+          });
+        });
+      }
+
+      // Cập nhật các tùy chọn trong dropdown Đầu việc (nếu có select element)
+      if (taskSelect) {
+        const prevSelected = currentRhythmSelectedTaskKey;
+        taskSelect.innerHTML = `<option value="ALL">📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ</option>`;
+        
+        allTasks.forEach(t => {
+          let activeDays = 0;
+          dayCols.forEach(dc => {
+            const raw = t.dailyValues[dc.colIndex];
+            if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
+              activeDays++;
+            }
+          });
+          const totStr = t.monthTotal !== undefined && t.monthTotal !== null && t.monthTotal !== '' && t.monthTotal !== '-' ? (typeof t.monthTotal === 'number' ? formatNumberWithCommas(t.monthTotal) : t.monthTotal) : `${activeDays} ngày`;
+          const opt = document.createElement('option');
+          opt.value = t.key;
+          opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} (${totStr}) • ${t.staffName}`;
+          if (t.key === prevSelected) opt.selected = true;
+          taskSelect.appendChild(opt);
+        });
+
+        // Kiểm tra tính hợp lệ của lựa chọn hiện tại
+        if (prevSelected !== 'ALL' && !allTasks.some(t => t.key === prevSelected)) {
+          currentRhythmSelectedTaskKey = 'ALL';
+          taskSelect.value = 'ALL';
+        }
+      }
+
+      const now = new Date();
+      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const currentDayNum = now.getDate();
+
+      // ================= TRƯỜNG HỢP 1: XEM CHI TIẾT TỪNG ĐẦU VIỆC CỤ THỂ =================
+      if (currentRhythmSelectedTaskKey !== 'ALL') {
+        const curTask = allTasks.find(t => t.key === currentRhythmSelectedTaskKey);
+        if (curTask) {
+          let maxVal = 0;
+          let peakDay = dayCols[0].label;
+          let peakValStr = "-";
+          let activeDaysCount = 0;
+
+          dayCols.forEach(dc => {
+            const raw = curTask.dailyValues[dc.colIndex];
+            if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
+              activeDaysCount++;
+              const cleanStr = String(raw).replace(/,/g, '').trim();
+              const num = parseFloat(cleanStr);
+              if (!isNaN(num) && !curTask.isTextMode) {
+                if (num > maxVal) {
+                  maxVal = num;
+                  peakDay = dc.label;
+                  peakValStr = formatNumberWithCommas(num);
+                }
+              } else {
+                peakDay = dc.label;
+                peakValStr = String(raw).trim();
+              }
+            }
+          });
+
+          // Cập nhật nhãn và thẻ thống kê đầu việc
+          if (peakBadge) {
+            if (activeDaysCount > 0) {
+              peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>Cao điểm: Ngày ${peakDay} (${peakValStr})`;
+              peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num flex items-center shadow-2xs";
+            } else {
+              peakBadge.innerHTML = "Chưa có phát sinh";
+              peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num";
+            }
+          }
+
+          if (titleLabel) {
+            titleLabel.innerHTML = `
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+              <span class="truncate max-w-[280px] sm:max-w-md font-black text-slate-900" title="${escapeHtml(curTask.taskName)}">${escapeHtml(curTask.taskName)}</span>
+              <span class="text-[10px] text-slate-400 font-normal">(${escapeHtml(curTask.staffName)})</span>
+            `;
+          }
+
+          if (scaleModeLabel) {
+            scaleModeLabel.innerText = curTask.isTextMode 
+              ? "Chế độ: Ký hiệu quy chuẩn (X, Đ, C)" 
+              : "Chế độ: Số liệu định lượng";
+          }
+
+          if (totalBadge) {
+            let totDisplay = curTask.monthTotal !== undefined && curTask.monthTotal !== null && curTask.monthTotal !== '' && curTask.monthTotal !== '-' 
+              ? (typeof curTask.monthTotal === 'number' ? formatNumberWithCommas(curTask.monthTotal) : curTask.monthTotal) 
+              : `${activeDaysCount} ngày`;
+            totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng: <b class="text-emerald-700 font-num">${totDisplay}</b></span>`;
+          }
+
+          if (daysBadge) {
+            daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span><b class="text-sky-700 font-num">${activeDaysCount}/${dayCols.length}</b> ngày</span>`;
+          }
+
+          // Vẽ cột biểu đồ kèm SỐ LIỆU NHẬP VÀO hiển thị trực tiếp trên từng cột
+          let html = '';
+          dayCols.forEach(dc => {
+            const raw = curTask.dailyValues[dc.colIndex];
+            const hasData = (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0');
+            const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
+            const weekendClass = dc.isWeekend ? "opacity-75" : "";
+
+            let displayVal = "";
+            let topLabelHtml = "";
+            let heightPercent = 8;
+            let barColor = "bg-slate-100 group-hover:bg-slate-200";
+
+            if (hasData) {
+              const strVal = String(raw).trim();
+              if (!curTask.isTextMode) {
+                const num = parseFloat(strVal.replace(/,/g, ''));
+                if (!isNaN(num)) {
+                  displayVal = formatNumberWithCommas(num);
+                  const isPeak = (num === maxVal && maxVal > 0);
+                  heightPercent = maxVal > 0 ? Math.max(16, Math.round((num / maxVal) * 65) + 12) : 16;
+                  
+                  if (isPeak) {
+                    barColor = "bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/25";
+                    topLabelHtml = `<span class="text-[10px] font-num font-black text-amber-800 leading-none">${displayVal}</span>`;
+                  } else if (isToday) {
+                    barColor = "bg-gradient-to-t from-emerald-600 to-teal-500 ring-2 ring-emerald-500 ring-offset-1 shadow-xs";
+                    topLabelHtml = `<span class="text-[10px] font-num font-black text-emerald-800 leading-none">${displayVal}</span>`;
+                  } else {
+                    barColor = "bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600 shadow-xs shadow-emerald-500/20";
+                    topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${displayVal}</span>`;
+                  }
+                } else {
+                  displayVal = strVal;
+                  heightPercent = 50;
+                  barColor = "bg-gradient-to-t from-teal-500 to-emerald-400";
+                  topLabelHtml = `<span class="text-[10px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none">${displayVal}</span>`;
+                }
+              } else {
+                displayVal = strVal;
+                heightPercent = 55;
+                barColor = "bg-gradient-to-t from-teal-500 to-emerald-400";
+                topLabelHtml = `<span class="text-[10px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none">${displayVal}</span>`;
+              }
+            } else {
+              topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
+            }
+
+            html += `
+              <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[22px] sm:min-w-[26px] ${weekendClass}" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${hasData ? `Số liệu = ${displayVal}` : 'Không có phát sinh'} (Nhấp để cuộn bảng tới ngày này)">
+                <!-- Tooltip hover chi tiết -->
+                <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none transition-all">
+                  <div class="bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl whitespace-nowrap shadow-xl border border-slate-700">
+                    <div class="flex items-center gap-1.5 border-b border-slate-700 pb-1 mb-1">
+                      <span class="w-2 h-2 rounded-full ${hasData ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                      <span class="font-black text-emerald-400">Ngày ${dc.label}</span>
+                      ${isToday ? '<span class="text-[9px] bg-emerald-700 text-white px-1.5 rounded">Hôm nay</span>' : ''}
+                    </div>
+                    <div class="text-slate-200 text-[10px] truncate max-w-[200px]">${escapeHtml(curTask.taskName)}</div>
+                    <div class="text-amber-300 font-black font-num text-xs mt-0.5">Số liệu nhập vào: ${hasData ? displayVal : 'Chưa nhập'}</div>
+                    <div class="text-slate-400 text-[9px] mt-0.5">Phụ trách: ${escapeHtml(curTask.staffName)}</div>
+                  </div>
+                  <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5"></div>
+                </div>
+
+                <!-- Số liệu in trực tiếp phía trên cột -->
+                <div class="h-4 flex items-center justify-center mb-1">
+                  ${topLabelHtml}
+                </div>
+
+                <!-- Cột biểu đồ -->
+                <div class="w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor}" style="height: ${heightPercent}%"></div>
+                
+                <!-- Nhãn ngày bên dưới -->
+                <span class="text-[9px] font-num mt-1 ${isToday ? 'font-black text-emerald-800 underline' : 'text-slate-400'}">
+                  ${dc.label.split('/')[0]}
+                </span>
+              </div>
+            `;
+          });
+
+          container.innerHTML = html;
+          return;
+        }
+      }
+
+      // ================= TRƯỜNG HỢP 2: XEM TỔNG HỢP TOÀN BỘ ĐẦU VIỆC =================
+      let maxCount = 0;
+      let peakDay = dayCols[0].label;
+      let totalAllTaskEntries = 0;
+
+      dayCols.forEach(dc => {
+        const val = dailyMap[dc.label] || 0;
+        totalAllTaskEntries += val;
+        if (val > maxCount) {
+          maxCount = val;
+          peakDay = dc.label;
+        }
+      });
+
+      if (peakBadge) {
+        if (maxCount > 0) {
+          peakBadge.innerHTML = `<i class="fa-solid fa-fire text-amber-500 mr-1"></i>Cao điểm: Ngày ${peakDay} (${maxCount} việc)`;
+          peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num flex items-center shadow-2xs";
+        } else {
+          peakBadge.innerHTML = "Chưa có phát sinh";
+          peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num";
+        }
+      }
+
+      if (titleLabel) {
+        titleLabel.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+          <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
+        `;
+      }
+
+      if (scaleModeLabel) {
+        scaleModeLabel.innerText = "Chỉ số: Số lượt đầu việc phát sinh/ngày";
+      }
+
+      if (totalBadge) {
+        totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng: <b class="text-emerald-700 font-num">${totalAllTaskEntries}</b> lượt</span>`;
+      }
+
+      if (daysBadge) {
+        let activeDays = 0;
+        dayCols.forEach(dc => { if ((dailyMap[dc.label] || 0) > 0) activeDays++; });
+        daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span><b class="text-sky-700 font-num">${activeDays}/${dayCols.length}</b> ngày</span>`;
+      }
+
+      let html = '';
+      dayCols.forEach(dc => {
+        const count = dailyMap[dc.label] || 0;
+        const isPeak = (count === maxCount && maxCount > 0);
+        const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
+        const weekendClass = dc.isWeekend ? "opacity-75" : "";
+
+        const heightPercent = maxCount > 0 ? Math.max(12, Math.round((count / maxCount) * 68) + 12) : 8;
+        
+        let barColor = "bg-slate-100 group-hover:bg-slate-200";
+        let topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
+
+        if (count > 0) {
+          if (isPeak) {
+            barColor = "bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/20";
+            topLabelHtml = `<span class="text-[10px] font-num font-black text-amber-800 leading-none">${count}</span>`;
+          } else if (isToday) {
+            barColor = "bg-gradient-to-t from-emerald-600 to-teal-500 group-hover:from-emerald-700 ring-2 ring-emerald-500 ring-offset-1";
+            topLabelHtml = `<span class="text-[10px] font-num font-black text-emerald-800 leading-none">${count}</span>`;
+          } else {
+            barColor = "bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600";
+            topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${count}</span>`;
+          }
+        }
+
+        html += `
+          <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[20px] sm:min-w-[24px] ${weekendClass}" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${count} công việc ghi nhận (Nhấp để cuộn bảng tới ngày này)">
+            <!-- Tooltip hover tức thì -->
+            <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none transition-all">
+              <div class="bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl whitespace-nowrap shadow-xl border border-slate-700">
+                <div class="flex items-center gap-1.5 border-b border-slate-700 pb-1 mb-1">
+                  <span class="w-2 h-2 rounded-full ${count > 0 ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                  <span class="font-black text-emerald-400">Ngày ${dc.label}</span>
+                  ${isToday ? '<span class="text-[9px] bg-emerald-700 text-white px-1.5 rounded">Hôm nay</span>' : ''}
+                </div>
+                <div class="text-white text-xs font-num font-black">${count} lượt đầu việc phát sinh</div>
+                <div class="text-slate-400 text-[9px] mt-0.5">Nhấp vào cột để xem trực tiếp trên ma trận</div>
+              </div>
+              <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5"></div>
+            </div>
+
+            <!-- In số lượng trực tiếp trên đỉnh cột -->
+            <div class="h-4 flex items-center justify-center mb-1">
+              ${topLabelHtml}
+            </div>
+
+            <!-- Cột biểu đồ -->
+            <div class="w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor}" style="height: ${heightPercent}%"></div>
+            
+            <!-- Nhãn ngày bên dưới -->
+            <span class="text-[9px] font-num mt-1 ${isToday ? 'font-black text-emerald-800 underline' : isPeak ? 'font-black text-amber-800' : 'text-slate-400'}">
+              ${dc.label.split('/')[0]}
+            </span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderDeptLeaderboard(deptAggregation) {
+      const container = document.getElementById('deptLeaderboardList');
+      if (!container) return;
+
+      const depts = Object.values(deptAggregation || {});
+      if (depts.length === 0) {
+        container.innerHTML = `<div class="py-8 text-center text-xs text-slate-400 font-semibold">Chưa có dữ liệu phòng ban</div>`;
+        return;
+      }
+
+      const list = depts.map(d => {
+        const dCov = d.totalAssignedTasks > 0 ? (d.activeTasksCount / d.totalAssignedTasks) * 100 : 0;
+        const dAdh = d.possibleTaskDays > 0 ? (d.loggedTaskDays / d.possibleTaskDays) * 100 : 0;
+        const compositeScore = Math.round((dCov * 0.6) + (dAdh * 0.4));
+        return {
+          deptName: d.deptName,
+          totalAssignedTasks: d.totalAssignedTasks,
+          activeTasksCount: d.activeTasksCount,
+          coverageRate: Math.round(dCov),
+          adherenceRate: Math.round(dAdh),
+          score: compositeScore
+        };
+      }).sort((a, b) => b.score - a.score);
+
+      let html = '';
+      list.forEach((item, index) => {
+        let rankBadge = '';
+        let rowBg = 'bg-slate-50 hover:bg-emerald-50/50 border-slate-200';
+        
+        if (index === 0) {
+          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-amber-950 font-black text-xs flex items-center justify-center shadow-xs">🥇</div>`;
+          rowBg = 'bg-gradient-to-r from-amber-50/80 to-white hover:from-amber-100/80 border-amber-200 shadow-2xs';
+        } else if (index === 1) {
+          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-300 to-slate-100 text-slate-700 font-black text-xs flex items-center justify-center shadow-xs">🥈</div>`;
+          rowBg = 'bg-slate-50/90 hover:bg-slate-100/90 border-slate-200';
+        } else if (index === 2) {
+          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-700 to-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs">🥉</div>`;
+          rowBg = 'bg-amber-50/40 hover:bg-amber-50/70 border-amber-200/70';
+        } else {
+          rankBadge = `<div class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-bold text-[10px] flex items-center justify-center border border-slate-200 font-num">#${index + 1}</div>`;
+        }
+
+        html += `
+          <div onclick="filterDashboardFromLeaderboard('${escapeHtml(item.deptName)}')" class="p-2.5 rounded-2xl border ${rowBg} transition-all duration-200 cursor-pointer group flex items-center justify-between gap-2.5" title="Nhấp để lọc xem riêng bộ phận ${escapeHtml(item.deptName)}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              ${rankBadge}
+              <div class="min-w-0">
+                <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-700 transition">${escapeHtml(item.deptName)}</p>
+                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                  <span class="font-medium text-slate-500">Độ phủ: <b class="text-teal-700 font-num">${item.coverageRate}%</b></span>
+                  <span>•</span>
+                  <span class="font-medium text-slate-500">Tuân thủ: <b class="text-sky-700 font-num">${item.adherenceRate}%</b></span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-right flex-shrink-0">
+              <span class="text-xs font-black font-num ${index === 0 ? 'text-amber-800' : 'text-slate-800'}">${item.score}đ</span>
+              <div class="w-16 bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1">
+                <div class="h-full rounded-full ${index === 0 ? 'bg-amber-500' : 'bg-emerald-500'}" style="width: ${item.score}%"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterDashboardFromLeaderboard(deptName) {
+      const isDirOrMgr = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+      if (!isDirOrMgr) {
+        showToast("Bạn đang xem số liệu thuộc bộ phận của mình!");
+        scrollToElement('matrixCard');
+        return;
+      }
+      const select = document.getElementById('adminDeptSelect');
+      if (select) {
+        select.value = deptName;
+        onAdminDeptChange();
+        scrollToElement('matrixCard');
+        showToast(`Đã lọc xem bộ phận: ${deptName}`);
+      }
+    }
+
+    function updateHeaderTodayStatus(data) {
+      const badge = document.getElementById('headerTodayStatusBadge');
+      const text = document.getElementById('headerTodayStatusText');
+      if (!badge || !text || !data || !data.dayCols) return;
+
+      const now = new Date();
+      const isCurrentMonth = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const todayDayNum = now.getDate();
+      const todayDayStr = (todayDayNum < 10 ? '0' : '') + todayDayNum;
+
+      if (isCurrentMonth) {
+        let todayEntries = 0;
+        data.staffGroups.forEach(grp => {
+          grp.tasks.forEach(t => {
+            const val = t.dailyValues[todayDayNum];
+            if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
+              todayEntries++;
+            }
+          });
+        });
+
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+        text.innerHTML = `Hôm nay (Ngày ${todayDayStr}): <span class="text-emerald-700 font-black ml-1">${todayEntries} đầu việc ghi nhận</span>`;
+      } else {
+        const mStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+        text.innerHTML = `Kỳ ${mStr}/${currentSelectedYear}: <span class="text-emerald-700 font-black ml-1">${data.staffGroups.length} nhóm nhân sự</span>`;
+      }
+    }
+
+    function scrollToDayColumn(colIndex) {
+      const container = document.getElementById('tableScrollContainer');
+      const th = document.getElementById(`th-col-${colIndex}`) || document.querySelector(`th[data-col-index="${colIndex}"]`);
+      if (container && th) {
+        const stickyTaskHeader = document.querySelector('.col-fixed-task');
+        let stickyOffset = 164;
+        if (stickyTaskHeader) {
+          stickyOffset = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
+        }
+        const targetScroll = th.offsetLeft - stickyOffset;
+        container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+      }
+    }
+
+    function scrollToElement(elemId) {
+      const elem = document.getElementById(elemId);
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
 
@@ -6630,6 +7365,562 @@
         showToast("Lỗi: " + err.message, true);
       }
     }
+
+    // ================= HƯỚNG 3: THANH ĐIỀU HÀNH TỨC THÌ (COMMAND PALETTE - CTRL + K) =================
+    let currentCmdFilter = 'all';
+    let activeCmdIndex = 0;
+    let currentCmdItems = [];
+
+    function openCommandPalette() {
+      const modal = document.getElementById('commandPaletteModal');
+      const input = document.getElementById('commandPaletteInput');
+      if (!modal || !input) return;
+
+      modal.classList.remove('hidden');
+      input.value = '';
+      currentCmdFilter = 'all';
+
+      const isDirOrMgr = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+      const btnStaff = document.getElementById('cmdFilterStaff');
+      const btnDept = document.getElementById('cmdFilterDept');
+      const btnTask = document.getElementById('cmdFilterTask');
+      const btnAction = document.getElementById('cmdFilterAction');
+      const searchRoleBadge = document.getElementById('cmdSearchRoleBadge');
+
+      if (!isDirOrMgr) {
+        input.placeholder = "Tìm nhanh chức năng hoặc đầu việc của bạn... (ESC để đóng)";
+        if (btnStaff) btnStaff.classList.add('hidden');
+        if (btnDept) btnDept.classList.add('hidden');
+        if (btnTask) btnTask.innerText = "Việc của tôi";
+        if (btnAction) btnAction.innerText = "Chức năng của tôi";
+        if (searchRoleBadge) searchRoleBadge.innerHTML = '<i class="fa-solid fa-user-check text-[10px] mr-1"></i>Chức năng cá nhân';
+      } else {
+        input.placeholder = "Tìm nhanh nhân viên, bộ phận, đầu việc hoặc tính năng... (ESC để đóng)";
+        if (btnStaff) btnStaff.classList.remove('hidden');
+        if (btnDept) btnDept.classList.remove('hidden');
+        if (btnTask) btnTask.innerText = "Đầu việc";
+        if (btnAction) btnAction.innerText = "Hành động";
+        if (searchRoleBadge) searchRoleBadge.innerHTML = '<i class="fa-solid fa-bolt text-[10px] mr-1"></i>Điều hành trung tâm';
+      }
+
+      updateCommandPaletteFilterPills();
+      buildAndRenderCommandPaletteResults('');
+      setTimeout(() => { input.focus(); }, 60);
+    }
+
+    function closeCommandPalette() {
+      const modal = document.getElementById('commandPaletteModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function setCommandPaletteFilter(filterType) {
+      currentCmdFilter = filterType;
+      updateCommandPaletteFilterPills();
+      const input = document.getElementById('commandPaletteInput');
+      buildAndRenderCommandPaletteResults(input ? input.value : '');
+    }
+
+    function updateCommandPaletteFilterPills() {
+      const filters = ['all', 'staff', 'dept', 'task', 'action'];
+      filters.forEach(f => {
+        const btn = document.querySelector(`.cmd-filter-btn[data-filter="${f}"]`);
+        if (btn) {
+          if (f === currentCmdFilter) {
+            btn.className = "cmd-filter-btn px-2.5 py-1 rounded-lg font-bold bg-white text-emerald-800 shadow-2xs border border-emerald-200 cursor-pointer";
+          } else {
+            btn.className = "cmd-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:bg-white border border-transparent cursor-pointer";
+          }
+        }
+      });
+    }
+
+    function onCommandPaletteSearch(keyword) {
+      buildAndRenderCommandPaletteResults(keyword);
+    }
+
+    function buildAndRenderCommandPaletteResults(rawKeyword) {
+      const kw = removeAccents((rawKeyword || '').trim()).toLowerCase();
+      const items = [];
+
+      const isDirOrMgr = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+
+      // 1. CHỨC NĂNG / ACTIONS
+      if (currentCmdFilter === 'all' || currentCmdFilter === 'action') {
+        if (!isDirOrMgr) {
+          // ================= DANH MỤC CHỨC NĂNG DÀNH RIÊNG CHO NHÂN VIÊN =================
+          const myActions = [
+            {
+              type: 'action',
+              title: 'Điền báo cáo công việc',
+              subtitle: 'Ghi nhận sản lượng & công việc hoàn thành hôm nay',
+              icon: 'fa-solid fa-pen-to-square text-emerald-600 bg-emerald-50',
+              badge: 'Báo cáo',
+              handler: () => { closeCommandPalette(); openDayEntryModal(); },
+              tags: 'bao cao nhap lieu ngay cong san luong tien do nhap bao cao'
+            },
+            {
+              type: 'action',
+              title: 'Xem bảng ma trận công việc của tôi',
+              subtitle: `Tập trung hiển thị danh mục đầu việc của ${currentUser.fullName}`,
+              icon: 'fa-solid fa-table-cells text-teal-600 bg-teal-50',
+              badge: 'Ma trận',
+              handler: () => { 
+                closeCommandPalette(); 
+                currentSelectedStaff = currentUser.fullName;
+                applyClientFilterAndRender();
+                scrollToElement('matrixCard'); 
+                showToast("Đang hiển thị công việc của bạn");
+              },
+              tags: 'ma tran cong viec cua toi danh muc bang tien do'
+            },
+            {
+              type: 'action',
+              title: 'Xem biểu đồ nhịp độ công việc',
+              subtitle: 'Theo dõi nhịp độ phát sinh công việc theo ngày',
+              icon: 'fa-solid fa-chart-simple text-sky-600 bg-sky-50',
+              badge: 'Nhịp độ',
+              handler: () => { closeCommandPalette(); scrollToElement('activityRhythmCard'); },
+              tags: 'bieu do nhip do bieu do cot phan tich'
+            },
+            {
+              type: 'action',
+              title: 'Xem bảng thi đua phòng ban',
+              subtitle: `Xếp hạng thi đua bộ phận ${currentUser.department}`,
+              icon: 'fa-solid fa-trophy text-amber-600 bg-amber-50',
+              badge: 'Thi đua',
+              handler: () => { closeCommandPalette(); scrollToElement('deptLeaderboardCard'); },
+              tags: 'thi dua vinh danh xep hang phong ban bo phan'
+            },
+            {
+              type: 'action',
+              title: 'Xuất báo cáo cá nhân sang Excel (.xlsx)',
+              subtitle: `Tải bảng báo cáo công việc cá nhân kỳ này`,
+              icon: 'fa-solid fa-file-excel text-emerald-700 bg-emerald-50',
+              badge: 'Xuất file',
+              handler: () => { closeCommandPalette(); exportToExcel(); },
+              tags: 'xuat excel download tai ve bao cao'
+            },
+            {
+              type: 'action',
+              title: 'Xem hồ sơ tài khoản cá nhân',
+              subtitle: `@${currentUser.username} • Bộ phận: ${currentUser.department}`,
+              icon: 'fa-solid fa-id-badge text-indigo-600 bg-indigo-50',
+              badge: 'Tài khoản',
+              handler: () => { closeCommandPalette(); openUserProfileModal(); },
+              tags: 'ho so tai khoan ca nhan thong tin user profile'
+            },
+            {
+              type: 'action',
+              title: 'Đổi mật khẩu bảo mật',
+              subtitle: 'Cập nhật mật khẩu đăng nhập an toàn',
+              icon: 'fa-solid fa-key text-amber-600 bg-amber-50',
+              badge: 'Bảo mật',
+              handler: () => { closeCommandPalette(); openChangePasswordModal(); },
+              tags: 'doi mat khau password bao mat'
+            },
+            {
+              type: 'action',
+              title: 'Làm mới dữ liệu',
+              subtitle: 'Cập nhật dữ liệu mới nhất từ máy chủ',
+              icon: 'fa-solid fa-arrows-rotate text-blue-600 bg-blue-50',
+              badge: 'Đồng bộ',
+              handler: () => { closeCommandPalette(); loadMatrixData(true); },
+              tags: 'lam moi refresh dong bo reload'
+            },
+            {
+              type: 'action',
+              title: 'Đăng xuất tài khoản',
+              subtitle: 'Thoát khỏi phiên làm việc an toàn',
+              icon: 'fa-solid fa-power-off text-rose-600 bg-rose-50',
+              badge: 'Đăng xuất',
+              handler: () => { closeCommandPalette(); handleLogout(); },
+              tags: 'dang xuat logout thoat'
+            }
+          ];
+
+          myActions.forEach(a => {
+            if (!kw || removeAccents(a.title).toLowerCase().includes(kw) || removeAccents(a.subtitle).toLowerCase().includes(kw) || a.tags.includes(kw)) {
+              items.push(a);
+            }
+          });
+        } else {
+          // ================= DANH MỤC HÀNH ĐỘNG DÀNH CHO ADMIN VÀ QUẢN LÝ =================
+          const adminActions = [
+            {
+              type: 'action',
+              title: 'Điền báo cáo công việc',
+              subtitle: 'Ghi nhận sản lượng & công việc hôm nay',
+              icon: 'fa-solid fa-pen-to-square text-emerald-600 bg-emerald-50',
+              badge: 'Thao tác',
+              handler: () => { closeCommandPalette(); openDayEntryModal(); },
+              tags: 'bao cao nhap lieu ngay cong san luong tien do'
+            },
+            {
+              type: 'action',
+              title: 'Xem bảng ma trận công việc',
+              subtitle: 'Cuộn nhanh đến lưới ma trận tiến độ',
+              icon: 'fa-solid fa-table-cells text-teal-600 bg-teal-50',
+              badge: 'Điều hướng',
+              handler: () => { closeCommandPalette(); scrollToElement('matrixCard'); },
+              tags: 'ma tran luoi bang chi tiet tien do'
+            },
+            {
+              type: 'action',
+              title: 'Xem biểu đồ nhịp độ công việc',
+              subtitle: 'Theo dõi tần suất phát sinh việc theo ngày',
+              icon: 'fa-solid fa-chart-simple text-sky-600 bg-sky-50',
+              badge: 'Báo cáo',
+              handler: () => { closeCommandPalette(); scrollToElement('activityRhythmCard'); },
+              tags: 'bieu do nhip do bieu do cot phan tich'
+            },
+            {
+              type: 'action',
+              title: 'Bảng vinh danh thi đua các bộ phận',
+              subtitle: 'Xếp hạng độ phủ & tỷ lệ tuân thủ báo cáo',
+              icon: 'fa-solid fa-trophy text-amber-600 bg-amber-50',
+              badge: 'Thi đua',
+              handler: () => { closeCommandPalette(); scrollToElement('deptLeaderboardCard'); },
+              tags: 'thi dua vinh danh xep hang phong ban bo phan'
+            },
+            {
+              type: 'action',
+              title: 'Xuất báo cáo sang Excel (.xlsx)',
+              subtitle: 'Tải file Excel định dạng chuẩn công ty',
+              icon: 'fa-solid fa-file-excel text-emerald-700 bg-emerald-50',
+              badge: 'Xuất file',
+              handler: () => { closeCommandPalette(); exportToExcel(); },
+              tags: 'xuat excel download tai ve bao cao'
+            },
+            {
+              type: 'action',
+              title: 'Quản trị nhân sự & Tài khoản',
+              subtitle: 'Thêm tài khoản, đổi mật khẩu, điều chuyển',
+              icon: 'fa-solid fa-id-card-clip text-emerald-700 bg-emerald-50',
+              badge: 'Quản trị',
+              handler: () => { closeCommandPalette(); openUserManagerModal(); },
+              tags: 'quan tri nhan su tai khoan user dieu chuyen'
+            },
+            {
+              type: 'action',
+              title: 'Phân công & Giao việc (Đầu việc)',
+              subtitle: 'Thêm mới hoặc phân công danh mục công việc',
+              icon: 'fa-solid fa-list-check text-teal-700 bg-teal-50',
+              badge: 'Quản trị',
+              handler: () => { closeCommandPalette(); openAssignModal(); },
+              tags: 'phan cong giao viec dau viec them viec assign'
+            },
+            {
+              type: 'action',
+              title: 'Quản lý danh mục Bộ phận',
+              subtitle: 'Thêm mới, đổi tên hoặc xóa bộ phận',
+              icon: 'fa-solid fa-sitemap text-slate-700 bg-slate-100',
+              badge: 'Quản trị',
+              handler: () => { closeCommandPalette(); openDeptManagerModal(); },
+              tags: 'quan ly bo phan phong ban to nhom department'
+            },
+            {
+              type: 'action',
+              title: 'Khóa sổ / Mở khóa kỳ báo cáo',
+              subtitle: 'Đóng băng hoặc mở cho phép nhập liệu tháng',
+              icon: 'fa-solid fa-lock text-rose-700 bg-rose-50',
+              badge: 'Quản trị',
+              handler: () => { closeCommandPalette(); openPeriodLockModal(); },
+              tags: 'khoa so mo khoa ky bao cao lock period'
+            },
+            {
+              type: 'action',
+              title: 'Xem hồ sơ tài khoản',
+              subtitle: 'Thông tin cá nhân, bộ phận và phân quyền',
+              icon: 'fa-solid fa-id-badge text-indigo-600 bg-indigo-50',
+              badge: 'Tài khoản',
+              handler: () => { closeCommandPalette(); openUserProfileModal(); },
+              tags: 'ho so tai khoan ca nhan thong tin user profile'
+            },
+            {
+              type: 'action',
+              title: 'Đổi mật khẩu bảo mật',
+              subtitle: 'Cập nhật mật khẩu đăng nhập an toàn',
+              icon: 'fa-solid fa-key text-amber-600 bg-amber-50',
+              badge: 'Bảo mật',
+              handler: () => { closeCommandPalette(); openChangePasswordModal(); },
+              tags: 'doi mat khau password bao mat'
+            },
+            {
+              type: 'action',
+              title: 'Làm mới & Đồng bộ dữ liệu',
+              subtitle: 'Cập nhật số liệu mới nhất từ máy chủ',
+              icon: 'fa-solid fa-arrows-rotate text-blue-600 bg-blue-50',
+              badge: 'Đồng bộ',
+              handler: () => { closeCommandPalette(); loadMatrixData(true); },
+              tags: 'lam moi refresh dong bo reload'
+            },
+            {
+              type: 'action',
+              title: 'Đăng xuất hệ thống',
+              subtitle: 'Thoát phiên làm việc an toàn',
+              icon: 'fa-solid fa-power-off text-rose-600 bg-rose-50',
+              badge: 'Đăng xuất',
+              handler: () => { closeCommandPalette(); handleLogout(); },
+              tags: 'dang xuat logout thoat'
+            }
+          ];
+
+          adminActions.forEach(a => {
+            if (!kw || removeAccents(a.title).toLowerCase().includes(kw) || removeAccents(a.subtitle).toLowerCase().includes(kw) || a.tags.includes(kw)) {
+              items.push(a);
+            }
+          });
+        }
+      }
+
+      // 2. BỘ PHẬN - CHỈ DÀNH CHO ADMIN VÀ QUẢN LÝ
+      if (isDirOrMgr && (currentCmdFilter === 'all' || currentCmdFilter === 'dept')) {
+        const depts = (globalInitData && globalInitData.departments) ? globalInitData.departments : [];
+        depts.forEach(d => {
+          const dName = typeof d === 'string' ? d : d.name;
+          if (!dName) return;
+          if (!kw || removeAccents(dName).toLowerCase().includes(kw)) {
+            items.push({
+              type: 'dept',
+              title: dName,
+              subtitle: 'Xem toàn bộ tiến độ của bộ phận này',
+              icon: 'fa-solid fa-sitemap text-emerald-700 bg-emerald-50',
+              badge: 'Bộ phận',
+              handler: () => {
+                closeCommandPalette();
+                filterDashboardFromLeaderboard(dName);
+              }
+            });
+          }
+        });
+      }
+
+      // 3. NHÂN SỰ - CHỈ DÀNH CHO ADMIN VÀ QUẢN LÝ
+      if (isDirOrMgr && (currentCmdFilter === 'all' || currentCmdFilter === 'staff')) {
+        const users = (adminManageUsersCache && adminManageUsersCache.users) 
+          ? adminManageUsersCache.users 
+          : (globalInitData && globalInitData.users ? globalInitData.users : []);
+        
+        users.forEach(u => {
+          const fName = u.fullName || u.full_name || '';
+          const uName = u.username || '';
+          const dName = u.dept || (u.departments ? u.departments.name : '');
+          if (!fName || uName.startsWith('group_')) return;
+
+          const combined = `${removeAccents(fName)} ${uName} ${removeAccents(dName)}`.toLowerCase();
+          if (!kw || combined.includes(kw)) {
+            items.push({
+              type: 'staff',
+              title: fName,
+              subtitle: `@${uName} · ${dName || 'Ban DVKH'} · ${u.role || 'Nhân viên'}`,
+              icon: 'fa-solid fa-user text-teal-700 bg-teal-50',
+              badge: u.role || 'Nhân viên',
+              handler: () => {
+                closeCommandPalette();
+                const searchInput = document.getElementById('adminStaffSearchInput');
+                if (searchInput) {
+                  searchInput.value = fName;
+                  onAdminStaffSearchInput(fName);
+                  scrollToElement('matrixCard');
+                  showToast(`Đang xem công việc của nhân sự: ${fName}`);
+                }
+              }
+            });
+          }
+        });
+      }
+
+      // 4. ĐẦU VIỆC (TASKS)
+      if (currentCmdFilter === 'all' || currentCmdFilter === 'task') {
+        if (currentMatrixData && currentMatrixData.staffGroups) {
+          const seenTasks = new Set();
+          
+          if (!isDirOrMgr) {
+            // NHÂN VIÊN: CHỈ TÌM KIẾM VÀ HIỂN THỊ ĐẦU VIỆC CỦA CHÍNH MÌNH
+            currentMatrixData.staffGroups.forEach(grp => {
+              const isMyGroup = (grp.userId && grp.userId === currentUser.id) || 
+                                isStaffMatchedInCell(currentUser.fullName, grp.staffName) ||
+                                (isSharedGroupDeptClient(currentUser.department) && isDeptEquivalent(grp.department, currentUser.department));
+
+              if (isMyGroup) {
+                grp.tasks.forEach(t => {
+                  const tName = (t.taskName || '').trim();
+                  if (tName && !seenTasks.has(tName)) {
+                    seenTasks.add(tName);
+                    if (!kw || removeAccents(tName).toLowerCase().includes(kw)) {
+                      items.push({
+                        type: 'task',
+                        title: tName,
+                        subtitle: `Đầu việc của tôi • ${t.isTextMode ? 'Ký hiệu quy chuẩn' : 'Số định lượng'}`,
+                        icon: 'fa-solid fa-list-check text-emerald-600 bg-emerald-50',
+                        badge: 'Việc của tôi',
+                        handler: () => {
+                          closeCommandPalette();
+                          scrollToElement('matrixCard');
+                          showToast(`Đã tìm đầu việc của bạn: ${tName}`);
+                        }
+                      });
+                    }
+                  }
+                });
+              }
+            });
+          } else {
+            // QUẢN LÝ / ADMIN: TÌM KIẾM TẤT CẢ ĐẦU VIỆC TOÀN CÔNG TY
+            currentMatrixData.staffGroups.forEach(grp => {
+              grp.tasks.forEach(t => {
+                const tName = (t.taskName || '').trim();
+                if (tName && !seenTasks.has(tName)) {
+                  seenTasks.add(tName);
+                  if (!kw || removeAccents(tName).toLowerCase().includes(kw)) {
+                    items.push({
+                      type: 'task',
+                      title: tName,
+                      subtitle: `Đầu việc thuộc: ${grp.department || 'Ban DVKH'}`,
+                      icon: 'fa-solid fa-list-check text-sky-700 bg-sky-50',
+                      badge: t.isTextMode ? 'Ký hiệu' : 'Định lượng',
+                      handler: () => {
+                        closeCommandPalette();
+                        scrollToElement('matrixCard');
+                        showToast(`Đã tìm đầu việc: ${tName}`);
+                      }
+                    });
+                  }
+                }
+              });
+            });
+          }
+        }
+      }
+
+      currentCmdItems = items;
+      activeCmdIndex = 0;
+      renderCommandPaletteResults();
+    }
+
+    function renderCommandPaletteResults() {
+      const container = document.getElementById('commandPaletteResults');
+      if (!container) return;
+
+      if (currentCmdItems.length === 0) {
+        const isDirOrMgr = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-2xl mb-2 text-slate-300"></i>
+            <p class="text-xs font-semibold">Không tìm thấy kết quả phù hợp</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">${
+              isDirOrMgr 
+                ? "Hãy thử tìm theo tên nhân sự, tên bộ phận, hoặc từ khóa chức năng." 
+                : "Chỉ hiển thị các chức năng và đầu việc trong phạm vi tài khoản của bạn."
+            }</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      currentCmdItems.forEach((item, index) => {
+        const isActive = (index === activeCmdIndex);
+        const activeClass = isActive 
+          ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-400 shadow-2xs' 
+          : 'bg-white hover:bg-slate-50 border-slate-200/80';
+
+        html += `
+          <div 
+            id="cmdItem-${index}" 
+            onclick="executeCommandAction(${index})" 
+            onmouseenter="setCommandPaletteActiveIndex(${index})"
+            class="cmd-result-item p-2.5 sm:p-3 rounded-2xl border ${activeClass} transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer group"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs flex-shrink-0 shadow-2xs ${item.icon}"></span>
+              <div class="min-w-0">
+                <p class="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-emerald-700 transition">${escapeHtml(item.title)}</p>
+                <p class="text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(item.subtitle)}</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2 flex-shrink-0">
+              ${item.badge ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(item.badge)}</span>` : ''}
+              <i class="fa-solid fa-chevron-right text-slate-300 text-xs group-hover:text-emerald-600 transition"></i>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      scrollActiveCmdItemIntoView();
+    }
+
+    function setCommandPaletteActiveIndex(index) {
+      activeCmdIndex = index;
+      const items = document.querySelectorAll('.cmd-result-item');
+      items.forEach((elem, i) => {
+        if (i === index) {
+          elem.className = "cmd-result-item p-2.5 sm:p-3 rounded-2xl border bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-400 shadow-2xs transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer group";
+        } else {
+          elem.className = "cmd-result-item p-2.5 sm:p-3 rounded-2xl border bg-white hover:bg-slate-50 border-slate-200/80 transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer group";
+        }
+      });
+    }
+
+    function scrollActiveCmdItemIntoView() {
+      const activeElem = document.getElementById(`cmdItem-${activeCmdIndex}`);
+      if (activeElem) {
+        activeElem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    function handleCommandPaletteKeyDown(e) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentCmdItems.length > 0) {
+          activeCmdIndex = (activeCmdIndex + 1) % currentCmdItems.length;
+          setCommandPaletteActiveIndex(activeCmdIndex);
+          scrollActiveCmdItemIntoView();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentCmdItems.length > 0) {
+          activeCmdIndex = (activeCmdIndex - 1 + currentCmdItems.length) % currentCmdItems.length;
+          setCommandPaletteActiveIndex(activeCmdIndex);
+          scrollActiveCmdItemIntoView();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        executeCommandAction(activeCmdIndex);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeCommandPalette();
+      }
+    }
+
+    function executeCommandAction(index) {
+      if (index >= 0 && index < currentCmdItems.length) {
+        const item = currentCmdItems[index];
+        if (item && typeof item.handler === 'function') {
+          item.handler();
+        }
+      }
+    }
+
+    // Lắng nghe phím tắt toàn hệ thống: Ctrl + K, Cmd + K, ESC
+    window.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const modal = document.getElementById('commandPaletteModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          closeCommandPalette();
+        } else {
+          openCommandPalette();
+        }
+      } else if (e.key === 'Escape') {
+        const modal = document.getElementById('commandPaletteModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          closeCommandPalette();
+        }
+      }
+    });
 
     // ================= ĐĂNG XUẤT =================
     function handleLogout() {
