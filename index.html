@@ -2319,14 +2319,16 @@
         const { data: depts, error: dErr } = await supabase
           .from('departments')
           .select('*')
-          .order('name');
+          .order('name')
+          .limit(1000);
         if (dErr) throw dErr;
 
         const { data: users, error: uErr } = await supabase
           .from('users')
           .select('*')
           .eq('status', 'Hoạt động')
-          .order('full_name');
+          .order('full_name')
+          .limit(10000);
         if (uErr) throw uErr;
 
         const validUsers = (users || []).filter(u => {
@@ -2465,8 +2467,8 @@
 
       try {
         if (!adminManageUsersCache) {
-          const { data: users, error: uErr } = await supabase.from('users').select('*, departments(name)');
-          const { data: depts, error: dErr } = await supabase.from('departments').select('name');
+          const { data: users, error: uErr } = await supabase.from('users').select('*, departments(name)').limit(10000);
+          const { data: depts, error: dErr } = await supabase.from('departments').select('name').limit(1000);
           if (!uErr && !dErr) {
             const validUsers = (users || []).filter(u => {
               const uName = (u.username || '').toLowerCase();
@@ -2734,7 +2736,8 @@
         const { data: depts, error } = await supabase
           .from('departments')
           .select('*, users(id, status)')
-          .order('name');
+          .order('name')
+          .limit(1000);
 
         loading.classList.add('hidden');
         if (error) throw error;
@@ -3553,13 +3556,15 @@
         });
       }
 
-      const { data: dbDepts } = await supabase.from('departments').select('*');
-      const { data: dbUsers } = await supabase.from('users').select('*').order('full_name');
+      // Nâng giới hạn truy vấn để không bị cắt cụt dữ liệu quá 1000 dòng
+      const { data: dbDepts } = await supabase.from('departments').select('*').limit(1000);
+      const { data: dbUsers } = await supabase.from('users').select('*').order('full_name').limit(10000);
 
       const { data: tasks, error: tErr } = await supabase
         .from('tasks')
         .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id, status)')
-        .order('id', { ascending: true });
+        .order('id', { ascending: true })
+        .limit(10000);
 
       if (tErr) throw tErr;
 
@@ -3571,7 +3576,8 @@
         .from('daily_reports')
         .select('*')
         .gte('report_date', startDate)
-        .lte('report_date', endDate);
+        .lte('report_date', endDate)
+        .limit(50000);
 
       if (rErr) throw rErr;
 
@@ -3623,39 +3629,24 @@
         // Tách biệt rõ Hàng nhập trả vs Tổ kho
         const isShared = isSharedGroupDeptClient(deptName);
 
-        // Kiểm tra xem công việc này có phát sinh dữ liệu trong tháng đang xem hay không
-        let hasAnyDataInMonth = false;
-        const dailyValues = {};
-        dayCols.forEach(dc => {
-          const val = reportLookup[`${t.id}_${dc.dayNum}`];
-          if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
-            hasAnyDataInMonth = true;
-          }
-          dailyValues[dc.colIndex] = (val !== undefined && val !== null) ? val : "";
-        });
-
-        // BẢO TOÀN LỊCH SỬ & LỌC CÔNG VIỆC MỚI:
-        // Nếu xem kỳ quá khứ (tháng cũ) và công việc hoàn toàn KHÔNG có số liệu phát sinh trong tháng cũ đó
-        // (do vừa được thêm ở tháng mới) -> Bỏ qua, không hiển thị trong tháng cũ!
+        // BẢO VỆ DỮ LIỆU THÁNG CŨ & LOẠI TRỪ CÔNG VIỆC MỚI TẠO Ở THÁNG SAU:
+        // Nếu công việc có mốc created_at và thời điểm tạo là sau tháng đang xem (ví dụ tạo trong tháng 10 nhưng đang xem tháng 9)
+        // -> Loại bỏ công việc này khỏi kỳ tháng 9.
         if (t.created_at) {
           const taskCreated = new Date(t.created_at);
-          const endOfQueriedMonth = new Date(year, month, 0, 23, 59, 59);
-          if (taskCreated > endOfQueriedMonth && !hasAnyDataInMonth) {
+          const endOfQueriedMonth = new Date(year, month, 0, 23, 59, 59, 999);
+          if (taskCreated > endOfQueriedMonth) {
             return;
           }
         }
-        if (isPastPeriod && !hasAnyDataInMonth) {
-          return;
-        }
 
         // 2. XỬ LÝ TRẠNG THÁI NHÂN SỰ:
-        // Nếu nhân sự bị Tạm khóa hoặc Khóa:
-        // - Ở kỳ hiện tại/tương lai: Ẩn đi để không phải báo cáo
-        // - Nhưng ở KỲ QUÁ KHỨ (tháng cũ) nếu nhân sự đó ĐÃ CÓ SỐ LIỆU BÁO CÁO: VẪN GIỮ ĐỂ BẢO TOÀN NGUYÊN VẸN LỊCH SỬ!
+        // Ở kỳ hiện tại/tương lai: Nếu nhân sự bị Tạm khóa hoặc Khóa thì ẩn đi.
+        // Ở kỳ quá khứ: KHÔNG ẩn nhân sự để bảo toàn báo cáo và lịch sử của họ!
         if (!isShared && assignedUser) {
           const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
           if (uStatus.includes("tam") || uStatus.includes("khoa")) {
-            if (!isPastPeriod || !hasAnyDataInMonth) {
+            if (!isPastPeriod) {
               return;
             }
           }
@@ -3668,7 +3659,7 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // CHỈ LỌC THÀNH VIÊN ĐANG HOẠT ĐỘNG THUỘC KHO NÀY (HOẶC ĐÃ CÓ SỐ LIỆU TRONG KỲ QUÁ KHỨ)
+          // Lọc thành viên thuộc kho này
           const deptMembers = (dbUsers || []).filter(u => {
             if (!isPastPeriod && u.status !== 'Hoạt động') return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
@@ -3714,6 +3705,12 @@
             tasks: []
           };
         }
+
+        const dailyValues = {};
+        dayCols.forEach(dc => {
+          const val = reportLookup[`${t.id}_${dc.dayNum}`];
+          dailyValues[dc.colIndex] = (val !== undefined && val !== null) ? val : "";
+        });
 
         const monthTotal = calculateSmartRowTotalClient(dailyValues, dayCols);
 
@@ -5557,7 +5554,7 @@
       }
     }
 
-    // ================= KHẮC PHỤC LỖI NULL VALUE TRONG CỘT ID CỦA BẢNG TASKS =================
+    // ================= KHẮC PHỤC TRIỆT ĐỂ LỖI NULL VALUE TRONG CỘT ID CỦA BẢNG TASKS =================
     async function submitAdminAssign() {
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       const staffName = staffSelect ? staffSelect.value.trim() : "";
@@ -5609,7 +5606,7 @@
         const dId = dept && dept[0] ? dept[0].id : 1;
         const uId = user && user[0] ? user[0].id : 1;
 
-        // 1. Cập nhật các công việc cũ đã có ID
+        // 1. Cập nhật các việc cũ đã có ID
         if (tasksToUpdate.length > 0) {
           const updatePayload = tasksToUpdate.map(t => ({
             id: t.id,
@@ -5622,7 +5619,7 @@
           if (upErr) throw upErr;
         }
 
-        // 2. Thêm mới hoàn toàn các công việc chưa có ID (không truyền thuộc tính id để DB tự sinh)
+        // 2. Thêm mới các việc chưa có ID (không truyền thuộc tính id để DB tự sinh)
         if (tasksToInsert.length > 0) {
           const insertPayload = tasksToInsert.map(t => ({
             department_id: dId,
@@ -5670,8 +5667,8 @@
       loading.classList.remove('hidden');
 
       try {
-        const { data: users, error: uErr } = await supabase.from('users').select('*, departments(id, name)').order('full_name');
-        const { data: depts, error: dErr } = await supabase.from('departments').select('name').order('name');
+        const { data: users, error: uErr } = await supabase.from('users').select('*, departments(id, name)').order('full_name').limit(10000);
+        const { data: depts, error: dErr } = await supabase.from('departments').select('name').order('name').limit(1000);
 
         loading.classList.add('hidden');
         if (uErr) throw uErr;
