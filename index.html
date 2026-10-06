@@ -46,6 +46,8 @@
       overflow: hidden !important;
     }
     #loginRightCol {
+      width: 100% !important;
+      max-width: 100% !important;
       height: 100% !important;
       max-height: 100vh !important;
       overflow: hidden !important;
@@ -375,23 +377,22 @@
   </div>
 
 
-  <!-- ================= MÀN HÌNH ĐĂNG NHẬP (HIỆN ĐẠI & SANG TRỌNG) ================= -->
   <!-- ================= MÀN HÌNH ĐĂNG NHẬP TOÀN MÀN HÌNH (SPLIT-SCREEN 2/3 - 1/3) ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 flex flex-col md:flex-row w-full h-full min-h-screen overflow-hidden bg-slate-950">
     
-    <!-- CỘT TRÁI (CHIẾM 2/3 MÀN HÌNH): HÌNH ẢNH NHÀ MÁY THỰC TẾ, LOGO, TÊN CÔNG TY & THÔNG TIN BÁO CÁO CÔNG VIỆC -->
-    <div id="loginHeroCol" class="hidden md:flex md:w-2/3 lg:w-2/3 h-full relative flex-col justify-between p-6 lg:p-8 xl:p-12 overflow-hidden select-none bg-slate-950">
-      
-      <!-- Lớp ảnh nền Trụ sở & Nhà máy Tiền Phong với hiệu ứng chuyển động nhẹ -->
-      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105" style="background-image: url('tienphong_banner.jpg');"></div>
-      
-      <!-- Lớp phủ Gradient ngang thông minh (Vignette): Đậm ở bên trái giúp chữ sắc nét, trong sáng ở bên phải tôn vinh nhà máy -->
-      <div class="absolute inset-0 bg-gradient-to-r from-[#01261d]/95 via-[#023b2c]/85 to-[#065842]/55"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-[#011a14]/90 via-transparent to-transparent"></div>
+    <!-- ẢNH NỀN TOÀN MÀN HÌNH (TRỤ SỞ & NHÀ MÁY TIỀN PHONG XUYÊN SUỐT 100% KHÔNG BỊ NGẮT QUÃNG) -->
+    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105 pointer-events-none select-none z-0" style="background-image: url('tienphong_banner.jpg');"></div>
+    
+    <!-- LỚP PHỦ GRADIENT ĐỒNG BỘ TOÀN MÀN HÌNH: SẮC XANH TIỀN PHONG ĐẬM ĐÀ, SANG TRỌNG VÀ CHUYÊN NGHIỆP -->
+    <div class="absolute inset-0 pointer-events-none z-0" style="background: linear-gradient(to right, rgba(1, 28, 22, 0.94) 0%, rgba(2, 46, 35, 0.82) 55%, rgba(1, 22, 16, 0.78) 100%);"></div>
+    <div class="absolute inset-0 pointer-events-none z-0" style="background: linear-gradient(to top, rgba(1, 18, 14, 0.92) 0%, rgba(1, 18, 14, 0.25) 55%, rgba(1, 18, 14, 0.65) 100%);"></div>
 
-      <!-- Quầng sáng cực quang phát sáng (Aurora Glow) -->
-      <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- QUẦNG SÁNG CỰC QUANG (AURORA GLOW) TẠO ĐỘ SÂU KHÔNG GIAN -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+    <!-- CỘT TRÁI (CHIẾM 2/3 MÀN HÌNH): LOGO, TÊN CÔNG TY & THÔNG TIN BÁO CÁO CÔNG VIỆC -->
+    <div id="loginHeroCol" class="hidden md:flex md:w-2/3 lg:w-2/3 h-full relative z-10 flex-col justify-between p-6 lg:p-8 xl:p-12 overflow-hidden select-none bg-transparent">
       
       <!-- 1. HEADER: LOGO CHÍNH THỨC & TÊN CÔNG TY TIỀN PHONG -->
       <div class="relative z-10 flex items-center gap-4">
@@ -476,14 +477,14 @@
     </div>
 
     <!-- CỘT PHẢI (CHIẾM 1/3 MÀN HÌNH): FORM ĐĂNG NHẬP HỆ THỐNG CỐ ĐỊNH, KHÔNG CUỘN TRƯỢT -->
-    <div id="loginRightCol" class="w-full md:w-1/3 lg:w-1/3 h-full max-h-screen bg-gradient-to-b from-[#eaf4ef] via-[#dbeee3] to-[#e4f3eb] flex flex-col justify-between px-3 py-3 sm:px-5 sm:py-4 lg:px-5 xl:px-7 z-20 shadow-2xl relative overflow-hidden border-l border-emerald-300/50 box-border select-none">
+    <div id="loginRightCol" class="w-full md:w-1/3 lg:w-1/3 h-full max-h-screen relative z-10 flex flex-col justify-between px-3 py-3 sm:px-5 sm:py-4 lg:px-5 xl:px-7 overflow-hidden select-none box-border md:backdrop-blur-sm md:bg-black/20 md:border-l md:border-white/10">
       
-      <!-- Họa tiết quầng sáng ngọc bích êm dịu kết nối hài hòa với cột bên trái -->
-      <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
+      <!-- Họa tiết quầng sáng ngọc bích êm dịu kết nối hài hòa với toàn màn hình -->
+      <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-teal-400/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <!-- Thẻ Card nổi sang trọng căn chỉnh hoàn hảo vừa vặn 1/3 màn hình -->
-      <div class="w-full max-w-[370px] mx-auto my-auto p-5 sm:p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-emerald-200/80 shadow-2xl shadow-emerald-900/10 relative z-10 box-border">
+      <div class="w-full max-w-[380px] mx-auto my-auto p-5 sm:p-6 rounded-3xl bg-white/95 backdrop-blur-2xl border border-white/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6),0_0_0_1px_rgba(16,185,129,0.25)] relative z-10 box-border">
         
         <!-- BANNER DÀNH CHO DI ĐỘNG (< 768px) -->
         <div class="block md:hidden mb-4 p-3 rounded-2xl bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white border border-emerald-500/30 shadow-md">
@@ -592,12 +593,12 @@
       </div>
 
       <!-- Chân trang bảo mật doanh nghiệp -->
-      <div class="mt-2 pt-2 border-t border-emerald-900/10 text-center text-[11px] text-emerald-900/60 font-medium">
+      <div class="mt-2 pt-2 border-t border-white/10 text-center text-[11px] text-slate-300 font-medium">
         <div class="flex items-center justify-center gap-1.5 mb-0.5">
-          <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
-          <span>Hệ thống nội bộ Công ty CP Nhựa Thiếu niên Tiền Phong</span>
+          <i class="fa-solid fa-shield-halved text-emerald-400 text-xs"></i>
+          <span class="text-slate-200">Hệ thống nội bộ Công ty CP Nhựa Thiếu niên Tiền Phong</span>
         </div>
-        <p class="text-[10px] text-emerald-900/50">© 2026 Nhựa Tiền Phong. Bảo lưu mọi quyền.</p>
+        <p class="text-[10px] text-emerald-300/80">© 2026 Nhựa Tiền Phong. Bảo lưu mọi quyền.</p>
       </div>
     </div>
   </div>
@@ -4492,7 +4493,7 @@
       });
 
       updateDateNavButtons();
-      setTimeout(() => { scrollToToday(); }, 250);
+      setTimeout(() => { scrollToToday(true); }, 250);
     }
 
     /**
@@ -4840,7 +4841,7 @@
       }
     }
 
-    function scrollToToday() {
+    function scrollToToday(isSilent = false) {
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
 
@@ -4849,8 +4850,10 @@
         setActiveDateNavButton('today');
         scrollColumnToCenter(todayDayNum, true);
 
-        const dStr = (todayDayNum < 10 ? '0' : '') + todayDayNum;
-        showToast(`Đã chuyển đến: Hôm nay (Ngày ${dStr})`);
+        if (!isSilent) {
+          const dStr = (todayDayNum < 10 ? '0' : '') + todayDayNum;
+          showToast(`Đã chuyển đến: Hôm nay (Ngày ${dStr})`);
+        }
       } else {
         showToast("Đang chuyển về kỳ báo cáo tháng hiện tại...");
         const curM = now.getMonth() + 1;
