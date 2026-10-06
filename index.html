@@ -46,10 +46,11 @@
       overflow: hidden !important;
     }
     #loginRightCol {
-      overflow-y: auto !important;
+      height: 100% !important;
+      max-height: 100vh !important;
+      overflow: hidden !important;
+      overflow-y: hidden !important;
       overflow-x: hidden !important;
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
       box-sizing: border-box !important;
     }
     #loginRightCol::-webkit-scrollbar {
@@ -468,8 +469,8 @@
       </div>
     </div>
 
-    <!-- CỘT PHẢI (CHIẾM 1/3 MÀN HÌNH): FORM ĐĂNG NHẬP HỆ THỐNG CAO CẤP VỚI NỀN NGỌC BÍCH DỊU MẮT & THẺ NỔI TRẮNG -->
-    <div id="loginRightCol" class="w-full md:w-1/3 lg:w-1/3 h-full min-h-screen bg-gradient-to-b from-[#eaf4ef] via-[#dbeee3] to-[#e4f3eb] flex flex-col justify-between px-3 py-4 sm:px-5 sm:py-5 lg:px-5 xl:px-7 z-20 shadow-2xl relative overflow-y-auto overflow-x-hidden border-l border-emerald-300/50 box-border">
+    <!-- CỘT PHẢI (CHIẾM 1/3 MÀN HÌNH): FORM ĐĂNG NHẬP HỆ THỐNG CỐ ĐỊNH, KHÔNG CUỘN TRƯỢT -->
+    <div id="loginRightCol" class="w-full md:w-1/3 lg:w-1/3 h-full max-h-screen bg-gradient-to-b from-[#eaf4ef] via-[#dbeee3] to-[#e4f3eb] flex flex-col justify-between px-3 py-3 sm:px-5 sm:py-4 lg:px-5 xl:px-7 z-20 shadow-2xl relative overflow-hidden border-l border-emerald-300/50 box-border select-none">
       
       <!-- Họa tiết quầng sáng ngọc bích êm dịu kết nối hài hòa với cột bên trái -->
       <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -616,10 +617,9 @@
         </div>
       </div>
 
-      <!-- Chỉ số nhịp độ báo cáo hôm nay (Live Status) -->
-      <div id="headerTodayStatusBadge" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 text-xs font-bold text-emerald-900 shadow-2xs">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span id="headerTodayStatusText">Hôm nay: Đang đồng bộ...</span>
+      <!-- Chỉ số nhịp độ báo cáo hôm nay (Live Status) - Đã ẩn hoàn toàn theo yêu cầu -->
+      <div id="headerTodayStatusBadge" class="hidden">
+        <span id="headerTodayStatusText"></span>
       </div>
 
       <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & ĐỔI TÊN CHUYÊN NGHIỆP "QUẢN TRỊ NHÂN SỰ" -->
@@ -1552,7 +1552,7 @@
           <thead class="sticky top-0 bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider z-10 border-b border-slate-200">
             <tr>
               <th class="py-2.5 px-3 text-center">STT</th>
-              <th class="py-2.5 px-3">Họ và tên / Username</th>
+              <th class="py-2.5 px-3">Họ và tên / Tài khoản</th>
               <th class="py-2.5 px-3">Bộ phận</th>
               <th class="py-2.5 px-3 text-center">Vai trò</th>
               <th class="py-2.5 px-3 text-center">Trạng thái</th>
@@ -1980,14 +1980,18 @@
       </div>
 
       <div class="space-y-3 pt-1">
-        <!-- Avatar lớn & tên -->
+        <!-- Avatar lớn & tên: THAY BẰNG LOGO CÔNG TY TIỀN PHONG -->
         <div class="flex items-center gap-3 p-3.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white rounded-2xl border border-emerald-200">
-          <div id="profileModalAvatar" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xl flex items-center justify-center shadow-md flex-shrink-0">
-            P
+          <div class="w-16 h-12 rounded-2xl bg-white p-1 shadow-sm border border-emerald-300/80 flex items-center justify-center flex-shrink-0">
+            <img src="tienphong_logo2.png" onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';" alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+            <span id="profileModalAvatar" class="hidden"></span>
           </div>
           <div class="min-w-0 flex-1">
             <h4 id="profileModalFullName" class="font-black text-slate-900 text-sm sm:text-base truncate">Họ và tên</h4>
-            <p id="profileModalUsername" class="text-xs text-emerald-700 font-bold font-num truncate">@username</p>
+            <p class="text-xs text-slate-500 font-medium truncate mt-0.5 flex items-center gap-1.5">
+              <span>Tài khoản:</span>
+              <span id="profileModalUsername" class="text-emerald-700 font-bold font-mono">username</span>
+            </p>
           </div>
         </div>
 
@@ -2267,7 +2271,7 @@
 
       if (av) av.innerText = (currentUser.fullName || "P").charAt(0);
       if (fn) fn.innerText = currentUser.fullName || "---";
-      if (un) un.innerText = "@" + (currentUser.username || "---");
+      if (un) un.innerText = currentUser.username || "---";
       if (rl) rl.innerText = currentUser.role || "---";
       if (dp) dp.innerText = currentUser.department || "---";
       if (st) st.innerText = currentUser.status || "Hoạt động";
@@ -4380,7 +4384,7 @@
                   data-day="${dc.dayNum}" 
                   data-old-value="${displayVal}"
                   value="${displayVal}" 
-                  placeholder="·" 
+                  placeholder="" 
                   onfocus="scrollMatrixCellIntoView(this)"
                   onkeydown="handleMatrixCellKeydown(event, ${currentRowIndex}, ${cIdx})" 
                   onblur="handleMatrixCellBlur(this)" 
@@ -4400,7 +4404,7 @@
                   if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
                     let parsedVal = parseFloat(clean);
                     if (parsedVal === 0) {
-                      cellContentHtml = `<span class="text-slate-300 font-light font-num">·</span>`;
+                      cellContentHtml = '';
                     } else {
                       cellContentHtml = `<span class="font-num font-bold text-slate-900 text-xs">${formatNumberWithCommas(rawVal)}</span>`;
                     }
@@ -4414,7 +4418,7 @@
                   }
                 }
               } else {
-                cellContentHtml = `<span class="text-slate-300 font-light font-num">·</span>`;
+                cellContentHtml = '';
               }
             }
 
@@ -5279,9 +5283,8 @@
     }
 
     function updateHeaderTodayStatus(data) {
-      const badge = document.getElementById('headerTodayStatusBadge');
-      const text = document.getElementById('headerTodayStatusText');
-      if (!badge || !text || !data || !data.dayCols) return;
+      // Đã ẩn thông tin ghi nhận đầu việc hôm nay theo yêu cầu
+      return;
 
       const now = new Date();
       const isCurrentMonth = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
@@ -6814,7 +6817,7 @@
           <td class="py-2.5 px-3 text-center text-slate-400 font-num">${idx + 1}</td>
           <td class="py-2.5 px-3">
             <p class="font-bold text-slate-800 leading-tight">${escapeHtml(u.fullName)}</p>
-            <p class="text-[11px] text-slate-400 font-num">@${escapeHtml(u.username)}</p>
+            <p class="text-[11px] text-slate-400 font-mono">${escapeHtml(u.username)}</p>
           </td>
           <td class="py-2.5 px-3 font-semibold text-emerald-800">${escapeHtml(u.dept)}</td>
           <td class="py-2.5 px-3 text-center">${roleBadge}</td>
@@ -7130,7 +7133,7 @@
             peers.forEach(p => {
               const opt = document.createElement('option');
               opt.value = p.id;
-              opt.innerText = `Sao chép việc từ: ${p.fullName} (@${p.username})`;
+              opt.innerText = `Sao chép việc từ: ${p.fullName} (${p.username})`;
               copySelect.appendChild(opt);
             });
           } else {
@@ -7186,7 +7189,7 @@
       if (status === "Khóa") {
         pendingTransferData = updateData;
         document.getElementById('lockConfirmFullName').innerText = fullName;
-        document.getElementById('lockConfirmUsername').innerText = '@' + username;
+        document.getElementById('lockConfirmUsername').innerText = username;
         document.getElementById('lockConfirmModal').classList.remove('hidden');
         return;
       }
@@ -7683,7 +7686,7 @@
             {
               type: 'action',
               title: 'Xem hồ sơ tài khoản cá nhân',
-              subtitle: `@${currentUser.username} • Bộ phận: ${currentUser.department}`,
+              subtitle: `Tài khoản: ${currentUser.username} • Bộ phận: ${currentUser.department}`,
               icon: 'fa-solid fa-id-badge text-indigo-600 bg-indigo-50',
               badge: 'Tài khoản',
               handler: () => { closeCommandPalette(); openUserProfileModal(); },
@@ -7892,7 +7895,7 @@
             items.push({
               type: 'staff',
               title: fName,
-              subtitle: `@${uName} · ${dName || 'Ban DVKH'} · ${u.role || 'Nhân viên'}`,
+              subtitle: `${uName} · ${dName || 'Ban DVKH'} · ${u.role || 'Nhân viên'}`,
               icon: 'fa-solid fa-user text-teal-700 bg-teal-50',
               badge: u.role || 'Nhân viên',
               handler: () => {
