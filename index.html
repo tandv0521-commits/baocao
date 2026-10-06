@@ -135,6 +135,12 @@
       visibility: visible;
       transform: translateX(-50%) translateY(0);
     }
+    @media (hover: none) {
+      [data-tooltip]::after,
+      [data-tooltip]::before {
+        display: none !important;
+      }
+    }
 
     /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT ================= */
     .sheet-table { border-collapse: separate !important; border-spacing: 0 !important; }
@@ -4666,47 +4672,40 @@
       if (!th) return;
 
       const isMobile = (window.innerWidth < 768);
-      const containerWidth = container.clientWidth;
+      const containerRect = container.getBoundingClientRect();
+      const thRect = th.getBoundingClientRect();
 
-      // 1. Chiều rộng nhóm cột cố định bên trái (TT + Họ tên + Nội dung việc)
+      // 1. Xác định mép phải nhóm cột cố định bên trái trên màn hình
       const stickyTaskHeader = document.querySelector('thead .col-fixed-task');
-      let stickyLeftWidth = isMobile ? 164 : 609;
+      let leftVisibleEdge = containerRect.left;
       if (stickyTaskHeader) {
-        stickyLeftWidth = stickyTaskHeader.offsetLeft + stickyTaskHeader.offsetWidth;
-      }
-
-      // 2. Chiều rộng cột cố định Tổng cộng bên phải (trên desktop >= 768px)
-      const stickyTotalHeader = document.querySelector('thead .col-fixed-total');
-      let stickyRightWidth = 0;
-      if (!isMobile && stickyTotalHeader) {
-        stickyRightWidth = stickyTotalHeader.offsetWidth || 125;
-      }
-
-      // 3. Vùng hiển thị khả dụng dành cho các ngày
-      const visibleWidth = Math.max(80, containerWidth - stickyLeftWidth - stickyRightWidth);
-
-      // 4. Tọa độ tâm điểm mong muốn của vùng hiển thị
-      const centerOffset = stickyLeftWidth + (visibleWidth / 2);
-
-      // 5. Tọa độ tâm điểm của cột ngày trong bảng
-      let thCenter = th.offsetLeft + (th.offsetWidth / 2);
-
-      // Dự phòng nếu th.offsetLeft trả về 0 do một số phiên bản trình duyệt
-      if (thCenter <= 0) {
-        const containerRect = container.getBoundingClientRect();
-        const thRect = th.getBoundingClientRect();
-        const deltaX = (thRect.left + thRect.width / 2) - (containerRect.left + centerOffset);
-        container.scrollTo({
-          left: Math.max(0, container.scrollLeft + deltaX),
-          behavior: isSmooth ? 'smooth' : 'auto'
-        });
+        leftVisibleEdge = stickyTaskHeader.getBoundingClientRect().right;
       } else {
-        const targetScrollLeft = thCenter - centerOffset;
-        container.scrollTo({
-          left: Math.max(0, targetScrollLeft),
-          behavior: isSmooth ? 'smooth' : 'auto'
-        });
+        leftVisibleEdge = containerRect.left + (isMobile ? 164 : 609);
       }
+
+      // 2. Xác định mép trái cột cố định Tổng cộng bên phải trên màn hình (trên desktop >= 768px)
+      const stickyTotalHeader = document.querySelector('thead .col-fixed-total');
+      let rightVisibleEdge = containerRect.right;
+      if (!isMobile && stickyTotalHeader) {
+        rightVisibleEdge = stickyTotalHeader.getBoundingClientRect().left;
+      }
+
+      // 3. Vùng hiển thị thực tế dành cho các ngày và tâm điểm mong muốn trên màn hình
+      const availableWidth = Math.max(80, rightVisibleEdge - leftVisibleEdge);
+      const targetCenterOnScreen = leftVisibleEdge + (availableWidth / 2);
+
+      // 4. Tâm điểm hiện tại của cột ngày trên màn hình
+      const currentThCenterOnScreen = thRect.left + (thRect.width / 2);
+
+      // 5. Khoảng cách delta cần cuộn: nếu cột đang lệch phải, deltaX > 0 -> cuộn sang phải để cột dịch về giữa
+      const deltaX = currentThCenterOnScreen - targetCenterOnScreen;
+      const finalScrollLeft = Math.max(0, container.scrollLeft + deltaX);
+
+      container.scrollTo({
+        left: finalScrollLeft,
+        behavior: isSmooth ? 'smooth' : 'auto'
+      });
 
       // Tự động đồng bộ trạng thái nút điều hướng ngày
       const now = new Date();
@@ -4815,12 +4814,14 @@
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
       const todayDayNum = isCurrentPeriod ? now.getDate() : 1;
+      const yesterdayDayNum = todayDayNum - 1;
 
-      if (currentNavActiveDay === null) {
-        currentNavActiveDay = todayDayNum;
+      let targetDay;
+      if (currentNavActiveDay === yesterdayDayNum) {
+        targetDay = currentNavActiveDay - 1;
+      } else {
+        targetDay = yesterdayDayNum;
       }
-
-      const targetDay = currentNavActiveDay - 1;
 
       if (targetDay < 1) {
         showToast("Đang ở ngày 01 đầu tháng. Bạn có thể chọn kỳ báo cáo tháng trước để xem!");
@@ -4832,7 +4833,7 @@
       scrollColumnToCenter(targetDay, true);
 
       const dStr = (targetDay < 10 ? '0' : '') + targetDay;
-      if (isCurrentPeriod && targetDay === todayDayNum - 1) {
+      if (targetDay === yesterdayDayNum) {
         showToast(`Đã chuyển đến: Hôm qua (Ngày ${dStr})`);
       } else {
         showToast(`Đã chuyển đến: Ngày ${dStr}`);
@@ -4869,13 +4870,15 @@
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
       const todayDayNum = isCurrentPeriod ? now.getDate() : 1;
+      const tomorrowDayNum = todayDayNum + 1;
       const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
 
-      if (currentNavActiveDay === null) {
-        currentNavActiveDay = todayDayNum;
+      let targetDay;
+      if (currentNavActiveDay === tomorrowDayNum) {
+        targetDay = currentNavActiveDay + 1;
+      } else {
+        targetDay = tomorrowDayNum;
       }
-
-      const targetDay = currentNavActiveDay + 1;
 
       if (targetDay > daysInMonth) {
         showToast("Đã đến ngày cuối tháng. Ngày mai thuộc kỳ báo cáo tháng tiếp theo!");
@@ -4886,7 +4889,7 @@
       scrollColumnToCenter(targetDay, true);
 
       const dStr = (targetDay < 10 ? '0' : '') + targetDay;
-      if (isCurrentPeriod && targetDay === todayDayNum + 1) {
+      if (targetDay === tomorrowDayNum) {
         showToast(`Đã chuyển đến: Ngày mai (Ngày ${dStr})`);
       } else {
         showToast(`Đã chuyển đến: Ngày ${dStr}`);
@@ -5605,10 +5608,6 @@
         badge.classList.add('flex');
         text.innerHTML = `Kỳ ${mStr}/${currentSelectedYear}: <span class="text-emerald-700 font-black ml-1">${data.staffGroups.length} nhóm nhân sự</span>`;
       }
-    }
-
-    function scrollToDayColumn(colIndex) {
-      scrollColumnToCenter(colIndex, true);
     }
 
     function scrollToElement(elemId) {
