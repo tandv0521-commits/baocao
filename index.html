@@ -844,30 +844,82 @@
             </button>
           </div>
 
-          <!-- Bộ lọc Admin/Quản lý: CÓ THÊM Ô NHẬP TÌM KIẾM THEO TÊN NHÂN VIÊN -->
-          <div id="adminFilterContainer" class="hidden flex flex-wrap items-center gap-1.5">
-            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ phận:</span>
-              <select id="adminDeptSelect" onchange="onAdminDeptChange()" class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer max-w-[130px] sm:max-w-none truncate"></select>
+          <!-- Bộ lọc Admin/Quản lý: GIAO DIỆN BỘ PHẬN VÀ HỌ TÊN ĐỒNG BỘ VỚI MÀN HÌNH ĐĂNG NHẬP -->
+          <div id="adminFilterContainer" class="hidden flex flex-wrap items-center gap-2">
+            <!-- Native hidden selects giữ nguyên để tương thích 100% với logic code hệ thống -->
+            <select id="adminDeptSelect" onchange="onAdminDeptChange()" class="hidden"></select>
+            <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="hidden"></select>
+
+            <!-- 1. BỘ PHẬN: CUSTOM PICKER GIỐNG GIAO DIỆN ĐĂNG NHẬP -->
+            <div class="relative" id="filterDeptPickerWrapper">
+              <button type="button" id="filterDeptPickerBtn" onclick="toggleDashboardDeptPickerMenu(event)" class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-1 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span id="filterDeptPickerIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                    <i class="fa-solid fa-layer-group"></i>
+                  </span>
+                  <div class="min-w-0 flex flex-col leading-tight">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
+                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[120px] sm:max-w-[170px]">Tất cả ban DVKH</span>
+                  </div>
+                </div>
+                <i id="filterDeptPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+              </button>
+
+              <!-- Menu xổ xuống chọn bộ phận với tìm kiếm và dải màu gợi ý -->
+              <div id="filterDeptPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+                  <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" id="filterDeptSearchInput" oninput="filterDashboardDeptPickerList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                  </div>
+                </div>
+                <div id="filterDeptPickerList" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
+                  <!-- Được tạo động với dải gợi ý màu sắc sinh động -->
+                </div>
+              </div>
             </div>
 
-            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
-              <span class="text-[10px] font-bold text-slate-400 uppercase">Nhân sự:</span>
-              <select id="adminStaffSelect" onchange="onAdminStaffChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"></select>
+            <!-- 2. HỌ VÀ TÊN NHÂN SỰ: CUSTOM PICKER GIỐNG GIAO DIỆN ĐĂNG NHẬP -->
+            <div class="relative" id="filterStaffPickerWrapper">
+              <button type="button" id="filterStaffPickerBtn" onclick="toggleDashboardStaffPickerMenu(event)" class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-1 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span id="filterStaffPickerAvatarBox" class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs">
+                    🌟
+                  </span>
+                  <div class="min-w-0 flex flex-col leading-tight">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Họ và tên:</span>
+                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[130px] sm:max-w-[180px]">Tất cả nhân viên</span>
+                  </div>
+                </div>
+                <i id="filterStaffPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+              </button>
+
+              <!-- Menu xổ xuống chọn nhân sự với avatar và dải màu tươi sáng -->
+              <div id="filterStaffPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-84 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+                  <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" id="filterStaffSearchInput" oninput="filterDashboardStaffPickerList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                  </div>
+                </div>
+                <div id="filterStaffPickerList" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
+                  <!-- Được tạo động với avatar và dải nhân sự sinh động -->
+                </div>
+              </div>
             </div>
 
             <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ -->
-            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
               <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-28 sm:w-36 transition" />
+              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-24 sm:w-32 transition" />
               <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </div>
 
-            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
+            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
               <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
-              <span class="hidden sm:inline">Tất cả ban DVKH</span>
+              <span class="hidden sm:inline">Toàn ban DVKH</span>
             </button>
           </div>
         </div>
@@ -1827,8 +1879,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
+        <div class="grid grid-cols-2 gap-3" id="accEditRoleAndStatusRow">
+          <div id="accEditRoleWrapper">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
             <select id="accEditRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Nhân viên">Nhân viên</option>
@@ -1839,7 +1891,15 @@
               <option value="Quản lý">Quản lý</option>
             </select>
           </div>
-          <div>
+          <!-- Huy hiệu cố định vai trò cho Giám đốc / Admin (không cho chọn vai trò thông thường) -->
+          <div id="accEditDirectorRoleBadge" class="hidden">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-amber-800 mb-1">Vai trò hệ thống</label>
+            <div class="w-full bg-gradient-to-r from-amber-50 to-amber-100/80 border border-amber-300 rounded-xl px-3 py-2 text-xs font-black text-amber-950 flex items-center gap-1.5 shadow-2xs">
+              <i class="fa-solid fa-crown text-amber-600 text-xs"></i>
+              <span>Giám Đốc Ban (Admin)</span>
+            </div>
+          </div>
+          <div id="accEditStatusWrapper">
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Trạng thái tài khoản</label>
             <select id="accEditStatusSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Hoạt động">🟢 Hoạt động</option>
@@ -1848,6 +1908,14 @@
             </select>
           </div>
         </div>
+
+        <!-- Chức năng CHUYỂN GIAO QUYỀN GIÁM ĐỐC & ADMIN CHO NHÂN SỰ KHÁC -->
+        <div id="accEditTransferAdminBox" class="hidden pt-1">
+          <button type="button" onclick="openTransferAdminModalFromEdit()" class="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 active:scale-[0.98] text-white text-xs font-extrabold transition shadow-md flex items-center justify-center gap-2 cursor-pointer group">
+            <i class="fa-solid fa-crown text-yellow-200 group-hover:scale-110 transition-transform"></i>
+            <span>Chuyển Quyền Giám Đốc & Admin Cho Nhân Sự Khác</span>
+          </button>
+        </div>
       </div>
 
       <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
@@ -1855,6 +1923,77 @@
         <button type="button" onclick="submitAccountEdit()" id="btnSubmitAccountEdit" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-check text-xs"></i>
           <span>Lưu Tài Khoản</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL CHUYỂN GIAO QUYỀN GIÁM ĐỐC & ADMIN ================= -->
+  <div id="transferAdminModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-amber-200 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-amber-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center text-lg shadow-2xs">
+            <i class="fa-solid fa-crown text-amber-600"></i>
+          </div>
+          <div>
+            <h4 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Chuyển Giao Quyền Giám Đốc & Admin</h4>
+            <p class="text-[11px] text-amber-800 font-semibold mt-0.5">Bàn giao thẩm quyền tối cao cho nhân sự kế nhiệm</p>
+          </div>
+        </div>
+        <button onclick="closeTransferAdminModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Cảnh báo quan trọng -->
+      <div class="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300/80 text-amber-950 text-xs space-y-1 shadow-2xs">
+        <div class="flex items-center gap-2 font-bold text-amber-900">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+          <span>Lưu ý đặc biệt quan trọng:</span>
+        </div>
+        <p class="text-[11.5px] leading-relaxed text-amber-900/90 pl-5">
+          Bạn đang thực hiện bàn giao quyền <strong>Giám Đốc Ban & Quản Trị Viên (Admin)</strong> cho nhân sự khác. Sau khi xác nhận, nhân sự mới sẽ tiếp nhận vai trò tối cao trên toàn bộ hệ thống.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <!-- 1. Thông tin Giám đốc hiện tại -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Giám đốc / Admin hiện tại bàn giao</label>
+          <input type="text" id="transferAdminCurrentName" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 cursor-not-allowed" />
+        </div>
+
+        <!-- 2. Chọn nhân sự tiếp nhận quyền -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-800 mb-1">
+            Chọn nhân sự kế nhiệm tiếp nhận quyền <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <select id="transferAdminNewStaffSelect" class="w-full bg-amber-50/40 hover:bg-amber-50 border border-amber-300 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer transition shadow-2xs">
+              <option value="">-- Đang nạp danh sách nhân sự kế nhiệm... --</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none text-xs"></i>
+          </div>
+        </div>
+
+        <!-- 3. Vai trò của Giám đốc cũ sau khi chuyển giao -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Vai trò mới của bạn sau khi chuyển giao quyền</label>
+          <select id="transferAdminFormerRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+            <option value="Quản lý" selected>Quản lý (Khuyến nghị)</option>
+            <option value="Nhân viên">Nhân viên</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Nút hành động -->
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2.5 flex-shrink-0">
+        <button type="button" onclick="closeTransferAdminModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy</button>
+        <button type="button" onclick="submitTransferAdminRole()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 active:scale-95 text-white text-xs font-extrabold shadow-md transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-crown text-yellow-200"></i>
+          <span>Xác Nhận Chuyển Quyền</span>
         </button>
       </div>
     </div>
@@ -3698,7 +3837,7 @@
       updateStaffPickerUI(sel.value, st ? st.fullName : sel.value);
     }
 
-    // Đóng dropdown khi bấm ra ngoài
+    // Đóng dropdown khi bấm ra ngoài (cả màn hình đăng nhập và bộ lọc dashboard)
     document.addEventListener('click', function(e) {
       const deptWrap = document.getElementById('deptPickerWrapper');
       if (deptWrap && !deptWrap.contains(e.target)) {
@@ -3714,7 +3853,301 @@
         if (m) m.classList.add('hidden');
         if (c) c.classList.remove('rotate-180');
       }
+
+      // Bộ lọc trên Dashboard
+      const fDeptWrap = document.getElementById('filterDeptPickerWrapper');
+      if (fDeptWrap && !fDeptWrap.contains(e.target)) {
+        const m = document.getElementById('filterDeptPickerMenu');
+        const c = document.getElementById('filterDeptPickerChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+      const fStaffWrap = document.getElementById('filterStaffPickerWrapper');
+      if (fStaffWrap && !fStaffWrap.contains(e.target)) {
+        const m = document.getElementById('filterStaffPickerMenu');
+        const c = document.getElementById('filterStaffPickerChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
     });
+
+    // ================= BỘ LỌC BỘ PHẬN & NHÂN SỰ DASHBOARD ĐỒNG BỘ GIAO DIỆN ĐĂNG NHẬP =================
+    let dashboardDeptListCache = [];
+    let dashboardStaffListCache = [];
+
+    function toggleDashboardDeptPickerMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('filterDeptPickerMenu');
+      const chev = document.getElementById('filterDeptPickerChevron');
+      const staffMenu = document.getElementById('filterStaffPickerMenu');
+      const staffChev = document.getElementById('filterStaffPickerChevron');
+      if (staffMenu) staffMenu.classList.add('hidden');
+      if (staffChev) staffChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('filterDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderDashboardDeptPicker(dashboardDeptListCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterDashboardDeptPickerList() {
+      const term = (document.getElementById('filterDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = dashboardDeptListCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderDashboardDeptPicker(filtered);
+    }
+
+    function selectDashboardDepartment(deptName) {
+      const sel = document.getElementById('adminDeptSelect');
+      if (sel) sel.value = deptName;
+      updateDashboardDeptPickerUI(deptName);
+      const menu = document.getElementById('filterDeptPickerMenu');
+      const chev = document.getElementById('filterDeptPickerChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onAdminDeptChange();
+    }
+
+    function renderDashboardDeptPicker(depts) {
+      const container = document.getElementById('filterDeptPickerList');
+      if (!container) return;
+      const currentVal = document.getElementById('adminDeptSelect')?.value || currentSelectedDept || 'TẤT CẢ';
+
+      let html = '';
+      
+      // 1. Tùy chọn "Tất cả ban DVKH"
+      const isAllSelected = (!currentVal || currentVal === 'TẤT CẢ');
+      html += `
+        <div onclick="selectDashboardDepartment('TẤT CẢ')" class="dashboard-dept-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isAllSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-600 mb-1">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">Tất cả ban DVKH</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Toàn ban</span>
+            ${isAllSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+          </div>
+        </div>
+      `;
+
+      (depts || []).forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectDashboardDepartment('${escapeHtml(d)}')" class="dashboard-dept-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function updateDashboardDeptPickerUI(deptName) {
+      const textEl = document.getElementById('filterDeptPickerText');
+      const iconBox = document.getElementById('filterDeptPickerIconBox');
+      if (!deptName || deptName === "TẤT CẢ") {
+        if (textEl) textEl.innerText = "Tất cả ban DVKH";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else {
+        const s = getDeptStyle(deptName);
+        if (textEl) textEl.innerText = deptName;
+        if (iconBox) {
+          iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+          iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+        }
+      }
+      renderDashboardDeptPicker(dashboardDeptListCache);
+    }
+
+    // --- STAFF PICKER ---
+    function toggleDashboardStaffPickerMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('filterStaffPickerMenu');
+      const chev = document.getElementById('filterStaffPickerChevron');
+      const deptMenu = document.getElementById('filterDeptPickerMenu');
+      const deptChev = document.getElementById('filterDeptPickerChevron');
+      if (deptMenu) deptMenu.classList.add('hidden');
+      if (deptChev) deptChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('filterStaffSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderDashboardStaffPicker(dashboardStaffListCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterDashboardStaffPickerList() {
+      const term = (document.getElementById('filterStaffSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = dashboardStaffListCache.filter(st => {
+        const normN = typeof removeAccents === 'function' ? removeAccents(st.fullName || '').toLowerCase() : (st.fullName || '').toLowerCase();
+        const normU = (st.username || '').toLowerCase();
+        const normD = typeof removeAccents === 'function' ? removeAccents(st.dept || '').toLowerCase() : (st.dept || '').toLowerCase();
+        return normN.includes(normTerm) || normU.includes(normTerm) || normD.includes(normTerm);
+      });
+      renderDashboardStaffPicker(filtered);
+    }
+
+    function selectDashboardStaff(staffValue, staffFullName) {
+      const sel = document.getElementById('adminStaffSelect');
+      if (sel) sel.value = staffValue;
+      updateDashboardStaffPickerUI(staffValue, staffFullName);
+      const menu = document.getElementById('filterStaffPickerMenu');
+      const chev = document.getElementById('filterStaffPickerChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onAdminStaffChange();
+    }
+
+    function renderDashboardStaffPicker(staffList) {
+      const container = document.getElementById('filterStaffPickerList');
+      if (!container) return;
+      const currentVal = document.getElementById('adminStaffSelect')?.value || currentSelectedStaff || 'TẤT CẢ';
+
+      if (!staffList || staffList.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy nhân sự phù hợp</div>';
+        return;
+      }
+
+      let html = '';
+      const borderAccents = ['border-l-emerald-500', 'border-l-blue-500', 'border-l-amber-500', 'border-l-purple-500', 'border-l-teal-500', 'border-l-indigo-500'];
+
+      staffList.forEach((st, idx) => {
+        const isSelected = (st.value === currentVal);
+        const bAccent = borderAccents[idx % borderAccents.length];
+
+        if (st.isAll) {
+          html += `
+            <div onclick="selectDashboardStaff('${escapeHtml(st.value)}', '${escapeHtml(st.fullName)}')" class="dashboard-staff-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-amber-300 bg-amber-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-amber-500 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  🌟
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-amber-950">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.dept || 'Toàn ban DVKH')}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                ${isSelected ? '<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px]"><i class="fa-solid fa-check"></i></span>' : ''}
+              </div>
+            </div>
+          `;
+        } else if (st.isMe) {
+          html += `
+            <div onclick="selectDashboardStaff('${escapeHtml(st.value)}', '${escapeHtml(st.displayName || st.fullName)}')" class="dashboard-staff-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-600 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  🎯
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-emerald-700 font-semibold truncate">Trách nhiệm trực tiếp</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                ${isSelected ? '<span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]"><i class="fa-solid fa-check"></i></span>' : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          const av = getStaffStyle(st.fullName, idx);
+          const roleSubtitle = st.role ? `[${st.role}] ` : '';
+          const deptSubtitle = st.dept ? `• ${st.dept}` : '';
+          html += `
+            <div onclick="selectDashboardStaff('${escapeHtml(st.value)}', '${escapeHtml(st.fullName)}')" class="dashboard-staff-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  ${av.initial}
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-slate-400 font-medium truncate">${roleSubtitle}${escapeHtml(st.username || '')} ${deptSubtitle}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                ${isSelected ? '<span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]"><i class="fa-solid fa-check"></i></span>' : ''}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      container.innerHTML = html;
+    }
+
+    function updateDashboardStaffPickerUI(staffValue, staffFullName) {
+      const textEl = document.getElementById('filterStaffPickerText');
+      const avBox = document.getElementById('filterStaffPickerAvatarBox');
+      if (!staffValue || staffValue === "TẤT CẢ") {
+        if (textEl) textEl.innerText = "Tất cả nhân viên";
+        if (avBox) {
+          avBox.className = "w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs";
+          avBox.innerHTML = '🌟';
+        }
+      } else {
+        const item = dashboardStaffListCache.find(s => s.value === staffValue);
+        const nameToUse = staffFullName || item?.displayName || item?.fullName || staffValue;
+        if (item?.isMe) {
+          if (textEl) textEl.innerText = item.displayName || nameToUse;
+          if (avBox) {
+            avBox.className = "w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs";
+            avBox.innerHTML = '🎯';
+          }
+        } else {
+          const av = getStaffStyle(nameToUse, 0);
+          if (textEl) textEl.innerText = nameToUse;
+          if (avBox) {
+            avBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs`;
+            avBox.innerHTML = av.initial;
+          }
+        }
+      }
+      renderDashboardStaffPicker(dashboardStaffListCache);
+    }
 
     function populatePeriodDropdown(periods) {
       const select = document.getElementById('reportPeriodSelect');
@@ -4401,8 +4834,9 @@
         if (currentSelectedDept === "TẤT CẢ") allDeptOpt.selected = true;
         deptSelect.appendChild(allDeptOpt);
 
+        let depts = [];
         if (globalInitData && globalInitData.departments) {
-          let depts = [...globalInitData.departments];
+          depts = [...globalInitData.departments];
           depts.sort((a, b) => {
             let aIsGDB = removeAccents(a).includes("giam doc ban");
             let bIsGDB = removeAccents(b).includes("giam doc ban");
@@ -4419,6 +4853,10 @@
             deptSelect.appendChild(opt);
           });
         }
+
+        dashboardDeptListCache = depts;
+        renderDashboardDeptPicker(depts);
+        updateDashboardDeptPickerUI(currentSelectedDept || "TẤT CẢ");
 
         populateStaffDropdown(currentSelectedDept);
       } else {
@@ -4440,6 +4878,7 @@
       const staffSelect = document.getElementById('adminStaffSelect');
       const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
       staffSelect.innerHTML = '';
+      dashboardStaffListCache = [];
 
       if (!dept || dept === "TẤT CẢ") {
         const allOpt = document.createElement('option');
@@ -4447,6 +4886,13 @@
         allOpt.innerText = "🌟 Tất cả nhân viên trong ban DVKH";
         if (currentSelectedStaff === "TẤT CẢ") allOpt.selected = true;
         staffSelect.appendChild(allOpt);
+
+        dashboardStaffListCache.push({
+          value: "TẤT CẢ",
+          fullName: "Tất cả nhân viên trong ban DVKH",
+          isAll: true,
+          dept: "Toàn ban DVKH"
+        });
 
         if (globalInitData && globalInitData.deptMap) {
           for (let d in globalInitData.deptMap) {
@@ -4459,6 +4905,14 @@
               opt.innerText = `${st.fullName}${rolePart} (${d})`;
               if (st.fullName === currentSelectedStaff) opt.selected = true;
               staffSelect.appendChild(opt);
+
+              dashboardStaffListCache.push({
+                value: st.fullName,
+                fullName: st.fullName,
+                username: st.username,
+                role: (isSharedDept && st.role) ? st.role : '',
+                dept: d
+              });
             });
           }
         }
@@ -4471,6 +4925,15 @@
           meOpt.innerText = `🎯 Nhiệm vụ phụ trách trực tiếp • ${currentUser.fullName}${meRolePart}`;
           if (currentSelectedStaff === currentUser.fullName) meOpt.selected = true;
           staffSelect.appendChild(meOpt);
+
+          dashboardStaffListCache.push({
+            value: currentUser.fullName,
+            fullName: `Nhiệm vụ trực tiếp • ${currentUser.fullName}`,
+            displayName: currentUser.fullName,
+            isMe: true,
+            role: currentUser.role,
+            dept: dept
+          });
         }
 
         const allOpt = document.createElement('option');
@@ -4478,6 +4941,13 @@
         allOpt.innerText = `🌟 Tất cả trong bộ phận ${dept}`;
         if (currentSelectedStaff === "TẤT CẢ") allOpt.selected = true;
         staffSelect.appendChild(allOpt);
+
+        dashboardStaffListCache.push({
+          value: "TẤT CẢ",
+          fullName: `Tất cả trong bộ phận ${dept}`,
+          isAll: true,
+          dept: dept
+        });
 
         if (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) {
           globalInitData.deptMap[dept].forEach(st => {
@@ -4488,10 +4958,21 @@
               opt.innerText = `${st.fullName}${rolePart}`;
               if (st.fullName === currentSelectedStaff) opt.selected = true;
               staffSelect.appendChild(opt);
+
+              dashboardStaffListCache.push({
+                value: st.fullName,
+                fullName: st.fullName,
+                username: st.username,
+                role: (isSharedDept && st.role) ? st.role : '',
+                dept: dept
+              });
             }
           });
         }
       }
+
+      renderDashboardStaffPicker(dashboardStaffListCache);
+      updateDashboardStaffPickerUI(currentSelectedStaff || "TẤT CẢ");
     }
 
     /**
@@ -4502,6 +4983,8 @@
       const selected = document.getElementById('adminDeptSelect').value;
       if (!selected) return;
       currentSelectedDept = selected;
+
+      updateDashboardDeptPickerUI(currentSelectedDept);
 
       const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
       if (isLead || currentSelectedDept === "TẤT CẢ") {
@@ -4528,6 +5011,8 @@
       const selected = document.getElementById('adminStaffSelect').value;
       if (!selected) return;
       currentSelectedStaff = selected;
+
+      updateDashboardStaffPickerUI(currentSelectedStaff);
 
       const searchInp = document.getElementById('adminStaffSearchInput');
       if (searchInp) searchInp.value = '';
@@ -4578,12 +5063,15 @@
       currentSelectedStaff = "TẤT CẢ";
       const deptSelect = document.getElementById('adminDeptSelect');
       if (deptSelect) deptSelect.value = "TẤT CẢ";
+      const staffSelect = document.getElementById('adminStaffSelect');
+      if (staffSelect) staffSelect.value = "TẤT CẢ";
       
       const searchInp = document.getElementById('adminStaffSearchInput');
       if (searchInp) searchInp.value = '';
       const clearBtn = document.getElementById('btnClearStaffSearch');
       if (clearBtn) clearBtn.classList.add('hidden');
 
+      updateDashboardDeptPickerUI("TẤT CẢ");
       populateStaffDropdown("TẤT CẢ");
 
       if (fullPeriodMatrixCache) {
@@ -7987,6 +8475,17 @@
               <span>Xem thông tin</span>
             </button>
           `;
+        } else if (isTargetAdmin && isCurrAdmin) {
+          actionBtns = `
+            <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
+              <i class="fa-solid fa-user-gear text-[11px]"></i>
+              <span>Tài khoản</span>
+            </button>
+            <button onclick="openTransferAdminModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Chuyển quyền Giám Đốc & Admin cho nhân sự khác">
+              <i class="fa-solid fa-crown text-[11px] text-yellow-200"></i>
+              <span>Chuyển quyền</span>
+            </button>
+          `;
         } else {
           actionBtns = `
             <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
@@ -8056,26 +8555,47 @@
       const passInput = document.getElementById('accEditPasswordInput');
       const roleSel = document.getElementById('accEditRoleSelect');
       const statusSel = document.getElementById('accEditStatusSelect');
+      const roleWrapper = document.getElementById('accEditRoleWrapper');
+      const directorBadge = document.getElementById('accEditDirectorRoleBadge');
+      const transferAdminBox = document.getElementById('accEditTransferAdminBox');
 
       if (passInput) passInput.value = '';
 
-      if (isManagerViewingAdmin) {
-        // CHẾ ĐỘ CHỈ XEM: Quản lý xem thông tin tài khoản Admin, không được sửa đổi vai trò
-        if (adminNotice) adminNotice.classList.remove('hidden');
-        if (submitBtn) submitBtn.classList.add('hidden');
-        if (fullNameInput) fullNameInput.readOnly = true;
-        if (usernameInput) usernameInput.readOnly = true;
-        if (passInput) {
-          passInput.disabled = true;
-          passInput.placeholder = "(Chỉ Admin mới có quyền đổi mật khẩu này)";
-        }
-        if (statusSel) statusSel.disabled = true;
-        if (roleSel) {
-          roleSel.disabled = true;
-          roleSel.innerHTML = `<option value="${escapeHtml(user.role || 'Giám Đốc Ban')}">${escapeHtml(user.role || 'Giám Đốc Ban')}</option>`;
+      if (isTargetAdmin) {
+        // TÀI KHOẢN GIÁM ĐỐC / ADMIN: BỎ CHỨC NĂNG CHỌN VAI TRÒ
+        if (roleWrapper) roleWrapper.classList.add('hidden');
+        if (directorBadge) directorBadge.classList.remove('hidden');
+
+        if (isCurrAdmin) {
+          // Giám đốc xem/sửa tài khoản Giám đốc: Có nút chuyển giao quyền Giám Đốc & Admin
+          if (adminNotice) adminNotice.classList.add('hidden');
+          if (submitBtn) submitBtn.classList.remove('hidden');
+          if (transferAdminBox) transferAdminBox.classList.remove('hidden');
+          if (fullNameInput) fullNameInput.readOnly = false;
+          if (usernameInput) usernameInput.readOnly = false;
+          if (passInput) {
+            passInput.disabled = false;
+            passInput.placeholder = "Nhập mật khẩu mới từ 4 ký tự...";
+          }
+          if (statusSel) statusSel.disabled = false;
+        } else {
+          // Quản lý xem tài khoản Giám đốc: Chế độ chỉ xem tra soát
+          if (adminNotice) adminNotice.classList.remove('hidden');
+          if (submitBtn) submitBtn.classList.add('hidden');
+          if (transferAdminBox) transferAdminBox.classList.add('hidden');
+          if (fullNameInput) fullNameInput.readOnly = true;
+          if (usernameInput) usernameInput.readOnly = true;
+          if (passInput) {
+            passInput.disabled = true;
+            passInput.placeholder = "(Chỉ Admin mới có quyền đổi mật khẩu này)";
+          }
+          if (statusSel) statusSel.disabled = true;
         }
       } else {
-        // CHẾ ĐỘ CHỈNH SỬA BÌNH THƯỜNG
+        // TÀI KHOẢN NHÂN SỰ BÌNH THƯỜNG: HIỂN THỊ CHỌN VAI TRÒ
+        if (roleWrapper) roleWrapper.classList.remove('hidden');
+        if (directorBadge) directorBadge.classList.add('hidden');
+        if (transferAdminBox) transferAdminBox.classList.add('hidden');
         if (adminNotice) adminNotice.classList.add('hidden');
         if (submitBtn) submitBtn.classList.remove('hidden');
         if (fullNameInput) fullNameInput.readOnly = false;
@@ -8163,7 +8683,7 @@
       const fullName = document.getElementById('accEditFullNameInput').value.trim();
       const newUsername = document.getElementById('accEditUsernameInput').value.trim().toLowerCase();
       const newPass = document.getElementById('accEditPasswordInput').value.trim();
-      const role = document.getElementById('accEditRoleSelect').value;
+      const roleSelVal = document.getElementById('accEditRoleSelect')?.value || 'Nhân viên';
       const status = document.getElementById('accEditStatusSelect').value;
       const errBox = document.getElementById('accEditErrorBox');
       const errMsg = document.getElementById('accEditErrorMsg');
@@ -8178,6 +8698,9 @@
         showToast("Tài khoản Quản lý chỉ được xem thông tin, không có quyền thiết lập vai trò cho Admin!", true);
         return;
       }
+
+      // Vai trò: Tài khoản Giám đốc giữ nguyên tuyệt đối, không thay đổi qua form này
+      const finalRole = isTargetAdmin ? (targetUser?.role || 'Admin') : roleSelVal;
 
       if (!fullName || !newUsername) {
         showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
@@ -8210,7 +8733,7 @@
         const updatePayload = {
           full_name: fullName,
           username: newUsername,
-          role: role,
+          role: finalRole,
           status: status
         };
 
@@ -8242,6 +8765,200 @@
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi cập nhật tài khoản: " + err.message, true);
+      }
+    }
+
+    // ================= CHUYỂN GIAO QUYỀN GIÁM ĐỐC & ADMIN CHO NHÂN SỰ KHÁC =================
+    function openTransferAdminModalFromEdit() {
+      const origUsername = document.getElementById('accEditOriginalUsername')?.value?.trim();
+      closeAccountEditModal();
+      openTransferAdminModal(origUsername);
+    }
+
+    function openTransferAdminModal(targetUsername) {
+      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      if (!isCurrAdmin) {
+        showToast("Chỉ Giám Đốc Ban hoặc Admin mới có quyền thực hiện chuyển giao quyền Giám Đốc!", true);
+        return;
+      }
+
+      if (!adminManageUsersCache || !adminManageUsersCache.users) return;
+
+      // Tìm thông tin Giám đốc hiện tại
+      let currentDirector = null;
+      if (targetUsername) {
+        currentDirector = adminManageUsersCache.users.find(u => u.username === targetUsername);
+      }
+      if (!currentDirector || !isDirectorOrAdmin(currentDirector.role, currentDirector.username)) {
+        currentDirector = adminManageUsersCache.users.find(u => isDirectorOrAdmin(u.role, u.username));
+      }
+      if (!currentDirector) {
+        currentDirector = {
+          username: currentUser?.username || 'admin',
+          fullName: currentUser?.fullName || 'Giám Đốc Ban',
+          role: currentUser?.role || 'Admin',
+          department_id: currentUser?.department_id || 349
+        };
+      }
+
+      // Điền thông tin Giám đốc bàn giao
+      const currentNameInput = document.getElementById('transferAdminCurrentName');
+      if (currentNameInput) {
+        currentNameInput.value = `${currentDirector.fullName} (${currentDirector.username}) - Giám Đốc Ban & Admin`;
+        currentNameInput.dataset.directorUsername = currentDirector.username;
+      }
+
+      // Nạp danh sách nhân sự kế nhiệm vào dropdown
+      const newStaffSelect = document.getElementById('transferAdminNewStaffSelect');
+      if (newStaffSelect) {
+        newStaffSelect.innerHTML = '<option value="">-- Chọn nhân sự kế nhiệm tiếp nhận quyền --</option>';
+
+        // Lọc tất cả nhân sự đang hoạt động (loại trừ Giám đốc hiện tại và tài khoản bị khóa)
+        const candidates = adminManageUsersCache.users.filter(u => {
+          if (u.username === currentDirector.username) return false;
+          const st = removeAccents(u.status || "").toLowerCase();
+          if (st.includes('khoa')) return false;
+          return true;
+        });
+
+        // Sắp xếp: Quản lý / Trưởng nhóm lên trước để tiện bàn giao, tiếp theo theo tên A-Z
+        candidates.sort((a, b) => {
+          const aIsMgr = isAdminOrManager(a.role, a.username) ? 1 : 0;
+          const bIsMgr = isAdminOrManager(b.role, b.username) ? 1 : 0;
+          if (aIsMgr !== bIsMgr) return bIsMgr - aIsMgr;
+          return a.fullName.localeCompare(b.fullName, 'vi');
+        });
+
+        candidates.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.username;
+          const roleStr = u.role ? `[${u.role}]` : '';
+          const deptStr = u.dept ? `- ${u.dept}` : '';
+          opt.textContent = `${u.fullName} (${u.username}) ${roleStr} ${deptStr}`;
+          newStaffSelect.appendChild(opt);
+        });
+      }
+
+      // Reset vai trò mới của Giám đốc cũ về "Quản lý"
+      const formerRoleSel = document.getElementById('transferAdminFormerRoleSelect');
+      if (formerRoleSel) formerRoleSel.value = 'Quản lý';
+
+      const modal = document.getElementById('transferAdminModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeTransferAdminModal() {
+      const modal = document.getElementById('transferAdminModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function submitTransferAdminRole() {
+      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      if (!isCurrAdmin) {
+        showToast("Bạn không có quyền thực hiện thao tác chuyển giao quyền này!", true);
+        return;
+      }
+
+      const currentNameInput = document.getElementById('transferAdminCurrentName');
+      const directorUsername = currentNameInput?.dataset?.directorUsername || currentUser?.username;
+      const newStaffSelect = document.getElementById('transferAdminNewStaffSelect');
+      const newStaffUsername = newStaffSelect?.value;
+      const formerRoleSel = document.getElementById('transferAdminFormerRoleSelect');
+      const formerRole = formerRoleSel?.value || 'Quản lý';
+
+      if (!newStaffUsername) {
+        showToast("Vui lòng chọn nhân sự kế nhiệm tiếp nhận quyền Giám Đốc!", true);
+        if (newStaffSelect) newStaffSelect.focus();
+        return;
+      }
+
+      if (!adminManageUsersCache || !adminManageUsersCache.users) return;
+      const currentDirector = adminManageUsersCache.users.find(u => u.username === directorUsername);
+      const successor = adminManageUsersCache.users.find(u => u.username === newStaffUsername);
+
+      if (!successor) {
+        showToast("Không tìm thấy thông tin nhân sự kế nhiệm!", true);
+        return;
+      }
+
+      const dirName = currentDirector ? currentDirector.fullName : directorUsername;
+      const succName = successor.fullName;
+
+      const confirmText = 
+        `XÁC NHẬN CHUYỂN GIAO QUYỀN GIÁM ĐỐC & ADMIN:\n\n` +
+        `• Nhân sự kế nhiệm trở thành Giám Đốc Ban & Admin: ${succName} (${successor.username})\n` +
+        `• Vai trò mới của ${dirName}: ${formerRole}\n\n` +
+        `Sau khi xác nhận, toàn bộ quyền Giám Đốc Ban & Quản Trị Viên (Admin) sẽ được bàn giao sang cho ${succName}.\n\n` +
+        `Bạn có chắc chắn muốn tiến hành chuyển quyền?`;
+
+      if (!confirm(confirmText)) return;
+
+      showProgressHud("CHUYỂN GIAO QUYỀN GIÁM ĐỐC", `Đang bàn giao quyền Giám Đốc & Admin cho ${succName}...`, "fa-solid fa-crown text-amber-500 animate-spin");
+      autoSimulateProgress(15, 80, "Cập nhật thẩm quyền hệ thống...", 25);
+
+      try {
+        // 1. Tìm department_id của Ban Giám Đốc (thường là 349)
+        let giamDocDeptId = 349;
+        const gdDept = departmentsCache?.find(d => {
+          const nameNorm = removeAccents(d.name || "").toLowerCase();
+          return nameNorm.includes("giam doc");
+        });
+        if (gdDept && gdDept.id) {
+          giamDocDeptId = gdDept.id;
+        } else if (currentDirector && currentDirector.department_id) {
+          giamDocDeptId = currentDirector.department_id;
+        }
+
+        // 2. Cập nhật nhân sự kế nhiệm trở thành Admin & thuộc Giám Đốc Ban
+        const { error: errSucc } = await supabase
+          .from('users')
+          .update({
+            role: 'Admin',
+            department_id: giamDocDeptId
+          })
+          .eq('username', successor.username);
+
+        if (errSucc) throw errSucc;
+
+        // 3. Cập nhật Giám đốc cũ chuyển sang vai trò mới (ví dụ: 'Quản lý' hoặc 'Nhân viên')
+        const { error: errFormer } = await supabase
+          .from('users')
+          .update({
+            role: formerRole
+          })
+          .eq('username', directorUsername);
+
+        if (errFormer) throw errFormer;
+
+        // 4. Cập nhật trạng thái session nếu người đang đăng nhập là Giám đốc cũ hoặc người kế nhiệm
+        if (currentUser && currentUser.username === directorUsername) {
+          currentUser.role = formerRole;
+          localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+        } else if (currentUser && currentUser.username === successor.username) {
+          currentUser.role = 'Admin';
+          currentUser.department_id = giamDocDeptId;
+          localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+        }
+
+        autoSimulateProgress(80, 100, "Bàn giao quyền thành công!", 15, () => {
+          hideProgressHud(250);
+          showToast(`Đã chuyển giao quyền Giám Đốc Ban & Admin thành công cho ${succName}!`);
+          closeTransferAdminModal();
+          closeAccountEditModal();
+
+          cachedPreloadMatrix = null;
+          fullPeriodMatrixCache = null;
+
+          loadAllUsersManagementData();
+          loadInitialData(() => {
+            setupRoleControls();
+            loadMatrixData(true);
+          });
+        });
+
+      } catch (err) {
+        hideProgressHud(100);
+        showToast("Lỗi khi chuyển giao quyền Giám Đốc: " + err.message, true);
       }
     }
 
@@ -8299,9 +9016,8 @@
       if (!user) return;
 
       const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
-      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-      if (isTargetAdmin && !isCurrAdmin) {
-        showToast("Tài khoản Quản lý không có quyền điều chuyển tài khoản Admin / Ban Giám Đốc!", true);
+      if (isTargetAdmin) {
+        showToast("Tài khoản Giám Đốc Ban & Admin không dùng chức năng điều chuyển thông thường! Vui lòng dùng chức năng 'Chuyển quyền Giám Đốc & Admin'.", true);
         return;
       }
 
