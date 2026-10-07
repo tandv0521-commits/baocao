@@ -560,9 +560,9 @@
             </div>
           </div>
 
-          <!-- 2. HỌ VÀ TÊN NHÂN SỰ: CUSTOM PICKER VỚI AVATAR VÀ DẢI MÀU SẮC TƯƠI MỚI -->
+          <!-- 2. HỌ VÀ TÊN: CUSTOM PICKER VỚI AVATAR VÀ DẢI MÀU SẮC TƯƠI MỚI -->
           <div class="relative" id="staffPickerWrapper">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">2. Họ và tên nhân sự</label>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">2. Họ và tên</label>
             <button type="button" id="staffPickerBtn" onclick="toggleStaffPickerMenu(event)" class="w-full bg-slate-50/90 hover:bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-700 font-semibold focus:ring-4 focus:ring-emerald-500/15 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span id="staffPickerAvatarBox" class="w-7 h-7 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs font-bold shadow-2xs">
@@ -670,53 +670,153 @@
         <span id="headerTodayStatusText"></span>
       </div>
 
-      <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & ĐỔI TÊN CHUYÊN NGHIỆP "QUẢN TRỊ NHÂN SỰ" -->
-      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
-        <!-- Nút Tìm kiếm thần tốc (Ctrl + K) -->
-        <button type="button" onclick="openCommandPalette()" data-tooltip="Tìm nhanh (Ctrl + K)" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-magnifying-glass text-emerald-600 text-xs"></i>
-          <span id="headerSearchBtnText" class="hidden md:inline text-slate-600 font-semibold">Tìm nhanh</span>
-          <kbd class="hidden sm:inline px-1.5 py-0.5 text-[9px] font-num font-bold bg-white text-slate-500 border border-slate-300 rounded shadow-2xs">Ctrl K</kbd>
-        </button>
-
-        <button id="btnAdminDeptManager" onclick="openDeptManagerModal()" data-tooltip="Quản lý bộ phận" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-sitemap text-emerald-700 text-xs"></i>
-          <span class="hidden md:inline">QL Bộ phận</span>
-        </button>
-
-        <!-- Nút Quản trị Nhân sự thiết kế Gradient hiện đại -->
-        <button id="btnAdminUserManager" onclick="openUserManagerModal()" data-tooltip="Quản trị nhân sự" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white hover:from-emerald-100 hover:to-teal-100 text-emerald-900 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-id-card-clip text-emerald-700 text-xs"></i>
-          <span class="hidden md:inline">Quản Trị Nhân Sự</span>
-        </button>
-
-        <button id="btnAdminAssign" onclick="openAssignModal()" data-tooltip="Phân công công việc" class="hidden px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 active:scale-95 text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
-          <span class="hidden md:inline">Giao việc</span>
-        </button>
-
-        <button id="btnExportExcel" onclick="exportToExcel()" data-tooltip="Tải Excel" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
-          <span class="hidden sm:inline">Tải Excel</span>
-        </button>
-
-        <!-- Nút Điền báo cáo: DUY NHẤT 1 THẺ GỢI Ý CHUYÊN NGHIỆP -->
-        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1 cursor-pointer">
+      <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & GỘP GỌN MENU CHỨC NĂNG -->
+      <div class="flex items-center gap-2 flex-wrap ml-auto">
+        <!-- Nút Điền báo cáo: Nổi bật và ưu tiên cao nhất -->
+        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo công việc" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
         </button>
 
-        <button onclick="loadMatrixData(true)" data-tooltip="Làm mới dữ liệu" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
-          <i class="fa-solid fa-arrows-rotate text-xs"></i>
-        </button>
+        <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
+        <div class="relative" id="headerActionsDropdownWrapper">
+          <button type="button" id="headerActionsMenuBtn" onclick="toggleHeaderActionsMenu(event)" data-tooltip="Danh mục chức năng" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 hover:border-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-95">
+            <i class="fa-solid fa-bars-staggered text-emerald-700 text-xs"></i>
+            <span class="text-slate-700 font-bold hidden sm:inline">Chức năng</span>
+            <i id="headerActionsChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200"></i>
+          </button>
 
-        <button onclick="openChangePasswordModal()" data-tooltip="Đổi mật khẩu" class="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition cursor-pointer">
-          <i class="fa-solid fa-key text-xs"></i>
-        </button>
+          <!-- Menu thả xuống cao cấp (Dropdown Menu) -->
+          <div id="headerActionsMenu" class="hidden absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-2xl shadow-emerald-950/20 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-2 space-y-1">
+            
+            <!-- Nhóm 1: Tác vụ & Tra cứu nhanh -->
+            <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt text-amber-500"></i>
+              <span>Tác vụ nhanh</span>
+            </div>
 
-        <button onclick="handleLogout()" data-tooltip="Đăng xuất" class="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-semibold transition cursor-pointer">
-          <i class="fa-solid fa-power-off text-xs"></i>
-        </button>
+            <button type="button" onclick="closeHeaderActionsMenu(); openCommandPalette();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-700">Tìm kiếm nhanh</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Tra cứu ngày, nhân sự, phòng ban</span>
+                </div>
+              </div>
+              <kbd class="px-1.5 py-0.5 text-[9px] font-num font-bold bg-slate-100 text-slate-500 border border-slate-200 rounded">Ctrl K</kbd>
+            </button>
+
+            <button type="button" id="btnExportExcel" onclick="closeHeaderActionsMenu(); exportToExcel();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-file-excel"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-teal-700">Xuất bảng Excel</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Tải file .xlsx chuẩn in ấn & báo cáo</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-download text-xs text-slate-400 group-hover:text-teal-600 transition"></i>
+            </button>
+
+            <button type="button" onclick="closeHeaderActionsMenu(); loadMatrixData(true);" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-sky-700">Làm mới dữ liệu</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Đồng bộ dữ liệu thời gian thực</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-rotate text-xs text-slate-400 group-hover:text-sky-600 transition"></i>
+            </button>
+
+            <!-- Nhóm 2: Quản trị & Điều hành (Admin / Quản lý) -->
+            <div id="adminMenuSection" class="hidden pt-1 mt-1 border-t border-slate-100">
+              <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                <span>Quản trị & Điều hành</span>
+              </div>
+
+              <button type="button" id="btnAdminUserManager" onclick="closeHeaderActionsMenu(); openUserManagerModal();" class="hidden w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-800">Quản trị nhân sự</span>
+                    <span class="text-[10px] text-slate-400 block truncate">Tài khoản, quyền hạn, điều chuyển</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-emerald-600 transition"></i>
+              </button>
+
+              <button type="button" id="btnAdminDeptManager" onclick="closeHeaderActionsMenu(); openDeptManagerModal();" class="hidden w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-sitemap"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-slate-900">Quản lý bộ phận</span>
+                    <span class="text-[10px] text-slate-400 block truncate">Thêm mới, đổi tên, phân cấp tổ kho</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-600 transition"></i>
+              </button>
+
+              <button type="button" id="btnAdminAssign" onclick="closeHeaderActionsMenu(); openAssignModal();" class="hidden w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-list-check"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-700">Phân công giao việc</span>
+                    <span class="text-[10px] text-slate-400 block truncate">Gán đầu việc cho bộ phận / nhân sự</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-emerald-600 transition"></i>
+              </button>
+            </div>
+
+            <!-- Nhóm 3: Tài khoản & Hệ thống -->
+            <div class="pt-1 mt-1 border-t border-slate-100">
+              <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-gear text-slate-400"></i>
+                <span>Tài khoản & Hệ thống</span>
+              </div>
+
+              <button type="button" onclick="closeHeaderActionsMenu(); openChangePasswordModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-key"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-amber-800">Đổi mật khẩu</span>
+                    <span class="text-[10px] text-slate-400 block truncate">Bảo mật mã hóa SHA-256</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-shield-halved text-xs text-slate-400 group-hover:text-amber-600 transition"></i>
+              </button>
+
+              <button type="button" onclick="closeHeaderActionsMenu(); handleLogout();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 text-rose-600 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-power-off"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-rose-700 block truncate">Đăng xuất</span>
+                    <span class="text-[10px] text-rose-400 block truncate">Thoát tài khoản khỏi phiên làm việc</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-arrow-right-from-bracket text-xs text-rose-400 group-hover:text-rose-600 transition"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
       </div>
     </header>
 
@@ -2393,6 +2493,120 @@
       }
     }
 
+    // ================= BẢO MẬT MẬT KHẨU CẤP DOANH NGHIỆP & CHỐNG TẤN CÔNG VÉT CẠN =================
+    const ENTERPRISE_SECURITY_PEPPER = "NTP_DVKH_SECURITY_SALT_2026_ENTERPRISE";
+    const MAX_LOGIN_ATTEMPTS = 5;
+    const LOCKOUT_DURATION_MS = 60 * 1000; // 60 giây khóa tạm nếu nhập sai quá 5 lần
+
+    /**
+     * BĂM MẬT KHẨU CHUẨN DOANH NGHIỆP (SHA-256 + PEPPER)
+     */
+    async function hashEnterprisePassword(plainPassword) {
+      if (!plainPassword) return "";
+      try {
+        const enc = new TextEncoder();
+        const data = enc.encode(plainPassword + "::" + ENTERPRISE_SECURITY_PEPPER);
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        const hex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+        return "sha256$" + hex;
+      } catch (err) {
+        console.error("Crypto error:", err);
+        return plainPassword;
+      }
+    }
+
+    /**
+     * XÁC THỰC MẬT KHẨU THÔNG MINH (TƯƠNG THÍCH CẢ MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
+     */
+    async function verifyEnterprisePassword(inputPassword, storedHash) {
+      if (!inputPassword || !storedHash) return false;
+      // 1. Kiểm tra hash theo chuẩn enterprise sha256$
+      if (storedHash.startsWith("sha256$")) {
+        const inputHashed = await hashEnterprisePassword(inputPassword);
+        return inputHashed === storedHash;
+      }
+      // 2. Kiểm tra nếu trong DB là sha256 thuần 64 ký tự hex
+      if (storedHash.length === 64 && /^[0-9a-fA-F]{64}$/.test(storedHash)) {
+        const enc = new TextEncoder();
+        const rawDigest = await crypto.subtle.digest("SHA-256", enc.encode(inputPassword));
+        const rawHex = Array.from(new Uint8Array(rawDigest)).map(b => b.toString(16).padStart(2, "0")).join("");
+        if (rawHex.toLowerCase() === storedHash.toLowerCase()) return true;
+      }
+      // 3. Tương thích ngược: Mật khẩu cũ dạng plain text
+      return storedHash === inputPassword;
+    }
+
+    /**
+     * KIỂM TRA KHÓA TẠM TÀI KHOẢN (CHỐNG BRUTE-FORCE)
+     */
+    function checkAccountLockout(username) {
+      if (!username) return 0;
+      const key = "ntp_auth_lock_" + username.toLowerCase().trim();
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return 0;
+      try {
+        const info = JSON.parse(raw);
+        if (info.count >= MAX_LOGIN_ATTEMPTS) {
+          const elapsed = Date.now() - info.lastAttempt;
+          if (elapsed < LOCKOUT_DURATION_MS) {
+            return Math.ceil((LOCKOUT_DURATION_MS - elapsed) / 1000);
+          } else {
+            sessionStorage.removeItem(key);
+            return 0;
+          }
+        }
+      } catch(e) {}
+      return 0;
+    }
+
+    function recordFailedLoginAttempt(username) {
+      if (!username) return;
+      const key = "ntp_auth_lock_" + username.toLowerCase().trim();
+      let info = { count: 0, lastAttempt: Date.now() };
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        try { info = JSON.parse(raw); } catch(e) {}
+      }
+      info.count = (info.count || 0) + 1;
+      info.lastAttempt = Date.now();
+      sessionStorage.setItem(key, JSON.stringify(info));
+    }
+
+    function clearFailedLoginAttempts(username) {
+      if (!username) return;
+      sessionStorage.removeItem("ntp_auth_lock_" + username.toLowerCase().trim());
+    }
+
+    // ================= XỬ LÝ MENU CHỨC NĂNG THẢ XUỐNG GỌN GÀNG =================
+    function toggleHeaderActionsMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('headerActionsMenu');
+      const chev = document.getElementById('headerActionsChevron');
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function closeHeaderActionsMenu() {
+      const menu = document.getElementById('headerActionsMenu');
+      const chev = document.getElementById('headerActionsChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+
+    document.addEventListener('click', function(e) {
+      const wrap = document.getElementById('headerActionsDropdownWrapper');
+      if (wrap && !wrap.contains(e.target)) {
+        closeHeaderActionsMenu();
+      }
+    });
+
     // ================= ĐÁNH GIÁ ĐỘ MẠNH YẾU CỦA MẬT KHẨU =================
     function toggleModalPasswordVisibility(inputId, iconId) {
       const pInput = document.getElementById(inputId);
@@ -3328,8 +3542,7 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${bStyle}">Nhân sự</span>
-              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+              ${isSelected ? '<span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]"><i class="fa-solid fa-check"></i></span>' : ''}
             </div>
           </div>
         `;
@@ -3964,6 +4177,14 @@
         }
       }
 
+      // 1. KIỂM TRA CHỐNG TẤN CÔNG VÉT CẠN (BRUTE-FORCE LOCKOUT BẢO MẬT DOANH NGHIỆP)
+      const lockoutRemaining = checkAccountLockout(username);
+      if (lockoutRemaining > 0) {
+        errMsg.innerText = `CẢNH BÁO AN NINH: Bạn đã nhập sai mật khẩu quá 5 lần. Vì an toàn doanh nghiệp, vui lòng đợi ${lockoutRemaining} giây trước khi thử lại!`;
+        errBox.classList.remove('hidden');
+        return;
+      }
+
       showProgressHud("ĐĂNG NHẬP HỆ THỐNG", "Đang xác thực thông tin tài khoản...", "fa-solid fa-user-shield animate-pulse");
       autoSimulateProgress(10, 85, "Kiểm tra quyền truy cập...", 30);
 
@@ -3990,11 +4211,28 @@
           return;
         }
 
-        if (user.password_hash !== password) {
+        // 2. XÁC THỰC MẬT KHẨU BẢO MẬT DOANH NGHIỆP (TƯƠNG THÍCH MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
+        const isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
+        if (!isPasswordValid) {
+          recordFailedLoginAttempt(username);
           hideProgressHud(100);
           errMsg.innerText = "Mật khẩu không chính xác!";
           errBox.classList.remove('hidden');
           return;
+        }
+
+        // Đăng nhập thành công -> Xóa bộ đếm sai
+        clearFailedLoginAttempts(username);
+
+        // 3. TỰ ĐỘNG NÂNG CẤP MẬT KHẨU CŨ SANG CHUẨN MÃ HÓA SHA-256 DOANH NGHIỆP (SEAMLESS MIGRATION)
+        if (!user.password_hash || !user.password_hash.startsWith('sha256$')) {
+          try {
+            const upgradedSecureHash = await hashEnterprisePassword(password);
+            supabase.from('users').update({ password_hash: upgradedSecureHash }).eq('id', user.id).then();
+            user.password_hash = upgradedSecureHash;
+          } catch(e) {
+            console.warn("Auto-upgrade password hash background error:", e);
+          }
         }
 
         const rememberChk = document.getElementById('rememberPasswordChk');
@@ -4106,12 +4344,14 @@
       const btnAssign = document.getElementById('btnAdminAssign');
       const btnUserManager = document.getElementById('btnAdminUserManager');
       const btnDeptManager = document.getElementById('btnAdminDeptManager');
+      const adminSection = document.getElementById('adminMenuSection');
 
       if (isAdminOrManager(currentUser.role, currentUser.username)) {
         container.classList.remove('hidden');
         btnAssign.classList.remove('hidden');
         if (btnUserManager) btnUserManager.classList.remove('hidden');
         if (btnDeptManager) btnDeptManager.classList.remove('hidden');
+        if (adminSection) adminSection.classList.remove('hidden');
 
         deptSelect.innerHTML = '';
 
@@ -4146,6 +4386,7 @@
         btnAssign.classList.add('hidden');
         if (btnUserManager) btnUserManager.classList.add('hidden');
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
+        if (adminSection) adminSection.classList.add('hidden');
       }
 
       updatePeriodLockUI(currentPeriodLocked);
@@ -7574,7 +7815,11 @@
       // HIỂN THỊ MẬT KHẨU HIỆN TẠI ĐANG SỬ DỤNG
       const curPassDisplay = document.getElementById('accEditCurrentPasswordDisplay');
       if (curPassDisplay) {
-        curPassDisplay.value = user.password_hash || "";
+        if (user.password_hash && user.password_hash.startsWith('sha256$')) {
+          curPassDisplay.value = '•••••••• (Bảo mật SHA-256)';
+        } else {
+          curPassDisplay.value = user.password_hash || "";
+        }
         curPassDisplay.type = 'password';
       }
       const curEyeIcon = document.getElementById('accCurrentEyeIcon');
@@ -7679,7 +7924,7 @@
         };
 
         if (newPass) {
-          updatePayload.password_hash = newPass;
+          updatePayload.password_hash = await hashEnterprisePassword(newPass);
         }
 
         const { error } = await supabase
@@ -7980,7 +8225,7 @@
         };
 
         if (updateData.newPassword) {
-          updatePayload.password_hash = updateData.newPassword;
+          updatePayload.password_hash = await hashEnterprisePassword(updateData.newPassword);
         }
 
         // Cập nhật hồ sơ tài khoản nhân sự
@@ -8149,12 +8394,13 @@
         const { data: dData } = await supabase.from('departments').select('id').eq('name', dept).limit(1);
         const dId = dData && dData[0] ? dData[0].id : null;
 
+        const securePass = await hashEnterprisePassword(password || '123456');
         const { error } = await supabase
           .from('users')
           .insert([{
             full_name: fullName,
             username: username,
-            password_hash: password || '123456',
+            password_hash: securePass,
             department_id: dId,
             role: role,
             status: "Hoạt động"
@@ -8216,7 +8462,7 @@
         return;
       }
 
-      // Xác thực mật khẩu cũ trước khi đổi
+      // Xác thực mật khẩu cũ trước khi đổi (Hỗ trợ cả SHA-256 lẫn legacy)
       const { data: curUserRecord, error: checkErr } = await supabase
         .from('users')
         .select('password_hash')
@@ -8228,18 +8474,20 @@
         return;
       }
 
-      if (curUserRecord[0].password_hash !== oldP) {
+      const isOldValid = await verifyEnterprisePassword(oldP, curUserRecord[0].password_hash);
+      if (!isOldValid) {
         showToast("Mật khẩu hiện tại không chính xác!", true);
         return;
       }
 
       showProgressHud("ĐỔI MẬT KHẨU", "Đang cập nhật mật khẩu bảo mật mới...", "fa-solid fa-key animate-pulse");
-      autoSimulateProgress(10, 85, "Lưu vào cơ sở dữ liệu...", 25);
+      autoSimulateProgress(10, 85, "Mã hóa và lưu vào cơ sở dữ liệu...", 25);
 
       try {
+        const secureNewHash = await hashEnterprisePassword(newP);
         const { error } = await supabase
           .from('users')
-          .update({ password_hash: newP })
+          .update({ password_hash: secureNewHash })
           .eq('username', currentUser.username);
 
         if (error) throw error;
