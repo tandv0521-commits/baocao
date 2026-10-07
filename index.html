@@ -274,6 +274,8 @@
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
     }
 
+
+
     /* ================= CẢI THIỆN GIAO DIỆN (UI/UX) DI ĐỘNG & LÀM ĐẸP MODAL / BẢNG BIỂU ================= */
     #tableScrollContainer {
       -webkit-overflow-scrolling: touch;
@@ -672,10 +674,17 @@
 
       <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & GỘP GỌN MENU CHỨC NĂNG -->
       <div class="flex items-center gap-2 flex-wrap ml-auto">
+
         <!-- Nút Điền báo cáo: Nổi bật và ưu tiên cao nhất -->
         <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo công việc" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
+        </button>
+
+        <!-- Nút Xuất Excel nhanh: 1 chạm chuẩn báo cáo -->
+        <button id="btnQuickExportExcel" onclick="exportToExcel()" data-tooltip="Xuất file Excel chuẩn báo cáo" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95">
+          <i class="fa-solid fa-file-excel text-emerald-600 text-xs sm:text-sm"></i>
+          <span class="hidden md:inline">Xuất Excel</span>
         </button>
 
         <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
@@ -2708,7 +2717,11 @@
 
     let draftSaveTimeout = null;
     let pendingTransferData = null;
-    let pendingDeleteTaskRowElem = null;
+    // ================= DUY TRÌ GIAO DIỆN SÁNG MẶC ĐỊNH GỐC BAN ĐẦU =================
+    try {
+      localStorage.removeItem('ops_portal_theme');
+      document.documentElement.classList.remove('dark');
+    } catch(e) {}
 
     // ================= ÂM THANH BÁO ĐỘNG KHI PHÁT HIỆN TRÙNG LẶP =================
     function playAlarmSound() {
@@ -6826,14 +6839,19 @@
         const curTask = allTasks.find(t => t.key === currentRhythmSelectedTaskKey);
         if (curTask) {
           let maxVal = 0;
-          let peakDay = dayCols[0].label;
+          let peakDay = null;
           let peakValStr = "-";
           let activeDaysCount = 0;
+          let lastActiveDay = null;
+          let lastActiveValStr = "-";
 
           dayCols.forEach(dc => {
             const raw = curTask.dailyValues[dc.colIndex];
             if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
               activeDaysCount++;
+              lastActiveDay = dc.label;
+              lastActiveValStr = String(raw).trim();
+
               const cleanStr = String(raw).replace(/,/g, '').trim();
               const num = parseFloat(cleanStr);
               if (!isNaN(num) && !curTask.isTextMode) {
@@ -6842,16 +6860,19 @@
                   peakDay = dc.label;
                   peakValStr = formatNumberWithCommas(num);
                 }
-              } else {
-                peakDay = dc.label;
-                peakValStr = String(raw).trim();
               }
             }
           });
 
+          // Nếu là đầu việc chuyên ký hiệu quy chuẩn hoặc không có số liệu định lượng hợp lệ, dùng ngày phát sinh gần nhất
+          if (!peakDay && lastActiveDay) {
+            peakDay = lastActiveDay;
+            peakValStr = lastActiveValStr;
+          }
+
           // Cập nhật nhãn và thẻ thống kê đầu việc
           if (peakBadge) {
-            if (activeDaysCount > 0) {
+            if (activeDaysCount > 0 && peakDay) {
               peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>Cao điểm: Ngày ${peakDay} (${peakValStr})`;
               peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num flex items-center shadow-2xs";
             } else {
@@ -6918,16 +6939,23 @@
                     topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${displayVal}</span>`;
                   }
                 } else {
+                  // ĐIỀN CHỮ / KÝ HIỆU TRONG ĐẦU VIỆC ĐỊNH LƯỢNG (Ví dụ: HT, X, Đ, Nghỉ...):
+                  // Cột sẽ ở mức THẤP NHẤT (baseline) đúng theo logic nghiệp vụ
                   displayVal = strVal;
-                  heightPercent = 50;
-                  barColor = "bg-gradient-to-t from-teal-500 to-emerald-400";
-                  topLabelHtml = `<span class="text-[10px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none">${displayVal}</span>`;
+                  heightPercent = 12; // Mức thấp nhất cho dữ liệu chữ / ký hiệu
+                  barColor = isToday 
+                    ? "bg-gradient-to-t from-teal-500 to-emerald-400 ring-2 ring-emerald-400 shadow-xs" 
+                    : "bg-teal-400/80 group-hover:bg-teal-500";
+                  topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
                 }
               } else {
+                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN (X, Đ, C...)
                 displayVal = strVal;
-                heightPercent = 55;
-                barColor = "bg-gradient-to-t from-teal-500 to-emerald-400";
-                topLabelHtml = `<span class="text-[10px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none">${displayVal}</span>`;
+                heightPercent = 16; // Mức tượng trưng thấp đồng đều
+                barColor = isToday
+                  ? "bg-gradient-to-t from-teal-600 to-emerald-500 ring-2 ring-emerald-400 shadow-xs"
+                  : "bg-gradient-to-t from-teal-500 to-emerald-400 group-hover:from-teal-600";
+                topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
               }
             } else {
               topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
@@ -7199,24 +7227,34 @@
       }
     }
 
-    // ================= XUẤT EXCEL TIÊU CHUẨN CAO CẤP & TỰ ĐỘNG ẨN SỐ 0 =================
+    // ================= XUẤT EXCEL TIÊU CHUẨN CAO CẤP & ĐỊNH DẠNG BÁO CÁO CHUẨN DOANH NGHIỆP =================
+    function getExcelColumnLetter(colIndex) {
+      let temp, letter = '';
+      while (colIndex > 0) {
+        temp = (colIndex - 1) % 26;
+        letter = String.fromCharCode(temp + 65) + letter;
+        colIndex = Math.floor((colIndex - temp - 1) / 26);
+      }
+      return letter;
+    }
+
     async function exportToExcel() {
       if (!currentMatrixData || !currentMatrixData.staffGroups || currentMatrixData.staffGroups.length === 0) {
         showToast("Chưa có dữ liệu để xuất Excel!", true);
         return;
       }
 
-      showProgressHud("XUẤT BẢNG EXCEL", "Đang kết xuất và định dạng bảng Excel chuyên nghiệp...", "fa-solid fa-file-excel animate-pulse");
-      autoSimulateProgress(10, 85, "Tổng hợp chỉ số, ẩn số 0 và tạo mẫu in...", 25);
+      showProgressHud("XUẤT BẢNG EXCEL", "Đang kết xuất và định dạng bảng Excel chuẩn báo cáo...", "fa-solid fa-file-excel animate-pulse");
+      autoSimulateProgress(10, 85, "Thiết lập tiêu ngữ, tiêu đề 2 tầng, công thức và mẫu ký duyệt...", 25);
 
       try {
         const workbook = new ExcelJS.Workbook();
-        workbook.creator = "Hệ thống Báo cáo Công việc - Ban DVKH";
+        workbook.creator = "Hệ thống Báo cáo Công việc - Công ty CP Nhựa Thiếu niên Tiền Phong";
         workbook.created = new Date();
 
-        const deptTitle = (currentMatrixData.queryDept === "TẤT CẢ") ? "Ban DVKH" : (currentMatrixData.queryDept || currentUser.department);
-        let staffTitle = (currentSelectedStaff === "TẤT CẢ") ? "Tất cả nhân viên trong ban DVKH" : currentSelectedStaff;
-        if (staffTitle && staffTitle !== "Tất cả nhân viên trong ban DVKH" && !staffTitle.startsWith("SEARCH_")) {
+        const deptTitle = (currentMatrixData.queryDept === "TẤT CẢ") ? "Ban Dịch vụ Khách hàng" : (currentMatrixData.queryDept || (currentUser ? currentUser.department : "Ban DVKH"));
+        let staffTitle = (currentSelectedStaff === "TẤT CẢ") ? "Toàn thể cán bộ nhân viên" : currentSelectedStaff;
+        if (staffTitle && staffTitle !== "Toàn thể cán bộ nhân viên" && !staffTitle.startsWith("SEARCH_")) {
           const isSharedDept = isSharedGroupDeptClient(currentMatrixData.queryDept);
           if (!isSharedDept) {
             staffTitle = staffTitle.replace(/\s*\([^\)]*\)\s*$/, '').trim();
@@ -7228,12 +7266,26 @@
         
         let sheetTitle = `BC_${mStr}_${currentYear}`;
         const ws = workbook.addWorksheet(sheetTitle, { 
-          views: [{ state: 'frozen', xSplit: 3, ySplit: 5, showGridLines: true }],
-          pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 }
+          views: [{ state: 'frozen', xSplit: 3, ySplit: 9, showGridLines: true }],
+          pageSetup: { 
+            orientation: 'landscape', 
+            fitToPage: true, 
+            fitToWidth: 1, 
+            fitToHeight: 0, 
+            paperSize: 9, // A4
+            printTitlesRow: '8:9',
+            margins: { left: 0.35, right: 0.35, top: 0.5, bottom: 0.5, header: 0.25, footer: 0.25 }
+          }
         });
+
+        ws.headerFooter = {
+          oddHeader: '&LCÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG&RBAN DỊCH VỤ KHÁCH HÀNG',
+          oddFooter: `&LBáo cáo tiến độ & kết quả công việc - Tháng ${mStr}/${currentYear}&RTrang &P / &N`
+        };
 
         const dayCols = currentMatrixData.dayCols;
         const totalColumns = 3 + dayCols.length + 1;
+        const rightColStart = Math.max(4, totalColumns - 9);
 
         const borderGrid = {
           top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -7242,64 +7294,155 @@
           right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
         };
 
-        const compRow = ws.addRow(['CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG - BAN DỊCH VỤ KHÁCH HÀNG']);
-        compRow.height = 22;
+        const borderHeader = {
+          top: { style: 'medium', color: { argb: 'FF059669' } },
+          left: { style: 'thin', color: { argb: 'FF94A3B8' } },
+          bottom: { style: 'medium', color: { argb: 'FF059669' } },
+          right: { style: 'thin', color: { argb: 'FF94A3B8' } }
+        };
+
+        // ================= HÀNG 1, 2, 3: KHUNG TIÊU NGỮ & QUỐC HIỆU DOANH NGHIỆP =================
+        const todayNow = new Date();
+        const nowD = String(todayNow.getDate()).padStart(2, '0');
+        const nowM = String(todayNow.getMonth() + 1).padStart(2, '0');
+        const nowY = todayNow.getFullYear();
+
+        // Hàng 1
+        const row1 = ws.addRow(['CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG']);
+        row1.height = 20;
         ws.mergeCells(1, 1, 1, 4);
-        compRow.getCell(1).font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF065F46' } };
-        compRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+        row1.getCell(1).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF005A36' } };
+        row1.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
-        const titleRow = ws.addRow(['BẢNG THEO DÕI VÀ TỔNG HỢP TIẾN ĐỘ CÔNG VIỆC']);
-        titleRow.height = 30;
-        ws.mergeCells(2, 1, 2, totalColumns);
-        titleRow.getCell(1).font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF047857' } };
-        titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+        row1.getCell(rightColStart).value = 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM';
+        ws.mergeCells(1, rightColStart, 1, totalColumns);
+        row1.getCell(rightColStart).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        row1.getCell(rightColStart).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        const subTitleRow = ws.addRow([`Kỳ báo cáo: Tháng ${mStr} / Năm ${currentYear}   |   Bộ phận: ${deptTitle.toUpperCase()}   |   Đối tượng: ${staffTitle}`]);
-        subTitleRow.height = 20;
-        ws.mergeCells(3, 1, 3, totalColumns);
-        subTitleRow.getCell(1).font = { name: 'Arial', size: 9.5, italic: true, color: { argb: 'FF475569' } };
-        subTitleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+        // Hàng 2
+        const row2 = ws.addRow(['BAN DỊCH VỤ KHÁCH HÀNG']);
+        row2.height = 19;
+        ws.mergeCells(2, 1, 2, 4);
+        row2.getCell(1).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF005A36' } };
+        row2.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
 
+        row2.getCell(rightColStart).value = 'Độc lập - Tự do - Hạnh phúc';
+        ws.mergeCells(2, rightColStart, 2, totalColumns);
+        row2.getCell(rightColStart).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        row2.getCell(rightColStart).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Hàng 3
+        const row3 = ws.addRow(['Mã biểu mẫu: BM-DVKH/BC-01']);
+        row3.height = 18;
+        ws.mergeCells(3, 1, 3, 4);
+        row3.getCell(1).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF64748B' } };
+        row3.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+
+        row3.getCell(rightColStart).value = `Hải Phòng, ngày ${nowD} tháng ${nowM} năm ${nowY}`;
+        ws.mergeCells(3, rightColStart, 3, totalColumns);
+        row3.getCell(rightColStart).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF475569' } };
+        row3.getCell(rightColStart).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Hàng 4: Dòng trống ngăn cách
         ws.addRow([]);
         ws.getRow(4).height = 6;
 
-        const headerTitles = ['TT', 'Họ và tên / Tổ', 'Nội dung công việc'];
-        dayCols.forEach(dc => headerTitles.push(dc.dayNum));
-        headerTitles.push('Tổng cộng');
+        // ================= HÀNG 5, 6: TIÊU ĐỀ TRUNG TÂM BÁO CÁO =================
+        const titleRow = ws.addRow(['BẢNG THEO DÕI VÀ BÁO CÁO TIẾN ĐỘ CÔNG VIỆC']);
+        titleRow.height = 30;
+        ws.mergeCells(5, 1, 5, totalColumns);
+        titleRow.getCell(1).font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF047857' } };
+        titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        const headerRow = ws.addRow(headerTitles);
-        headerRow.height = 28;
+        const subTitleRow = ws.addRow([`Kỳ báo cáo: Tháng ${mStr} / Năm ${currentYear}   |   Đơn vị: ${deptTitle.toUpperCase()}   |   Đối tượng: ${staffTitle}`]);
+        subTitleRow.height = 20;
+        ws.mergeCells(6, 1, 6, totalColumns);
+        subTitleRow.getCell(1).font = { name: 'Arial', size: 9.5, italic: true, color: { argb: 'FF334155' } };
+        subTitleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        headerRow.eachCell((cell, colNumber) => {
+        // Hàng 7: Dòng trống ngăn cách
+        ws.addRow([]);
+        ws.getRow(7).height = 6;
+
+        // ================= HÀNG 8, 9: TIÊU ĐỀ CỘT 2 TẦNG (THỨ & NGÀY) =================
+        const dayNamesVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+        // Tầng 1 (Hàng 8): TT, Họ tên, Nội dung, Thứ trong tuần, Tổng cộng
+        const headerTier1 = ['TT', 'Họ và tên / Tổ', 'Nội dung công việc'];
+        dayCols.forEach(dc => {
+          const dateObj = new Date(currentYear, currentMonth - 1, dc.dayNum);
+          const dOfWeek = dateObj.getDay();
+          headerTier1.push(dayNamesVi[dOfWeek]);
+        });
+        headerTier1.push('Tổng cộng');
+
+        // Tầng 2 (Hàng 9): TT, Họ tên, Nội dung, Số ngày (01..31), Tổng cộng
+        const headerTier2 = ['', '', ''];
+        dayCols.forEach(dc => {
+          headerTier2.push(String(dc.dayNum).padStart(2, '0'));
+        });
+        headerTier2.push('');
+
+        const row8 = ws.addRow(headerTier1);
+        row8.height = 20;
+        const row9 = ws.addRow(headerTier2);
+        row9.height = 20;
+
+        // Merge các cột cố định giữa hàng 8 và 9
+        ws.mergeCells(8, 1, 9, 1); // TT
+        ws.mergeCells(8, 2, 9, 2); // Họ và tên
+        ws.mergeCells(8, 3, 9, 3); // Nội dung công việc
+        ws.mergeCells(8, totalColumns, 9, totalColumns); // Tổng cộng
+
+        // Định dạng header hàng 8 & 9
+        for (let col = 1; col <= totalColumns; col++) {
+          const cell8 = row8.getCell(col);
+          const cell9 = row9.getCell(col);
+
           let isSundayCol = false;
-          if (colNumber > 3 && colNumber < totalColumns) {
-            const dc = dayCols[colNumber - 4];
+          let isSaturdayCol = false;
+          if (col > 3 && col < totalColumns) {
+            const dc = dayCols[col - 4];
             const dateObj = new Date(currentYear, currentMonth - 1, dc.dayNum);
-            isSundayCol = (dateObj.getDay() === 0);
+            const dow = dateObj.getDay();
+            isSundayCol = (dow === 0);
+            isSaturdayCol = (dow === 6);
           }
 
-          cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: isSundayCol ? 'FF9F1239' : (colNumber === totalColumns ? 'FF0F172A' : 'FF064E3B') } };
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: isSundayCol ? 'FFFFE4E6' : (colNumber === totalColumns ? 'FFE2E8F0' : 'FFECFDF5') }
-          };
-          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          cell.border = {
-            top: { style: 'thin', color: { argb: 'FF059669' } },
-            left: { style: 'thin', color: { argb: 'FF94A3B8' } },
-            bottom: { style: 'medium', color: { argb: 'FF059669' } },
-            right: { style: 'thin', color: { argb: 'FF94A3B8' } }
-          };
-        });
+          const isTotalCol = (col === totalColumns);
 
+          let bgColor = 'FFECFDF5';
+          let textColor = 'FF064E3B';
+
+          if (isSundayCol) {
+            bgColor = 'FFFFE4E6';
+            textColor = 'FF9F1239';
+          } else if (isSaturdayCol) {
+            bgColor = 'FFF1F5F9';
+            textColor = 'FF334155';
+          } else if (isTotalCol) {
+            bgColor = 'FFE2E8F0';
+            textColor = 'FF0F172A';
+          }
+
+          [cell8, cell9].forEach(c => {
+            c.font = { name: 'Arial', size: 9, bold: true, color: { argb: textColor } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+            c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            c.border = borderHeader;
+          });
+        }
+
+        // Độ rộng cột
         ws.getColumn(1).width = 6;
-        ws.getColumn(2).width = 28;
-        ws.getColumn(3).width = 40;
+        ws.getColumn(2).width = 26;
+        ws.getColumn(3).width = 38;
         dayCols.forEach((dc, idx) => { ws.getColumn(4 + idx).width = 4.8; });
         ws.getColumn(totalColumns).width = 14;
 
-        let currentRowNum = 6;
+        // ================= DỮ LIỆU CÔNG VIỆC TỪ HÀNG 10 =================
+        let currentRowNum = 10;
+        const firstDataRow = currentRowNum;
         const deptGroups = {};
         currentMatrixData.staffGroups.forEach(grp => {
           const dName = grp.department ? grp.department.trim() : (deptTitle || "Chưa phân bộ phận");
@@ -7308,11 +7451,15 @@
         });
 
         let globalSTT = 1;
+        const dailyNumericSums = new Array(dayCols.length).fill(0);
+        let grandNumericTotal = 0;
 
         for (const [dName, members] of Object.entries(deptGroups)) {
           const actualStaffCount = countTotalPeopleInDept(members);
+          let deptTaskCount = 0;
+          members.forEach(m => deptTaskCount += (m.tasks ? m.tasks.length : 0));
 
-          const deptBannerRow = ws.addRow([`📁 BỘ PHẬN: ${dName.toUpperCase()} (${actualStaffCount} nhân sự)`]);
+          const deptBannerRow = ws.addRow([`📁 BỘ PHẬN: ${dName.toUpperCase()} (${actualStaffCount} nhân sự • ${deptTaskCount} đầu việc)`]);
           deptBannerRow.height = 24;
           ws.mergeCells(currentRowNum, 1, currentRowNum, totalColumns);
           
@@ -7334,9 +7481,6 @@
             const personRowBg = isEvenPerson ? 'FFFFFFFF' : 'FFF8FAFC';
             const personTotalBg = isEvenPerson ? 'FFF1F5F9' : 'FFE2E8F0';
 
-            // Xử lý tên nhân sự xuất Excel:
-            // Với nhóm gộp (Tổ kho / isShared): GIỮ NGUYÊN danh sách thành viên kèm số thứ tự và vai trò
-            // Với nhóm công việc thường (!isShared): BỎ thông tin vai trò cạnh họ tên (ví dụ: "Đặng Văn Việt (Nhân viên)" -> "Đặng Văn Việt")
             const isSharedGroup = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
             let excelStaffName = grp.staffName || "";
             if (!isSharedGroup) {
@@ -7350,8 +7494,10 @@
 
             grp.tasks.forEach((t) => {
               const rowData = [personSTT, excelStaffName, t.taskName];
+              let hasNumericValuesInRow = false;
+              let rowNumericSum = 0;
 
-              dayCols.forEach(dc => {
+              dayCols.forEach((dc, dayIdx) => {
                 const val = t.dailyValues[dc.colIndex];
                 if (val !== undefined && val !== null && String(val).trim() !== '') {
                   let strVal = String(val).trim();
@@ -7360,8 +7506,15 @@
                   } else {
                     const num = parseFloat(strVal.replace(/,/g, ''));
                     if (!isNaN(num) && !t.isTextMode) {
-                      if (num === 0) rowData.push('');
-                      else rowData.push(num);
+                      if (num === 0) {
+                        rowData.push('');
+                      } else {
+                        rowData.push(num);
+                        hasNumericValuesInRow = true;
+                        rowNumericSum += num;
+                        dailyNumericSums[dayIdx] += num;
+                        grandNumericTotal += num;
+                      }
                     } else {
                       rowData.push(strVal.toUpperCase());
                     }
@@ -7371,9 +7524,17 @@
                 }
               });
 
-              if (typeof t.monthTotal === 'number') {
-                if (t.monthTotal === 0) rowData.push('');
-                else rowData.push(t.monthTotal);
+              // Cột Tổng cộng từng dòng: áp dụng công thức Excel SUM hoặc số tính toán
+              const startDayColLetter = getExcelColumnLetter(4);
+              const endDayColLetter = getExcelColumnLetter(3 + dayCols.length);
+
+              if (hasNumericValuesInRow) {
+                rowData.push({
+                  formula: `SUM(${startDayColLetter}${currentRowNum}:${endDayColLetter}${currentRowNum})`,
+                  result: (typeof t.monthTotal === 'number' && t.monthTotal > 0) ? t.monthTotal : rowNumericSum
+                });
+              } else if (typeof t.monthTotal === 'number' && t.monthTotal > 0) {
+                rowData.push(t.monthTotal);
               } else if (t.monthTotal && t.monthTotal !== '-' && t.monthTotal !== '0') {
                 rowData.push(String(t.monthTotal));
               } else {
@@ -7407,16 +7568,21 @@
                   cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
                   cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF065F46' } };
                 } else if (colNumber === 3) {
-                  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 0.5 };
                 } else if (colNumber === totalColumns) {
                   cell.alignment = { vertical: 'middle', horizontal: 'center' };
                   cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF047857' } };
-                  if (typeof cell.value === 'number') cell.numFmt = '#,##0';
+                  cell.numFmt = '#,##0';
                 } else {
                   cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                  if (typeof cell.value === 'string' && ['X', 'P', 'Đ', 'C'].includes(cell.value)) {
-                    cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF059669' } };
-                  } else if (typeof cell.value === 'number') {
+                  const v = (typeof cell.value === 'object' && cell.value !== null) ? cell.value.result : cell.value;
+                  if (typeof v === 'string' && ['X', 'P', 'Đ', 'C'].includes(v)) {
+                    let sColor = 'FF059669';
+                    if (v === 'P') sColor = 'FFD97706';
+                    if (v === 'Đ') sColor = 'FF0D9488';
+                    if (v === 'C') sColor = 'FFE11D48';
+                    cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: sColor } };
+                  } else if (typeof v === 'number') {
                     cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF0F172A' } };
                     cell.numFmt = '#,##0';
                   }
@@ -7434,17 +7600,152 @@
           });
         }
 
+        const lastDataRow = currentRowNum - 1;
+
+        // ================= HÀNG TỔNG CỘNG TOÀN KỲ (GRAND TOTAL ROW) =================
+        const summaryRowData = ['TỔNG CỘNG CHỈ SỐ KỲ BÁO CÁO', '', ''];
+        dayCols.forEach((dc, dIdx) => {
+          const colLetter = getExcelColumnLetter(4 + dIdx);
+          summaryRowData.push({
+            formula: `SUM(${colLetter}${firstDataRow}:${colLetter}${lastDataRow})`,
+            result: dailyNumericSums[dIdx] > 0 ? dailyNumericSums[dIdx] : ''
+          });
+        });
+
+        const totalColLetter = getExcelColumnLetter(totalColumns);
+        summaryRowData.push({
+          formula: `SUM(${totalColLetter}${firstDataRow}:${totalColLetter}${lastDataRow})`,
+          result: grandNumericTotal > 0 ? grandNumericTotal : ''
+        });
+
+        const summaryRow = ws.addRow(summaryRowData);
+        summaryRow.height = 24;
+        ws.mergeCells(currentRowNum, 1, currentRowNum, 3);
+
+        const borderSummary = {
+          top: { style: 'thin', color: { argb: 'FF059669' } },
+          left: { style: 'thin', color: { argb: 'FF94A3B8' } },
+          bottom: { style: 'double', color: { argb: 'FF059669' } },
+          right: { style: 'thin', color: { argb: 'FF94A3B8' } }
+        };
+
+        summaryRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF065F46' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
+          cell.border = borderSummary;
+          if (colNumber === 1) {
+            cell.alignment = { vertical: 'middle', horizontal: 'right', indent: 1 };
+          } else {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.numFmt = '#,##0';
+          }
+        });
+        currentRowNum++;
+
+        // Dòng trống
+        ws.addRow([]);
+        ws.getRow(currentRowNum).height = 8;
+        currentRowNum++;
+
+        // ================= CHÚ THÍCH KÝ HIỆU BÁO CÁO (LEGEND) =================
+        const legendRow = ws.addRow(['* Ghi chú quy chuẩn:   [X]: Đã hoàn thành nhiệm vụ   |   [P]: Nghỉ phép / chế độ   |   [Đ]: Đi công tác / Hiện trường   |   [C]: Trực ca kíp / Làm thêm OT']);
+        legendRow.height = 18;
+        ws.mergeCells(currentRowNum, 1, currentRowNum, totalColumns);
+        legendRow.getCell(1).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF475569' } };
+        legendRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        currentRowNum++;
+
+        // Dòng trống
+        ws.addRow([]);
+        ws.getRow(currentRowNum).height = 12;
+        currentRowNum++;
+
+        // ================= KHUNG CHỮ KÝ XÁC NHẬN PHÊ DUYỆT (3 CỘT CHUẨN DOANH NGHIỆP) =================
+        const signRightStart = Math.max(4, totalColumns - 8);
+        const signMidStart = Math.max(4, Math.floor((totalColumns - 3) / 2) - 2);
+        const signMidEnd = Math.min(signRightStart - 1, signMidStart + 5);
+
+        // 1. Dòng Ngày tháng địa điểm
+        const rSignDate = ws.addRow([]);
+        rSignDate.height = 18;
+        rSignDate.getCell(signRightStart).value = `Hải Phòng, ngày ${nowD} tháng ${nowM} năm ${nowY}`;
+        ws.mergeCells(currentRowNum, signRightStart, currentRowNum, totalColumns);
+        rSignDate.getCell(signRightStart).font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF334155' } };
+        rSignDate.getCell(signRightStart).alignment = { vertical: 'middle', horizontal: 'center' };
+        currentRowNum++;
+
+        // 2. Dòng Chức danh người ký
+        const rSignTitle = ws.addRow([]);
+        rSignTitle.height = 20;
+
+        rSignTitle.getCell(1).value = 'NGƯỜI LẬP BÁO CÁO';
+        ws.mergeCells(currentRowNum, 1, currentRowNum, 3);
+        rSignTitle.getCell(1).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        rSignTitle.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        rSignTitle.getCell(signMidStart).value = 'PHỤ TRÁCH BỘ PHẬN';
+        ws.mergeCells(currentRowNum, signMidStart, currentRowNum, signMidEnd);
+        rSignTitle.getCell(signMidStart).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        rSignTitle.getCell(signMidStart).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        rSignTitle.getCell(signRightStart).value = 'GIÁM ĐỐC BAN DỊCH VỤ KHÁCH HÀNG';
+        ws.mergeCells(currentRowNum, signRightStart, currentRowNum, totalColumns);
+        rSignTitle.getCell(signRightStart).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        rSignTitle.getCell(signRightStart).alignment = { vertical: 'middle', horizontal: 'center' };
+        currentRowNum++;
+
+        // 3. Dòng Ghi chú hướng dẫn ký
+        const rSignSub = ws.addRow([]);
+        rSignSub.height = 16;
+
+        rSignSub.getCell(1).value = '(Ký, ghi rõ họ tên)';
+        ws.mergeCells(currentRowNum, 1, currentRowNum, 3);
+        rSignSub.getCell(1).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF64748B' } };
+        rSignSub.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        rSignSub.getCell(signMidStart).value = '(Ký, ghi rõ họ tên)';
+        ws.mergeCells(currentRowNum, signMidStart, currentRowNum, signMidEnd);
+        rSignSub.getCell(signMidStart).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF64748B' } };
+        rSignSub.getCell(signMidStart).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        rSignSub.getCell(signRightStart).value = '(Ký, phê duyệt & đóng dấu)';
+        ws.mergeCells(currentRowNum, signRightStart, currentRowNum, totalColumns);
+        rSignSub.getCell(signRightStart).font = { name: 'Arial', size: 8.5, italic: true, color: { argb: 'FF64748B' } };
+        rSignSub.getCell(signRightStart).alignment = { vertical: 'middle', horizontal: 'center' };
+        currentRowNum++;
+
+        // 4. Khoảng cách để ký tên (3 dòng trống)
+        for (let s = 0; s < 3; s++) {
+          ws.addRow([]);
+          ws.getRow(currentRowNum).height = 18;
+          currentRowNum++;
+        }
+
+        // 5. Dòng Họ và tên người lập
+        const rSignName = ws.addRow([]);
+        rSignName.height = 20;
+        const submitterName = (staffTitle && staffTitle !== "Toàn thể cán bộ nhân viên" && !staffTitle.startsWith("Tất cả")) 
+          ? staffTitle 
+          : (currentUser ? currentUser.fullName : "");
+
+        rSignName.getCell(1).value = submitterName;
+        ws.mergeCells(currentRowNum, 1, currentRowNum, 3);
+        rSignName.getCell(1).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        rSignName.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+        currentRowNum++;
+
+        // Xuất buffer và tải file
         const buffer = await workbook.xlsx.writeBuffer();
         const cleanDept = deptTitle.replace(/[\/\\?%*:|"<>]/g, '_');
         const cleanStaff = staffTitle.replace(/[\/\\?%*:|"<>]/g, '_');
-        const fileName = `Bao_Cao_${mStr}_${currentYear}_${cleanDept}_${cleanStaff}.xlsx`;
+        const fileName = `Bao_Cao_Cong_Viec_Thang_${mStr}_${currentYear}_${cleanDept}_${cleanStaff}.xlsx`;
 
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blob, fileName);
 
         autoSimulateProgress(85, 100, "Tải file hoàn tất!", 15, () => {
           hideProgressHud(250);
-          showToast("Tải báo cáo Excel thành công!");
+          showToast("Tải báo cáo Excel chuẩn công ty thành công!");
         });
       } catch (err) {
         hideProgressHud(100);
