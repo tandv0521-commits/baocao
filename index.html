@@ -240,6 +240,21 @@
     tbody tr:hover td.col-fixed-tt, tbody tr:hover td.col-fixed-task { background-color: #f8fafc !important; }
     tbody td.col-fixed-total { background-color: #f8fafc !important; }
 
+    /* Đường kẻ phân cách & bao quanh nhân sự trong bảng ma trận - THẨM MỸ CAO CẤP 10/10 */
+    .person-row-last td {
+      border-bottom: 2px solid #059669 !important; /* Xanh ngọc Tiền Phong thanh thoát, sắc nét, êm dịu */
+    }
+    .person-row-inner td {
+      border-bottom: 1px solid #e8edf2 !important; /* Nét kẻ mảnh dịu mắt giữa các đầu việc của cùng 1 người */
+    }
+    td.person-merged-tt, td.person-merged-name {
+      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT và Họ tên khớp chuẩn xác với vạch phân cách */
+      border-right: 1.5px solid #cbd5e1 !important;
+    }
+    td.col-fixed-task {
+      border-right: 2px solid #cbd5e1 !important; /* Ngăn cách rõ ràng giữa Cột nội dung công việc và các cột ngày */
+    }
+
     /* Màu nhận diện cột ngày Chủ nhật (CN) */
     .col-sunday-header { background-color: #fff1f2 !important; color: #be123c !important; border-bottom-color: #fda4af !important; }
     .col-sunday-cell { background-color: #fff1f2/40 !important; }
@@ -357,24 +372,24 @@
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
 
-  <!-- ================= DẢI TIẾN TRÌNH % THÔNG MINH ================= -->
+  <!-- ================= DẢI TIẾN TRÌNH HỆ THỐNG (PHONG CÁCH TỐI GIẢN, DỊU MẮT) ================= -->
   <div id="systemProgressHud" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 sm:p-7 max-w-sm w-full space-y-4 text-center animate-in fade-in zoom-in-95 duration-200">
-      <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner border border-emerald-100">
-        <i id="progressHudIcon" class="fa-solid fa-cloud-arrow-up animate-bounce"></i>
+    <div class="relative bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-7 max-w-sm w-full space-y-4 text-center overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl border border-emerald-200 shadow-xs">
+        <i id="progressHudIcon" class="fa-solid fa-shield-halved"></i>
       </div>
       <div class="space-y-1">
-        <h3 id="progressHudTitle" class="text-sm sm:text-base font-black text-slate-800 tracking-tight">ĐANG XỬ LÝ HỆ THỐNG...</h3>
+        <h3 id="progressHudTitle" class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">ĐANG XỬ LÝ HỆ THỐNG...</h3>
         <p id="progressHudDesc" class="text-xs text-slate-500 font-medium">Hệ thống đang đồng bộ dữ liệu thời gian thực...</p>
       </div>
-      <!-- Dải đếm phần trăm động -->
+      <!-- Dải đếm phần trăm thanh lịch dịu mắt -->
       <div class="space-y-1.5 pt-1">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-600 font-num">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-600 font-num">
           <span id="progressHudStep" class="text-[11px] text-slate-400">Tiến trình</span>
-          <span id="progressHudPercent" class="text-emerald-700 font-black text-sm">0%</span>
+          <span id="progressHudPercent" class="text-emerald-700 font-bold text-sm">0%</span>
         </div>
         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
-          <div id="progressHudBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+          <div id="progressHudBar" class="h-full bg-emerald-600 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
         </div>
       </div>
     </div>
@@ -598,7 +613,7 @@
             <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Tên đăng nhập (Username)</label>
             <div class="relative">
               <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-              <input type="text" id="loginUsernameInput" placeholder="Nhập tên đăng nhập (VD: admin...)" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
+              <input type="text" id="loginUsernameInput" onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập (VD: admin...)" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
             </div>
           </div>
         </div>
@@ -608,7 +623,7 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Mật khẩu truy cập</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="password" id="loginPasswordInput" value="" placeholder="Nhập mật khẩu..." class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
+            <input type="password" id="loginPasswordInput" onkeydown="if(event.key==='Enter') handleLogin()" value="" placeholder="Nhập mật khẩu..." class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
               <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
             </button>
@@ -630,10 +645,15 @@
           <span id="loginErrorMsg" class="font-bold"></span>
         </div>
 
-        <!-- Nút Đăng nhập -->
-        <button onclick="handleLogin()" id="btnLogin" class="w-full mt-3.5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:via-teal-400 hover:to-emerald-500 active:scale-[0.98] text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-emerald-950/40 border border-emerald-400/30 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer group">
-          <span>Đăng Nhập Vào Hệ Thống</span>
-          <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+        <!-- Nút Đăng nhập với In-Button Micro-Loader (Đồng nhất, hài hòa, loại bỏ hoàn toàn vạch gạch chân ở đáy nút) -->
+        <button onclick="handleLogin()" id="btnLogin" class="relative overflow-hidden w-full mt-3.5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:via-teal-500 hover:to-emerald-600 active:scale-[0.98] text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-emerald-950/40 border border-emerald-400/30 transition-all duration-200 cursor-pointer group select-none">
+          <!-- Vệt nền tiến trình chạy êm ái bên trong nút (vô hình khi ở trạng thái chờ) -->
+          <div id="btnLoginProgressFill" class="absolute left-0 top-0 bottom-0 bg-emerald-950/35 rounded-2xl transition-all duration-150 ease-out pointer-events-none" style="width: 0%;"></div>
+          <!-- Nội dung chữ & Icon -->
+          <div class="relative z-10 flex items-center justify-center gap-2 pointer-events-none">
+            <span id="btnLoginText">Đăng Nhập Vào Hệ Thống</span>
+            <i id="btnLoginIcon" class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+          </div>
         </button>
       </div>
 
@@ -991,7 +1011,7 @@
                 <th class="col-fixed-total py-3.5 px-2.5 sm:px-3 text-center border-l font-bold">Tổng cộng</th>
               </tr>
             </thead>
-            <tbody id="sheetTableBody" class="font-medium text-slate-700 divide-y divide-slate-100"></tbody>
+            <tbody id="sheetTableBody" class="font-medium text-slate-700"></tbody>
           </table>
         </div>
 
@@ -4971,8 +4991,84 @@
       updateStaffPickerUI('', '');
     }
 
+    // ================= TIỆN ÍCH TIẾN TRÌNH TRỰC TIẾP TRÊN NÚT ĐĂNG NHẬP (IN-BUTTON MICRO-LOADER) =================
+    // HOÀN TOÀN KHÔNG MỞ POPUP MÀN HÌNH, KHÔNG BỊ CHÓI / LÓA MẮT, ÊM DỊU & CHUYỂN CẢNH MƯỢT MÀ
+    let _loginSimInterval = null;
+
+    function setLoginButtonProgress(percent, label, isFinished = false) {
+      const btn = document.getElementById('btnLogin');
+      const textEl = document.getElementById('btnLoginText');
+      const iconEl = document.getElementById('btnLoginIcon');
+      const fillEl = document.getElementById('btnLoginProgressFill');
+
+      if (!btn) return;
+      btn.disabled = true;
+      btn.classList.add('cursor-wait', 'opacity-95');
+      btn.classList.remove('cursor-pointer');
+
+      const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+      if (fillEl) fillEl.style.width = clamped + '%';
+
+      if (textEl) {
+        if (isFinished) {
+          textEl.innerText = "Đăng nhập thành công!";
+        } else if (label) {
+          textEl.innerText = `${label} (${clamped}%)`;
+        } else {
+          textEl.innerText = `Đang xác thực... (${clamped}%)`;
+        }
+      }
+
+      if (iconEl) {
+        if (isFinished) {
+          iconEl.className = "fa-solid fa-circle-check text-xs text-emerald-200 animate-in zoom-in-75 duration-150";
+        } else {
+          iconEl.className = "fa-solid fa-circle-notch fa-spin text-xs";
+        }
+      }
+    }
+
+    function resetLoginButton() {
+      if (_loginSimInterval) {
+        clearInterval(_loginSimInterval);
+        _loginSimInterval = null;
+      }
+      const btn = document.getElementById('btnLogin');
+      const textEl = document.getElementById('btnLoginText');
+      const iconEl = document.getElementById('btnLoginIcon');
+      const fillEl = document.getElementById('btnLoginProgressFill');
+
+      if (!btn) return;
+      btn.disabled = false;
+      btn.classList.remove('cursor-wait', 'opacity-95');
+      btn.classList.add('cursor-pointer');
+
+      if (fillEl) fillEl.style.width = '0%';
+      if (textEl) textEl.innerText = "Đăng Nhập Vào Hệ Thống";
+      if (iconEl) iconEl.className = "fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform";
+    }
+
+    function autoSimulateLoginButton(fromPct, toPct, label, speedMs = 18, onComplete = null) {
+      if (_loginSimInterval) clearInterval(_loginSimInterval);
+      let curr = fromPct;
+      setLoginButtonProgress(curr, label, curr >= 100);
+
+      _loginSimInterval = setInterval(() => {
+        curr += (toPct > curr ? 1 : -1);
+        const isFin = curr >= 100;
+        setLoginButtonProgress(curr, label, isFin);
+
+        if ((toPct >= fromPct && curr >= toPct) || (toPct < fromPct && curr <= toPct)) {
+          clearInterval(_loginSimInterval);
+          _loginSimInterval = null;
+          if (typeof onComplete === 'function') onComplete();
+        }
+      }, speedMs);
+    }
+
     /**
      * ĐĂNG NHẬP: BỎ HOÀN TOÀN CỬA SAU 123456, GHI NHỚ MẬT KHẨU KHI ĐƯỢC TÍCH CHỌN
+     * TIẾN TRÌNH TRỰC TIẾP TRÊN NÚT ĐĂNG NHẬP (KHÔNG BẬT POPUP CHE MÀN HÌNH, KHÔNG LÓA MẮT)
      */
     async function handleLogin() {
       const isDeptTab = !document.getElementById('deptLoginForm').classList.contains('hidden');
@@ -5007,8 +5103,8 @@
         return;
       }
 
-      showProgressHud("ĐĂNG NHẬP HỆ THỐNG", "Đang xác thực thông tin tài khoản...", "fa-solid fa-user-shield animate-pulse");
-      autoSimulateProgress(10, 85, "Kiểm tra quyền truy cập...", 30);
+      // CHẠY TIẾN TRÌNH ÊM ÁI TRỰC TIẾP TRÊN NÚT (15% -> 80%)
+      autoSimulateLoginButton(15, 80, "Đang xác thực", 20);
 
       try {
         const { data: users, error } = await supabase
@@ -5019,7 +5115,7 @@
 
         if (error) throw error;
         if (!users || users.length === 0) {
-          hideProgressHud(100);
+          resetLoginButton();
           errMsg.innerText = "Tên đăng nhập không tồn tại!";
           errBox.classList.remove('hidden');
           return;
@@ -5027,7 +5123,7 @@
 
         const user = users[0];
         if (user.status === 'Khóa') {
-          hideProgressHud(100);
+          resetLoginButton();
           errMsg.innerText = "Tài khoản này đã bị khóa!";
           errBox.classList.remove('hidden');
           return;
@@ -5037,7 +5133,7 @@
         const isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
         if (!isPasswordValid) {
           recordFailedLoginAttempt(username);
-          hideProgressHud(100);
+          resetLoginButton();
           errMsg.innerText = "Mật khẩu không chính xác!";
           errBox.classList.remove('hidden');
           return;
@@ -5059,8 +5155,8 @@
           localStorage.removeItem('ops_portal_remembered_auth_v49');
         }
 
-        autoSimulateProgress(85, 100, "Xác thực thành công! Đang vào hệ thống...", 15, () => {
-          hideProgressHud(250);
+        // Hoàn tất tiến trình 80% -> 100% êm ái trên nút và chuyển cảnh mượt mà vào Dashboard
+        autoSimulateLoginButton(80, 100, "Xác thực thành công", 12, () => {
           currentUser = Object.freeze({
             id: user.id,
             username: user.username,
@@ -5071,10 +5167,13 @@
             status: user.status
           });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
-          initMainDashboard();
+          setTimeout(() => {
+            initMainDashboard();
+            resetLoginButton();
+          }, 180);
         });
       } catch (err) {
-        hideProgressHud(100);
+        resetLoginButton();
         errMsg.innerText = "Lỗi kết nối máy chủ: " + err.message;
         errBox.classList.remove('hidden');
       }
@@ -5917,20 +6016,21 @@
         const autoSTT = gIdx + 1;
 
         grp.tasks.forEach((t, tIdx) => {
+          const isLastTask = (tIdx === totalStaffRows - 1);
           const tr = document.createElement('tr');
-          tr.className = "hover:bg-slate-50/80 transition";
+          tr.className = `${isLastTask ? 'person-row-last' : 'person-row-inner'} hover:bg-slate-50/80 transition`;
           const currentRowIndex = globalRowCounter++;
 
           let ttCellHtml = '';
           let nameCellHtml = '';
           if (tIdx === 0) {
             ttCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-tt py-2 sm:py-3 px-1 sm:px-2 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-200 align-middle bg-white font-num">
+              <td rowspan="${totalStaffRows}" class="col-fixed-tt person-merged-tt py-2 sm:py-3 px-1 sm:px-2 text-center font-bold text-slate-400 text-xs align-middle bg-white font-num">
                 ${autoSTT}
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name py-2 sm:py-3 px-1.5 sm:px-2.5 text-left font-bold text-slate-900 border-r border-b border-slate-200 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2 sm:py-3 px-1.5 sm:px-2.5 text-left font-bold text-slate-900 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
                   ${formatStaffNameHtml(grp.staffName, grp.department)}
                 </div>
@@ -6042,13 +6142,20 @@
 
           const guideHtml = t.guide ? `<span class="italic text-[10px] text-slate-400 block mt-0.5 leading-snug break-words">${escapeHtml(t.guide)}</span>` : '';
 
+          const taskBadgeHtml = (totalStaffRows > 1)
+            ? `<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold shrink-0 border border-emerald-200/90 font-num select-none mt-0.5">${tIdx + 1}</span>`
+            : `<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>`;
+
           tr.innerHTML = `
             ${ttCellHtml}
             ${nameCellHtml}
-            <td class="col-fixed-task py-2.5 px-2 sm:px-3 font-semibold text-slate-900 border-r border-b border-slate-200">
-              <div class="w-full whitespace-normal break-words text-xs leading-relaxed" title="${escapeHtml(t.taskName)}">
-                <span class="font-bold text-slate-800">${escapeHtml(t.taskName)}</span>
-                ${guideHtml}
+            <td class="col-fixed-task py-2.5 px-2 sm:px-3 font-semibold text-slate-900">
+              <div class="w-full whitespace-normal break-words text-xs leading-relaxed flex items-start gap-1.5" title="${escapeHtml(t.taskName)}">
+                ${taskBadgeHtml}
+                <div class="min-w-0 flex-1">
+                  <span class="font-bold text-slate-800">${escapeHtml(t.taskName)}</span>
+                  ${guideHtml}
+                </div>
               </div>
             </td>
             ${dayCellsHtml}
@@ -7498,8 +7605,9 @@
               }
             }
 
-            grp.tasks.forEach((t) => {
-              const rowData = [personSTT, excelStaffName, t.taskName];
+            grp.tasks.forEach((t, tIdx) => {
+              const excelTaskName = (staffTaskCount > 1) ? `${tIdx + 1}. ${t.taskName}` : t.taskName;
+              const rowData = [personSTT, excelStaffName, excelTaskName];
               let hasNumericValuesInRow = false;
               let rowNumericSum = 0;
 
@@ -7598,10 +7706,54 @@
               currentRowNum++;
             });
 
+            const staffEndRow = currentRowNum - 1;
             if (staffTaskCount > 1) {
-              const staffEndRow = currentRowNum - 1;
               ws.mergeCells(staffStartRow, 1, staffEndRow, 1);
               ws.mergeCells(staffStartRow, 2, staffEndRow, 2);
+            }
+
+            // ================= ĐƯỜNG KẺ BAO QUANH PHÂN BIỆT NỘI DUNG CÔNG VIỆC TỪNG NHÂN SỰ =================
+            const borderEmeraldMedium = { style: 'medium', color: { argb: 'FF059669' } };
+            const borderGridThin = { style: 'thin', color: { argb: 'FFCBD5E1' } };
+
+            for (let r = staffStartRow; r <= staffEndRow; r++) {
+              const rowObj = ws.getRow(r);
+              const isFirstRow = (r === staffStartRow);
+              const isLastRow = (r === staffEndRow);
+
+              for (let col = 1; col <= totalColumns; col++) {
+                const cell = rowObj.getCell(col);
+                const cb = cell.border || {};
+
+                // Xác định viền 4 phía bao quanh khối công việc của nhân sự
+                const topBorder = isFirstRow ? borderEmeraldMedium : (cb.top || borderGridThin);
+                const bottomBorder = isLastRow ? borderEmeraldMedium : (cb.bottom || borderGridThin);
+
+                let leftBorder = cb.left || borderGridThin;
+                let rightBorder = cb.right || borderGridThin;
+
+                if (col === 1) {
+                  leftBorder = borderEmeraldMedium;
+                }
+                if (col === 2) {
+                  rightBorder = borderEmeraldMedium;
+                }
+                if (col === 3) {
+                  // Cột 3 (Nội dung công việc): bao quanh 2 bên rõ rệt
+                  leftBorder = borderEmeraldMedium;
+                  rightBorder = borderEmeraldMedium;
+                }
+                if (col === totalColumns) {
+                  rightBorder = borderEmeraldMedium;
+                }
+
+                cell.border = {
+                  top: topBorder,
+                  bottom: bottomBorder,
+                  left: leftBorder,
+                  right: rightBorder
+                };
+              }
             }
           });
         }
@@ -11500,6 +11652,7 @@
       cachedPreloadMatrix = null;
       cachedDeptsDetailed = null;
       adminManageUsersCache = null;
+      resetLoginButton();
       document.getElementById('mainDashboard').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
     }
