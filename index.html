@@ -1879,22 +1879,22 @@
               <!-- Vai trò 1 (Đại diện) -->
               <div class="p-2.5 bg-white border border-amber-200 rounded-xl space-y-1.5 shadow-2xs">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="transferWarehouseRole" id="roleKhoChinh" value="Kho chính" class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                  <input type="radio" name="transferWarehouseRole" id="roleKhoChinh" value="Kho chính" onchange="onTransferWarehouseRadioChange('lead')" class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
                   <span id="labelRoleLead" class="text-xs font-black text-amber-950">Người đại diện lập báo cáo</span>
                 </label>
                 <div class="pt-0.5">
-                  <input type="text" id="customRoleLeadTitleInput" value="Kho chính" placeholder="Danh xưng (VD: Kho chính, Tổ trưởng...)" class="w-full px-2.5 py-1 text-xs font-bold bg-amber-50/60 border border-amber-200 rounded-lg text-amber-900 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500" />
+                  <input type="text" id="customRoleLeadTitleInput" value="Kho chính" oninput="onTransferCustomTitleInput('lead', this.value)" placeholder="Danh xưng (VD: Kho chính, Tổ trưởng...)" class="w-full px-2.5 py-1 text-xs font-bold bg-amber-50/60 border border-amber-200 rounded-lg text-amber-900 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500" />
                 </div>
               </div>
 
               <!-- Vai trò 2 (Thành viên) -->
               <div class="p-2.5 bg-white border border-amber-200 rounded-xl space-y-1.5 shadow-2xs">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="transferWarehouseRole" id="rolePhuKho" value="Phụ kho" checked class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                  <input type="radio" name="transferWarehouseRole" id="rolePhuKho" value="Thủ kho" onchange="onTransferWarehouseRadioChange('member')" checked class="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer">
                   <span id="labelRoleMember" class="text-xs font-bold text-slate-800">Thành viên xem đồng bộ</span>
                 </label>
                 <div class="pt-0.5">
-                  <input type="text" id="customRoleMemberTitleInput" value="Phụ kho" placeholder="Danh xưng (VD: Phụ kho, Thành viên...)" class="w-full px-2.5 py-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:ring-1 focus:ring-slate-400" />
+                  <input type="text" id="customRoleMemberTitleInput" value="Thủ kho" oninput="onTransferCustomTitleInput('member', this.value)" placeholder="Danh xưng (VD: Thủ kho, Phụ kho...)" class="w-full px-2.5 py-1 text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:bg-white focus:ring-1 focus:ring-slate-400" />
                 </div>
               </div>
             </div>
@@ -1927,8 +1927,12 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
-            <select id="transferRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
+            <select id="transferRoleSelect" onchange="onTransferRoleSelectChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Nhân viên">Nhân viên</option>
+              <option value="Thủ kho">Thủ kho</option>
+              <option value="Kho chính">Kho chính</option>
+              <option value="Tổ trưởng">Tổ trưởng</option>
+              <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
             </select>
           </div>
@@ -7954,12 +7958,22 @@
 
       document.getElementById('accEditPasswordInput').value = '';
       
-      // Gán vai trò (bảo toàn vai trò chính xác từ Supabase: Thủ kho, Kho chính, Tổ trưởng, Trưởng nhóm...)
+      // Gán vai trò (bảo toàn vai trò từ Supabase: Thủ kho, Kho chính, Tổ trưởng, Trưởng nhóm... và LOẠI BỎ ADMIN)
       const roleSel = document.getElementById('accEditRoleSelect');
       if (roleSel) {
+        // Loại bỏ triệt để tùy chọn Admin nếu có
+        Array.from(roleSel.options).forEach(o => {
+          if (o.value.toLowerCase().includes("admin") || o.innerText.toLowerCase().includes("admin")) {
+            o.remove();
+          }
+        });
+
         let currentRole = user.role || "Nhân viên";
+        if (currentRole.toLowerCase().includes("admin")) {
+          currentRole = "Quản lý";
+        }
         let hasOpt = Array.from(roleSel.options).some(o => o.value.toLowerCase() === currentRole.toLowerCase());
-        if (!hasOpt) {
+        if (!hasOpt && !currentRole.toLowerCase().includes("admin")) {
           const opt = document.createElement('option');
           opt.value = currentRole;
           opt.innerText = currentRole;
@@ -8146,8 +8160,25 @@
       
       const roleSelect = document.getElementById('transferRoleSelect');
       if (roleSelect) {
-        let rNorm = removeAccents(user.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
-        roleSelect.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
+        // Loại bỏ triệt để tùy chọn Admin nếu có
+        Array.from(roleSelect.options).forEach(o => {
+          if (o.value.toLowerCase().includes("admin") || o.innerText.toLowerCase().includes("admin")) {
+            o.remove();
+          }
+        });
+
+        let currentRole = user.role || "Nhân viên";
+        if (currentRole.toLowerCase().includes("admin")) {
+          currentRole = "Quản lý";
+        }
+        let hasOpt = Array.from(roleSelect.options).some(o => o.value.toLowerCase() === currentRole.toLowerCase());
+        if (!hasOpt && !currentRole.toLowerCase().includes("admin")) {
+          const opt = document.createElement('option');
+          opt.value = currentRole;
+          opt.innerText = currentRole;
+          roleSelect.appendChild(opt);
+        }
+        roleSelect.value = currentRole;
       }
       
       const st = removeAccents(user.status || "").toLowerCase();
@@ -8186,7 +8217,56 @@
         if (customLeadInput) customLeadInput.value = user.role || "Kho chính";
       } else {
         if (rPhuKho) rPhuKho.checked = true;
-        if (customMemberInput) customMemberInput.value = user.role || "Phụ kho";
+        if (customMemberInput) customMemberInput.value = user.role || "Thủ kho";
+      }
+    }
+
+    // ĐỒNG BỘ HAI CHIỀU: KHI ĐỔI VAI TRÒ HỆ THỐNG TRONG MODAL ĐIỀU CHUYỂN
+    function onTransferRoleSelectChange(val) {
+      if (!val) return;
+      const deptSelect = document.getElementById('transferDeptSelect');
+      const isShared = isSharedGroupDeptClient(deptSelect ? deptSelect.value : '');
+      if (!isShared) return;
+
+      const rKhoChinh = document.getElementById('roleKhoChinh');
+      const rPhuKho = document.getElementById('rolePhuKho');
+      const customLeadInput = document.getElementById('customRoleLeadTitleInput');
+      const customMemberInput = document.getElementById('customRoleMemberTitleInput');
+      const isLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(val));
+
+      if (isLead) {
+        if (rKhoChinh) rKhoChinh.checked = true;
+        if (customLeadInput) customLeadInput.value = val;
+      } else {
+        if (rPhuKho) rPhuKho.checked = true;
+        if (customMemberInput) customMemberInput.value = val;
+      }
+    }
+
+    // ĐỒNG BỘ: KHI CLICK RADIO VAI TRÒ NHÓM KHO
+    function onTransferWarehouseRadioChange(type) {
+      const roleSelect = document.getElementById('transferRoleSelect');
+      if (!roleSelect) return;
+      const targetVal = (type === 'lead') 
+        ? (document.getElementById('customRoleLeadTitleInput')?.value || "Kho chính")
+        : (document.getElementById('customRoleMemberTitleInput')?.value || "Thủ kho");
+
+      const matchOpt = Array.from(roleSelect.options).find(o => o.value.toLowerCase() === targetVal.toLowerCase());
+      if (matchOpt) {
+        roleSelect.value = matchOpt.value;
+      } else {
+        roleSelect.value = (type === 'lead') ? "Kho chính" : "Thủ kho";
+      }
+    }
+
+    // ĐỒNG BỘ: KHI NHẬP TAY DANH XƯNG TÙY BIẾN
+    function onTransferCustomTitleInput(type, val) {
+      const roleSelect = document.getElementById('transferRoleSelect');
+      if (!roleSelect || !val) return;
+      const trimmed = val.trim();
+      const matchOpt = Array.from(roleSelect.options).find(o => o.value.toLowerCase() === trimmed.toLowerCase());
+      if (matchOpt) {
+        roleSelect.value = matchOpt.value;
       }
     }
 
@@ -8208,10 +8288,10 @@
 
         if (isWarehouse) {
           if (customLeadInput && (!customLeadInput.value || customLeadInput.value === "Trưởng nhóm")) customLeadInput.value = "Kho chính";
-          if (customMemberInput && (!customMemberInput.value || customMemberInput.value === "Thành viên")) customMemberInput.value = "Phụ kho";
+          if (customMemberInput && (!customMemberInput.value || customMemberInput.value === "Thành viên" || customMemberInput.value === "Phụ kho")) customMemberInput.value = "Thủ kho";
         } else {
           if (customLeadInput && (!customLeadInput.value || customLeadInput.value === "Kho chính")) customLeadInput.value = "Trưởng nhóm";
-          if (customMemberInput && (!customMemberInput.value || customMemberInput.value === "Phụ kho")) customMemberInput.value = "Thành viên";
+          if (customMemberInput && (!customMemberInput.value || customMemberInput.value === "Phụ kho" || customMemberInput.value === "Thủ kho")) customMemberInput.value = "Thành viên";
         }
       } else {
         if (roleContainer) roleContainer.classList.add('hidden');
@@ -8268,8 +8348,12 @@
           role = customLead || "Kho chính";
         } else {
           const customMember = document.getElementById('customRoleMemberTitleInput')?.value.trim();
-          role = customMember || "Phụ kho";
+          role = customMember || "Thủ kho";
         }
+      }
+
+      if (role && role.toLowerCase().includes("admin")) {
+        role = "Quản lý";
       }
 
       const updateData = {
