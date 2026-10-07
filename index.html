@@ -639,10 +639,24 @@
           <span class="text-[10.5px] sm:text-[11px] text-emerald-200 font-medium whitespace-nowrap shrink-0 drop-shadow-xs"><i class="fa-solid fa-shield-halved text-emerald-300 mr-1"></i>Bảo mật SSL 256-bit</span>
         </div>
 
-        <!-- Thông báo lỗi -->
-        <div id="loginErrorBox" class="hidden mt-2.5 p-2.5 rounded-2xl bg-rose-50/95 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 animate-in fade-in duration-150 shadow-md">
-          <i class="fa-solid fa-circle-exclamation flex-shrink-0 text-rose-600"></i>
-          <span id="loginErrorMsg" class="font-bold"></span>
+        <!-- Hộp Thông báo lỗi & Cảnh báo an ninh đăng nhập (Phân cấp 5 lần thử bảo mật) -->
+        <div id="loginErrorBox" class="hidden mt-2.5 p-3 rounded-2xl border text-xs shadow-lg animate-in fade-in duration-150 transition-all">
+          <div class="flex items-start gap-2.5">
+            <div id="loginErrorIconBox" class="w-6 h-6 rounded-xl flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs">
+              <i id="loginErrorIcon" class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div id="loginErrorTitle" class="font-bold text-xs tracking-tight">Thông báo đăng nhập</div>
+              <div id="loginErrorMsg" class="text-[11px] leading-relaxed mt-0.5 font-medium"></div>
+            </div>
+          </div>
+          <!-- Vạch tiến trình đếm số lần thử (1 đến 5 lần) -->
+          <div id="loginAttemptsBar" class="hidden mt-2 pt-2 border-t flex items-center justify-between text-[10.5px]">
+            <span id="loginAttemptsText" class="font-bold font-num">Số lần thử: 1/5</span>
+            <div id="loginAttemptsDots" class="flex items-center gap-1.5">
+              <!-- Render động 5 chấm chỉ số -->
+            </div>
+          </div>
         </div>
 
         <!-- Nút Đăng nhập với In-Button Micro-Loader (Đồng nhất, hài hòa, loại bỏ hoàn toàn vạch gạch chân ở đáy nút) -->
@@ -3015,7 +3029,7 @@
     }
 
     function recordFailedLoginAttempt(username) {
-      if (!username) return;
+      if (!username) return 0;
       const key = "ntp_auth_lock_" + username.toLowerCase().trim();
       let info = { count: 0, lastAttempt: Date.now() };
       const raw = sessionStorage.getItem(key);
@@ -3025,6 +3039,18 @@
       info.count = (info.count || 0) + 1;
       info.lastAttempt = Date.now();
       sessionStorage.setItem(key, JSON.stringify(info));
+      return info.count;
+    }
+
+    function getFailedLoginAttempts(username) {
+      if (!username) return 0;
+      const key = "ntp_auth_lock_" + username.toLowerCase().trim();
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return 0;
+      try {
+        const info = JSON.parse(raw);
+        return info.count || 0;
+      } catch(e) { return 0; }
     }
 
     function clearFailedLoginAttempts(username) {
@@ -3532,6 +3558,14 @@
         userForm.classList.remove('hidden');
         tabUserBtn.className = activePill;
         tabDeptBtn.className = inactivePill;
+      }
+
+      const errBox = document.getElementById('loginErrorBox');
+      if (errBox) errBox.classList.add('hidden');
+      if (typeof _lockoutTimerInterval !== 'undefined' && _lockoutTimerInterval) {
+        clearInterval(_lockoutTimerInterval);
+        _lockoutTimerInterval = null;
+        resetLoginButton();
       }
     }
 
@@ -5040,7 +5074,7 @@
 
       if (!btn) return;
       btn.disabled = false;
-      btn.classList.remove('cursor-wait', 'opacity-95');
+      btn.classList.remove('cursor-wait', 'opacity-95', 'opacity-80', 'cursor-not-allowed');
       btn.classList.add('cursor-pointer');
 
       if (fillEl) fillEl.style.width = '0%';
@@ -5066,6 +5100,200 @@
       }, speedMs);
     }
 
+    // ================= HỆ THỐNG CẢNH BÁO NHẬP SAI MẬT KHẨU & KHÓA TẠM BẢO MẬT (5 LẦN THỬ) =================
+    let _lockoutTimerInterval = null;
+
+    function renderAttemptsDotsHtml(count, maxAttempts = 5) {
+      let html = '';
+      for (let i = 1; i <= maxAttempts; i++) {
+        if (i <= count) {
+          if (count >= 5) {
+            html += '<span class="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-2xs" title="Lần ' + i + ' (Sai)"></span>';
+          } else if (count === 4) {
+            html += '<span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-2xs" title="Lần ' + i + ' (Sai)"></span>';
+          } else {
+            html += '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-2xs" title="Lần ' + i + ' (Sai)"></span>';
+          }
+        } else if (i === count + 1 && count === 4) {
+          html += '<span class="w-2.5 h-2.5 rounded-full bg-amber-200 border-2 border-amber-500 animate-pulse" title="Lần thử cuối cùng!"></span>';
+        } else {
+          html += '<span class="w-2.5 h-2.5 rounded-full bg-slate-200 border border-slate-300" title="Chưa dùng"></span>';
+        }
+      }
+      return html;
+    }
+
+    function showLoginErrorGeneral(title, message, isWarning = false) {
+      if (_lockoutTimerInterval) {
+        clearInterval(_lockoutTimerInterval);
+        _lockoutTimerInterval = null;
+      }
+      const errBox = document.getElementById('loginErrorBox');
+      const errTitle = document.getElementById('loginErrorTitle');
+      const errMsg = document.getElementById('loginErrorMsg');
+      const errIconBox = document.getElementById('loginErrorIconBox');
+      const errIcon = document.getElementById('loginErrorIcon');
+      const attemptsBar = document.getElementById('loginAttemptsBar');
+
+      if (!errBox) return;
+      if (attemptsBar) attemptsBar.classList.add('hidden');
+
+      if (isWarning) {
+        errBox.className = "mt-2.5 p-3 rounded-2xl border border-amber-300 bg-amber-50/95 text-amber-900 text-xs shadow-lg animate-in fade-in duration-150 transition-all";
+        if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs";
+        if (errIcon) errIcon.className = "fa-solid fa-triangle-exclamation";
+        if (errTitle) {
+          errTitle.className = "font-black text-amber-950 text-xs tracking-tight";
+          errTitle.innerText = title;
+        }
+        if (errMsg) {
+          errMsg.className = "text-[11px] text-amber-800 leading-relaxed mt-0.5 font-medium";
+          errMsg.innerHTML = message;
+        }
+      } else {
+        errBox.className = "mt-2.5 p-3 rounded-2xl border border-rose-200 bg-rose-50/95 text-rose-900 text-xs shadow-lg animate-in fade-in duration-150 transition-all";
+        if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs";
+        if (errIcon) errIcon.className = "fa-solid fa-circle-exclamation";
+        if (errTitle) {
+          errTitle.className = "font-black text-rose-950 text-xs tracking-tight";
+          errTitle.innerText = title;
+        }
+        if (errMsg) {
+          errMsg.className = "text-[11px] text-rose-800 leading-relaxed mt-0.5 font-medium";
+          errMsg.innerHTML = message;
+        }
+      }
+
+      errBox.classList.remove('hidden');
+    }
+
+    function showPasswordAttemptError(username, failedCount) {
+      if (_lockoutTimerInterval) {
+        clearInterval(_lockoutTimerInterval);
+        _lockoutTimerInterval = null;
+      }
+      const errBox = document.getElementById('loginErrorBox');
+      const errTitle = document.getElementById('loginErrorTitle');
+      const errMsg = document.getElementById('loginErrorMsg');
+      const errIconBox = document.getElementById('loginErrorIconBox');
+      const errIcon = document.getElementById('loginErrorIcon');
+      const attemptsBar = document.getElementById('loginAttemptsBar');
+      const attemptsText = document.getElementById('loginAttemptsText');
+      const attemptsDots = document.getElementById('loginAttemptsDots');
+
+      if (!errBox) return;
+      if (attemptsBar) attemptsBar.classList.remove('hidden');
+      if (attemptsDots) attemptsDots.innerHTML = renderAttemptsDotsHtml(failedCount, 5);
+
+      if (failedCount === 4) {
+        // Cảnh báo nguy cơ cao (lần 4/5 - còn 1 lần duy nhất)
+        errBox.className = "mt-2.5 p-3 rounded-2xl border-2 border-amber-400 bg-amber-50/98 text-amber-950 text-xs shadow-xl animate-in zoom-in-95 duration-150 transition-all";
+        if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 text-xs mt-0.5 animate-pulse shadow-2xs";
+        if (errIcon) errIcon.className = "fa-solid fa-shield-halved";
+        if (errTitle) {
+          errTitle.className = "font-black text-amber-900 text-xs tracking-tight uppercase";
+          errTitle.innerText = "CẢNH BÁO BẢO MẬT: ĐÃ SAI 4/5 LẦN!";
+        }
+        if (errMsg) {
+          errMsg.className = "text-[11px] text-amber-900 leading-relaxed mt-0.5 font-semibold";
+          errMsg.innerHTML = "Bạn chỉ còn <b>1 lần thử duy nhất</b>! Nếu sai 5 lần, hệ thống sẽ tạm khóa và bắt buộc chờ 60 giây.";
+        }
+        if (attemptsBar) attemptsBar.className = "mt-2 pt-2 border-t border-amber-300/80 flex items-center justify-between text-[10.5px]";
+        if (attemptsText) {
+          attemptsText.className = "font-black text-rose-700 font-num uppercase tracking-wider";
+          attemptsText.innerHTML = "● CÒN 1 LẦN THỬ CUỐI CÙNG";
+        }
+      } else {
+        // Lần 1, 2, 3
+        const remaining = 5 - failedCount;
+        errBox.className = "mt-2.5 p-3 rounded-2xl border border-rose-200 bg-rose-50/95 text-rose-900 text-xs shadow-lg animate-in fade-in duration-150 transition-all";
+        if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs";
+        if (errIcon) errIcon.className = "fa-solid fa-key";
+        if (errTitle) {
+          errTitle.className = "font-black text-rose-950 text-xs tracking-tight";
+          errTitle.innerText = `Mật khẩu không chính xác! (Lần ${failedCount}/5)`;
+        }
+        if (errMsg) {
+          errMsg.className = "text-[11px] text-rose-800 leading-relaxed mt-0.5 font-medium";
+          errMsg.innerHTML = `Bạn còn <b>${remaining} lần thử</b>. Nhập sai 5 lần hệ thống sẽ tự động tạm khóa và yêu cầu chờ để bảo vệ tài khoản.`;
+        }
+        if (attemptsBar) attemptsBar.className = "mt-2 pt-2 border-t border-rose-200/70 flex items-center justify-between text-[10.5px]";
+        if (attemptsText) {
+          attemptsText.className = "font-bold text-rose-800 font-num";
+          attemptsText.innerText = `Đã nhập sai: ${failedCount}/5 lần`;
+        }
+      }
+
+      errBox.classList.remove('hidden');
+    }
+
+    function showAccountLockoutLive(username, remainingSec) {
+      const errBox = document.getElementById('loginErrorBox');
+      const errTitle = document.getElementById('loginErrorTitle');
+      const errMsg = document.getElementById('loginErrorMsg');
+      const errIconBox = document.getElementById('loginErrorIconBox');
+      const errIcon = document.getElementById('loginErrorIcon');
+      const attemptsBar = document.getElementById('loginAttemptsBar');
+      const attemptsText = document.getElementById('loginAttemptsText');
+      const attemptsDots = document.getElementById('loginAttemptsDots');
+      const btn = document.getElementById('btnLogin');
+      const btnText = document.getElementById('btnLoginText');
+      const btnIcon = document.getElementById('btnLoginIcon');
+
+      if (!errBox) return;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+        btn.classList.remove('cursor-pointer');
+        if (btnText) btnText.innerText = `Tạm khóa an toàn (${remainingSec}s)`;
+        if (btnIcon) btnIcon.className = "fa-solid fa-lock text-xs";
+      }
+
+      if (attemptsBar) attemptsBar.classList.remove('hidden');
+      if (attemptsDots) attemptsDots.innerHTML = renderAttemptsDotsHtml(5, 5);
+
+      errBox.className = "mt-2.5 p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/98 text-rose-950 text-xs shadow-xl animate-in zoom-in-95 duration-150 transition-all";
+      if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs";
+      if (errIcon) errIcon.className = "fa-solid fa-shield-halved";
+      if (errTitle) {
+        errTitle.className = "font-black text-rose-950 text-xs tracking-tight uppercase";
+        errTitle.innerText = "TÀI KHOẢN TẠM KHÓA (CHỐNG DÒ QUÉT)";
+      }
+      if (errMsg) {
+        errMsg.className = "text-[11px] text-rose-900 leading-relaxed mt-0.5 font-medium";
+        errMsg.innerHTML = `Bạn đã nhập sai 5 lần liên tiếp. Vì an toàn doanh nghiệp, vui lòng đợi <b class="text-rose-950 font-num text-xs bg-rose-200/90 px-1.5 py-0.5 rounded-md border border-rose-300 font-black">${remainingSec} giây</b> trước khi thử lại.`;
+      }
+      
+      if (attemptsBar) attemptsBar.className = "mt-2 pt-2 border-t border-rose-300/80 flex items-center justify-between text-[10.5px]";
+      if (attemptsText) {
+        attemptsText.className = "font-black text-rose-900 font-num";
+        attemptsText.innerText = "Trạng thái: Đã sai 5/5 lần (Đang chờ)";
+      }
+
+      errBox.classList.remove('hidden');
+    }
+
+    function startLockoutTimer(username, initialSeconds) {
+      if (_lockoutTimerInterval) clearInterval(_lockoutTimerInterval);
+      let sec = initialSeconds;
+
+      showAccountLockoutLive(username, sec);
+
+      _lockoutTimerInterval = setInterval(() => {
+        sec--;
+        if (sec <= 0) {
+          clearInterval(_lockoutTimerInterval);
+          _lockoutTimerInterval = null;
+          clearFailedLoginAttempts(username);
+          resetLoginButton();
+          showLoginErrorGeneral("Thời gian chờ kết thúc", "Bạn có thể nhập lại mật khẩu chính xác để đăng nhập.", true);
+        } else {
+          showAccountLockoutLive(username, sec);
+        }
+      }, 1000);
+    }
+
     /**
      * ĐĂNG NHẬP: BỎ HOÀN TOÀN CỬA SAU 123456, GHI NHỚ MẬT KHẨU KHI ĐƯỢC TÍCH CHỌN
      * TIẾN TRÌNH TRỰC TIẾP TRÊN NÚT ĐĂNG NHẬP (KHÔNG BẬT POPUP CHE MÀN HÌNH, KHÔNG LÓA MẮT)
@@ -5075,22 +5303,19 @@
       let username = "";
       const password = document.getElementById('loginPasswordInput').value.trim();
       const errBox = document.getElementById('loginErrorBox');
-      const errMsg = document.getElementById('loginErrorMsg');
 
-      errBox.classList.add('hidden');
+      if (errBox) errBox.classList.add('hidden');
 
       if (isDeptTab) {
         username = document.getElementById('loginStaffSelect').value;
         if (!username) {
-          errMsg.innerText = "Vui lòng chọn Bộ phận và Họ tên!";
-          errBox.classList.remove('hidden');
+          showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng chọn Bộ phận và Họ tên để tiếp tục!");
           return;
         }
       } else {
         username = document.getElementById('loginUsernameInput').value.trim();
         if (!username) {
-          errMsg.innerText = "Vui lòng nhập Tên đăng nhập!";
-          errBox.classList.remove('hidden');
+          showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng nhập Tên đăng nhập (Username)!");
           return;
         }
       }
@@ -5098,8 +5323,7 @@
       // 1. KIỂM TRA CHỐNG TẤN CÔNG VÉT CẠN (BRUTE-FORCE LOCKOUT BẢO MẬT DOANH NGHIỆP)
       const lockoutRemaining = checkAccountLockout(username);
       if (lockoutRemaining > 0) {
-        errMsg.innerText = `CẢNH BÁO AN NINH: Bạn đã nhập sai mật khẩu quá 5 lần. Vì an toàn doanh nghiệp, vui lòng đợi ${lockoutRemaining} giây trước khi thử lại!`;
-        errBox.classList.remove('hidden');
+        startLockoutTimer(username, lockoutRemaining);
         return;
       }
 
@@ -5116,30 +5340,35 @@
         if (error) throw error;
         if (!users || users.length === 0) {
           resetLoginButton();
-          errMsg.innerText = "Tên đăng nhập không tồn tại!";
-          errBox.classList.remove('hidden');
+          showLoginErrorGeneral("Tài khoản không tồn tại", `Tên đăng nhập "${escapeHtml(username)}" không tồn tại trên hệ thống!`);
           return;
         }
 
         const user = users[0];
         if (user.status === 'Khóa') {
           resetLoginButton();
-          errMsg.innerText = "Tài khoản này đã bị khóa!";
-          errBox.classList.remove('hidden');
+          showLoginErrorGeneral("Tài khoản đã bị khóa", "Tài khoản này đã bị Quản trị viên vô hiệu hóa. Vui lòng liên hệ phòng CNTT hoặc Ban DVKH!");
           return;
         }
 
         // 2. XÁC THỰC MẬT KHẨU BẢO MẬT DOANH NGHIỆP (TƯƠNG THÍCH MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
         const isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
         if (!isPasswordValid) {
-          recordFailedLoginAttempt(username);
+          const failedCount = recordFailedLoginAttempt(username);
           resetLoginButton();
-          errMsg.innerText = "Mật khẩu không chính xác!";
-          errBox.classList.remove('hidden');
+          if (failedCount >= MAX_LOGIN_ATTEMPTS) {
+            startLockoutTimer(username, Math.ceil(LOCKOUT_DURATION_MS / 1000));
+          } else {
+            showPasswordAttemptError(username, failedCount);
+          }
           return;
         }
 
-        // Đăng nhập thành công -> Xóa bộ đếm sai
+        // Đăng nhập thành công -> Xóa bộ đếm sai và timer
+        if (_lockoutTimerInterval) {
+          clearInterval(_lockoutTimerInterval);
+          _lockoutTimerInterval = null;
+        }
         clearFailedLoginAttempts(username);
 
         const rememberChk = document.getElementById('rememberPasswordChk');
@@ -5174,8 +5403,7 @@
         });
       } catch (err) {
         resetLoginButton();
-        errMsg.innerText = "Lỗi kết nối máy chủ: " + err.message;
-        errBox.classList.remove('hidden');
+        showLoginErrorGeneral("Lỗi kết nối máy chủ", "Lỗi kết nối máy chủ: " + (err.message || err));
       }
     }
 
