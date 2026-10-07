@@ -1777,6 +1777,15 @@
         <span id="accEditErrorMsg" class="font-bold"></span>
       </div>
 
+      <!-- Khung thông báo chế độ chỉ xem khi Quản lý xem tài khoản Admin / Ban Giám đốc -->
+      <div id="accEditAdminNotice" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5 shadow-2xs">
+        <i class="fa-solid fa-shield-halved text-amber-600 text-base shrink-0"></i>
+        <div>
+          <p class="font-bold text-amber-950">Tài khoản Quản trị viên / Ban Giám Đốc</p>
+          <p class="text-[11px] text-amber-800/90 mt-0.5">Tài khoản Quản lý chỉ được xem thông tin tra soát, không có quyền thiết lập vai trò hay thay đổi cấu hình tài khoản này.</p>
+        </div>
+      </div>
+
       <div class="space-y-3.5">
         <input type="hidden" id="accEditOriginalUsername" value="" />
         <div>
@@ -1918,23 +1927,24 @@
             </div>
           </div>
 
-          <!-- KHỐI 2: TÙY CHỌN SAO CHÉP CÔNG VIỆC CHO BỘ PHẬN CÁ NHÂN -->
+          <!-- KHỐI 2: TÙY CHỌN SAO CHÉP / XỬ LÝ CÔNG VIỆC CHO BỘ PHẬN CÁ NHÂN -->
           <div id="transferNormalTasksContainer" class="hidden bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2.5">
             <label class="block text-xs font-bold uppercase tracking-wider text-emerald-950 flex items-center justify-between">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-copy text-emerald-600"></i>
-                <span>Sao chép danh mục công việc</span>
+                <span>Xử lý danh mục công việc</span>
               </span>
               <span class="text-[10px] text-emerald-700 font-semibold lowercase">(tùy chọn)</span>
             </label>
             
             <div>
-              <p class="text-[11px] text-slate-500 mb-1.5 leading-relaxed">
-                Chọn một nhân sự trong bộ phận mới để sao chép toàn bộ danh mục đầu việc sang cho nhân sự này:
+              <p id="transferTasksDesc" class="text-[11px] text-slate-500 mb-1.5 leading-relaxed">
+                Chọn sao chép việc từ đồng nghiệp trong bộ phận mới, hoặc chọn giữ lại việc cũ / làm mới đầu việc:
               </p>
               <div class="relative">
-                <select id="transferCopyFromStaffSelect" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
-                  <option value="">-- Không sao chép (Chuyển danh mục đầu việc sang bộ phận mới) --</option>
+                <select id="transferCopyFromStaffSelect" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 pr-8 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+                  <option value="keep_old">📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)</option>
+                  <option value="fresh_empty">✨ Làm mới công việc (Không có công việc nào, chờ phân công)</option>
                 </select>
                 <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
               </div>
@@ -7965,6 +7975,31 @@
           roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">${escapeHtml(u.role)}</span>`;
         }
 
+        const isTargetAdmin = isDirectorOrAdmin(u.role, u.username);
+        const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+        const isManagerViewingAdmin = isTargetAdmin && !isCurrAdmin;
+
+        let actionBtns = '';
+        if (isManagerViewingAdmin) {
+          actionBtns = `
+            <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs active:scale-95 cursor-pointer" title="Xem thông tin tài khoản Quản trị viên (Chế độ chỉ xem)">
+              <i class="fa-solid fa-eye text-[11px] text-slate-500"></i>
+              <span>Xem thông tin</span>
+            </button>
+          `;
+        } else {
+          actionBtns = `
+            <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
+              <i class="fa-solid fa-user-gear text-[11px]"></i>
+              <span>Tài khoản</span>
+            </button>
+            <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs active:scale-95 cursor-pointer" title="Điều chuyển bộ phận & phân vai trò">
+              <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i>
+              <span>Điều chuyển</span>
+            </button>
+          `;
+        }
+
         tr.innerHTML = `
           <td class="py-2.5 px-3 text-center text-slate-400 font-num">${idx + 1}</td>
           <td class="py-2.5 px-3">
@@ -7976,15 +8011,7 @@
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
           <td class="py-2.5 px-3 text-center">
             <div class="flex items-center justify-center gap-1.5">
-              <!-- Nút chức năng "Tài khoản" chuẩn nhận diện doanh nghiệp -->
-              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
-                <i class="fa-solid fa-user-gear text-[11px]"></i>
-                <span>Tài khoản</span>
-              </button>
-              <button onclick="openTransferModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs active:scale-95 cursor-pointer" title="Điều chuyển bộ phận & phân vai trò">
-                <i class="fa-solid fa-arrows-split-up-and-left text-[11px]"></i>
-                <span>Điều chuyển</span>
-              </button>
+              ${actionBtns}
             </div>
           </td>
         `;
@@ -8018,37 +8045,76 @@
       const curEyeInputIcon = document.getElementById('accCurrentEyeInputIcon');
       if (curEyeInputIcon) curEyeInputIcon.className = "fa-regular fa-eye text-xs";
 
-      document.getElementById('accEditPasswordInput').value = '';
-      
-      // Gán vai trò (bảo toàn vai trò từ Supabase: Thủ kho, Kho chính, Tổ trưởng, Trưởng nhóm... và LOẠI BỎ ADMIN)
-      const roleSel = document.getElementById('accEditRoleSelect');
-      if (roleSel) {
-        // Loại bỏ triệt để tùy chọn Admin nếu có
-        Array.from(roleSel.options).forEach(o => {
-          if (o.value.toLowerCase().includes("admin") || o.innerText.toLowerCase().includes("admin")) {
-            o.remove();
-          }
-        });
+      const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
+      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      const isManagerViewingAdmin = isTargetAdmin && !isCurrAdmin;
 
-        let currentRole = user.role || "Nhân viên";
-        if (currentRole.toLowerCase().includes("admin")) {
-          currentRole = "Quản lý";
+      const adminNotice = document.getElementById('accEditAdminNotice');
+      const submitBtn = document.getElementById('btnSubmitAccountEdit');
+      const fullNameInput = document.getElementById('accEditFullNameInput');
+      const usernameInput = document.getElementById('accEditUsernameInput');
+      const passInput = document.getElementById('accEditPasswordInput');
+      const roleSel = document.getElementById('accEditRoleSelect');
+      const statusSel = document.getElementById('accEditStatusSelect');
+
+      if (passInput) passInput.value = '';
+
+      if (isManagerViewingAdmin) {
+        // CHẾ ĐỘ CHỈ XEM: Quản lý xem thông tin tài khoản Admin, không được sửa đổi vai trò
+        if (adminNotice) adminNotice.classList.remove('hidden');
+        if (submitBtn) submitBtn.classList.add('hidden');
+        if (fullNameInput) fullNameInput.readOnly = true;
+        if (usernameInput) usernameInput.readOnly = true;
+        if (passInput) {
+          passInput.disabled = true;
+          passInput.placeholder = "(Chỉ Admin mới có quyền đổi mật khẩu này)";
         }
-        let hasOpt = Array.from(roleSel.options).some(o => o.value.toLowerCase() === currentRole.toLowerCase());
-        if (!hasOpt && !currentRole.toLowerCase().includes("admin")) {
-          const opt = document.createElement('option');
-          opt.value = currentRole;
-          opt.innerText = currentRole;
-          roleSel.appendChild(opt);
+        if (statusSel) statusSel.disabled = true;
+        if (roleSel) {
+          roleSel.disabled = true;
+          roleSel.innerHTML = `<option value="${escapeHtml(user.role || 'Giám Đốc Ban')}">${escapeHtml(user.role || 'Giám Đốc Ban')}</option>`;
         }
-        roleSel.value = currentRole;
+      } else {
+        // CHẾ ĐỘ CHỈNH SỬA BÌNH THƯỜNG
+        if (adminNotice) adminNotice.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.remove('hidden');
+        if (fullNameInput) fullNameInput.readOnly = false;
+        if (usernameInput) usernameInput.readOnly = false;
+        if (passInput) {
+          passInput.disabled = false;
+          passInput.placeholder = "Nhập mật khẩu mới từ 4 ký tự...";
+        }
+        if (statusSel) statusSel.disabled = false;
+        if (roleSel) {
+          roleSel.disabled = false;
+          roleSel.innerHTML = `
+            <option value="Nhân viên">Nhân viên</option>
+            <option value="Thủ kho">Thủ kho</option>
+            <option value="Kho chính">Kho chính</option>
+            <option value="Tổ trưởng">Tổ trưởng</option>
+            <option value="Trưởng nhóm">Trưởng nhóm</option>
+            <option value="Quản lý">Quản lý</option>
+          `;
+          let currentRole = user.role || "Nhân viên";
+          if (currentRole.toLowerCase().includes("admin")) {
+            currentRole = "Quản lý";
+          }
+          let hasOpt = Array.from(roleSel.options).some(o => o.value.toLowerCase() === currentRole.toLowerCase());
+          if (!hasOpt && !currentRole.toLowerCase().includes("admin")) {
+            const opt = document.createElement('option');
+            opt.value = currentRole;
+            opt.innerText = currentRole;
+            roleSel.appendChild(opt);
+          }
+          roleSel.value = currentRole;
+        }
       }
       
       const st = removeAccents(user.status || "").toLowerCase();
       let statusVal = "Hoạt động";
       if (st.includes("tam")) statusVal = "Tạm khóa";
       else if (st.includes("khoa")) statusVal = "Khóa";
-      document.getElementById('accEditStatusSelect').value = statusVal;
+      if (statusSel) statusSel.value = statusVal;
 
       document.getElementById('accountEditModal').classList.remove('hidden');
     }
@@ -8103,6 +8169,15 @@
       const errMsg = document.getElementById('accEditErrorMsg');
 
       if (errBox) errBox.classList.add('hidden');
+
+      // BẢO VỆ TÀI KHOẢN ADMIN: Quản lý không có quyền thiết lập vai trò hay sửa cấu hình của Admin
+      const targetUser = adminManageUsersCache?.users?.find(u => u.username === origUsername);
+      const isTargetAdmin = isDirectorOrAdmin(targetUser?.role, origUsername);
+      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      if (isTargetAdmin && !isCurrAdmin) {
+        showToast("Tài khoản Quản lý chỉ được xem thông tin, không có quyền thiết lập vai trò cho Admin!", true);
+        return;
+      }
 
       if (!fullName || !newUsername) {
         showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
@@ -8222,6 +8297,13 @@
       if (!adminManageUsersCache) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
       if (!user) return;
+
+      const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
+      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      if (isTargetAdmin && !isCurrAdmin) {
+        showToast("Tài khoản Quản lý không có quyền điều chuyển tài khoản Admin / Ban Giám Đốc!", true);
+        return;
+      }
 
       document.getElementById('transferFullNameInput').value = user.fullName;
       document.getElementById('transferUsernameInput').value = user.username;
@@ -8366,7 +8448,8 @@
         if (normalContainer) normalContainer.classList.remove('hidden');
 
         if (copySelect && adminManageUsersCache && adminManageUsersCache.users) {
-          copySelect.innerHTML = '<option value="">-- Không sao chép (Chuyển danh mục đầu việc sang bộ phận mới) --</option>';
+          copySelect.innerHTML = '';
+          const descEl = document.getElementById('transferTasksDesc');
           
           const peers = adminManageUsersCache.users.filter(u => 
             isDeptEquivalent(u.dept, selectedDept) && 
@@ -8375,17 +8458,40 @@
           );
 
           if (peers.length > 0) {
+            if (descEl) descEl.innerText = "Chọn sao chép việc từ đồng nghiệp trong bộ phận mới, hoặc chọn giữ lại việc cũ / làm mới đầu việc:";
             peers.forEach(p => {
               const opt = document.createElement('option');
               opt.value = p.id;
               opt.innerText = `Sao chép việc từ: ${p.fullName} (${p.username})`;
               copySelect.appendChild(opt);
             });
+            const optKeep = document.createElement('option');
+            optKeep.value = "keep_old";
+            optKeep.innerText = "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)";
+            copySelect.appendChild(optKeep);
+
+            const optFresh = document.createElement('option');
+            optFresh.value = "fresh_empty";
+            optFresh.innerText = "✨ Làm mới công việc (Không có việc nào, chờ phân công mới)";
+            copySelect.appendChild(optFresh);
           } else {
-            const opt = document.createElement('option');
-            opt.value = "";
-            opt.innerText = "(Bộ phận này chưa có nhân sự nào khác để sao chép)";
-            copySelect.appendChild(opt);
+            // Khi bộ phận mới không có nhân sự để sao chép đầu việc
+            if (descEl) descEl.innerText = "Bộ phận mới chưa có nhân sự để sao chép. Vui lòng chọn cách xử lý công việc:";
+            const optNotice = document.createElement('option');
+            optNotice.disabled = true;
+            optNotice.innerText = "-- Bộ phận mới chưa có nhân sự để sao chép --";
+            copySelect.appendChild(optNotice);
+
+            const optKeep = document.createElement('option');
+            optKeep.value = "keep_old";
+            optKeep.innerText = "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)";
+            optKeep.selected = true;
+            copySelect.appendChild(optKeep);
+
+            const optFresh = document.createElement('option');
+            optFresh.value = "fresh_empty";
+            optFresh.innerText = "✨ Làm mới công việc (Không có công việc nào, chờ phân công)";
+            copySelect.appendChild(optFresh);
           }
         }
       }
@@ -8525,12 +8631,14 @@
         // XỬ LÝ ĐIỀU CHUYỂN CÔNG VIỆC KHI SANG BỘ PHẬN MỚI
         let copiedTasksCount = 0;
         if (oldDeptId && dId && oldDeptId !== dId && currentUserId && !isLock) {
-          if (updateData.copyFromUserId) {
+          const actionChoice = updateData.copyFromUserId;
+
+          if (actionChoice && actionChoice !== "keep_old" && actionChoice !== "fresh_empty") {
             // Trường hợp 1: Chọn sao chép đầu việc từ đồng nghiệp ở bộ phận mới
             const { data: sourceTasks, error: sErr } = await supabase
               .from('tasks')
               .select('task_name, guide, mode')
-              .eq('assigned_user_id', updateData.copyFromUserId);
+              .eq('assigned_user_id', actionChoice);
 
             if (!sErr && sourceTasks && sourceTasks.length > 0) {
               const newTasksPayload = sourceTasks.map(st => ({
@@ -8566,8 +8674,30 @@
                 await supabase.from('tasks').delete().in('id', unneededIds);
               }
             }
+          } else if (actionChoice === "fresh_empty") {
+            // Trường hợp 2: Làm mới công việc (Không có đầu việc nào ở bộ phận mới, chờ phân công)
+            const { data: oldTasks } = await supabase
+              .from('tasks')
+              .select('id')
+              .eq('assigned_user_id', currentUserId)
+              .eq('department_id', oldDeptId);
+
+            if (oldTasks && oldTasks.length > 0) {
+              const oldIds = oldTasks.map(t => t.id);
+              const { data: oldReports } = await supabase
+                .from('daily_reports')
+                .select('task_id')
+                .in('task_id', oldIds)
+                .limit(10);
+
+              const reportedIds = new Set((oldReports || []).map(r => r.task_id));
+              const unneededIds = oldIds.filter(id => !reportedIds.has(id));
+              if (unneededIds.length > 0) {
+                await supabase.from('tasks').delete().in('id', unneededIds);
+              }
+            }
           } else {
-            // Trường hợp 2: Không sao chép -> Chuyển toàn bộ danh mục công việc sang bộ phận mới
+            // Trường hợp 3: Giữ đầu việc ở bộ phận cũ (Chuyển danh mục công việc cũ sang bộ phận mới)
             await supabase
               .from('tasks')
               .update({ department_id: dId })
