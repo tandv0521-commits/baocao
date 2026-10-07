@@ -1644,29 +1644,73 @@
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-              <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
-              <span>1. Lọc theo Bộ phận</span>
-            </label>
-            <div class="relative">
-              <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="w-full bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer transition shadow-2xs"></select>
-              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+      <!-- BỘ LỌC BỘ PHẬN VÀ NHÂN SỰ PHÂN CÔNG CAO CẤP ĐỒNG BỘ VỚI MÀN HÌNH ĐĂNG NHẬP -->
+      <div class="relative z-30 flex-shrink-0 grid grid-cols-2 gap-3">
+        <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
+        <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
+        <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
+
+        <!-- 1. BỘ PHẬN PHÂN CÔNG: CUSTOM PICKER -->
+        <div class="relative" id="modalAssignDeptPickerWrapper">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
+            <span>1. Lọc theo Bộ phận</span>
+          </label>
+          <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2 min-w-0">
+              <span id="modalAssignDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                <i class="fa-solid fa-layer-group"></i>
+              </span>
+              <span id="modalAssignDeptText" class="truncate font-bold text-slate-800">Đang tải bộ phận...</span>
             </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-              <i class="fa-solid fa-user-check text-emerald-600 text-[11px]"></i>
-              <span>2. Nhân sự phân công <span class="text-rose-500">*</span></span>
-            </label>
-            <div class="relative">
-              <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="w-full bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-300 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-emerald-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer transition shadow-2xs"></select>
-              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none text-[10px]"></i>
+            <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+          </button>
+
+          <!-- Dropdown menu chọn bộ phận -->
+          <div id="modalAssignDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+              </div>
             </div>
+            <div id="modalAssignDeptList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
           </div>
         </div>
+
+        <!-- 2. NHÂN SỰ PHÂN CÔNG: CUSTOM PICKER -->
+        <div class="relative" id="modalAssignStaffPickerWrapper">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-check text-emerald-600 text-[11px]"></i>
+            <span>2. Nhân sự phân công <span class="text-rose-500">*</span></span>
+          </label>
+          <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/40 hover:bg-emerald-50 border border-emerald-300 hover:border-emerald-500 rounded-xl px-2.5 py-2 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2 min-w-0">
+              <span id="modalAssignStaffAvatarBox" class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs">
+                <i class="fa-solid fa-user text-[10px]"></i>
+              </span>
+              <div class="min-w-0 flex flex-col leading-tight">
+                <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950">Chọn nhân sự...</span>
+                <span id="modalAssignStaffSubText" class="truncate text-[10px] text-emerald-700 font-medium hidden"></span>
+              </div>
+            </div>
+            <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-[10px] shrink-0 transition-transform duration-200"></i>
+          </button>
+
+          <!-- Dropdown menu chọn nhân sự -->
+          <div id="modalAssignStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+              </div>
+            </div>
+            <div id="modalAssignStaffList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1 relative z-10">
 
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
@@ -1759,20 +1803,93 @@
         </button>
       </div>
 
-      <div class="p-4 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+      <div class="p-4 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-3 relative z-30">
+        <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[240px]">
           <div class="relative w-full max-w-xs">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
-          <select id="userFilterDeptSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"></select>
-          <!-- BỘ LỌC TRẠNG THÁI NHÂN SỰ (HOẠT ĐỘNG - TẠM KHÓA - KHÓA) -->
-          <select id="userFilterStatusSelect" onchange="filterUserListTable()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer">
+
+          <!-- Native selects giữ nguyên để tương thích 100% logic hệ thống -->
+          <select id="userFilterDeptSelect" onchange="filterUserListTable()" class="hidden"></select>
+          <select id="userFilterStatusSelect" onchange="filterUserListTable()" class="hidden">
             <option value="">Tất cả trạng thái</option>
-            <option value="Hoạt động">🟢 Hoạt động</option>
-            <option value="Tạm khóa">🟡 Tạm khóa</option>
-            <option value="Khóa">🔴 Khóa</option>
+            <option value="Hoạt động">Hoạt động</option>
+            <option value="Tạm khóa">Tạm khóa</option>
+            <option value="Khóa">Khóa</option>
           </select>
+
+          <!-- 1. BỘ PHẬN: CUSTOM PICKER QUẢN LÝ NHÂN SỰ -->
+          <div class="relative" id="userFilterDeptPickerWrapper">
+            <button type="button" id="userFilterDeptBtn" onclick="toggleUserFilterDeptPicker(event)" class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="userFilterDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                  <i class="fa-solid fa-layer-group"></i>
+                </span>
+                <div class="min-w-0 flex flex-col leading-tight">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
+                  <span id="userFilterDeptText" class="truncate font-bold text-slate-800 max-w-[130px] sm:max-w-[170px]">Tất cả bộ phận</span>
+                </div>
+              </div>
+              <i id="userFilterDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Menu xổ xuống chọn bộ phận -->
+            <div id="userFilterDeptMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="userFilterDeptSearchInput" oninput="filterUserFilterDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                </div>
+              </div>
+              <div id="userFilterDeptList" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+            </div>
+          </div>
+
+          <!-- 2. TRẠNG THÁI: CUSTOM PICKER -->
+          <div class="relative" id="userFilterStatusPickerWrapper">
+            <button type="button" id="userFilterStatusBtn" onclick="toggleUserFilterStatusPicker(event)" class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span id="userFilterStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
+                <div class="min-w-0 flex flex-col leading-tight">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái:</span>
+                  <span id="userFilterStatusText" class="truncate font-bold text-slate-800 max-w-[95px] sm:max-w-[125px]">Tất cả trạng thái</span>
+                </div>
+              </div>
+              <i id="userFilterStatusChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Menu xổ xuống chọn trạng thái -->
+            <div id="userFilterStatusMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-52 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5 space-y-1">
+              <div onclick="selectUserFilterStatus('')" class="status-option group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer text-xs font-bold text-slate-700 transition">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                  <span>Tất cả trạng thái</span>
+                </div>
+              </div>
+              <div onclick="selectUserFilterStatus('Hoạt động')" class="status-option group flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 cursor-pointer text-xs font-bold text-emerald-800 transition">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span>Hoạt động</span>
+                </div>
+                <span class="text-[9.5px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-extrabold border border-emerald-200">Active</span>
+              </div>
+              <div onclick="selectUserFilterStatus('Tạm khóa')" class="status-option group flex items-center justify-between p-2 rounded-xl hover:bg-amber-50 cursor-pointer text-xs font-bold text-amber-800 transition">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span>Tạm khóa</span>
+                </div>
+                <span class="text-[9.5px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-extrabold border border-amber-200">Paused</span>
+              </div>
+              <div onclick="selectUserFilterStatus('Khóa')" class="status-option group flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 cursor-pointer text-xs font-bold text-rose-800 transition">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  <span>Khóa</span>
+                </div>
+                <span class="text-[9.5px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 font-extrabold border border-rose-200">Locked</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
@@ -2026,9 +2143,32 @@
         </div>
 
         <div id="transferAssignmentWrapper" class="space-y-3.5 transition-all duration-200">
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Bộ phận công tác mới <span class="text-rose-500">*</span></label>
-            <select id="transferDeptSelect" onchange="onTransferDeptChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"></select>
+          <div class="relative" id="transferDeptPickerWrapper">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
+              <span>Bộ phận công tác mới <span class="text-rose-500">*</span></span>
+            </label>
+            <select id="transferDeptSelect" onchange="onTransferDeptChange(this.value)" class="hidden"></select>
+            <button type="button" id="transferDeptBtn" onclick="toggleTransferDeptPicker(event)" class="w-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="transferDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                  <i class="fa-solid fa-layer-group"></i>
+                </span>
+                <span id="transferDeptText" class="truncate font-bold text-emerald-950">-- Chọn bộ phận chuyển đến --</span>
+              </div>
+              <i id="transferDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Dropdown menu chọn bộ phận điều chuyển -->
+            <div id="transferDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="transferDeptSearchInput" oninput="filterTransferDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                </div>
+              </div>
+              <div id="transferDeptList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+            </div>
           </div>
 
           <!-- KHỐI 1: VAI TRÒ DÀNH CHO BỘ PHẬN TỔ KHO (NHÓM GỘP) - CHO PHÉP TÙY CHỈNH TÊN CHỨC DANH -->
@@ -2080,12 +2220,25 @@
               <p id="transferTasksDesc" class="text-[11px] text-slate-500 mb-1.5 leading-relaxed">
                 Chọn sao chép việc từ đồng nghiệp trong bộ phận mới, hoặc chọn giữ lại việc cũ / làm mới đầu việc:
               </p>
-              <div class="relative">
-                <select id="transferCopyFromStaffSelect" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 pr-8 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
+              <div class="relative" id="transferCopyStaffPickerWrapper">
+                <select id="transferCopyFromStaffSelect" class="hidden">
                   <option value="keep_old">📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)</option>
                   <option value="fresh_empty">✨ Làm mới công việc (Không có công việc nào, chờ phân công)</option>
                 </select>
-                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                <button type="button" id="transferCopyStaffBtn" onclick="toggleTransferCopyStaffPicker(event)" class="w-full bg-white hover:bg-emerald-50/40 border border-emerald-300 hover:border-emerald-500 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span id="transferCopyStaffAvatarBox" class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs font-bold">
+                      📋
+                    </span>
+                    <span id="transferCopyStaffText" class="truncate font-bold text-slate-800">📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)</span>
+                  </div>
+                  <i id="transferCopyStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-[10px] shrink-0 transition-transform duration-200"></i>
+                </button>
+
+                <!-- Dropdown menu chọn nguồn sao chép công việc -->
+                <div id="transferCopyStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5">
+                  <div id="transferCopyStaffList" class="max-h-52 overflow-y-auto custom-scroll space-y-1"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -2215,9 +2368,30 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Bộ phận công tác <span class="text-rose-500">*</span></label>
-          <select id="addDeptSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"></select>
+        <div class="relative" id="addDeptPickerWrapper">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
+            <span>Bộ phận công tác <span class="text-rose-500">*</span></span>
+          </label>
+          <select id="addDeptSelect" class="hidden"></select>
+          <button type="button" id="addDeptBtn" onclick="toggleAddDeptPicker(event)" class="w-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2 min-w-0">
+              <span id="addDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                <i class="fa-solid fa-layer-group"></i>
+              </span>
+              <span id="addDeptText" class="truncate font-bold text-slate-800">-- Chọn bộ phận có sẵn --</span>
+            </div>
+            <i id="addDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+          </button>
+          <div id="addDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" id="addDeptSearchInput" oninput="filterAddDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+              </div>
+            </div>
+            <div id="addDeptList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+          </div>
         </div>
       </div>
 
@@ -3866,6 +4040,63 @@
       if (fStaffWrap && !fStaffWrap.contains(e.target)) {
         const m = document.getElementById('filterStaffPickerMenu');
         const c = document.getElementById('filterStaffPickerChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+
+      // Modal Phân công công việc (assignModal)
+      const maDeptWrap = document.getElementById('modalAssignDeptPickerWrapper');
+      if (maDeptWrap && !maDeptWrap.contains(e.target)) {
+        const m = document.getElementById('modalAssignDeptMenu');
+        const c = document.getElementById('modalAssignDeptChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+      const maStaffWrap = document.getElementById('modalAssignStaffPickerWrapper');
+      if (maStaffWrap && !maStaffWrap.contains(e.target)) {
+        const m = document.getElementById('modalAssignStaffMenu');
+        const c = document.getElementById('modalAssignStaffChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+
+      // Modal Quản lý nhân sự (userManagerModal)
+      const ufDeptWrap = document.getElementById('userFilterDeptPickerWrapper');
+      if (ufDeptWrap && !ufDeptWrap.contains(e.target)) {
+        const m = document.getElementById('userFilterDeptMenu');
+        const c = document.getElementById('userFilterDeptChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+      const ufStatusWrap = document.getElementById('userFilterStatusPickerWrapper');
+      if (ufStatusWrap && !ufStatusWrap.contains(e.target)) {
+        const m = document.getElementById('userFilterStatusMenu');
+        const c = document.getElementById('userFilterStatusChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+
+      // Modal Điều chuyển nhân sự (transferModal)
+      const trDeptWrap = document.getElementById('transferDeptPickerWrapper');
+      if (trDeptWrap && !trDeptWrap.contains(e.target)) {
+        const m = document.getElementById('transferDeptMenu');
+        const c = document.getElementById('transferDeptChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+      const trCopyWrap = document.getElementById('transferCopyStaffPickerWrapper');
+      if (trCopyWrap && !trCopyWrap.contains(e.target)) {
+        const m = document.getElementById('transferCopyStaffMenu');
+        const c = document.getElementById('transferCopyStaffChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+
+      // Modal Thêm nhân sự (addUserModal)
+      const adDeptWrap = document.getElementById('addDeptPickerWrapper');
+      if (adDeptWrap && !adDeptWrap.contains(e.target)) {
+        const m = document.getElementById('addDeptMenu');
+        const c = document.getElementById('addDeptChevron');
         if (m) m.classList.add('hidden');
         if (c) c.classList.remove('rotate-180');
       }
@@ -7949,8 +8180,11 @@
               if (dept === currentSelectedDept && currentSelectedDept !== "TẤT CẢ") opt.selected = true;
               deptSelect.appendChild(opt);
             });
+            modalAssignDeptCache = depts;
+            renderModalAssignDeptPicker(depts);
           }
           const activeDept = deptSelect.value || (globalInitData && globalInitData.departments && globalInitData.departments[0]) || "";
+          updateModalAssignDeptUI(activeDept);
           onAssignDeptSelectChange(activeDept);
         }
       } catch (e) {
@@ -7961,6 +8195,239 @@
     function closeAssignModal() {
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.add('hidden');
+      const dm = document.getElementById('modalAssignDeptMenu');
+      if (dm) dm.classList.add('hidden');
+      const sm = document.getElementById('modalAssignStaffMenu');
+      if (sm) sm.classList.add('hidden');
+      const dc = document.getElementById('modalAssignDeptChevron');
+      if (dc) dc.classList.remove('rotate-180');
+      const sc = document.getElementById('modalAssignStaffChevron');
+      if (sc) sc.classList.remove('rotate-180');
+    }
+
+    // ================= CUSTOM PICKERS DÀNH CHO MODAL PHÂN CÔNG CÔNG VIỆC =================
+    let modalAssignDeptCache = [];
+    let modalAssignStaffCache = [];
+
+    function toggleModalAssignDeptPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('modalAssignDeptMenu');
+      const chev = document.getElementById('modalAssignDeptChevron');
+      const staffMenu = document.getElementById('modalAssignStaffMenu');
+      const staffChev = document.getElementById('modalAssignStaffChevron');
+      if (staffMenu) staffMenu.classList.add('hidden');
+      if (staffChev) staffChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('modalAssignDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderModalAssignDeptPicker(modalAssignDeptCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterModalAssignDeptList() {
+      const term = (document.getElementById('modalAssignDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = modalAssignDeptCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderModalAssignDeptPicker(filtered);
+    }
+
+    function selectModalAssignDept(dept) {
+      const sel = document.getElementById('modalAssignDeptSelect');
+      if (sel) sel.value = dept;
+      updateModalAssignDeptUI(dept);
+      const menu = document.getElementById('modalAssignDeptMenu');
+      const chev = document.getElementById('modalAssignDeptChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onAssignDeptSelectChange(dept);
+    }
+
+    function renderModalAssignDeptPicker(depts) {
+      const container = document.getElementById('modalAssignDeptList');
+      if (!container) return;
+      const currentVal = document.getElementById('modalAssignDeptSelect')?.value || '';
+
+      if (!depts || depts.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy bộ phận phù hợp</div>';
+        return;
+      }
+
+      let html = '';
+      depts.forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectModalAssignDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateModalAssignDeptUI(deptName) {
+      const textEl = document.getElementById('modalAssignDeptText');
+      const iconBox = document.getElementById('modalAssignDeptIconBox');
+      if (!deptName) {
+        if (textEl) textEl.innerText = "Chọn bộ phận...";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else {
+        const s = getDeptStyle(deptName);
+        if (textEl) textEl.innerText = deptName;
+        if (iconBox) {
+          iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+          iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+        }
+      }
+      renderModalAssignDeptPicker(modalAssignDeptCache);
+    }
+
+    function toggleModalAssignStaffPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('modalAssignStaffMenu');
+      const chev = document.getElementById('modalAssignStaffChevron');
+      const deptMenu = document.getElementById('modalAssignDeptMenu');
+      const deptChev = document.getElementById('modalAssignDeptChevron');
+      if (deptMenu) deptMenu.classList.add('hidden');
+      if (deptChev) deptChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('modalAssignStaffSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderModalAssignStaffPicker(modalAssignStaffCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterModalAssignStaffList() {
+      const term = (document.getElementById('modalAssignStaffSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = modalAssignStaffCache.filter(st => {
+        const normN = typeof removeAccents === 'function' ? removeAccents(st.fullName || '').toLowerCase() : (st.fullName || '').toLowerCase();
+        const normU = (st.username || '').toLowerCase();
+        const normR = typeof removeAccents === 'function' ? removeAccents(st.role || '').toLowerCase() : (st.role || '').toLowerCase();
+        return normN.includes(normTerm) || normU.includes(normTerm) || normR.includes(normTerm);
+      });
+      renderModalAssignStaffPicker(filtered);
+    }
+
+    function selectModalAssignStaff(staffName) {
+      const sel = document.getElementById('modalAssignStaffSelect');
+      if (sel) sel.value = staffName;
+      updateModalAssignStaffUI(staffName);
+      const menu = document.getElementById('modalAssignStaffMenu');
+      const chev = document.getElementById('modalAssignStaffChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onAssignStaffSelectChange(staffName);
+    }
+
+    function renderModalAssignStaffPicker(staffList) {
+      const container = document.getElementById('modalAssignStaffList');
+      if (!container) return;
+      const currentVal = document.getElementById('modalAssignStaffSelect')?.value || '';
+
+      if (!staffList || staffList.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Chưa có nhân sự nào trong bộ phận này</div>';
+        return;
+      }
+
+      let html = '';
+      const borderAccents = ['border-l-emerald-500', 'border-l-blue-500', 'border-l-amber-500', 'border-l-purple-500', 'border-l-teal-500', 'border-l-indigo-500'];
+
+      staffList.forEach((st, idx) => {
+        const isSelected = (st.fullName === currentVal);
+        const av = getStaffStyle(st.fullName, idx);
+        const bAccent = borderAccents[idx % borderAccents.length];
+
+        html += `
+          <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                ${av.initial}
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              ${st.role ? `<span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200">${escapeHtml(st.role)}</span>` : ''}
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateModalAssignStaffUI(staffName) {
+      const textEl = document.getElementById('modalAssignStaffText');
+      const subText = document.getElementById('modalAssignStaffSubText');
+      const avatarBox = document.getElementById('modalAssignStaffAvatarBox');
+      
+      const st = modalAssignStaffCache.find(x => x.fullName === staffName);
+      if (!staffName || !st) {
+        if (textEl) textEl.innerText = staffName || "Chọn nhân sự...";
+        if (subText) subText.classList.add('hidden');
+        if (avatarBox) {
+          avatarBox.className = "w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-[10px] font-bold shadow-2xs";
+          avatarBox.innerHTML = '<i class="fa-solid fa-user text-[10px]"></i>';
+        }
+      } else {
+        const av = getStaffStyle(st.fullName);
+        if (textEl) textEl.innerText = st.fullName;
+        if (subText) {
+          if (st.role) {
+            subText.innerText = st.role;
+            subText.classList.remove('hidden');
+          } else {
+            subText.classList.add('hidden');
+          }
+        }
+        if (avatarBox) {
+          avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+          avatarBox.innerText = av.initial;
+        }
+      }
+      renderModalAssignStaffPicker(modalAssignStaffCache);
     }
 
     function onAssignDeptSelectChange(dept) {
@@ -8001,6 +8468,9 @@
         staffSelect.appendChild(opt);
       }
 
+      modalAssignStaffCache = assignableUsers;
+      renderModalAssignStaffPicker(assignableUsers);
+      updateModalAssignStaffUI(staffSelect.value);
       onAssignStaffSelectChange(staffSelect.value);
     }
 
@@ -8296,6 +8766,14 @@
 
     function closeUserManagerModal() {
       document.getElementById('userManagerModal').classList.add('hidden');
+      const dm = document.getElementById('userFilterDeptMenu');
+      if (dm) dm.classList.add('hidden');
+      const sm = document.getElementById('userFilterStatusMenu');
+      if (sm) sm.classList.add('hidden');
+      const dc = document.getElementById('userFilterDeptChevron');
+      if (dc) dc.classList.remove('rotate-180');
+      const sc = document.getElementById('userFilterStatusChevron');
+      if (sc) sc.classList.remove('rotate-180');
     }
 
     /**
@@ -8397,6 +8875,9 @@
       }
     }
 
+    // ================= CUSTOM PICKERS DÀNH CHO BỘ LỌC QUẢN LÝ NHÂN SỰ =================
+    let userFilterDeptCache = [];
+
     function populateUserFilterDepts(depts) {
       const select = document.getElementById('userFilterDeptSelect');
       if (!select || !depts) return;
@@ -8407,6 +8888,172 @@
         opt.innerText = d;
         select.appendChild(opt);
       });
+      userFilterDeptCache = depts;
+      renderUserFilterDeptList(depts);
+      updateUserFilterDeptUI(select.value);
+    }
+
+    function toggleUserFilterDeptPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('userFilterDeptMenu');
+      const chev = document.getElementById('userFilterDeptChevron');
+      const sMenu = document.getElementById('userFilterStatusMenu');
+      const sChev = document.getElementById('userFilterStatusChevron');
+      if (sMenu) sMenu.classList.add('hidden');
+      if (sChev) sChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('userFilterDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderUserFilterDeptList(userFilterDeptCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterUserFilterDeptList() {
+      const term = (document.getElementById('userFilterDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = userFilterDeptCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderUserFilterDeptList(filtered);
+    }
+
+    function selectUserFilterDept(dept) {
+      const sel = document.getElementById('userFilterDeptSelect');
+      if (sel) sel.value = dept;
+      updateUserFilterDeptUI(dept);
+      const menu = document.getElementById('userFilterDeptMenu');
+      const chev = document.getElementById('userFilterDeptChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      filterUserListTable();
+    }
+
+    function renderUserFilterDeptList(depts) {
+      const container = document.getElementById('userFilterDeptList');
+      if (!container) return;
+      const currentVal = document.getElementById('userFilterDeptSelect')?.value || '';
+
+      let html = '';
+      const isAllSelected = (!currentVal || currentVal === '');
+      html += `
+        <div onclick="selectUserFilterDept('')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isAllSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-600 mb-1">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">Tất cả bộ phận</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Toàn ban</span>
+            ${isAllSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+          </div>
+        </div>
+      `;
+
+      (depts || []).forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectUserFilterDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateUserFilterDeptUI(deptName) {
+      const textEl = document.getElementById('userFilterDeptText');
+      const iconBox = document.getElementById('userFilterDeptIconBox');
+      if (!deptName) {
+        if (textEl) textEl.innerText = "Tất cả bộ phận";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else {
+        const s = getDeptStyle(deptName);
+        if (textEl) textEl.innerText = deptName;
+        if (iconBox) {
+          iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+          iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+        }
+      }
+      renderUserFilterDeptList(userFilterDeptCache);
+    }
+
+    function toggleUserFilterStatusPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('userFilterStatusMenu');
+      const chev = document.getElementById('userFilterStatusChevron');
+      const dMenu = document.getElementById('userFilterDeptMenu');
+      const dChev = document.getElementById('userFilterDeptChevron');
+      if (dMenu) dMenu.classList.add('hidden');
+      if (dChev) dChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function selectUserFilterStatus(status) {
+      const sel = document.getElementById('userFilterStatusSelect');
+      if (sel) sel.value = status;
+      updateUserFilterStatusUI(status);
+      const menu = document.getElementById('userFilterStatusMenu');
+      const chev = document.getElementById('userFilterStatusChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      filterUserListTable();
+    }
+
+    function updateUserFilterStatusUI(status) {
+      const textEl = document.getElementById('userFilterStatusText');
+      const dotEl = document.getElementById('userFilterStatusDot');
+      if (!status) {
+        if (textEl) textEl.innerText = "Tất cả trạng thái";
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0";
+      } else if (status === 'Hoạt động') {
+        if (textEl) textEl.innerText = "Hoạt động";
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0";
+      } else if (status === 'Tạm khóa') {
+        if (textEl) textEl.innerText = "Tạm khóa";
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+      } else if (status === 'Khóa') {
+        if (textEl) textEl.innerText = "Khóa";
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
+      }
     }
 
     /**
@@ -9008,6 +9655,224 @@
     function closeTransferModal() {
       const modal = document.getElementById('transferModal');
       if (modal) modal.classList.add('hidden');
+      const dm = document.getElementById('transferDeptMenu');
+      if (dm) dm.classList.add('hidden');
+      const cm = document.getElementById('transferCopyStaffMenu');
+      if (cm) cm.classList.add('hidden');
+      const dc = document.getElementById('transferDeptChevron');
+      if (dc) dc.classList.remove('rotate-180');
+      const cc = document.getElementById('transferCopyStaffChevron');
+      if (cc) cc.classList.remove('rotate-180');
+    }
+
+    // ================= CUSTOM PICKERS DÀNH CHO MODAL ĐIỀU CHUYỂN NHÂN SỰ =================
+    let transferDeptCache = [];
+    let transferCopyStaffCache = [];
+
+    function toggleTransferDeptPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('transferDeptMenu');
+      const chev = document.getElementById('transferDeptChevron');
+      const copyMenu = document.getElementById('transferCopyStaffMenu');
+      const copyChev = document.getElementById('transferCopyStaffChevron');
+      if (copyMenu) copyMenu.classList.add('hidden');
+      if (copyChev) copyChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('transferDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderTransferDeptList(transferDeptCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterTransferDeptList() {
+      const term = (document.getElementById('transferDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = transferDeptCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderTransferDeptList(filtered);
+    }
+
+    function selectTransferDept(dept) {
+      const sel = document.getElementById('transferDeptSelect');
+      if (sel) sel.value = dept;
+      updateTransferDeptUI(dept);
+      const menu = document.getElementById('transferDeptMenu');
+      const chev = document.getElementById('transferDeptChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onTransferDeptChange(dept);
+    }
+
+    function renderTransferDeptList(depts) {
+      const container = document.getElementById('transferDeptList');
+      if (!container) return;
+      const currentVal = document.getElementById('transferDeptSelect')?.value || '';
+
+      if (!depts || depts.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy bộ phận phù hợp</div>';
+        return;
+      }
+
+      let html = '';
+      depts.forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectTransferDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateTransferDeptUI(deptName) {
+      const textEl = document.getElementById('transferDeptText');
+      const iconBox = document.getElementById('transferDeptIconBox');
+      if (!deptName) {
+        if (textEl) textEl.innerText = "-- Chọn bộ phận chuyển đến --";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else {
+        const s = getDeptStyle(deptName);
+        if (textEl) textEl.innerText = deptName;
+        if (iconBox) {
+          iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+          iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+        }
+      }
+      renderTransferDeptList(transferDeptCache);
+    }
+
+    function toggleTransferCopyStaffPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('transferCopyStaffMenu');
+      const chev = document.getElementById('transferCopyStaffChevron');
+      const deptMenu = document.getElementById('transferDeptMenu');
+      const deptChev = document.getElementById('transferDeptChevron');
+      if (deptMenu) deptMenu.classList.add('hidden');
+      if (deptChev) deptChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function selectTransferCopyStaff(val) {
+      const sel = document.getElementById('transferCopyFromStaffSelect');
+      if (sel) sel.value = val;
+      updateTransferCopyStaffUI(val);
+      const menu = document.getElementById('transferCopyStaffMenu');
+      const chev = document.getElementById('transferCopyStaffChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+
+    function renderTransferCopyStaffList(options) {
+      const container = document.getElementById('transferCopyStaffList');
+      if (!container) return;
+      transferCopyStaffCache = options || [];
+      const currentVal = document.getElementById('transferCopyFromStaffSelect')?.value || 'keep_old';
+
+      let html = '';
+      (options || []).forEach(opt => {
+        const isSelected = (String(opt.value) === String(currentVal));
+        if (opt.isPeer) {
+          const av = getStaffStyle(opt.label);
+          html += `
+            <div onclick="selectTransferCopyStaff('${escapeHtml(String(opt.value))}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-500 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  ${av.initial}
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(opt.label)}</span>
+                  <span class="block text-[10px] text-emerald-700 font-medium truncate">Sao chép đầu việc</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Đồng nghiệp</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          const isKeep = (opt.value === 'keep_old');
+          const borderL = isKeep ? 'border-l-blue-500' : 'border-l-amber-500';
+          const iconEmoji = isKeep ? '📋' : '✨';
+          const badgeText = isKeep ? 'Bộ phận cũ' : 'Làm mới';
+          const badgeStyle = isKeep ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-amber-100 text-amber-800 border-amber-200';
+          html += `
+            <div onclick="selectTransferCopyStaff('${escapeHtml(String(opt.value))}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${borderL} mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                  ${iconEmoji}
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(opt.label)}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${badgeStyle}">${badgeText}</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+        }
+      });
+      container.innerHTML = html;
+    }
+
+    function updateTransferCopyStaffUI(val) {
+      const textEl = document.getElementById('transferCopyStaffText');
+      const boxEl = document.getElementById('transferCopyStaffAvatarBox');
+      const opt = transferCopyStaffCache.find(x => String(x.value) === String(val));
+      if (opt) {
+        if (textEl) textEl.innerText = opt.label;
+        if (boxEl) {
+          if (opt.isPeer) {
+            const av = getStaffStyle(opt.label);
+            boxEl.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+            boxEl.innerText = av.initial;
+          } else {
+            boxEl.className = "w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs font-bold";
+            boxEl.innerText = (opt.value === 'keep_old') ? '📋' : '✨';
+          }
+        }
+      }
+      renderTransferCopyStaffList(transferCopyStaffCache);
     }
 
     function openTransferModal(username) {
@@ -9064,10 +9929,13 @@
         if (isDeptEquivalent(d, user.dept)) opt.selected = true;
         deptSelect.appendChild(opt);
       });
+      transferDeptCache = adminManageUsersCache.departments;
+      renderTransferDeptList(transferDeptCache);
 
       document.getElementById('transferModal').classList.remove('hidden');
 
       const currentDept = deptSelect.value || user.dept;
+      updateTransferDeptUI(currentDept);
       onTransferDeptChange(currentDept);
       onTransferStatusSelectChange(statusVal);
 
@@ -9166,6 +10034,7 @@
         if (copySelect && adminManageUsersCache && adminManageUsersCache.users) {
           copySelect.innerHTML = '';
           const descEl = document.getElementById('transferTasksDesc');
+          const copyOptions = [];
           
           const peers = adminManageUsersCache.users.filter(u => 
             isDeptEquivalent(u.dept, selectedDept) && 
@@ -9180,16 +10049,19 @@
               opt.value = p.id;
               opt.innerText = `Sao chép việc từ: ${p.fullName} (${p.username})`;
               copySelect.appendChild(opt);
+              copyOptions.push({ value: p.id, label: `Sao chép việc từ: ${p.fullName} (${p.username})`, isPeer: true });
             });
             const optKeep = document.createElement('option');
             optKeep.value = "keep_old";
             optKeep.innerText = "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)";
             copySelect.appendChild(optKeep);
+            copyOptions.push({ value: "keep_old", label: "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)", isPeer: false });
 
             const optFresh = document.createElement('option');
             optFresh.value = "fresh_empty";
             optFresh.innerText = "✨ Làm mới công việc (Không có việc nào, chờ phân công mới)";
             copySelect.appendChild(optFresh);
+            copyOptions.push({ value: "fresh_empty", label: "✨ Làm mới công việc (Không có việc nào, chờ phân công mới)", isPeer: false });
           } else {
             // Khi bộ phận mới không có nhân sự để sao chép đầu việc
             if (descEl) descEl.innerText = "Bộ phận mới chưa có nhân sự để sao chép. Vui lòng chọn cách xử lý công việc:";
@@ -9203,12 +10075,18 @@
             optKeep.innerText = "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)";
             optKeep.selected = true;
             copySelect.appendChild(optKeep);
+            copyOptions.push({ value: "keep_old", label: "📋 Giữ đầu việc ở bộ phận cũ (Chuyển sang bộ phận mới)", isPeer: false });
 
             const optFresh = document.createElement('option');
             optFresh.value = "fresh_empty";
             optFresh.innerText = "✨ Làm mới công việc (Không có công việc nào, chờ phân công)";
             copySelect.appendChild(optFresh);
+            copyOptions.push({ value: "fresh_empty", label: "✨ Làm mới công việc (Không có công việc nào, chờ phân công)", isPeer: false });
           }
+
+          transferCopyStaffCache = copyOptions;
+          renderTransferCopyStaffList(copyOptions);
+          updateTransferCopyStaffUI(copySelect.value);
         }
       }
     }
@@ -9482,6 +10360,8 @@
     }
 
     // ================= THÊM MỚI NHÂN SỰ & BÁO ĐỘNG TRÙNG LẶP =================
+    let addDeptCache = [];
+
     function openAddUserModal() {
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.remove('hidden');
@@ -9508,11 +10388,113 @@
       if (depts.length > 0) {
         deptSelect.selectedIndex = 1;
       }
+      addDeptCache = depts;
+      renderAddDeptList(depts);
+      updateAddDeptUI(deptSelect.value);
     }
 
     function closeAddUserModal() {
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.add('hidden');
+      const m = document.getElementById('addDeptMenu');
+      if (m) m.classList.add('hidden');
+      const c = document.getElementById('addDeptChevron');
+      if (c) c.classList.remove('rotate-180');
+    }
+
+    function toggleAddDeptPicker(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('addDeptMenu');
+      const chev = document.getElementById('addDeptChevron');
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('addDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderAddDeptList(addDeptCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterAddDeptList() {
+      const term = (document.getElementById('addDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = addDeptCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderAddDeptList(filtered);
+    }
+
+    function selectAddDept(dept) {
+      const sel = document.getElementById('addDeptSelect');
+      if (sel) sel.value = dept;
+      updateAddDeptUI(dept);
+      const menu = document.getElementById('addDeptMenu');
+      const chev = document.getElementById('addDeptChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+
+    function renderAddDeptList(depts) {
+      const container = document.getElementById('addDeptList');
+      if (!container) return;
+      const currentVal = document.getElementById('addDeptSelect')?.value || '';
+
+      if (!depts || depts.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy bộ phận</div>';
+        return;
+      }
+
+      let html = '';
+      depts.forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectAddDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateAddDeptUI(deptName) {
+      const textEl = document.getElementById('addDeptText');
+      const iconBox = document.getElementById('addDeptIconBox');
+      if (!deptName) {
+        if (textEl) textEl.innerText = "-- Chọn bộ phận có sẵn --";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else {
+        const s = getDeptStyle(deptName);
+        if (textEl) textEl.innerText = deptName;
+        if (iconBox) {
+          iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+          iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+        }
+      }
+      renderAddDeptList(addDeptCache);
     }
 
     /**
