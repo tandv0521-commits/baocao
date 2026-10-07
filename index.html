@@ -2618,6 +2618,73 @@
     const SUPABASE_KEY = "sb_publishable_5oH-P1_iwO8MsLiGTZodYg_WuPw-l4f";
     var supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+    // ================= HỆ THỐNG BẢO VỆ AN NINH FRONTEND (SECURITY SHIELD) =================
+    (function initSecurityShield() {
+      // 1. Chống mở DevTools qua phím tắt (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'F12' || e.keyCode === 123) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+
+      // 2. Chống chuột phải (Context Menu) - Cho phép copy/paste trong ô nhập liệu (INPUT, TEXTAREA)
+      window.addEventListener('contextmenu', function (e) {
+        var target = e.target;
+        var isInputField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+        if (!isInputField) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+
+      // 3. Debugger Trap (Treo DevTools và tắt Console khi triển khai Online)
+      var isLocalEnv = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' || 
+                       window.location.protocol === 'file:';
+      
+      if (!isLocalEnv) {
+        try {
+          var noop = function () {};
+          console.log = noop;
+          console.debug = noop;
+          console.info = noop;
+          console.warn = noop;
+        } catch (ex) {}
+
+        setInterval(function () {
+          (function () {
+            return false;
+          }['constructor']('debugger')['call']());
+        }, 1000);
+      } else {
+        try {
+          console.log(
+            '%c[HỆ THỐNG AN NINH]%c Đã kích hoạt cơ chế bảo vệ giao diện & chống sửa đổi biến!',
+            'background: #dc2626; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+            'color: #2563eb; font-weight: bold; padding-left: 6px;'
+          );
+        } catch(ex) {}
+      }
+    })();
+
     let globalInitData = null;
     let currentUser = null;
     let currentSelectedDept = "TẤT CẢ";
@@ -3558,8 +3625,26 @@
         const cached = localStorage.getItem('ops_portal_session_final_v48');
         if (cached) {
           try {
-            currentUser = JSON.parse(cached);
-            initMainDashboard();
+            const parsed = JSON.parse(cached);
+            // Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
+            const verified = (users || []).find(u => (u.id === parsed.id || u.username === parsed.username) && (u.status || '').toLowerCase() !== 'locked');
+            if (verified) {
+              const d = depts.find(x => x.id === verified.department_id);
+              currentUser = Object.freeze({
+                id: verified.id,
+                username: verified.username,
+                fullName: verified.full_name,
+                department: d ? d.name : "Chưa phân",
+                department_id: verified.department_id,
+                role: verified.role,
+                status: verified.status
+              });
+              localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+              initMainDashboard();
+            } else {
+              localStorage.removeItem('ops_portal_session_final_v48');
+              currentUser = null;
+            }
           } catch(e) {}
         }
         if (callback) callback();
@@ -4954,7 +5039,7 @@
 
         autoSimulateProgress(85, 100, "Xác thực thành công! Đang vào hệ thống...", 15, () => {
           hideProgressHud(250);
-          currentUser = {
+          currentUser = Object.freeze({
             id: user.id,
             username: user.username,
             fullName: user.full_name,
@@ -4962,7 +5047,7 @@
             department_id: user.department_id,
             role: user.role,
             status: user.status
-          };
+          });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
           initMainDashboard();
         });
@@ -9579,11 +9664,17 @@
 
         // 4. Cập nhật trạng thái session nếu người đang đăng nhập là Giám đốc cũ hoặc người kế nhiệm
         if (currentUser && currentUser.username === directorUsername) {
-          currentUser.role = formerRole;
+          currentUser = Object.freeze({
+            ...currentUser,
+            role: formerRole
+          });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
         } else if (currentUser && currentUser.username === successor.username) {
-          currentUser.role = 'Admin';
-          currentUser.department_id = giamDocDeptId;
+          currentUser = Object.freeze({
+            ...currentUser,
+            role: 'Admin',
+            department_id: giamDocDeptId
+          });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
         }
 
