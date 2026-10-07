@@ -1805,6 +1805,10 @@
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
             <select id="accEditRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="Nhân viên">Nhân viên</option>
+              <option value="Thủ kho">Thủ kho</option>
+              <option value="Kho chính">Kho chính</option>
+              <option value="Tổ trưởng">Tổ trưởng</option>
+              <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
             </select>
           </div>
@@ -2031,6 +2035,10 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Vai trò hệ thống</label>
             <select id="addRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
               <option value="Nhân viên">Nhân viên</option>
+              <option value="Thủ kho">Thủ kho</option>
+              <option value="Kho chính">Kho chính</option>
+              <option value="Tổ trưởng">Tổ trưởng</option>
+              <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
             </select>
           </div>
@@ -2884,18 +2892,24 @@
         clean = clean.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|PhuKho|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên).*/gi, '').trim();
         clean = clean.replace(/^[\s\.\,\-\–\:]+|[\s\.\,\-\–\:]+$/g, '').trim();
 
-        let rLower = removeAccents(role);
-        if (rLower.includes('chinh') || rLower.includes('truong') || rLower.includes('leader')) {
+        let rLower = removeAccents(role).toLowerCase();
+        if (rLower.includes('chinh') || rLower.includes('truong') || rLower.includes('leader') || rLower.includes('quan ly')) {
           isLead = true;
-          role = role || "Kho chính";
-        } else if (rLower.includes('phu') || rLower.includes('nhan vien') || rLower.includes('thanh vien') || rLower.includes('nhanvien')) {
+        } else if (num === 1 && lines.length > 1 && !rLower.includes('phu') && !rLower.includes('boc xep')) {
+          isLead = true;
+        } else {
           isLead = false;
-          role = role || "Phụ kho";
-        } else if (num === 1 && lines.length > 1) {
-          isLead = true;
-          role = "Kho chính";
-        } else if (lines.length > 1) {
-          role = "Phụ kho";
+        }
+
+        // BẢO VỆ VAI TRÒ TỪ SUPABASE: Giữ nguyên vai trò cấu hình trong Supabase (Thủ kho, Bốc xếp, Kho chính...)
+        if (!role) {
+          if (isLead) {
+            role = (lines.length > 1) ? "Kho chính" : "";
+          } else if (lines.length > 1) {
+            role = "Thành viên kho";
+          } else {
+            role = "";
+          }
         }
 
         if (clean) {
@@ -2921,14 +2935,14 @@
 
     /**
      * HIỂN THỊ THÀNH VIÊN TRONG Ô HỌ VÀ TÊN NỔI BẬT:
-     * Card hiển thị hiện đại, màu sắc tương phản cao, làm nổi bật rõ ràng nhân sự
+     * Card hiển thị hiện đại, chuẩn hóa vai trò các thành viên kho và cá nhân
      */
     function formatStaffNameHtml(nameStr, deptName) {
       if (!nameStr) return '';
       const members = parseStaffList(nameStr);
 
       if (members.length <= 1) {
-        const single = members[0] || { name: nameStr };
+        const single = members[0] || { name: nameStr, role: '' };
         return `
           <div class="flex items-center gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border border-emerald-300 rounded-2xl shadow-xs transition hover:border-emerald-500">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xs sm:text-sm flex items-center justify-center staff-avatar-glow flex-shrink-0 shadow-sm">
@@ -2936,7 +2950,14 @@
             </div>
             <div class="text-left overflow-hidden flex-1 min-w-0">
               <span class="text-xs font-black text-slate-900 leading-tight block truncate">${escapeHtml(single.name)}</span>
-              <span class="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-tight block mt-0.5 truncate">${escapeHtml(deptName || '')}</span>
+              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span class="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-tight truncate">${escapeHtml(deptName || '')}</span>
+                ${single.role ? `
+                  <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-tight bg-teal-50 text-teal-800 border border-teal-200">
+                    ${escapeHtml(single.role)}
+                  </span>
+                ` : ''}
+              </div>
             </div>
           </div>
         `;
@@ -2946,10 +2967,10 @@
         <div class="flex flex-col gap-1.5 w-full text-left overflow-hidden">
           <div class="flex items-center justify-between pb-1 border-b border-emerald-100">
             <span class="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
-              <span>Tổ ${members.length} người</span>
+              <i class="fa-solid fa-warehouse text-emerald-600 text-xs"></i>
+              <span>Tổ kho (${members.length} nhân sự)</span>
             </span>
-            <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full uppercase truncate max-w-[95px]">${escapeHtml(deptName || '')}</span>
+            <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full uppercase truncate max-w-[110px]">${escapeHtml(deptName || '')}</span>
           </div>
           <div class="space-y-1.5 w-full">
             ${members.map(m => {
@@ -2973,7 +2994,9 @@
                   ${m.role ? `
                     <div class="pl-5.5 mt-0.5">
                       <span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tight ${
-                        m.isLead ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-200 text-slate-600'
+                        m.isLead 
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs' 
+                          : 'bg-teal-50 text-teal-800 border border-teal-200'
                       }">
                         ${escapeHtml(m.role)}
                       </span>
@@ -4413,7 +4436,8 @@
             globalInitData.deptMap[d].forEach(st => {
               const opt = document.createElement('option');
               opt.value = st.fullName;
-              opt.innerText = `${st.fullName} (${d})`;
+              const rolePart = st.role ? ` — (${st.role})` : '';
+              opt.innerText = `${st.fullName}${rolePart} (${d})`;
               if (st.fullName === currentSelectedStaff) opt.selected = true;
               staffSelect.appendChild(opt);
             });
@@ -4423,7 +4447,7 @@
         if (!isLead && isDeptEquivalent(dept, currentUser.department)) {
           const meOpt = document.createElement('option');
           meOpt.value = currentUser.fullName;
-          meOpt.innerText = `🎯 Nhiệm vụ phụ trách trực tiếp • ${currentUser.fullName}`;
+          meOpt.innerText = `🎯 Nhiệm vụ phụ trách trực tiếp • ${currentUser.fullName}${currentUser.role ? ' — (' + currentUser.role + ')' : ''}`;
           if (currentSelectedStaff === currentUser.fullName) meOpt.selected = true;
           staffSelect.appendChild(meOpt);
         }
@@ -4439,7 +4463,8 @@
             if (st.fullName !== currentUser.fullName) {
               const opt = document.createElement('option');
               opt.value = st.fullName;
-              opt.innerText = st.fullName;
+              const rolePart = st.role ? ` — (${st.role})` : '';
+              opt.innerText = `${st.fullName}${rolePart}`;
               if (st.fullName === currentSelectedStaff) opt.selected = true;
               staffSelect.appendChild(opt);
             }
@@ -4845,39 +4870,61 @@
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // Lọc thành viên thuộc kho này
+          // Lọc thành viên thuộc kho này từ danh sách users mới nhất
           const deptMembers = (dbUsers || []).filter(u => {
             if (!isPastPeriod && u.status !== 'Hoạt động') return false;
+            // Loại trừ tài khoản quản trị/giám đốc khỏi danh sách thành viên tổ kho
+            if (isDirectorOrAdmin(u.role, u.username)) return false;
             if (deptId && u.department_id && u.department_id === deptId) return true;
             const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
             const uDeptName = uDeptObj ? uDeptObj.name : "";
             return isDeptEquivalent(uDeptName, deptName);
           });
 
+          // Chuẩn hóa thứ tự thành viên kho: Kho chính / Trưởng nhóm xếp đầu, kế đến Thủ kho, Phụ kho, Bốc xếp
           deptMembers.sort((a, b) => {
-            const aLead = /chinh|truong|to truong|leader/i.test(removeAccents(a.role || ""));
-            const bLead = /chinh|truong|to truong|leader/i.test(removeAccents(b.role || ""));
-            if (aLead && !bLead) return -1;
-            if (!aLead && bLead) return 1;
+            const getRoleWeight = (r) => {
+              const norm = removeAccents(r || "").toLowerCase();
+              if (norm.includes('kho chinh') || norm.includes('chinh')) return 1;
+              if (norm.includes('to truong') || norm.includes('truong') || norm.includes('quan ly') || norm.includes('leader')) return 2;
+              if (norm.includes('pho') || norm.includes('to pho')) return 3;
+              if (norm.includes('thu kho')) return 4;
+              if (norm.includes('phu kho') || norm.includes('phu')) return 5;
+              if (norm.includes('boc xep')) return 6;
+              return 10;
+            };
+            const wA = getRoleWeight(a.role);
+            const wB = getRoleWeight(b.role);
+            if (wA !== wB) return wA - wB;
             return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
           });
 
           if (deptMembers.length > 0) {
             displayStaffName = deptMembers.map((u, i) => {
               let cleanName = u.full_name.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
-              let isUserLead = /chinh|truong|to truong|leader/i.test(removeAccents(u.role || ""));
-              let rStr = u.role ? ` (${u.role})` : (isUserLead ? " (Kho chính)" : " (Phụ kho)");
+              let isUserLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""));
+              let rStr = u.role ? ` (${u.role})` : (isUserLead ? " (Kho chính)" : " (Thành viên kho)");
               return `${i + 1}. ${cleanName}${rStr}`;
             }).join('\n');
 
-            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader/i.test(removeAccents(u.role || "")));
+            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || "")));
             groupUserId = leadUser ? leadUser.id : deptMembers[0].id;
           } else {
-            displayStaffName = t.users ? t.users.full_name : deptName;
+            const u = (dbUsers || []).find(u => u.id === t.assigned_user_id) || t.users;
+            displayStaffName = u ? `${u.full_name}${u.role ? ' (' + u.role + ')' : ''}` : deptName;
+            groupUserId = u ? u.id : t.assigned_user_id;
           }
         } else {
-          // BỘ PHẬN CÁ NHÂN: Hiển thị riêng từng cá nhân
-          displayStaffName = t.users ? t.users.full_name : "Chung bộ phận";
+          // BỘ PHẬN CÁ NHÂN: Hiển thị riêng từng cá nhân kèm vai trò chính xác từ Supabase
+          const u = (dbUsers || []).find(u => u.id === t.assigned_user_id) || t.users;
+          if (u) {
+            let cleanName = (u.full_name || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+            let roleStr = u.role ? ` (${u.role})` : '';
+            displayStaffName = `${cleanName}${roleStr}`;
+            groupUserId = u.id;
+          } else {
+            displayStaffName = "Chung bộ phận";
+          }
           groupKey = `${deptName}___${displayStaffName}`;
         }
 
@@ -4987,7 +5034,7 @@
         th.className = `py-2 px-1.5 min-w-[52px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
-            <span class="text-xs font-black font-num">${dc.label}</span>
+            <span class="text-xs font-black font-num" title="Ngày ${dc.label}">${dc.dayNum < 10 ? '0' + dc.dayNum : dc.dayNum}</span>
             <span class="text-[10px] font-bold mt-0.5 ${isSunday ? 'text-rose-600 font-black' : (isToday ? 'text-emerald-700 font-black' : 'text-slate-400')}">${dayOfWeekStr}</span>
             ${isToday ? '<span class="text-[8px] bg-emerald-200 text-emerald-900 font-bold px-1 rounded mt-0.5 tracking-tighter">Hôm nay</span>' : ''}
           </div>
@@ -7277,23 +7324,60 @@
     }
 
     // ================= PHÂN CÔNG GIAO VIỆC TRÊN MÁY CHỦ =================
-    function openAssignModal() {
+    async function openAssignModal() {
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.remove('hidden');
 
       try {
         const deptSelect = document.getElementById('modalAssignDeptSelect');
         if (deptSelect) {
+          deptSelect.innerHTML = '<option value="">Đang tải danh sách...</option>';
+        }
+
+        // TẢI DỮ LIỆU BỘ PHẬN VÀ NHÂN SỰ MỚI NHẤT TRỰC TIẾP TỪ SUPABASE (KÈM VAI TRÒ VỪA CẬP NHẬT)
+        const { data: dbDepts } = await supabase.from('departments').select('*').order('name').limit(1000);
+        const { data: dbUsers } = await supabase.from('users').select('*').eq('status', 'Hoạt động').order('full_name').limit(10000);
+
+        if (dbDepts && dbUsers) {
+          // Lọc bỏ tài khoản kỹ thuật nhóm gộp cũ
+          const validUsers = dbUsers.filter(u => {
+            const uName = (u.username || '').toLowerCase();
+            const fName = (u.full_name || '').trim();
+            const role = (u.role || '').toLowerCase();
+            if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
+            if (role.includes('nhom gop')) return false;
+            if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+            return true;
+          });
+
+          // Cập nhật lại deptMap mới nhất
+          const freshDeptMap = {};
+          dbDepts.forEach(d => { freshDeptMap[d.name] = []; });
+          validUsers.forEach(u => {
+            const d = dbDepts.find(x => x.id === u.department_id);
+            const dName = d ? d.name : "Chưa phân bộ phận";
+            if (!freshDeptMap[dName]) freshDeptMap[dName] = [];
+            freshDeptMap[dName].push({
+              id: u.id,
+              username: u.username,
+              fullName: u.full_name,
+              role: u.role || "",
+              status: u.status,
+              department_id: u.department_id
+            });
+          });
+
+          if (!globalInitData) globalInitData = {};
+          globalInitData.departments = dbDepts.map(d => d.name);
+          globalInitData.deptMap = freshDeptMap;
+        }
+
+        if (deptSelect) {
           deptSelect.innerHTML = '';
           if (globalInitData && globalInitData.departments) {
-            let depts = [...globalInitData.departments];
-            depts.sort((a, b) => {
-              let aIsGDB = removeAccents(a).includes("giam doc ban");
-              let bIsGDB = removeAccents(b).includes("giam doc ban");
-              if (aIsGDB && !bIsGDB) return -1;
-              if (!aIsGDB && bIsGDB) return 1;
-              return a.localeCompare(b, 'vi');
-            });
+            // Loại trừ bộ phận Giám đốc / Lãnh đạo cấp cao khỏi danh sách phân công
+            let depts = globalInitData.departments.filter(d => !normalizeDeptKey(d).includes("giam doc"));
+            depts.sort((a, b) => a.localeCompare(b, 'vi'));
 
             depts.forEach(dept => {
               const opt = document.createElement('option');
@@ -7306,7 +7390,9 @@
           const activeDept = deptSelect.value || (globalInitData && globalInitData.departments && globalInitData.departments[0]) || "";
           onAssignDeptSelectChange(activeDept);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("Lỗi nạp danh sách phân công:", e);
+      }
     }
 
     function closeAssignModal() {
@@ -7319,11 +7405,26 @@
       if (!staffSelect) return;
       staffSelect.innerHTML = '';
 
-      if (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept] && globalInitData.deptMap[dept].length > 0) {
-        globalInitData.deptMap[dept].forEach(st => {
+      const deptUsers = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) ? globalInitData.deptMap[dept] : [];
+      
+      // LOẠI TRỪ TUYỆT ĐỐI TÀI KHOẢN ADMIN & BAN GIÁM ĐỐC KHỎI PHÂN CÔNG CÔNG VIỆC
+      const assignableUsers = deptUsers.filter(st => {
+        if (isDirectorOrAdmin(st.role, st.username)) return false;
+        const r = removeAccents(st.role || "").toLowerCase();
+        const u = removeAccents(st.username || "").toLowerCase();
+        if (r.includes('admin') || r.includes('giam doc') || u.includes('admin')) return false;
+        return true;
+      });
+
+      if (assignableUsers.length > 0) {
+        assignableUsers.forEach(st => {
           const opt = document.createElement('option');
           opt.value = st.fullName;
-          opt.innerText = st.fullName;
+          opt.dataset.userId = st.id;
+          opt.dataset.role = st.role || "";
+          // Hiển thị tên nhân sự kèm vai trò hệ thống từ bảng user Supabase
+          const roleBadge = st.role ? ` — (${st.role})` : '';
+          opt.innerText = `👤 ${st.fullName}${roleBadge}`;
           if (currentSelectedStaff !== "TẤT CẢ" && st.fullName === currentSelectedStaff) {
             opt.selected = true;
           }
@@ -7332,7 +7433,7 @@
       } else {
         const opt = document.createElement('option');
         opt.value = "";
-        opt.innerText = "-- Chưa có nhân sự trong bộ phận này --";
+        opt.innerText = "-- Chưa có nhân sự phân công trong bộ phận này --";
         staffSelect.appendChild(opt);
       }
 
@@ -7348,6 +7449,10 @@
         return;
       }
 
+      const staffSelect = document.getElementById('modalAssignStaffSelect');
+      const selectedOpt = staffSelect ? staffSelect.selectedOptions[0] : null;
+      const targetUserId = selectedOpt?.dataset?.userId;
+
       container.innerHTML = `
         <div class="py-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
           <i class="fa-solid fa-circle-notch fa-spin text-emerald-600"></i>
@@ -7356,14 +7461,23 @@
       `;
 
       try {
-        const { data: user, error: uErr } = await supabase
-          .from('users')
-          .select('id')
-          .eq('full_name', staffName)
-          .limit(1);
+        let uId = targetUserId ? parseInt(targetUserId, 10) : null;
+        if (!uId) {
+          const { data: user, error: uErr } = await supabase
+            .from('users')
+            .select('id, role, username')
+            .eq('full_name', staffName)
+            .limit(1);
 
-        if (uErr) throw uErr;
-        const uId = user && user[0] ? user[0].id : null;
+          if (uErr) throw uErr;
+          if (user && user[0]) {
+            if (isDirectorOrAdmin(user[0].role, user[0].username)) {
+              container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Ban Giám đốc không tham gia phân công công việc.</p>';
+              return;
+            }
+            uId = user[0].id;
+          }
+        }
 
         if (!uId) {
           container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Chưa tìm thấy hồ sơ nhân sự này.</p>';
@@ -7554,10 +7668,23 @@
       autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
+        const staffSelect = document.getElementById('modalAssignStaffSelect');
+        const selectedOpt = staffSelect ? staffSelect.selectedOptions[0] : null;
+        let uId = selectedOpt?.dataset?.userId ? parseInt(selectedOpt.dataset.userId, 10) : null;
+
         const { data: dept } = await supabase.from('departments').select('id').eq('name', deptName).limit(1);
-        const { data: user } = await supabase.from('users').select('id').eq('full_name', staffName).limit(1);
+        const { data: user } = await supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1);
+
+        // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Ban Giám Đốc
+        if (user && user[0] && isDirectorOrAdmin(user[0].role, user[0].username)) {
+          hideProgressHud(100);
+          showToast("Không phân công công việc cho tài khoản Quản trị viên/Ban Giám đốc!", true);
+          return;
+        }
+
         const dId = dept && dept[0] ? dept[0].id : 1;
-        const uId = user && user[0] ? user[0].id : 1;
+        if (!uId && user && user[0]) uId = user[0].id;
+        if (!uId) uId = 1;
 
         // 1. Cập nhật các việc cũ đã có ID
         if (tasksToUpdate.length > 0) {
@@ -7827,11 +7954,18 @@
 
       document.getElementById('accEditPasswordInput').value = '';
       
-      // Gán vai trò (chỉ chấp nhận Nhân viên hoặc Quản lý)
+      // Gán vai trò (bảo toàn vai trò chính xác từ Supabase: Thủ kho, Kho chính, Tổ trưởng, Trưởng nhóm...)
       const roleSel = document.getElementById('accEditRoleSelect');
       if (roleSel) {
-        let rNorm = removeAccents(user.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
-        roleSel.value = (rNorm.includes("quanly") || rNorm.includes("leader") || rNorm === "ql") ? "Quản lý" : "Nhân viên";
+        let currentRole = user.role || "Nhân viên";
+        let hasOpt = Array.from(roleSel.options).some(o => o.value.toLowerCase() === currentRole.toLowerCase());
+        if (!hasOpt) {
+          const opt = document.createElement('option');
+          opt.value = currentRole;
+          opt.innerText = currentRole;
+          roleSel.appendChild(opt);
+        }
+        roleSel.value = currentRole;
       }
       
       const st = removeAccents(user.status || "").toLowerCase();
