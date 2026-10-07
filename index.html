@@ -5217,7 +5217,16 @@
       });
 
       updateDateNavButtons();
-      setTimeout(() => { scrollToToday(true); }, 250);
+      const now = new Date();
+      const isCurrentMonthNow = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      if (isCurrentMonthNow) {
+        setTimeout(() => { scrollToToday(true); }, 250);
+      } else {
+        setTimeout(() => {
+          scrollColumnToCenter(1, true);
+          setActiveDateNavButton('other');
+        }, 250);
+      }
     }
 
     /**
@@ -5491,14 +5500,17 @@
           lblTomorrow.innerHTML = `Ngày mai ${tmStr ? '<span class="hidden md:inline text-[10px] opacity-75 font-num">(' + tmStr + ')</span>' : ''}`;
         }
         btnTomorrow.setAttribute('data-tooltip', tomorrowNum <= daysInMonth ? `Cuộn đến ngày mai (Ngày ${tomorrowNum < 10 ? '0' + tomorrowNum : tomorrowNum})` : `Ngày mai thuộc tháng tiếp theo`);
+        setActiveDateNavButton('today');
       } else {
-        if (lblYesterday) lblYesterday.innerText = `Hôm qua`;
+        if (lblYesterday) lblYesterday.innerText = `Đầu tháng`;
         if (lblToday) lblToday.innerText = `Về hôm nay`;
-        if (lblTomorrow) lblTomorrow.innerText = `Ngày mai`;
+        if (lblTomorrow) lblTomorrow.innerText = `Cuối tháng`;
+        btnYesterday.setAttribute('data-tooltip', `Cuộn về ngày 01 đầu tháng`);
         btnToday.setAttribute('data-tooltip', `Chuyển về kỳ báo cáo tháng hiện tại`);
+        const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
+        btnTomorrow.setAttribute('data-tooltip', `Cuộn đến ngày ${daysInMonth} cuối tháng`);
+        setActiveDateNavButton('other');
       }
-
-      setActiveDateNavButton('today');
     }
 
     function highlightColumnPulse(colIndex) {
@@ -5538,7 +5550,11 @@
     function scrollToYesterday() {
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
-      const todayDayNum = isCurrentPeriod ? now.getDate() : 1;
+      if (!isCurrentPeriod) {
+        scrollToStartOfMonth();
+        return;
+      }
+      const todayDayNum = now.getDate();
       const yesterdayDayNum = todayDayNum - 1;
 
       let targetDay;
@@ -5579,6 +5595,14 @@
           showToast(`Đã chuyển đến: Hôm nay (Ngày ${dStr})`);
         }
       } else {
+        if (isSilent) {
+          // Khi render xem kỳ báo cáo tháng trước/khác, không tự chuyển về tháng hiện tại
+          scrollColumnToCenter(1, true);
+          setActiveDateNavButton('other');
+          return;
+        }
+
+        // Người dùng chủ động click nút "Về hôm nay" trên thanh công cụ
         showToast("Đang chuyển về kỳ báo cáo tháng hiện tại...");
         const curM = now.getMonth() + 1;
         const curY = now.getFullYear();
@@ -5596,9 +5620,16 @@
     function scrollToTomorrow() {
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
-      const todayDayNum = isCurrentPeriod ? now.getDate() : 1;
-      const tomorrowDayNum = todayDayNum + 1;
       const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
+      if (!isCurrentPeriod) {
+        scrollColumnToCenter(daysInMonth, true);
+        setActiveDateNavButton('other');
+        const dStr = (daysInMonth < 10 ? '0' : '') + daysInMonth;
+        showToast(`Đã chuyển đến: Ngày ${dStr} cuối tháng`);
+        return;
+      }
+      const todayDayNum = now.getDate();
+      const tomorrowDayNum = todayDayNum + 1;
 
       let targetDay;
       if (currentNavActiveDay === tomorrowDayNum) {
@@ -6360,7 +6391,13 @@
         workbook.created = new Date();
 
         const deptTitle = (currentMatrixData.queryDept === "TẤT CẢ") ? "Ban DVKH" : (currentMatrixData.queryDept || currentUser.department);
-        const staffTitle = (currentSelectedStaff === "TẤT CẢ") ? "Tất cả nhân viên trong ban DVKH" : currentSelectedStaff;
+        let staffTitle = (currentSelectedStaff === "TẤT CẢ") ? "Tất cả nhân viên trong ban DVKH" : currentSelectedStaff;
+        if (staffTitle && staffTitle !== "Tất cả nhân viên trong ban DVKH" && !staffTitle.startsWith("SEARCH_")) {
+          const isSharedDept = isSharedGroupDeptClient(currentMatrixData.queryDept);
+          if (!isSharedDept) {
+            staffTitle = staffTitle.replace(/\s*\([^\)]*\)\s*$/, '').trim();
+          }
+        }
         const currentMonth = currentSelectedMonth || (new Date().getMonth() + 1);
         const currentYear = currentSelectedYear || new Date().getFullYear();
         const mStr = (currentMonth < 10 ? '0' : '') + currentMonth;
@@ -6473,8 +6510,22 @@
             const personRowBg = isEvenPerson ? 'FFFFFFFF' : 'FFF8FAFC';
             const personTotalBg = isEvenPerson ? 'FFF1F5F9' : 'FFE2E8F0';
 
+            // Xử lý tên nhân sự xuất Excel:
+            // Với nhóm gộp (Tổ kho / isShared): GIỮ NGUYÊN danh sách thành viên kèm số thứ tự và vai trò
+            // Với nhóm công việc thường (!isShared): BỎ thông tin vai trò cạnh họ tên (ví dụ: "Đặng Văn Việt (Nhân viên)" -> "Đặng Văn Việt")
+            const isSharedGroup = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+            let excelStaffName = grp.staffName || "";
+            if (!isSharedGroup) {
+              const parsed = parseStaffList(excelStaffName);
+              if (parsed && parsed.length > 0 && parsed[0].name) {
+                excelStaffName = parsed[0].name;
+              } else {
+                excelStaffName = excelStaffName.replace(/\s*\([^\)]*\)\s*$/, '').trim();
+              }
+            }
+
             grp.tasks.forEach((t) => {
-              const rowData = [personSTT, grp.staffName, t.taskName];
+              const rowData = [personSTT, excelStaffName, t.taskName];
 
               dayCols.forEach(dc => {
                 const val = t.dailyValues[dc.colIndex];
