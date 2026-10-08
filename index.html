@@ -1125,35 +1125,43 @@
             </div>
 
             <!-- Thanh chọn đầu việc & Chuyển đổi nhanh -->
-            <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs">
-              <div class="flex items-center gap-2 flex-1 min-w-[260px]">
-                <label for="rhythmTaskSelect" class="text-[11px] font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
-                  <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
-                  <span>Xem đầu việc:</span>
-                </label>
-                <div class="flex items-center gap-1 flex-1">
-                  <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)" class="flex-1 bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate shadow-2xs">
-                    <!-- Tùy chọn sẽ nạp tự động bằng JS -->
-                  </select>
-                  <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs flex-shrink-0 shadow-2xs active:scale-95">
-                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                  </button>
-                  <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs flex-shrink-0 shadow-2xs active:scale-95">
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                  </button>
+            <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
+                <!-- Cụm chọn đầu việc: Nhãn + Dropdown + Nút trước/sau -->
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <label for="rhythmTaskSelect" class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
+                    <span class="hidden sm:inline">Xem đầu việc:</span>
+                    <span class="sm:hidden">Việc:</span>
+                  </label>
+                  <div class="flex items-center gap-1 flex-1 min-w-0">
+                    <div class="relative flex-1 min-w-0">
+                      <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)" class="w-full min-w-0 bg-white border border-slate-200 hover:border-emerald-400 text-xs font-bold text-slate-800 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer truncate shadow-2xs transition">
+                        <!-- Tùy chọn sẽ nạp tự động bằng JS -->
+                      </select>
+                    </div>
+                    <div class="flex items-center gap-0.5 shrink-0">
+                      <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                      </button>
+                      <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Thẻ thống kê nhanh của đầu việc đang chọn -->
-              <div id="rhythmTaskStatBadges" class="flex items-center gap-1.5 flex-wrap text-[11px] font-bold">
-                <span id="rhythmSelectedTaskTotal" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-emerald-800 shadow-2xs font-num flex items-center gap-1">
-                  <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
-                  <span>Tổng: 0</span>
-                </span>
-                <span id="rhythmSelectedTaskDays" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-sky-800 shadow-2xs font-num flex items-center gap-1">
-                  <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
-                  <span>0 ngày</span>
-                </span>
+                <!-- Thẻ thống kê nhanh của đầu việc đang chọn -->
+                <div id="rhythmTaskStatBadges" class="flex items-center gap-1.5 shrink-0 self-end sm:self-center text-[11px] font-bold">
+                  <span id="rhythmSelectedTaskTotal" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
+                    <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
+                    <span>Tổng: 0</span>
+                  </span>
+                  <span id="rhythmSelectedTaskDays" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
+                    <span>0 ngày</span>
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -7098,19 +7106,28 @@
         const progressData = getDailyReportingProgressData(rawData || activeData);
         const { targetDateLabel, completedList } = progressData;
 
+        const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+        const activeCompletedList = isManagerOrAdmin ? completedList : completedList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+
         if (leaderboardSubtitle) {
-          leaderboardSubtitle.innerText = `Đã hoàn thành báo cáo đến ngày ${targetDateLabel}`;
+          leaderboardSubtitle.innerText = isManagerOrAdmin 
+            ? `Đã hoàn thành báo cáo đến ngày ${targetDateLabel}` 
+            : `Tiến độ báo cáo đến ngày ${targetDateLabel}`;
         }
 
         if (leaderboardBadge) {
-          leaderboardBadge.innerText = `${completedList.length} hoàn thành`;
+          leaderboardBadge.innerText = isManagerOrAdmin
+            ? `${activeCompletedList.length} hoàn thành`
+            : (activeCompletedList.length > 0 ? `Đã hoàn thành` : `Chưa hoàn thành`);
         }
 
-        if (completedList.length === 0) {
-          leaderboardBox.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo đến ngày ${targetDateLabel}</p>`;
+        if (activeCompletedList.length === 0) {
+          leaderboardBox.innerHTML = isManagerOrAdmin
+            ? `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo đến ngày ${targetDateLabel}</p>`
+            : `<p class="text-slate-400 italic text-[11px] py-2">Bạn chưa hoàn thành báo cáo đến ngày ${targetDateLabel}</p>`;
         } else {
           let html = '';
-          completedList.forEach(item => {
+          activeCompletedList.forEach(item => {
             html += `
               <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
                 <div class="flex items-center gap-1.5 min-w-0">
@@ -7233,7 +7250,7 @@
           const totStr = t.monthTotal !== undefined && t.monthTotal !== null && t.monthTotal !== '' && t.monthTotal !== '-' ? (typeof t.monthTotal === 'number' ? formatNumberWithCommas(t.monthTotal) : t.monthTotal) : `${activeDays} ngày`;
           const opt = document.createElement('option');
           opt.value = t.key;
-          opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} (${totStr}) • ${t.staffName}`;
+          opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${t.staffName}`;
           if (t.key === prevSelected) opt.selected = true;
           taskSelect.appendChild(opt);
         });
@@ -7523,6 +7540,30 @@
     let _cachedFollowUpProgressData = null;
     let _currentFollowUpTab = 'pending'; // 'pending' = Chưa báo cáo (Cần đôn đốc) | 'completed' = Đã hoàn thành (Thi đua)
 
+    /**
+     * KIỂM TRA PHÂN QUYỀN THEO DÕI TIẾN ĐỘ & THI ĐUA:
+     * Admin & Quản lý: Hiển thị đầy đủ tất cả nhân sự và nhóm gộp.
+     * Nhân viên: Chỉ hiển thị tiến độ của chính mình (hoặc tổ kho/nhóm gộp mình thuộc về).
+     */
+    function isFollowUpItemBelongToUser(item, user) {
+      if (!user) return true;
+      const myName = user.fullName || "";
+      const myDept = user.department || "";
+
+      if (item.isGroup) {
+        // Nhóm gộp: Nhân sự thuộc bộ phận kho này hoặc có tên trong danh sách thành viên kho
+        if (isDeptEquivalent(myDept, item.department)) return true;
+        if (item.staffName && isStaffMatchedInCell(myName, item.staffName)) return true;
+        return false;
+      } else {
+        // Cá nhân: Đúng họ tên nhân sự này
+        if (isStaffMatchedInCell(myName, item.displayName) || isStaffMatchedInCell(myName, item.staffName)) return true;
+        const normMy = removeAccents(myName).toLowerCase().trim();
+        const normDisp = removeAccents(item.displayName || '').toLowerCase().trim();
+        return normDisp.includes(normMy) || normMy.includes(normDisp);
+      }
+    }
+
     function getDailyReportingProgressData(data) {
       if (!data || !data.staffGroups || !data.dayCols || data.staffGroups.length === 0) {
         return { targetDateLabel: '', targetDayNum: 1, totalDaysToEval: 1, pendingList: [], completedList: [] };
@@ -7721,20 +7762,36 @@
       if (!progressData) return;
       const { targetDateLabel, pendingList, completedList, totalDaysToEval } = progressData;
 
-      if (tabCountPending) tabCountPending.innerText = pendingList.length;
-      if (tabCountCompleted) tabCountCompleted.innerText = completedList.length;
+      const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+      const activePendingList = isManagerOrAdmin ? pendingList : pendingList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+      const activeCompletedList = isManagerOrAdmin ? completedList : completedList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+
+      if (tabCountPending) tabCountPending.innerText = activePendingList.length;
+      if (tabCountCompleted) tabCountCompleted.innerText = activeCompletedList.length;
 
       if (subTitle) {
-        subTitle.innerText = `Thống kê số ngày chưa báo cáo tính đến ngày ${targetDateLabel}`;
+        subTitle.innerText = isManagerOrAdmin
+          ? `Thống kê số ngày chưa báo cáo tính đến ngày ${targetDateLabel}`
+          : `Tiến độ báo cáo tính đến ngày ${targetDateLabel}`;
       }
 
       if (badge) {
-        if (pendingList.length === 0) {
-          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
-          badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>100% Hoàn thành`;
+        if (isManagerOrAdmin) {
+          if (activePendingList.length === 0) {
+            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
+            badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>100% Hoàn thành`;
+          } else {
+            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
+            badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa nộp: ${activePendingList.length} nhân sự/nhóm`;
+          }
         } else {
-          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
-          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa nộp: ${pendingList.length} nhân sự/nhóm`;
+          if (activePendingList.length === 0) {
+            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
+            badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>Đã hoàn thành`;
+          } else {
+            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
+            badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa hoàn thành`;
+          }
         }
       }
 
@@ -7752,21 +7809,21 @@
 
       if (_currentFollowUpTab === 'pending') {
         // TAB 1: THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (Chưa báo cáo - Xếp người chưa báo cáo nhiều ngày nhất lên đầu)
-        if (pendingList.length === 0) {
+        if (activePendingList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-gradient-to-b from-emerald-50/80 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-1.5">
               <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shadow-2xs">
                 <i class="fa-solid fa-circle-check"></i>
               </div>
-              <h5 class="text-xs font-black text-emerald-900">100% Đã Báo Cáo Đầy Đủ!</h5>
-              <p class="text-[11px] text-emerald-700 font-medium">Tất cả nhân sự và nhóm gộp đều đã hoàn thành báo cáo đến ngày <b>${targetDateLabel}</b>.</p>
+              <h5 class="text-xs font-black text-emerald-900">${isManagerOrAdmin ? '100% Đã Báo Cáo Đầy Đủ!' : 'Bạn Đã Hoàn Thành Báo Cáo!'}</h5>
+              <p class="text-[11px] text-emerald-700 font-medium">${isManagerOrAdmin ? 'Tất cả nhân sự và nhóm gộp đều đã hoàn thành báo cáo đến ngày' : 'Bạn đã nộp đầy đủ số liệu báo cáo tính đến ngày'} <b>${targetDateLabel}</b>.</p>
             </div>
           `;
           return;
         }
 
         let html = '';
-        pendingList.forEach(item => {
+        activePendingList.forEach(item => {
           const isDanger = item.unreportedDaysCount >= 3;
           const missDaysStr = item.unreportedDaysList.length <= 4 
             ? item.unreportedDaysList.map(d => 'ngày ' + d).join(', ')
@@ -7805,18 +7862,18 @@
         container.innerHTML = html;
       } else {
         // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo đến ngày mục tiêu)
-        if (completedList.length === 0) {
+        if (activeCompletedList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">
               <i class="fa-solid fa-inbox text-base mb-1 block"></i>
-              Chưa ghi nhận nhân sự hoặc nhóm gộp nào hoàn thành báo cáo đến ngày ${targetDateLabel}.
+              ${isManagerOrAdmin ? `Chưa ghi nhận nhân sự hoặc nhóm gộp nào hoàn thành báo cáo đến ngày ${targetDateLabel}.` : `Bạn còn ngày chưa nộp báo cáo tính đến ngày ${targetDateLabel}. Vui lòng chuyển sang tab <b>Chưa báo cáo</b> để bổ sung.`}
             </div>
           `;
           return;
         }
 
         let html = '';
-        completedList.forEach(item => {
+        activeCompletedList.forEach(item => {
           html += `
             <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
