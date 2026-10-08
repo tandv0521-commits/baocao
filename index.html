@@ -4751,11 +4751,16 @@
       periods.forEach(p => {
         const opt = document.createElement('option');
         opt.value = `${p.month}_${p.year}`;
+        
+        // Kiểm tra trạng thái khóa sổ lưu trữ bền vững (persistent)
+        const savedLock = localStorage.getItem(`ops_period_lock_${p.year}_${p.month}`);
+        const effectiveLock = (savedLock !== null) ? (savedLock === "true") : !!p.isLocked;
+
         opt.innerText = p.label;
-        opt.dataset.locked = p.isLocked ? "true" : "false";
+        opt.dataset.locked = effectiveLock ? "true" : "false";
         if (p.month === currentSelectedMonth && p.year === currentSelectedYear) {
           opt.selected = true;
-          currentPeriodLocked = !!p.isLocked;
+          currentPeriodLocked = effectiveLock;
         }
         select.appendChild(opt);
       });
@@ -4819,6 +4824,15 @@
             btnDayEntry.classList.remove('opacity-40', 'cursor-not-allowed', 'hidden');
             btnDayEntry.setAttribute('data-tooltip', 'Điền báo cáo');
           }
+        }
+      }
+
+      const btnAssign = document.getElementById('btnAdminAssign');
+      if (btnAssign) {
+        if (isLocked) {
+          btnAssign.classList.add('opacity-50');
+        } else {
+          btnAssign.classList.remove('opacity-50');
         }
       }
     }
@@ -4924,7 +4938,32 @@
           hideProgressHud(250);
           showToast(`Đã ${newLockState ? 'khóa' : 'mở khóa'} sổ kỳ báo cáo thành công!`);
           closePeriodLockModal();
+          
+          // LƯU TRẠNG THÁI KHÓA SỔ BỀN VỮNG
+          localStorage.setItem(`ops_period_lock_${currentSelectedYear}_${currentSelectedMonth}`, newLockState ? "true" : "false");
+
+          // BẢO LƯU NGUYÊN VẸN SNAPSHOT TOÀN BỘ SỐ LIỆU VÀ ĐẦU VIỆC KHI KHÓA SỔ
+          if (newLockState) {
+            const activeData = fullPeriodMatrixCache || currentMatrixData;
+            if (activeData && activeData.staffGroups && activeData.staffGroups.length > 0) {
+              try {
+                localStorage.setItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(activeData));
+              } catch(e) {
+                console.warn("Snapshot save warning:", e);
+              }
+            }
+          } else {
+            localStorage.removeItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`);
+          }
+
+          const select = document.getElementById('reportPeriodSelect');
+          if (select && select.selectedIndex >= 0) {
+            select.options[select.selectedIndex].dataset.locked = newLockState ? "true" : "false";
+          }
+
           updatePeriodLockUI(newLockState);
+          fullPeriodMatrixCache = null;
+          loadMatrixData(true);
         });
       }, 400);
     }
@@ -5192,7 +5231,8 @@
       currentSelectedYear = parseInt(parts[1], 10);
 
       const selOpt = select.options[select.selectedIndex];
-      currentPeriodLocked = selOpt ? (selOpt.dataset.locked === "true") : false;
+      const savedLock = localStorage.getItem(`ops_period_lock_${currentSelectedYear}_${currentSelectedMonth}`);
+      currentPeriodLocked = (savedLock !== null) ? (savedLock === "true") : (selOpt ? (selOpt.dataset.locked === "true") : false);
       updatePeriodLockUI(currentPeriodLocked);
 
       const now = new Date();
@@ -6194,6 +6234,19 @@
       const staffGroupsMap = {};
 
       tasks.forEach(t => {
+        const taskReportsInMonth = (reports || []).filter(r => r.task_id === t.id);
+        const hasReportsInThisMonth = taskReportsInMonth.length > 0;
+
+        // BẢO LƯU NGUYÊN VẸN CHO THÁNG CŨ:
+        // Nếu task bị gỡ gán (assigned_user_id = null) ở tháng mới, nhưng có báo cáo ở tháng này -> Lấy user_id từ báo cáo!
+        let effectiveUserId = t.assigned_user_id;
+        if (!effectiveUserId && hasReportsInThisMonth) {
+          effectiveUserId = taskReportsInMonth[0].user_id;
+        }
+
+        // Nếu task không có ai phụ trách và tháng này cũng không có báo cáo -> Bỏ qua
+        if (!effectiveUserId) return;
+
         let deptId = t.department_id;
         let deptName = "";
 
@@ -6205,8 +6258,8 @@
           if (foundD) deptName = foundD.name;
         }
 
-        if (!deptName && t.assigned_user_id) {
-          const assignedU = (dbUsers || []).find(u => u.id === t.assigned_user_id);
+        if (!deptName && effectiveUserId) {
+          const assignedU = (dbUsers || []).find(u => u.id === effectiveUserId);
           if (assignedU && assignedU.department_id) {
             deptId = assignedU.department_id;
             const foundD = (dbDepts || []).find(d => d.id === deptId);
@@ -6216,7 +6269,7 @@
 
         if (!deptName) deptName = "Chưa phân bộ phận";
 
-        const assignedUser = t.users || (dbUsers || []).find(u => u.id === t.assigned_user_id);
+        const assignedUser = (dbUsers || []).find(u => u.id === effectiveUserId) || t.users;
 
         // 1. TUYỆT ĐỐI KHÔNG CÓ DÒNG CÔNG VIỆC CỦA GIÁM ĐỐC BAN TRÊN MA TRẬN
         if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username) || normalizeDeptKey(deptName).includes("giam doc")) {
@@ -6227,14 +6280,19 @@
         const isShared = isSharedGroupDeptClient(deptName);
 
         // BẢO VỆ DỮ LIỆU THÁNG CŨ & LOẠI TRỪ CÔNG VIỆC MỚI TẠO Ở THÁNG SAU:
-        // Nếu công việc có mốc created_at và thời điểm tạo là sau tháng đang xem (ví dụ tạo trong tháng 10 nhưng đang xem tháng 9)
-        // -> Loại bỏ công việc này khỏi kỳ tháng 9.
+        // Nếu công việc có mốc created_at và thời điểm tạo là sau tháng đang xem
+        // -> Loại bỏ công việc này khỏi kỳ quá khứ.
         if (t.created_at) {
           const taskCreated = new Date(t.created_at);
           const endOfQueriedMonth = new Date(year, month, 0, 23, 59, 59, 999);
           if (taskCreated > endOfQueriedMonth) {
             return;
           }
+        }
+
+        // Với kỳ quá khứ (đã khóa): Nếu task không có báo cáo trong tháng này và đã bị bỏ gán -> Không hiển thị
+        if (isPastPeriod && !hasReportsInThisMonth && !t.assigned_user_id) {
+          return;
         }
 
         // 2. XỬ LÝ TRẠNG THÁI NHÂN SỰ:
@@ -6255,7 +6313,7 @@
 
         let groupKey = "";
         let displayStaffName = "";
-        let groupUserId = t.assigned_user_id;
+        let groupUserId = effectiveUserId;
 
         if (isShared) {
           groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
@@ -6349,7 +6407,7 @@
         });
       });
 
-      return {
+      const matrixResult = {
         success: true,
         queryMonth: month,
         queryYear: year,
@@ -6358,12 +6416,40 @@
         dayCols: dayCols,
         staffGroups: Object.values(staffGroupsMap)
       };
+
+      // TỰ ĐỘNG BẢO LƯU NGUYÊN VẸN SNAPSHOT NẾU KỲ NÀY ĐÃ KHÓA SỔ
+      const isPeriodLockedInStorage = (localStorage.getItem(`ops_period_lock_${year}_${month}`) === "true") ||
+                                      (isPastPeriod && (todayDate.getDate() >= 5));
+      if (isPeriodLockedInStorage && matrixResult.staffGroups.length > 0) {
+        try {
+          localStorage.setItem(`ops_matrix_snapshot_${year}_${month}`, JSON.stringify(matrixResult));
+        } catch(e) {}
+      }
+
+      return matrixResult;
     }
 
     async function loadMatrixData(forceServerFetch = false) {
       if (!forceServerFetch && fullPeriodMatrixCache && fullPeriodMatrixCache.queryMonth === currentSelectedMonth && fullPeriodMatrixCache.queryYear === currentSelectedYear) {
         applyClientFilterAndRender();
         return;
+      }
+
+      // NẾU KỲ BÁO CÁO NÀY ĐÃ KHÓA SỔ VÀ ĐÃ CÓ BẢN BẢO LƯU SNAPSHOT:
+      // TẢI TRỰC TIẾP SNAPSHOT ĐỂ BẢO VỆ NGUYÊN VẸN 100%, KHÔNG BỊ ẢNH HƯỞNG BỞI CÁC THAY ĐỔI CỦA THÁNG MỚI
+      if (!forceServerFetch && currentPeriodLocked) {
+        const savedSnapshot = localStorage.getItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`);
+        if (savedSnapshot) {
+          try {
+            const parsed = JSON.parse(savedSnapshot);
+            if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+              fullPeriodMatrixCache = parsed;
+              currentMatrixData = parsed;
+              applyClientFilterAndRender();
+              return;
+            }
+          } catch(e) {}
+        }
       }
 
       const tbody = document.getElementById('sheetTableBody');
@@ -6810,6 +6896,13 @@
     }
 
     async function saveSingleMatrixCellReport(taskId, userId, dayNum, val, inputElem) {
+      if (currentPeriodLocked) {
+        inputElem.classList.remove('cell-saving');
+        inputElem.value = inputElem.dataset.oldValue || '';
+        showToast("Kỳ báo cáo này đã khóa sổ. Không được phép chỉnh sửa số liệu!", true);
+        return;
+      }
+
       if (isFutureDay(dayNum, currentSelectedMonth, currentSelectedYear)) {
         inputElem.classList.remove('cell-saving');
         inputElem.value = inputElem.dataset.oldValue || '';
@@ -9937,8 +10030,8 @@
     }
 
     async function submitDayReport() {
-      if (currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username)) {
-        showToast("Kỳ báo cáo này đã khóa sổ. Vui lòng liên hệ Quản lý!", true);
+      if (currentPeriodLocked) {
+        showToast("Kỳ báo cáo này đã khóa sổ. Số liệu đã được bảo lưu nguyên vẹn, không thể chỉnh sửa!", true);
         return;
       }
 
@@ -10110,6 +10203,12 @@
 
     // ================= PHÂN CÔNG GIAO VIỆC TRÊN MÁY CHỦ =================
     async function openAssignModal() {
+      if (currentPeriodLocked) {
+        const mStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+        showToast(`Kỳ báo cáo Tháng ${mStr}/${currentSelectedYear} đã khóa sổ. Toàn bộ đầu việc và số liệu được bảo lưu nguyên vẹn. Để phân công công việc kỳ mới, vui lòng chuyển sang kỳ đang mở!`, true);
+        return;
+      }
+
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.remove('hidden');
 
@@ -10516,11 +10615,22 @@
 
         if (tErr) throw tErr;
 
+        let taskDataIds = new Set();
+        const taskIds = (tasks || []).map(t => t.id);
+        if (taskIds.length > 0) {
+          const { data: repData } = await supabase
+            .from('daily_reports')
+            .select('task_id')
+            .in('task_id', taskIds)
+            .limit(2000);
+          taskDataIds = new Set((repData || []).map(r => r.task_id));
+        }
+
         renderAssignTaskRows(tasks.map(t => ({
           taskId: t.id,
           taskName: t.task_name,
           guide: t.guide,
-          hasData: false
+          hasData: taskDataIds.has(t.id)
         })));
       } catch (err) {
         container.innerHTML = `<p class="empty-assign-msg text-xs text-rose-500 py-3 text-center">Lỗi tải dữ liệu: ${err.message}</p>`;
@@ -10623,24 +10733,43 @@
     }
 
     async function proceedExecuteDeleteTask() {
+      if (currentPeriodLocked) {
+        showToast("Kỳ báo cáo này đã khóa sổ. Không thể xóa đầu việc của kỳ này!", true);
+        return;
+      }
+
       const taskId = document.getElementById('deleteTargetTaskId').value;
       const btn = document.getElementById('btnConfirmDeleteTaskAction');
       if (btn) btn.disabled = true;
 
       try {
         if (taskId) {
-          const { error } = await supabase.from('tasks').delete().eq('id', taskId);
-          if (error) throw error;
+          const { data: repData } = await supabase
+            .from('daily_reports')
+            .select('id')
+            .eq('task_id', taskId)
+            .limit(1);
+
+          if (repData && repData.length > 0) {
+            // Task này ĐÃ CÓ SỐ LIỆU BÁO CÁO LỊCH SỬ:
+            // BẢO LƯU NGUYÊN VẸN CHO CÁC THÁNG TRƯỚC, TUYỆT ĐỐI KHÔNG XÓA CỨNG KHỎI DB!
+            // Chỉ gỡ phân công khỏi nhân sự để kỳ mới không còn xuất hiện:
+            await supabase.from('tasks').update({ assigned_user_id: null }).eq('id', taskId);
+          } else {
+            // Task chưa từng có số liệu báo cáo nào: Xóa sạch an toàn khỏi DB
+            const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+            if (error) throw error;
+          }
         }
 
         if (pendingDeleteTaskRowElem) {
           pendingDeleteTaskRowElem.remove();
         }
 
-        showToast("Đã xóa công việc khỏi danh mục thành công!");
+        showToast("Đã cập nhật danh mục công việc thành công!");
         closeTaskDeleteConfirmModal();
       } catch (err) {
-        showToast("Lỗi khi xóa công việc: " + err.message, true);
+        showToast("Lỗi khi xử lý công việc: " + err.message, true);
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -10648,6 +10777,11 @@
 
     // ================= KHẮC PHỤC TRIỆT ĐỂ LỖI NULL VALUE TRONG CỘT ID CỦA BẢNG TASKS =================
     async function submitAdminAssign() {
+      if (currentPeriodLocked) {
+        showToast("Kỳ báo cáo này đã khóa sổ. Không thể sửa đổi phân công công việc của kỳ này!", true);
+        return;
+      }
+
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       const staffName = staffSelect ? staffSelect.value.trim() : "";
       const deptName = document.getElementById('modalAssignDeptSelect').value.trim();
@@ -10667,13 +10801,17 @@
         const tName = nameInput ? nameInput.value.trim() : "";
         const tGuide = guideInput ? guideInput.value.trim() : "";
         const taskId = r.dataset.taskId;
+        const origTaskName = r.dataset.originalTaskName || "";
+        const hasData = r.dataset.hasData === "true";
 
         if (tName) {
           if (taskId && taskId !== "" && taskId !== "null" && taskId !== "undefined") {
             tasksToUpdate.push({
               id: parseInt(taskId, 10),
               task_name: tName,
-              guide: tGuide
+              guide: tGuide,
+              originalTaskName: origTaskName,
+              hasData: hasData
             });
           } else {
             tasksToInsert.push({
@@ -10711,26 +10849,51 @@
         if (!uId && user && user[0]) uId = user[0].id;
         if (!uId) uId = 1;
 
-        // 1. Cập nhật các việc cũ đã có ID
-        if (tasksToUpdate.length > 0) {
-          const updatePayload = tasksToUpdate.map(t => ({
-            id: t.id,
-            department_id: dId,
-            assigned_user_id: uId,
-            task_name: t.task_name,
-            guide: t.guide
-          }));
-          const { error: upErr } = await supabase.from('tasks').upsert(updatePayload);
+        const tasksToUpdateDirect = [];
+        const unassignOldTasks = [];
+
+        tasksToUpdate.forEach(t => {
+          const isNameChanged = (cleanNameStr(t.task_name) !== cleanNameStr(t.originalTaskName));
+          if (t.hasData && isNameChanged) {
+            // BẢO LƯU NGUYÊN VẸN ĐẦU VIỆC & SỐ LIỆU KỲ TRƯỚC:
+            // Không ghi đè tên task cũ! Giữ nguyên task cũ cho tháng trước, tạo task mới cho tháng này
+            unassignOldTasks.push(t.id);
+            tasksToInsert.push({
+              task_name: t.task_name,
+              guide: t.guide
+            });
+          } else {
+            tasksToUpdateDirect.push({
+              id: t.id,
+              department_id: dId,
+              assigned_user_id: uId,
+              task_name: t.task_name,
+              guide: t.guide
+            });
+          }
+        });
+
+        // Gỡ phân công công việc cũ khỏi kỳ mới (bảo toàn row trong tasks để tháng cũ đọc)
+        if (unassignOldTasks.length > 0) {
+          for (const oldId of unassignOldTasks) {
+            await supabase.from('tasks').update({ assigned_user_id: null }).eq('id', oldId);
+          }
+        }
+
+        // 1. Cập nhật các việc trực tiếp (tên không đổi hoặc chưa có số liệu lịch sử)
+        if (tasksToUpdateDirect.length > 0) {
+          const { error: upErr } = await supabase.from('tasks').upsert(tasksToUpdateDirect);
           if (upErr) throw upErr;
         }
 
-        // 2. Thêm mới các việc chưa có ID (không truyền thuộc tính id để DB tự sinh)
+        // 2. Thêm mới các việc (kèm created_at chuẩn để không bị hiển thị ngược về các kỳ quá khứ)
         if (tasksToInsert.length > 0) {
           const insertPayload = tasksToInsert.map(t => ({
             department_id: dId,
             assigned_user_id: uId,
             task_name: t.task_name,
-            guide: t.guide
+            guide: t.guide,
+            created_at: new Date().toISOString()
           }));
           const { error: inErr } = await supabase.from('tasks').insert(insertPayload);
           if (inErr) throw inErr;
