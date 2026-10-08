@@ -5477,6 +5477,7 @@
 
       setupRoleControls();
       preloadAdminDataInBackground();
+      setupDailyReportsRealtimeListener();
 
       const isMgrOrAdmin = isAdminOrManager(currentUser.role, currentUser.username);
       const headerSearchBtnText = document.getElementById('headerSearchBtnText');
@@ -5514,6 +5515,7 @@
         currentMatrixData = cachedPreloadMatrix;
         document.getElementById('loadingTasksBox').classList.add('hidden');
         applyClientFilterAndRender();
+        setupDailyReportsRealtimeListener();
       } else {
         loadMatrixData(false);
       }
@@ -6221,6 +6223,7 @@
         fullPeriodMatrixCache = matrix;
         currentMatrixData = matrix;
         applyClientFilterAndRender();
+        setupDailyReportsRealtimeListener();
       } catch (err) {
         loading.classList.add('hidden');
         showToast("Lỗi đồng bộ dữ liệu: " + err.message, true);
@@ -6553,33 +6556,128 @@
         inputElem.dataset.oldValue = val;
         inputElem.classList.remove('cell-saving');
 
-        const activeData = fullPeriodMatrixCache || currentMatrixData;
-        if (activeData && activeData.staffGroups) {
-          activeData.staffGroups.forEach(grp => {
-            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
-            if (matchedTask) {
-              matchedTask.dailyValues[dayNum] = val;
-              matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, activeData.dayCols);
-              
-              const rowTr = inputElem.closest('tr');
-              if (rowTr) {
-                const totalTd = rowTr.querySelector('.col-fixed-total');
-                if (totalTd) {
-                  let totalDisplay = '-';
-                  if (matchedTask.monthTotal !== undefined && matchedTask.monthTotal !== null && matchedTask.monthTotal !== '' && matchedTask.monthTotal !== '-' && matchedTask.monthTotal !== 0) {
-                    totalDisplay = (typeof matchedTask.monthTotal === 'number') ? (formatNumberWithCommas(matchedTask.monthTotal) || '-') : String(matchedTask.monthTotal);
-                  }
-                  totalTd.innerText = totalDisplay;
+        // Đồng bộ giá trị mới vào cả fullPeriodMatrixCache và currentMatrixData
+        [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+          if (targetCache && targetCache.staffGroups) {
+            targetCache.staffGroups.forEach(grp => {
+              const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+              if (matchedTask) {
+                matchedTask.dailyValues[dayNum] = val;
+                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+              }
+            });
+          }
+        });
+
+        const rowTr = inputElem.closest('tr');
+        if (rowTr) {
+          const totalTd = rowTr.querySelector('.col-fixed-total');
+          if (totalTd) {
+            const activeData = fullPeriodMatrixCache || currentMatrixData;
+            let totalDisplay = '-';
+            if (activeData && activeData.staffGroups) {
+              for (const grp of activeData.staffGroups) {
+                const mt = grp.tasks.find(t => t.taskId === taskId);
+                if (mt && mt.monthTotal !== undefined && mt.monthTotal !== null && mt.monthTotal !== '' && mt.monthTotal !== '-' && mt.monthTotal !== 0) {
+                  totalDisplay = (typeof mt.monthTotal === 'number') ? (formatNumberWithCommas(mt.monthTotal) || '-') : String(mt.monthTotal);
+                  break;
                 }
               }
             }
-          });
+            totalTd.innerText = totalDisplay;
+          }
         }
 
+        // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
+        refreshReportingProgressRealtime();
         showToast("Cập nhật báo cáo thành công!");
       } catch (err) {
         inputElem.classList.remove('cell-saving');
         showToast("Lỗi cập nhật: " + err.message, true);
+      }
+    }
+
+    /**
+     * CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO & THI ĐUA KHI CÓ PHÁT SINH SỐ LIỆU MỚI:
+     * Tự động tính toán lại và re-render Bảng Đôn Đốc và Bảng Thi Đua ngay lập tức
+     */
+    function refreshReportingProgressRealtime() {
+      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      if (!activeData) return;
+
+      // 1. Tính toán lại tiến độ và cập nhật Bảng Theo Dõi & Đôn Đốc Tiến Độ
+      _cachedFollowUpProgressData = getDailyReportingProgressData(activeData);
+      renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
+
+      // 2. Cập nhật Bảng Thi Đua Bám Sát Tiến Độ & Trung tâm KPI
+      renderAnalyticsSection(activeData);
+    }
+
+    /**
+     * LẮNG NGHE SỰ KIỆN NHẬP BÁO CÁO REALTIME TỪ SUPABASE:
+     * Khi bất kỳ nhân viên nào lưu báo cáo, các máy quản lý/admin nhận cập nhật tức thì
+     */
+    let _dailyReportRealtimeChannel = null;
+
+    function setupDailyReportsRealtimeListener() {
+      if (!supabase || _dailyReportRealtimeChannel) return;
+      try {
+        _dailyReportRealtimeChannel = supabase
+          .channel('public:daily_reports_realtime_board')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_reports' }, payload => {
+            handleRealtimeDailyReportChange(payload);
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime listener error:", err);
+      }
+    }
+
+    function handleRealtimeDailyReportChange(payload) {
+      if (!payload) return;
+      const isDelete = (payload.eventType === 'DELETE');
+      const rec = isDelete ? payload.old : (payload.new || payload.old);
+      if (!rec || !rec.report_date) return;
+
+      const parts = rec.report_date.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+
+      if (m !== currentSelectedMonth || y !== currentSelectedYear) return;
+
+      const taskId = rec.task_id;
+      let val = "";
+      if (!isDelete) {
+        if (rec.num_val !== null && rec.num_val !== undefined) val = rec.num_val;
+        else if (rec.sym_val) val = rec.sym_val;
+        else if (rec.text_val) val = rec.text_val;
+      }
+
+      let hasChanged = false;
+      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+        if (targetCache && targetCache.staffGroups) {
+          targetCache.staffGroups.forEach(grp => {
+            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+            if (matchedTask) {
+              if (matchedTask.dailyValues[d] !== val) {
+                matchedTask.dailyValues[d] = val;
+                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+                hasChanged = true;
+              }
+            }
+          });
+        }
+      });
+
+      if (hasChanged) {
+        refreshReportingProgressRealtime();
+        // Cập nhật giá trị hiển thị trên ô ma trận nếu đang mở ô này mà người dùng không đang gõ
+        const inp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${d}"]`);
+        if (inp && document.activeElement !== inp) {
+          inp.value = (val === '-' || val === '·' || val === '0') ? '' : val;
+          inp.dataset.oldValue = val;
+        }
       }
     }
 
@@ -7103,7 +7201,7 @@
 
       if (leaderboardBox) {
         leaderboardBox.innerHTML = '';
-        const progressData = getDailyReportingProgressData(rawData || activeData);
+        const progressData = getDailyReportingProgressData(rawData || fullPeriodMatrixCache || currentMatrixData);
         const { targetDateLabel, completedList } = progressData;
 
         const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
@@ -7746,7 +7844,7 @@
     }
 
     function renderDeptLeaderboard(deptAggregation, data) {
-      _cachedFollowUpProgressData = getDailyReportingProgressData(data || activeData);
+      _cachedFollowUpProgressData = getDailyReportingProgressData(data || fullPeriodMatrixCache || currentMatrixData);
       renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
     }
 
@@ -9238,20 +9336,21 @@
         });
       }
 
-      const targetCache = fullPeriodMatrixCache || currentMatrixData;
-      if (targetCache && targetCache.staffGroups) {
-        updates.forEach(u => {
-          targetCache.staffGroups.forEach(grp => {
-            const matchedTask = grp.tasks.find(t => t.taskId === u.taskId);
-            if (matchedTask) {
-              matchedTask.dailyValues[u.dayNum] = u.value;
-              matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
-            }
+      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+        if (targetCache && targetCache.staffGroups) {
+          updates.forEach(u => {
+            targetCache.staffGroups.forEach(grp => {
+              const matchedTask = grp.tasks.find(t => t.taskId === u.taskId);
+              if (matchedTask) {
+                matchedTask.dailyValues[u.dayNum] = u.value;
+                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+              }
+            });
           });
-        });
+        }
+      });
 
-        applyClientFilterAndRender();
-      }
+      applyClientFilterAndRender();
 
       showProgressHud("LƯU BÁO CÁO", "Đang lưu số liệu báo cáo lên máy chủ...", "fa-solid fa-cloud-arrow-up animate-pulse");
       autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
@@ -9292,6 +9391,8 @@
           updateSyncStatusUI('synced');
           showToast("Cập nhật báo cáo thành công!");
           closeDayEntryModal();
+          // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
+          refreshReportingProgressRealtime();
         });
       } catch (err) {
         hideProgressHud(100);
