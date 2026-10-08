@@ -247,8 +247,8 @@
     .person-row-inner td {
       border-bottom: 1px solid #e8edf2 !important; /* Nét kẻ mảnh dịu mắt giữa các đầu việc của cùng 1 người */
     }
-    td.person-merged-tt, td.person-merged-name {
-      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT và Họ tên khớp chuẩn xác với vạch phân cách */
+    td.person-merged-tt, td.person-merged-name, td.person-merged-leave-cell {
+      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT, Họ tên và Ngày nghỉ khớp chuẩn xác với vạch phân cách xanh ngọc */
       border-right: 1.5px solid #cbd5e1 !important;
     }
     td.col-fixed-task {
@@ -6475,6 +6475,59 @@
           const isLastTaskOfStaff = (tIdx === grp.tasks.length - 1);
 
           data.dayCols.forEach((dc, cIdx) => {
+            // Kiểm tra xem nhân sự này trong ngày dc có ký hiệu nghỉ hay không
+            const staffLeaveSym = grp.tasks
+              .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
+              .find(s => s && s.isLeave);
+
+            // NẾU LÀ NGÀY NGHỈ VÀ NHÂN SỰ CÓ NHIỀU ĐẦU VIỆC (> 1): GỘP CẢ CỘT LẠI VÀ CHỈ HIỂN THỊ 1 KÝ HIỆU
+            if (staffLeaveSym && totalStaffRows > 1) {
+              if (tIdx === 0) {
+                // Chỉ tạo 1 ô duy nhất ở dòng đầu tiên với rowspan = totalStaffRows
+                let mergedInputHtml = '';
+                if (canEditThisRow && !currentPeriodLocked) {
+                  mergedInputHtml = `
+                    <input type="text" 
+                      class="matrix-input-cell font-num matrix-badge-cell" 
+                      data-row="${currentRowIndex}" 
+                      data-col="${cIdx}" 
+                      data-task-id="${t.taskId}" 
+                      data-user-id="${grp.userId}" 
+                      data-day="${dc.dayNum}" 
+                      data-is-leave-merged="true"
+                      data-old-value="${staffLeaveSym.code}"
+                      value="${staffLeaveSym.code}" 
+                      style="background-color: transparent !important; color: ${staffLeaveSym.text} !important; border: none !important; box-shadow: none !important; font-weight: 900 !important; font-size: 13px !important; text-align: center; width: 100%; height: 100%; min-height: 48px; cursor: pointer;"
+                      title="${escapeHtml(staffLeaveSym.tooltip)} (Gộp toàn bộ ngày nghỉ của ${escapeHtml(grp.staffName)})"
+                      placeholder="" 
+                      onfocus="handleMatrixCellFocus(this)"
+                      onkeydown="handleMatrixCellKeydown(event, ${currentRowIndex}, ${cIdx})" 
+                      onblur="handleMatrixCellBlur(this)" 
+                      oninput="formatNumberInputLive(this)" />
+                  `;
+                } else {
+                  mergedInputHtml = `
+                    <span class="inline-flex items-center justify-center font-black text-sm select-none" 
+                      style="color: ${staffLeaveSym.text} !important;" 
+                      title="${escapeHtml(staffLeaveSym.tooltip)}">
+                      ${staffLeaveSym.code}
+                    </span>
+                  `;
+                }
+
+                dayCellsHtml += `
+                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell py-1 px-1 border-r text-center align-middle relative font-num" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important; border-right: 1px solid #cbd5e1 !important;">
+                    <div class="flex items-center justify-center h-full w-full">
+                      ${mergedInputHtml}
+                    </div>
+                  </td>
+                `;
+              }
+              // Các dòng tiếp theo của nhân sự (tIdx > 0): bỏ qua, không render thẻ td vì dòng 0 đã gộp rowspan
+              return;
+            }
+
+            // TRƯỜNG HỢP BÌNH THƯỜNG (KHÔNG GỘP HOẶC NHÂN SỰ CHỈ CÓ 1 ĐẦU VIỆC):
             const rawVal = t.dailyValues[dc.colIndex] !== undefined ? String(t.dailyValues[dc.colIndex]).trim() : '';
             const isToday = dc.isToday;
             const dateObj = new Date(currentSelectedYear, currentSelectedMonth - 1, dc.dayNum);
@@ -6487,8 +6540,8 @@
             let cellStyle = "";
 
             if (isLeaveDay) {
-              // NGÀY NGHỈ: TÔ MÀU TRONG Ô MA TRẬN, BỎ CÁC ĐƯỜNG KẺ Ô CẮT NGANG
-              cellStyle = `background-color: ${symInfo.bg} !important; ${!isLastTaskOfStaff ? 'border-bottom: 1px solid transparent !important;' : ''}`;
+              const btmBorder = isLastTaskOfStaff ? 'border-bottom: 2px solid #059669 !important;' : 'border-bottom: 1px solid #e8edf2 !important;';
+              cellStyle = `background-color: ${symInfo.bg} !important; ${btmBorder} border-right: 1px solid #cbd5e1 !important;`;
             } else if (isToday) {
               cellBgClass = "bg-emerald-50/40 border-x-2 border-emerald-300 font-semibold";
             } else if (isSunday) {
@@ -6570,7 +6623,7 @@
             }
 
             dayCellsHtml += `
-              <td class="py-1 px-1 border-r ${(!isLeaveDay || isLastTaskOfStaff) ? 'border-b border-slate-200' : ''} text-center ${cellBgClass} relative" style="${cellStyle}">
+              <td class="py-1 px-1 border-r ${isLastTaskOfStaff ? 'border-b-2 border-emerald-600' : 'border-b border-slate-200'} text-center ${cellBgClass} relative" style="${cellStyle}">
                 ${cellContentHtml}
               </td>
             `;
@@ -6746,6 +6799,127 @@
         textV = val;
       }
 
+      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      let staffGrp = null;
+      if (activeData && activeData.staffGroups) {
+        staffGrp = activeData.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === taskId));
+      }
+
+      // TRƯỜNG HỢP 1: ĐIỀN KÝ HIỆU NGÀY NGHỈ (7 KÝ HIỆU: P, Ô, CT, VR, HT, H, L)
+      // Tự động gộp cả cột của nhân sự đó trong ngày và áp dụng ký hiệu cho toàn bộ đầu việc
+      if (symInfo && symInfo.isLeave && staffGrp && staffGrp.tasks.length > 1) {
+        const recordsToUpsert = staffGrp.tasks.map(t => ({
+          task_id: t.taskId,
+          user_id: staffGrp.userId || userId,
+          report_date: reportDate,
+          num_val: null,
+          sym_val: symInfo.code,
+          text_val: (val !== symInfo.code) ? val : null,
+          updated_at: new Date().toISOString()
+        }));
+
+        try {
+          const { error } = await supabase
+            .from('daily_reports')
+            .upsert(recordsToUpsert, { onConflict: 'task_id,user_id,report_date' });
+          if (error) throw error;
+
+          [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+            if (targetCache && targetCache.staffGroups) {
+              const mg = targetCache.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === taskId));
+              if (mg) {
+                mg.tasks.forEach(t => {
+                  t.dailyValues[dayNum] = symInfo.code;
+                  t.monthTotal = calculateSmartRowTotalClient(t.dailyValues, targetCache.dayCols);
+                });
+              }
+            }
+          });
+
+          inputElem.classList.remove('cell-saving');
+          applyClientFilterAndRender();
+          refreshReportingProgressRealtime();
+          showToast(`Đã gộp ngày nghỉ (${symInfo.code}) cho ${staffGrp.staffName}`);
+          setTimeout(() => {
+            const restoredInp = document.querySelector(`input[data-day="${dayNum}"][data-is-leave-merged="true"]`)
+              || document.querySelector(`input[data-task-id="${taskId}"][data-day="${dayNum}"]`);
+            if (restoredInp) {
+              restoredInp.focus();
+            }
+          }, 60);
+          return;
+        } catch (err) {
+          inputElem.classList.remove('cell-saving');
+          showToast("Lỗi lưu ngày nghỉ: " + err.message, true);
+          return;
+        }
+      }
+
+      // TRƯỜNG HỢP 2: Ô ĐANG GỘP ĐƯỢC XÓA HOẶC ĐỔI THÀNH SỐ/KÝ HIỆU KHÁC
+      const wasLeaveMerged = (inputElem.dataset.isLeaveMerged === 'true');
+      if (wasLeaveMerged && (!symInfo || !symInfo.isLeave) && staffGrp && staffGrp.tasks.length > 1) {
+        const otherTasks = staffGrp.tasks.filter(t => t.taskId !== taskId);
+        const recordsToUpsert = [
+          {
+            task_id: taskId,
+            user_id: staffGrp.userId || userId,
+            report_date: reportDate,
+            num_val: numV,
+            sym_val: symV,
+            text_val: textV,
+            updated_at: new Date().toISOString()
+          },
+          ...otherTasks.map(t => ({
+            task_id: t.taskId,
+            user_id: staffGrp.userId || userId,
+            report_date: reportDate,
+            num_val: null,
+            sym_val: null,
+            text_val: null,
+            updated_at: new Date().toISOString()
+          }))
+        ];
+
+        try {
+          const { error } = await supabase
+            .from('daily_reports')
+            .upsert(recordsToUpsert, { onConflict: 'task_id,user_id,report_date' });
+          if (error) throw error;
+
+          [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+            if (targetCache && targetCache.staffGroups) {
+              const mg = targetCache.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === taskId));
+              if (mg) {
+                mg.tasks.forEach(t => {
+                  if (t.taskId === taskId) {
+                    t.dailyValues[dayNum] = valToCache;
+                  } else {
+                    t.dailyValues[dayNum] = "";
+                  }
+                  t.monthTotal = calculateSmartRowTotalClient(t.dailyValues, targetCache.dayCols);
+                });
+              }
+            }
+          });
+
+          inputElem.classList.remove('cell-saving');
+          applyClientFilterAndRender();
+          refreshReportingProgressRealtime();
+          showToast(`Đã tách các ô làm việc cho ${staffGrp.staffName}`);
+          setTimeout(() => {
+            const restoredInp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${dayNum}"]`);
+            if (restoredInp) {
+              restoredInp.focus();
+            }
+          }, 60);
+          return;
+        } catch (err) {
+          inputElem.classList.remove('cell-saving');
+          showToast("Lỗi cập nhật: " + err.message, true);
+          return;
+        }
+      }
+
       const dbRecord = {
         task_id: taskId,
         user_id: userId,
@@ -6902,11 +7076,16 @@
 
       if (hasChanged) {
         refreshReportingProgressRealtime();
-        // Cập nhật giá trị hiển thị trên ô ma trận nếu đang mở ô này mà người dùng không đang gõ
-        const inp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${d}"]`);
-        if (inp && document.activeElement !== inp) {
-          inp.value = (val === '-' || val === '·' || val === '0') ? '' : val;
-          inp.dataset.oldValue = val;
+        const sym = getSmartSymbolInfo(val);
+        if (sym && sym.isLeave) {
+          applyClientFilterAndRender();
+        } else {
+          // Cập nhật giá trị hiển thị trên ô ma trận nếu đang mở ô này mà người dùng không đang gõ
+          const inp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${d}"]`);
+          if (inp && document.activeElement !== inp) {
+            inp.value = (val === '-' || val === '·' || val === '0') ? '' : val;
+            inp.dataset.oldValue = val;
+          }
         }
       }
     }
@@ -8732,6 +8911,20 @@
               let rowNumericSum = 0;
 
               dayCols.forEach((dc, dayIdx) => {
+                const staffLeaveSym = grp.tasks
+                  .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
+                  .find(s => s && s.isLeave);
+
+                if (staffLeaveSym && staffTaskCount > 1) {
+                  // Ngày nghỉ gộp cột trong Excel: Dòng đầu nhận ký hiệu, các dòng sau để trống để chuẩn bị mergeCells
+                  if (tIdx === 0) {
+                    rowData.push(staffLeaveSym.code);
+                  } else {
+                    rowData.push('');
+                  }
+                  return;
+                }
+
                 const val = t.dailyValues[dc.colIndex];
                 if (val !== undefined && val !== null && String(val).trim() !== '') {
                   let strVal = String(val).trim();
@@ -8810,9 +9003,21 @@
                 } else {
                   cell.alignment = { vertical: 'middle', horizontal: 'center' };
                   const v = (typeof cell.value === 'object' && cell.value !== null) ? cell.value.result : cell.value;
-                  if (typeof v === 'string' && ['X', 'P', 'Đ', 'C'].includes(v)) {
+                  const sym = getSmartSymbolInfo(v);
+                  if (sym && sym.isLeave) {
+                    let sColor = 'FFB45309';
+                    let sBg = 'FFFFFBEB';
+                    if (sym.code === 'Ô') { sColor = 'FF7E22CE'; sBg = 'FFFAF5FF'; }
+                    else if (sym.code === 'CT') { sColor = 'FF0369A1'; sBg = 'FFF0F9FF'; }
+                    else if (sym.code === 'VR') { sColor = 'FF334155'; sBg = 'FFF1F5F9'; }
+                    else if (sym.code === 'HT') { sColor = 'FF0F766E'; sBg = 'FFF0FDFA'; }
+                    else if (sym.code === 'H') { sColor = 'FF4338CA'; sBg = 'FFEEF2FF'; }
+                    else if (sym.code === 'L') { sColor = 'FFBE123C'; sBg = 'FFFFF1F2'; }
+
+                    cell.font = { name: 'Arial', size: 8, bold: false, color: { argb: sColor } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sBg } };
+                  } else if (typeof v === 'string' && ['X', 'Đ', 'C'].includes(v)) {
                     let sColor = 'FF059669';
-                    if (v === 'P') sColor = 'FFD97706';
                     if (v === 'Đ') sColor = 'FF0D9488';
                     if (v === 'C') sColor = 'FFE11D48';
                     cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: sColor } };
@@ -8830,6 +9035,37 @@
             if (staffTaskCount > 1) {
               ws.mergeCells(staffStartRow, 1, staffEndRow, 1);
               ws.mergeCells(staffStartRow, 2, staffEndRow, 2);
+
+              // ================= GỘP CÁC Ô HÀNG DỌC CỦA NGÀY NGHỈ (7 KÝ HIỆU) VÀ CHỈ THỂ HIỆN 1 KÝ HIỆU TRONG EXCEL =================
+              dayCols.forEach((dc, dayIdx) => {
+                const staffLeaveSym = grp.tasks
+                  .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
+                  .find(s => s && s.isLeave);
+
+                if (staffLeaveSym) {
+                  const colNum = 4 + dayIdx;
+                  ws.mergeCells(staffStartRow, colNum, staffEndRow, colNum);
+
+                  let leaveBgArgb = 'FFFFFBEB';   // amber-50 (P)
+                  let leaveTextArgb = 'FFB45309'; // amber-700
+                  if (staffLeaveSym.code === 'Ô') { leaveBgArgb = 'FFFAF5FF'; leaveTextArgb = 'FF7E22CE'; }
+                  else if (staffLeaveSym.code === 'CT') { leaveBgArgb = 'FFF0F9FF'; leaveTextArgb = 'FF0369A1'; }
+                  else if (staffLeaveSym.code === 'VR') { leaveBgArgb = 'FFF1F5F9'; leaveTextArgb = 'FF334155'; }
+                  else if (staffLeaveSym.code === 'HT') { leaveBgArgb = 'FFF0FDFA'; leaveTextArgb = 'FF0F766E'; }
+                  else if (staffLeaveSym.code === 'H') { leaveBgArgb = 'FFEEF2FF'; leaveTextArgb = 'FF4338CA'; }
+                  else if (staffLeaveSym.code === 'L') { leaveBgArgb = 'FFFFF1F2'; leaveTextArgb = 'FFBE123C'; }
+
+                  const mCell = ws.getCell(staffStartRow, colNum);
+                  mCell.value = staffLeaveSym.code;
+                  mCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                  mCell.font = { name: 'Arial', size: 8, bold: false, color: { argb: leaveTextArgb } };
+                  mCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: leaveBgArgb } };
+
+                  for (let r = staffStartRow; r <= staffEndRow; r++) {
+                    ws.getCell(r, colNum).border = borderGrid;
+                  }
+                }
+              });
             }
 
             // ================= ĐƯỜNG KẺ BAO QUANH PHÂN BIỆT NỘI DUNG CÔNG VIỆC TỪNG NHÂN SỰ =================
@@ -8893,6 +9129,52 @@
             };
           }
         }
+
+        // ================= GHI CHÚ NỘI DUNG 7 KÝ HIỆU NGÀY NGHỈ Ở CUỐI FILE EXCEL =================
+        const blankRow = ws.addRow([]);
+        blankRow.height = 14;
+
+        const legendTitleRow = ws.addRow(['', 'GHI CHÚ QUY CHUẨN 7 KÝ HIỆU NGÀY NGHỈ & BÁO CÁO CÔNG VIỆC:']);
+        legendTitleRow.height = 22;
+        legendTitleRow.getCell(2).font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF065F46' } };
+
+        const legendHeaderRow = ws.addRow(['', 'Ký hiệu', 'Nội dung giải thích chi tiết quy chuẩn loại ngày nghỉ']);
+        legendHeaderRow.height = 20;
+        legendHeaderRow.getCell(2).font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF1E293B' } };
+        legendHeaderRow.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+        legendHeaderRow.getCell(2).alignment = { vertical: 'middle', horizontal: 'center' };
+        legendHeaderRow.getCell(2).border = borderGrid;
+
+        legendHeaderRow.getCell(3).font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF1E293B' } };
+        legendHeaderRow.getCell(3).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+        legendHeaderRow.getCell(3).alignment = { vertical: 'middle', horizontal: 'left', indent: 0.5 };
+        legendHeaderRow.getCell(3).border = borderGrid;
+
+        const leaveLegendItems = [
+          { code: 'P', name: 'Nghỉ phép', desc: 'Nghỉ phép năm / Phép chế độ theo quy định', bg: 'FFFFFBEB', text: 'FFB45309' },
+          { code: 'Ô', name: 'Nghỉ ốm', desc: 'Nghỉ ốm đau / Đi khám chữa bệnh có giấy tờ chứng từ', bg: 'FFFAF5FF', text: 'FF7E22CE' },
+          { code: 'CT', name: 'Công tác', desc: 'Đi công tác / Tham gia hội thảo / Đào tạo bên ngoài theo điều động', bg: 'FFF0F9FF', text: 'FF0369A1' },
+          { code: 'VR', name: 'Việc riêng', desc: 'Nghỉ việc riêng có phép theo đơn xin phép được duyệt', bg: 'FFF1F5F9', text: 'FF334155' },
+          { code: 'HT', name: 'Nghỉ tuần', desc: 'Nghỉ hàng tuần theo lịch phân ca / ngày nghỉ quy định', bg: 'FFF0FDFA', text: 'FF0F766E' },
+          { code: 'H', name: 'Học tập', desc: 'Đi học tập / Tập huấn / Đào tạo bồi dưỡng nghiệp vụ nội bộ', bg: 'FFEEF2FF', text: 'FF4338CA' },
+          { code: 'L', name: 'Nghỉ lễ/Tết', desc: 'Nghỉ các ngày Lễ, Tết chính thức theo Bộ luật Lao động', bg: 'FFFFF1F2', text: 'FFBE123C' }
+        ];
+
+        leaveLegendItems.forEach(item => {
+          const lRow = ws.addRow(['', item.code, `${item.name} • ${item.desc}`]);
+          lRow.height = 19;
+
+          const codeCell = lRow.getCell(2);
+          codeCell.font = { name: 'Arial', size: 8, bold: false, color: { argb: item.text } };
+          codeCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.bg } };
+          codeCell.alignment = { vertical: 'middle', horizontal: 'center' };
+          codeCell.border = borderGrid;
+
+          const descCell = lRow.getCell(3);
+          descCell.font = { name: 'Arial', size: 8.5, bold: false, color: { argb: 'FF334155' } };
+          descCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 0.5 };
+          descCell.border = borderGrid;
+        });
 
         // Xuất buffer và tải file
         const buffer = await workbook.xlsx.writeBuffer();
@@ -9626,6 +9908,40 @@
             value: val
           };
         });
+      }
+
+      // ĐỒNG BỘ 7 KÝ HIỆU NGÀY NGHỈ (P, Ô, CT, VR, HT, H, L):
+      // Khi điền ký hiệu nghỉ ở 1 ô thì cả cột ngày đó của nhân sự được gộp lại và đồng bộ cho tất cả đầu việc
+      const activeDataForModal = fullPeriodMatrixCache || currentMatrixData;
+      if (activeDataForModal && activeDataForModal.staffGroups) {
+        const leaveUpdates = [];
+        updates.forEach(u => {
+          const sym = getSmartSymbolInfo(u.value);
+          if (sym && sym.isLeave) {
+            const staffGrp = activeDataForModal.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === u.taskId));
+            if (staffGrp && staffGrp.tasks.length > 1) {
+              staffGrp.tasks.forEach(t => {
+                leaveUpdates.push({
+                  taskId: t.taskId,
+                  userId: staffGrp.userId || u.userId,
+                  reportDate: u.reportDate,
+                  dayNum: u.dayNum,
+                  value: sym.code
+                });
+              });
+            }
+          }
+        });
+        if (leaveUpdates.length > 0) {
+          leaveUpdates.forEach(lu => {
+            const existingIdx = updates.findIndex(x => x.taskId === lu.taskId && x.dayNum === lu.dayNum);
+            if (existingIdx >= 0) {
+              updates[existingIdx].value = lu.value;
+            } else {
+              updates.push(lu);
+            }
+          });
+        }
       }
 
       [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
