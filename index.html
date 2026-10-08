@@ -1177,23 +1177,39 @@
             </div>
           </div>
 
-          <!-- 2. BẢNG VINH DANH THI ĐUA NĂNG SUẤT CÁC BỘ PHẬN (Leaderboard) -->
+          <!-- 2. BẢNG CẦN ĐÔN ĐỐC BÁM SÁT TIẾN ĐỘ (Đổi vị trí lên trên: Đôn đốc nhân sự & nhóm gộp chưa báo cáo) -->
           <div id="deptLeaderboardCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs">
-                  <i class="fa-solid fa-medal"></i>
+                <span id="followUpCardIconBox" class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs">
+                  <i id="followUpCardIcon" class="fa-solid fa-triangle-exclamation"></i>
                 </span>
                 <div>
-                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Thi Đua Bám Sát Tiến Độ</h4>
-                  <p class="text-[11px] text-slate-400">Xếp hạng bám sát kế hoạch theo bộ phận</p>
+                  <h4 id="followUpCardTitle" class="text-xs font-black uppercase tracking-wider text-slate-800">Cần Đôn Đốc Bám Sát</h4>
+                  <p id="followUpCardSubtitle" class="text-[11px] text-slate-400">Chưa báo cáo tiến độ</p>
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800">Thi đua</span>
+              <div class="flex items-center gap-1.5">
+                <span id="followUpPendingBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 font-num">Đôn đốc</span>
+              </div>
+            </div>
+
+            <!-- Tab Chuyển Đổi Nhanh: [Chưa báo cáo] & [Đã báo cáo] -->
+            <div class="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl text-[11px] font-bold">
+              <button type="button" id="tabBtnPending" onclick="switchFollowUpViewTab('pending')" class="flex-1 py-1.5 px-2 rounded-lg bg-white text-amber-900 shadow-2xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[10px]"></i>
+                <span>Chưa báo cáo</span>
+                <span id="tabCountPending" class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-100 text-amber-900 font-num font-black">0</span>
+              </button>
+              <button type="button" id="tabBtnCompleted" onclick="switchFollowUpViewTab('completed')" class="flex-1 py-1.5 px-2 rounded-lg text-slate-500 hover:text-emerald-800 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                <span>Đã báo cáo</span>
+                <span id="tabCountCompleted" class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-800 font-num font-black">0</span>
+              </button>
             </div>
 
             <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-48 custom-scroll pr-1">
-              <!-- Danh sách xếp hạng sẽ render tự động bằng JS -->
+              <!-- Danh sách Cần đôn đốc / Thi đua sẽ render tự động bằng JS -->
             </div>
           </div>
         </div>
@@ -1229,12 +1245,17 @@
               <div id="insightConsistentTasks" class="space-y-1 text-xs text-slate-700"></div>
             </div>
 
-            <div class="p-3 bg-amber-50/40 rounded-2xl border border-amber-200/60 space-y-2">
-              <span class="text-[11px] font-bold text-amber-900 uppercase tracking-tight flex items-center gap-1.5">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
-                <span>Cần Đôn Đốc & Bám Sát</span>
-              </span>
-              <div id="insightAttentionTasks" class="space-y-1 text-xs text-slate-700"></div>
+            <!-- BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (Đổi vị trí xuống dưới: Cập nhật nhân sự & nhóm gộp đã hoàn thành báo cáo) -->
+            <div class="p-3 bg-emerald-50/40 rounded-2xl border border-emerald-200/60 space-y-2 flex flex-col">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-emerald-950 uppercase tracking-tight flex items-center gap-1.5">
+                  <i class="fa-solid fa-medal text-emerald-600"></i>
+                  <span>Thi Đua Bám Sát Tiến Độ</span>
+                </span>
+                <span id="insightLeaderboardBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 font-num">0 hoàn thành</span>
+              </div>
+              <p id="insightLeaderboardSubtitle" class="text-[10px] text-slate-500 italic">Đã hoàn thành báo cáo</p>
+              <div id="insightAttentionTasks" class="flex-1 space-y-1.5 text-xs text-slate-700 max-h-36 overflow-y-auto custom-scroll pr-1"></div>
             </div>
           </div>
         </div>
@@ -1259,8 +1280,8 @@
         <span class="text-[10px] font-black text-emerald-800 mt-1">Báo cáo</span>
       </button>
       <button type="button" onclick="scrollToElement('deptLeaderboardCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-amber-600 active:scale-95 transition cursor-pointer">
-        <i class="fa-solid fa-trophy text-base"></i>
-        <span class="text-[10px] font-bold mt-0.5">Thi đua</span>
+        <i class="fa-solid fa-bell text-base"></i>
+        <span class="text-[10px] font-bold mt-0.5">Đôn đốc</span>
       </button>
       <button type="button" onclick="openCommandPalette()" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-indigo-600 active:scale-95 transition cursor-pointer">
         <i class="fa-solid fa-magnifying-glass text-base"></i>
@@ -6997,13 +7018,13 @@
         ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
         : `Chưa có phát sinh`;
 
-      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length);
+      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length, data);
       renderActivityRhythmChart(data, dailyActiveTasksMap);
-      renderDeptLeaderboard(deptAggregation);
+      renderDeptLeaderboard(deptAggregation, data);
       updateHeaderTodayStatus(data);
     }
 
-    function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod) {
+    function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod, rawData) {
       const domainBox = document.getElementById('insightDomainBreakdown');
       if (domainBox) {
         domainBox.innerHTML = '';
@@ -7045,22 +7066,50 @@
         }
       }
 
-      const attentionBox = document.getElementById('insightAttentionTasks');
-      if (attentionBox) {
-        attentionBox.innerHTML = '';
-        const attentionList = taskList.filter(t => t.activeDays <= 1);
+      // CỘT 3: BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (Cập nhật nhân sự & nhóm gộp đã hoàn thành báo cáo)
+      const leaderboardBox = document.getElementById('insightAttentionTasks');
+      const leaderboardBadge = document.getElementById('insightLeaderboardBadge');
+      const leaderboardSubtitle = document.getElementById('insightLeaderboardSubtitle');
 
-        if (attentionList.length === 0) {
-          attentionBox.innerHTML = `<p class="text-emerald-700 font-medium text-[11px] py-2"><i class="fa-solid fa-circle-check mr-1"></i>Tất cả đầu việc đều đang được duy trì tốt!</p>`;
+      if (leaderboardBox) {
+        leaderboardBox.innerHTML = '';
+        const progressData = getDailyReportingProgressData(rawData || activeData);
+        const { targetDateLabel, completedList } = progressData;
+
+        if (leaderboardSubtitle) {
+          leaderboardSubtitle.innerText = `Đã hoàn thành báo cáo ngày ${targetDateLabel}`;
+        }
+
+        if (leaderboardBadge) {
+          leaderboardBadge.innerText = `${completedList.length} hoàn thành`;
+        }
+
+        if (completedList.length === 0) {
+          leaderboardBox.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo ngày ${targetDateLabel}</p>`;
         } else {
-          attentionList.slice(0, 3).forEach(t => {
-            attentionBox.innerHTML += `
-              <div class="flex items-start justify-between gap-1 pb-1 border-b border-amber-100/60 last:border-0">
-                <span class="font-semibold text-slate-700 truncate max-w-[170px]" title="${escapeHtml(t.taskName)}">• ${escapeHtml(t.taskName)}</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-900 whitespace-nowrap">Ít phát sinh</span>
+          let html = '';
+          completedList.forEach(item => {
+            html += `
+              <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="w-5 h-5 rounded-lg ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-[10px] shrink-0">
+                    <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1">
+                      <span class="font-bold text-slate-800 text-[11px] truncate group-hover:text-emerald-900 transition">${escapeHtml(item.displayName)}</span>
+                      ${item.isGroup ? '<span class="px-1 py-0.1 rounded text-[8px] font-black uppercase bg-teal-100 text-teal-800 shrink-0">Nhóm</span>' : ''}
+                    </div>
+                    <span class="text-[9.5px] text-slate-400 block truncate leading-tight">${item.isGroup ? 'Đại diện bộ phận' : escapeHtml(item.subDeptName)}</span>
+                  </div>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 whitespace-nowrap font-num shrink-0 border border-emerald-200/80">
+                  ✓ ${item.loggedTaskCount}/${item.totalTasks} việc
+                </span>
               </div>
             `;
           });
+          leaderboardBox.innerHTML = html;
         }
       }
     }
@@ -7448,73 +7497,279 @@
       container.innerHTML = html;
     }
 
-    function renderDeptLeaderboard(deptAggregation) {
-      const container = document.getElementById('deptLeaderboardList');
-      if (!container) return;
+    // ================= BỘ TÍNH TOÁN BÁM SÁT TIẾN ĐỘ BÁO CÁO THEO NGÀY (CẦN ĐÔN ĐỐC & THI ĐUA) =================
+    let _cachedFollowUpProgressData = null;
+    let _currentFollowUpTab = 'pending'; // 'pending' = Cần đôn đốc | 'completed' = Thi đua đã hoàn thành
 
-      const depts = Object.values(deptAggregation || {});
-      if (depts.length === 0) {
-        container.innerHTML = `<div class="py-8 text-center text-xs text-slate-400 font-semibold">Chưa có dữ liệu phòng ban</div>`;
-        return;
+    function getDailyReportingProgressData(data) {
+      if (!data || !data.staffGroups || !data.dayCols || data.staffGroups.length === 0) {
+        return { targetDateLabel: '', targetDayNum: 1, pendingList: [], completedList: [] };
       }
 
-      const list = depts.map(d => {
-        const dCov = d.totalAssignedTasks > 0 ? (d.activeTasksCount / d.totalAssignedTasks) * 100 : 0;
-        const dAdh = d.possibleTaskDays > 0 ? (d.loggedTaskDays / d.possibleTaskDays) * 100 : 0;
-        const compositeScore = Math.round((dCov * 0.6) + (dAdh * 0.4));
-        return {
-          deptName: d.deptName,
-          totalAssignedTasks: d.totalAssignedTasks,
-          activeTasksCount: d.activeTasksCount,
-          coverageRate: Math.round(dCov),
-          adherenceRate: Math.round(dAdh),
-          score: compositeScore
-        };
-      }).sort((a, b) => b.score - a.score);
+      const now = new Date();
+      const todayDate = now.getDate();
+      const todayMonth = now.getMonth() + 1;
+      const todayYear = now.getFullYear();
 
-      let html = '';
-      list.forEach((item, index) => {
-        let rankBadge = '';
-        let rowBg = 'bg-slate-50 hover:bg-emerald-50/50 border-slate-200';
-        
-        if (index === 0) {
-          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-amber-950 font-black text-xs flex items-center justify-center shadow-xs">🥇</div>`;
-          rowBg = 'bg-gradient-to-r from-amber-50/80 to-white hover:from-amber-100/80 border-amber-200 shadow-2xs';
-        } else if (index === 1) {
-          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-300 to-slate-100 text-slate-700 font-black text-xs flex items-center justify-center shadow-xs">🥈</div>`;
-          rowBg = 'bg-slate-50/90 hover:bg-slate-100/90 border-slate-200';
-        } else if (index === 2) {
-          rankBadge = `<div class="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-700 to-amber-500 text-white font-black text-xs flex items-center justify-center shadow-xs">🥉</div>`;
-          rowBg = 'bg-amber-50/40 hover:bg-amber-50/70 border-amber-200/70';
+      let targetDayNum = 1;
+      const isCurrentPeriod = (currentSelectedMonth === todayMonth && currentSelectedYear === todayYear);
+
+      if (isCurrentPeriod) {
+        // Ví dụ: Hôm nay ngày 08/10 thì tính hoàn thành là ngày 07/10
+        if (todayDate > 1) {
+          targetDayNum = todayDate - 1;
         } else {
-          rankBadge = `<div class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-bold text-[10px] flex items-center justify-center border border-slate-200 font-num">#${index + 1}</div>`;
+          targetDayNum = 1;
+        }
+      } else if (currentSelectedYear < todayYear || (currentSelectedYear === todayYear && currentSelectedMonth < todayMonth)) {
+        // Kỳ quá khứ (ví dụ xem lại tháng 9): tính theo ngày cuối cùng của tháng đó
+        targetDayNum = data.dayCols.length > 0 ? data.dayCols[data.dayCols.length - 1].dayNum : 30;
+      } else {
+        // Kỳ tương lai
+        targetDayNum = 1;
+      }
+
+      const targetDayCol = data.dayCols.find(dc => dc.dayNum === targetDayNum);
+      const targetColIdx = targetDayCol ? targetDayCol.colIndex : targetDayNum;
+
+      const targetDayStr = (targetDayNum < 10 ? '0' : '') + targetDayNum;
+      const targetMonthStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+      const targetDateLabel = `${targetDayStr}/${targetMonthStr}`;
+
+      const uniquePendingMap = new Map();
+      const uniqueCompletedMap = new Map();
+
+      data.staffGroups.forEach(grp => {
+        // Xác định nhóm gộp
+        const isGroup = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+        let displayName = "";
+        let subDeptName = "";
+        let uniqueKey = "";
+
+        if (isGroup) {
+          // NHÓM GỘP: CHỈ HIỂN THỊ TÊN BỘ PHẬN/NHÓM, KHÔNG HIỂN THỊ TÊN NHÂN SỰ
+          displayName = grp.department;
+          subDeptName = "Nhóm gộp";
+          uniqueKey = "GROUP___" + normalizeDeptKey(grp.department);
+        } else {
+          // NHÂN SỰ CÁ NHÂN: Hiển thị họ tên nhân sự
+          let cleanStaff = (grp.staffName || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+          displayName = cleanStaff || grp.staffName || "Chưa đặt tên";
+          subDeptName = grp.department || "";
+          uniqueKey = "STAFF___" + displayName + "___" + (grp.department || "");
         }
 
-        html += `
-          <div onclick="filterDashboardFromLeaderboard('${escapeHtml(item.deptName)}')" class="p-2.5 rounded-2xl border ${rowBg} transition-all duration-200 cursor-pointer group flex items-center justify-between gap-2.5" title="Nhấp để lọc xem riêng bộ phận ${escapeHtml(item.deptName)}">
-            <div class="flex items-center gap-2.5 min-w-0">
-              ${rankBadge}
-              <div class="min-w-0">
-                <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-700 transition">${escapeHtml(item.deptName)}</p>
-                <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                  <span class="font-medium text-slate-500">Độ phủ: <b class="text-teal-700 font-num">${item.coverageRate}%</b></span>
-                  <span>•</span>
-                  <span class="font-medium text-slate-500">Tuân thủ: <b class="text-sky-700 font-num">${item.adherenceRate}%</b></span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="text-right flex-shrink-0">
-              <span class="text-xs font-black font-num ${index === 0 ? 'text-amber-800' : 'text-slate-800'}">${item.score}đ</span>
-              <div class="w-16 bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1">
-                <div class="h-full rounded-full ${index === 0 ? 'bg-amber-500' : 'bg-emerald-500'}" style="width: ${item.score}%"></div>
-              </div>
-            </div>
-          </div>
-        `;
+        // Đếm số đầu việc có số liệu ghi nhận trong ngày xét duyệt
+        let loggedTaskCount = 0;
+        const totalTasks = grp.tasks ? grp.tasks.length : 0;
+
+        if (grp.tasks && grp.tasks.length > 0) {
+          grp.tasks.forEach(t => {
+            const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
+            if (val !== undefined && val !== null && String(val).trim() !== '') {
+              const s = String(val).trim();
+              if (s !== '-' && s !== '·' && s !== '0') {
+                loggedTaskCount++;
+              }
+            }
+          });
+        }
+
+        const itemObj = {
+          isGroup: isGroup,
+          displayName: displayName,
+          subDeptName: subDeptName,
+          department: grp.department,
+          staffName: grp.staffName,
+          loggedTaskCount: loggedTaskCount,
+          totalTasks: totalTasks,
+          hasReported: loggedTaskCount > 0,
+          groupRef: grp
+        };
+
+        if (loggedTaskCount > 0) {
+          if (uniqueCompletedMap.has(uniqueKey)) {
+            uniqueCompletedMap.get(uniqueKey).loggedTaskCount += loggedTaskCount;
+            uniqueCompletedMap.get(uniqueKey).totalTasks += totalTasks;
+          } else {
+            uniqueCompletedMap.set(uniqueKey, itemObj);
+          }
+        } else {
+          if (!uniquePendingMap.has(uniqueKey)) {
+            uniquePendingMap.set(uniqueKey, itemObj);
+          } else {
+            uniquePendingMap.get(uniqueKey).totalTasks += totalTasks;
+          }
+        }
       });
 
-      container.innerHTML = html;
+      // Nếu 1 nhóm gộp đã có bất kỳ đầu việc nào được gửi báo cáo thì xếp vào danh sách đã hoàn thành
+      uniqueCompletedMap.forEach((val, key) => {
+        if (uniquePendingMap.has(key)) {
+          uniquePendingMap.delete(key);
+        }
+      });
+
+      const pendingList = Array.from(uniquePendingMap.values());
+      const completedList = Array.from(uniqueCompletedMap.values());
+
+      return {
+        targetDateLabel,
+        targetDayNum,
+        pendingList,
+        completedList
+      };
+    }
+
+    function switchFollowUpViewTab(tab) {
+      _currentFollowUpTab = tab;
+      if (_cachedFollowUpProgressData) {
+        renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
+      }
+    }
+
+    function renderDeptLeaderboard(deptAggregation, data) {
+      _cachedFollowUpProgressData = getDailyReportingProgressData(data || activeData);
+      renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
+    }
+
+    function renderDeptLeaderboardListContent(progressData) {
+      const container = document.getElementById('deptLeaderboardList');
+      const subTitle = document.getElementById('followUpCardSubtitle');
+      const badge = document.getElementById('followUpPendingBadge');
+      const tabCountPending = document.getElementById('tabCountPending');
+      const tabCountCompleted = document.getElementById('tabCountCompleted');
+      const tabBtnPending = document.getElementById('tabBtnPending');
+      const tabBtnCompleted = document.getElementById('tabBtnCompleted');
+
+      if (!progressData) return;
+      const { targetDateLabel, pendingList, completedList } = progressData;
+
+      if (tabCountPending) tabCountPending.innerText = pendingList.length;
+      if (tabCountCompleted) tabCountCompleted.innerText = completedList.length;
+
+      if (subTitle) {
+        subTitle.innerText = `Tính đến ngày ${targetDateLabel} (Còn ${pendingList.length} chưa nộp)`;
+      }
+
+      if (badge) {
+        if (pendingList.length === 0) {
+          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
+          badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>100% Hoàn thành`;
+        } else {
+          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Còn ${pendingList.length} chưa nộp`;
+        }
+      }
+
+      if (tabBtnPending && tabBtnCompleted) {
+        if (_currentFollowUpTab === 'pending') {
+          tabBtnPending.className = "flex-1 py-1.5 px-2 rounded-lg bg-white text-amber-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60";
+          tabBtnCompleted.className = "flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-emerald-800 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer";
+        } else {
+          tabBtnPending.className = "flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-amber-900 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer";
+          tabBtnCompleted.className = "flex-1 py-1.5 px-2 rounded-lg bg-white text-emerald-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60";
+        }
+      }
+
+      if (!container) return;
+
+      if (_currentFollowUpTab === 'pending') {
+        // TAB 1: CẦN ĐÔN ĐỐC BÁM SÁT (Chưa báo cáo)
+        if (pendingList.length === 0) {
+          container.innerHTML = `
+            <div class="py-6 px-3 text-center bg-gradient-to-b from-emerald-50/80 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-1.5">
+              <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shadow-2xs">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <h5 class="text-xs font-black text-emerald-900">100% Đã Báo Cáo Tiến Độ!</h5>
+              <p class="text-[11px] text-emerald-700 font-medium">Tất cả nhân sự và nhóm gộp đều đã gửi số liệu ngày <b>${targetDateLabel}</b>.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        pendingList.forEach(item => {
+          html += `
+            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-7 h-7 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-amber-100 text-amber-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                  <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
+                </span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-xs font-black text-slate-800 truncate group-hover:text-amber-950 transition">${escapeHtml(item.displayName)}</p>
+                    ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
+                  </div>
+                  <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
+                </div>
+              </div>
+              <span class="px-2 py-1 rounded-xl text-[9.5px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200/90 shrink-0 whitespace-nowrap shadow-2xs">
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i>Chưa báo cáo
+              </span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else {
+        // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo)
+        if (completedList.length === 0) {
+          container.innerHTML = `
+            <div class="py-6 px-3 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">
+              <i class="fa-solid fa-inbox text-base mb-1 block"></i>
+              Chưa ghi nhận nhân sự hoặc nhóm gộp nào gửi báo cáo ngày ${targetDateLabel}.
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        completedList.forEach(item => {
+          html += `
+            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-7 h-7 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                  <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
+                </span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
+                    ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
+                  </div>
+                  <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
+                </div>
+              </div>
+              <span class="px-2 py-1 rounded-xl text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/90 shrink-0 whitespace-nowrap font-num shadow-2xs">
+                <i class="fa-solid fa-check mr-1"></i>${item.loggedTaskCount}/${item.totalTasks} việc
+              </span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+    }
+
+    function locateStaffOrGroupInMatrix(displayName, deptName) {
+      scrollToElement('matrixCard');
+      setTimeout(() => {
+        const rows = document.querySelectorAll('#matrixTableBody tr');
+        let found = false;
+        rows.forEach(tr => {
+          const text = tr.innerText || '';
+          if ((displayName && text.includes(displayName)) || (deptName && text.includes(deptName))) {
+            if (!found) {
+              tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              found = true;
+            }
+            tr.classList.add('bg-amber-100/90', 'transition-colors', 'duration-300');
+            setTimeout(() => {
+              tr.classList.remove('bg-amber-100/90');
+            }, 3000);
+          }
+        });
+        showToast(`Đang xem vị trí: ${displayName}`);
+      }, 350);
     }
 
     function filterDashboardFromLeaderboard(deptName) {
@@ -11434,12 +11689,12 @@
             },
             {
               type: 'action',
-              title: 'Xem bảng thi đua phòng ban',
-              subtitle: `Xếp hạng thi đua bộ phận ${currentUser.department}`,
-              icon: 'fa-solid fa-trophy text-amber-600 bg-amber-50',
-              badge: 'Thi đua',
+              title: 'Xem bảng đôn đốc bám sát tiến độ',
+              subtitle: `Theo dõi tiến độ báo cáo bộ phận ${currentUser.department}`,
+              icon: 'fa-solid fa-bell text-amber-600 bg-amber-50',
+              badge: 'Đôn đốc',
               handler: () => { closeCommandPalette(); scrollToElement('deptLeaderboardCard'); },
-              tags: 'thi dua vinh danh xep hang phong ban bo phan'
+              tags: 'don doc bam sat tien do chua bao cao thi dua'
             },
             {
               type: 'action',
@@ -11525,12 +11780,12 @@
             },
             {
               type: 'action',
-              title: 'Bảng vinh danh thi đua các bộ phận',
-              subtitle: 'Xếp hạng độ phủ & tỷ lệ tuân thủ báo cáo',
-              icon: 'fa-solid fa-trophy text-amber-600 bg-amber-50',
-              badge: 'Thi đua',
+              title: 'Bảng đôn đốc bám sát tiến độ',
+              subtitle: 'Theo dõi nhân sự & nhóm gộp chưa báo cáo',
+              icon: 'fa-solid fa-bell text-amber-600 bg-amber-50',
+              badge: 'Đôn đốc',
               handler: () => { closeCommandPalette(); scrollToElement('deptLeaderboardCard'); },
-              tags: 'thi dua vinh danh xep hang phong ban bo phan'
+              tags: 'don doc bam sat tien do chua bao cao thi dua'
             },
             {
               type: 'action',
