@@ -1064,10 +1064,6 @@
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-300 text-[10px] font-black shadow-2xs" title="Nghỉ hàng tuần theo quy định"><b class="font-black">HT</b> Nghỉ tuần</span>
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-black shadow-2xs" title="Đi học / Tập huấn / Đào tạo nội bộ"><b class="font-black">H</b> Học</span>
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-300 text-[10px] font-black shadow-2xs" title="Nghỉ Lễ / Tết theo luật định"><b class="font-black">L</b> Lễ/Tết</span>
-            <span class="text-slate-300">|</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black shadow-2xs" title="Đạt / Hoàn thành công việc"><b class="font-black">X</b> Đạt</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-green-50 text-green-800 border border-green-300 text-[10px] font-black shadow-2xs" title="Đang tiến hành / Đạt chuẩn"><b class="font-black">Đ</b> Đang làm</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-50 text-red-800 border border-red-300 text-[10px] font-black shadow-2xs" title="Chưa đạt / Cần xem xét"><b class="font-black">C</b> Chưa đạt</span>
           </div>
         </div>
 
@@ -1077,170 +1073,24 @@
         </div>
       </div>
 
-      <!-- ================= 2. TRUNG TÂM PHÂN TÍCH KPI NĂNG SUẤT (ĐÃ GỠ BỎ BIỂU ĐỒ CỘT NƯỚC) ================= -->
+      <!-- ================= 2. THEO DÕI TIẾN ĐỘ, THI ĐUA & NHỊP ĐỘ CÔNG VIỆC ================= -->
       <section id="analyticsSection" class="hidden space-y-3.5 pt-1">
-        <div class="bg-gradient-to-r from-slate-50 via-teal-50/40 to-emerald-50/70 border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center text-lg shadow-2xs">
-              <i class="fa-solid fa-chart-line"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm sm:text-base font-black text-slate-800 tracking-tight">TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC & ĐIỀU HÀNH NĂNG SUẤT</h3>
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-200">Executive Task Intelligence</span>
-              </div>
-              <p class="text-xs text-slate-500 mt-0.5">Thống kê quy mô danh mục đầu việc, độ phủ phát sinh và đọc hiểu nội dung nghiệp vụ</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <span id="analyticsStaffNameBadge" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-2xs font-num">---</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-          <div class="bg-white border border-slate-200/90 p-4 rounded-3xl shadow-2xs relative overflow-hidden group hover:border-emerald-300 transition">
-            <div class="flex items-center justify-between text-slate-400">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Danh mục đầu việc</span>
-              <span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs"><i class="fa-solid fa-list-check"></i></span>
-            </div>
-            <p id="kpiStatTotalTasks" class="text-2xl sm:text-3xl font-black text-slate-800 font-num mt-2">0</p>
-            <p id="kpiStatTasksSubDetail" class="text-[11px] text-slate-400 mt-1 font-medium truncate">0 định lượng · 0 quy chuẩn</p>
-          </div>
-
-          <div class="bg-white border border-slate-200/90 p-4 rounded-3xl shadow-2xs relative overflow-hidden group hover:border-teal-300 transition">
-            <div class="flex items-center justify-between text-slate-400">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Độ phủ phát sinh</span>
-              <span class="w-7 h-7 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-xs"><i class="fa-solid fa-chart-line"></i></span>
-            </div>
-            <p id="kpiStatTaskCoverageRate" class="text-2xl sm:text-3xl font-black text-teal-800 font-num mt-2">0%</p>
-            <p id="kpiStatActiveTasksDetail" class="text-[11px] text-teal-700 mt-1 font-semibold truncate">0/0 đầu việc có phát sinh</p>
-          </div>
-
-          <div class="bg-white border border-slate-200/90 p-4 rounded-3xl shadow-2xs relative overflow-hidden group hover:border-sky-300 transition flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between text-slate-400">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kỷ luật chấp hành</span>
-                <span class="w-7 h-7 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center text-xs"><i class="fa-solid fa-user-check"></i></span>
-              </div>
-              <div class="flex items-baseline justify-between mt-2">
-                <span id="kpiStatAdherenceRate" class="text-2xl sm:text-3xl font-black text-sky-800 font-num">0%</span>
-                <span id="kpiStatActiveDays" class="text-[11px] font-bold text-slate-500 font-num">0/0 ngày</span>
-              </div>
-            </div>
-            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-              <div id="kpiCompletionProgressBar" class="h-2 rounded-full bg-sky-500 transition-all duration-700" style="width: 0%"></div>
-            </div>
-          </div>
-
-          <div class="bg-white border border-slate-200/90 p-4 rounded-3xl shadow-2xs relative overflow-hidden group hover:border-amber-300 transition">
-            <div class="flex items-center justify-between text-slate-400">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Đơn vị bám sát nhất</span>
-              <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-xs"><i class="fa-solid fa-trophy"></i></span>
-            </div>
-            <p id="kpiTopDeptName" class="text-base sm:text-lg font-black text-slate-800 mt-2 truncate" title="Bộ phận có chỉ số chấp hành đầu việc tốt nhất">---</p>
-            <p id="kpiTopDeptMetric" class="text-[11px] font-bold text-amber-800 mt-1 font-num">Độ phủ: 0% · Tuân thủ: 0%</p>
-          </div>
-        </div>
-
-        <!-- ================= BIỂU ĐỒ TRỰC QUAN NHỊP ĐỘ BÁO CÁO & BẢNG VINH DANH THI ĐUA ================= -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
-          <!-- 1. BIỂU ĐỒ NHỊP ĐỘ BÁO CÁO THEO NGÀY (Rhythm Trend Chart) -->
-          <!-- 1. BIỂU ĐỒ NHỊP ĐỘ BÁO CÁO & SỐ LIỆU TỪNG ĐẦU VIỆC -->
-          <div id="activityRhythmCard" class="lg:col-span-2 bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3.5 flex flex-col justify-between">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
-              <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-sm shadow-2xs">
-                  <i class="fa-solid fa-chart-column"></i>
-                </span>
-                <div>
-                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhịp Độ Phát Sinh & Số Liệu Từng Đầu Việc</h4>
-                  <p class="text-[11px] text-slate-400">Xem diễn biến số liệu nhập vào qua từng ngày của từng đầu việc cụ thể</p>
-                </div>
-              </div>
-              <span id="chartPeakDayBadge" class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-teal-50 text-teal-800 border border-teal-200 font-num">
-                Cao điểm: --
-              </span>
-            </div>
-
-            <!-- Thanh chọn đầu việc & Chuyển đổi nhanh -->
-            <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
-                <!-- Cụm chọn đầu việc: Nhãn + Dropdown + Nút trước/sau -->
-                <div class="flex items-center gap-2 flex-1 min-w-0">
-                  <label for="rhythmTaskSelect" class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 shrink-0">
-                    <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
-                    <span class="hidden sm:inline">Xem đầu việc:</span>
-                    <span class="sm:hidden">Việc:</span>
-                  </label>
-                  <div class="flex items-center gap-1 flex-1 min-w-0">
-                    <div class="relative flex-1 min-w-0">
-                      <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)" class="w-full min-w-0 bg-white border border-slate-200 hover:border-emerald-400 text-xs font-bold text-slate-800 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer truncate shadow-2xs transition">
-                        <!-- Tùy chọn sẽ nạp tự động bằng JS -->
-                      </select>
-                    </div>
-                    <div class="flex items-center gap-0.5 shrink-0">
-                      <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
-                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                      </button>
-                      <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Thẻ thống kê nhanh của đầu việc đang chọn -->
-                <div id="rhythmTaskStatBadges" class="flex items-center gap-1.5 shrink-0 self-end sm:self-center text-[11px] font-bold">
-                  <span id="rhythmSelectedTaskTotal" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
-                    <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
-                    <span>Tổng: 0</span>
-                  </span>
-                  <span id="rhythmSelectedTaskDays" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
-                    <span>0 ngày</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Khung vẽ biểu đồ cột tương tác -->
-            <div class="w-full pt-1">
-              <!-- Nhãn trạng thái hiển thị trên đỉnh biểu đồ -->
-              <div class="flex items-center justify-between px-1 pb-1.5 text-xs gap-2">
-                <span id="rhythmChartViewingTaskTitle" class="font-black text-slate-800 truncate flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Tổng hợp tất cả đầu việc</span>
-                </span>
-                <span id="rhythmChartScaleMode" class="text-[10px] text-slate-400 font-semibold font-num flex-shrink-0">
-                  Số liệu: Số lượng nhập vào
-                </span>
-              </div>
-
-              <div id="rhythmBarChartSvgContainer" class="w-full h-44 flex items-end gap-1 sm:gap-1.5 px-1 pb-1 overflow-x-auto custom-scroll border-b border-slate-200">
-                <!-- Các cột biểu đồ và số liệu nhập vào sẽ được render tự động bằng JS -->
-              </div>
-              <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold font-num pt-1.5 px-1">
-                <span>Ngày 01</span>
-                <span class="text-slate-500 font-medium italic"><i class="fa-solid fa-hand-pointer text-[9px] mr-1"></i>Nhấp vào cột để cuộn bảng ma trận đến ngày đó</span>
-                <span id="chartLastDayLabel">Ngày cuối</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (Thống kê số ngày chưa báo cáo của từng người & nhóm gộp) -->
-          <div id="deptLeaderboardCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <span id="followUpCardIconBox" class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs">
+        <!-- DÒNG 1: HAI BẢNG THEO DÕI ĐÔN ĐỐC & THI ĐUA TRÌNH BÀY NGANG HÀNG TRÊN CÙNG MỘT DÒNG (50 - 50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 sm:gap-4">
+          <!-- 1. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ -->
+          <div id="deptLeaderboardCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <span id="followUpCardIconBox" class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-base shadow-2xs">
                   <i id="followUpCardIcon" class="fa-solid fa-clipboard-check"></i>
                 </span>
                 <div>
-                  <h4 id="followUpCardTitle" class="text-xs font-black uppercase tracking-wider text-slate-800">Theo Dõi & Đôn Đốc Tiến Độ</h4>
-                  <p id="followUpCardSubtitle" class="text-[11px] text-slate-400">Thống kê số ngày chưa báo cáo</p>
+                  <h4 id="followUpCardTitle" class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800">Theo Dõi & Đôn Đốc Tiến Độ</h4>
+                  <p id="followUpCardSubtitle" class="text-[11px] text-slate-400">Thống kê số ngày chưa báo cáo của từng người & nhóm gộp</p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5">
-                <span id="followUpPendingBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 font-num">Theo dõi tiến độ</span>
+                <span id="followUpPendingBadge" class="px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-200/90 font-num">Theo dõi tiến độ</span>
               </div>
             </div>
 
@@ -1258,54 +1108,120 @@
               </button>
             </div>
 
-            <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-48 custom-scroll pr-1">
-              <!-- Danh sách Cần đôn đốc / Thi đua sẽ render tự động bằng JS -->
+            <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll pr-1">
+              <!-- Danh sách Cần đôn đốc / Theo dõi sẽ render tự động bằng JS -->
+            </div>
+          </div>
+
+          <!-- 2. BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ -->
+          <div id="progressCompetitionCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <span class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base shadow-2xs">
+                  <i class="fa-solid fa-medal"></i>
+                </span>
+                <div>
+                  <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800">Thi Đua Bám Sát Tiến Độ</h4>
+                  <p id="insightLeaderboardSubtitle" class="text-[11px] text-slate-400">Đã hoàn thành báo cáo đến ngày ...</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span id="insightLeaderboardBadge" class="px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-200/90 font-num">0 hoàn thành</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-emerald-50/40 rounded-2xl border border-emerald-100 text-[11px] font-semibold text-emerald-800 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-trophy text-amber-500"></i>
+                <span>Vinh danh nhân sự & nhóm gộp đã hoàn thành báo cáo</span>
+              </span>
+              <span class="text-[10px] text-emerald-700 font-num font-bold">Cập nhật tức thì</span>
+            </div>
+
+            <div id="insightAttentionTasks" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll pr-1">
+              <!-- Danh sách vinh danh thi đua sẽ render tự động bằng JS -->
             </div>
           </div>
         </div>
 
-        <div id="taskSemanticInsightCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+        <!-- DÒNG 2: BẢNG NHỊP ĐỘ PHÁT SINH 1 DÒNG RIÊNG BIỆT TRÌNH BÀY HỢP LÝ CHUYÊN NGHIỆP (FULL WIDTH) -->
+        <div id="activityRhythmCard" class="w-full bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3.5 flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
             <div class="flex items-center gap-2">
-              <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm shadow-2xs">
-                <i class="fa-solid fa-brain"></i>
+              <span class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-sm shadow-2xs">
+                <i class="fa-solid fa-chart-column"></i>
               </span>
               <div>
-                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhận Định & Đọc Hiểu Chuyên Môn Danh Mục Đầu Việc</h4>
-                <p class="text-[11px] text-slate-400">Tự động phân nhóm tính chất công việc và đánh giá nhịp độ vận hành thực tế</p>
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhịp Độ Phát Sinh & Số Liệu Từng Đầu Việc</h4>
+                <p class="text-[11px] text-slate-400">Xem diễn biến số liệu nhập vào qua từng ngày của từng đầu việc cụ thể</p>
               </div>
             </div>
-            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 font-num">Task Insights</span>
+            <span id="chartPeakDayBadge" class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-teal-50 text-teal-800 border border-teal-200 font-num">
+              Cao điểm: --
+            </span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            <div class="p-3 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-2">
-              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-tight flex items-center gap-1.5">
-                <i class="fa-solid fa-layer-group text-emerald-600"></i>
-                <span>Phân Bổ Nhóm Nghiệp Vụ</span>
-              </span>
-              <div id="insightDomainBreakdown" class="space-y-1.5 text-xs"></div>
-            </div>
-
-            <div class="p-3 bg-emerald-50/40 rounded-2xl border border-emerald-200/60 space-y-2">
-              <span class="text-[11px] font-bold text-emerald-900 uppercase tracking-tight flex items-center gap-1.5">
-                <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                <span>Đầu Việc Vận Hành Đều Đặn</span>
-              </span>
-              <div id="insightConsistentTasks" class="space-y-1 text-xs text-slate-700"></div>
-            </div>
-
-            <!-- BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (Đổi vị trí xuống dưới: Cập nhật nhân sự & nhóm gộp đã hoàn thành báo cáo) -->
-            <div class="p-3 bg-emerald-50/40 rounded-2xl border border-emerald-200/60 space-y-2 flex flex-col">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-emerald-950 uppercase tracking-tight flex items-center gap-1.5">
-                  <i class="fa-solid fa-medal text-emerald-600"></i>
-                  <span>Thi Đua Bám Sát Tiến Độ</span>
-                </span>
-                <span id="insightLeaderboardBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 font-num">0 hoàn thành</span>
+          <!-- Thanh chọn đầu việc & Chuyển đổi nhanh -->
+          <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
+              <!-- Cụm chọn đầu việc: Nhãn + Dropdown + Nút trước/sau -->
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <label for="rhythmTaskSelect" class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 shrink-0">
+                  <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
+                  <span class="hidden sm:inline">Xem đầu việc:</span>
+                  <span class="sm:hidden">Việc:</span>
+                </label>
+                <div class="flex items-center gap-1 flex-1 min-w-0">
+                  <div class="relative flex-1 min-w-0">
+                    <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)" class="w-full min-w-0 bg-white border border-slate-200 hover:border-emerald-400 text-xs font-bold text-slate-800 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer truncate shadow-2xs transition">
+                      <!-- Tùy chọn sẽ nạp tự động bằng JS -->
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                      <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo" class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                      <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p id="insightLeaderboardSubtitle" class="text-[10px] text-slate-500 italic">Đã hoàn thành báo cáo đến ngày ...</p>
-              <div id="insightAttentionTasks" class="flex-1 space-y-1.5 text-xs text-slate-700 max-h-36 overflow-y-auto custom-scroll pr-1"></div>
+
+              <!-- Thẻ thống kê nhanh của đầu việc đang chọn -->
+              <div id="rhythmTaskStatBadges" class="flex items-center gap-1.5 shrink-0 self-end sm:self-center text-[11px] font-bold">
+                <span id="rhythmSelectedTaskTotal" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
+                  <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
+                  <span>Tổng: 0</span>
+                </span>
+                <span id="rhythmSelectedTaskDays" class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
+                  <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
+                  <span>0 ngày</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Khung vẽ biểu đồ cột tương tác -->
+          <div class="w-full pt-1">
+            <!-- Nhãn trạng thái hiển thị trên đỉnh biểu đồ -->
+            <div class="flex items-center justify-between px-1 pb-1.5 text-xs gap-2">
+              <span id="rhythmChartViewingTaskTitle" class="font-black text-slate-800 truncate flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Tổng hợp tất cả đầu việc</span>
+              </span>
+              <span id="rhythmChartScaleMode" class="text-[10px] text-slate-400 font-semibold font-num flex-shrink-0">
+                Số liệu: Số lượng nhập vào
+              </span>
+            </div>
+
+            <div id="rhythmBarChartSvgContainer" class="w-full h-44 flex items-end gap-1 sm:gap-1.5 px-1 pb-1 overflow-x-auto custom-scroll border-b border-slate-200">
+              <!-- Các cột biểu đồ và số liệu nhập vào sẽ được render tự động bằng JS -->
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold font-num pt-1.5 px-1">
+              <span>Ngày 01</span>
+              <span class="text-slate-500 font-medium italic"><i class="fa-solid fa-hand-pointer text-[9px] mr-1"></i>Nhấp vào cột để cuộn bảng ma trận đến ngày đó</span>
+              <span id="chartLastDayLabel">Ngày cuối</span>
             </div>
           </div>
         </div>
@@ -7278,7 +7194,10 @@
       }
 
       const mStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
-      document.getElementById('analyticsStaffNameBadge').innerText = `${staffTitle} • Tháng ${mStr}/${currentSelectedYear}`;
+      const staffBadge = document.getElementById('analyticsStaffNameBadge');
+      if (staffBadge) {
+        staffBadge.innerText = `${staffTitle} • Tháng ${mStr}/${currentSelectedYear}`;
+      }
 
       let totalTasksCount = 0;
       let numericTasksCount = 0;
@@ -7391,21 +7310,31 @@
         }
       });
 
-      document.getElementById('kpiStatTotalTasks').innerText = `${totalTasksCount}`;
-      document.getElementById('kpiStatTasksSubDetail').innerText = `${numericTasksCount} định lượng · ${symbolTasksCount} quy chuẩn`;
+      const kpiTotal = document.getElementById('kpiStatTotalTasks');
+      if (kpiTotal) kpiTotal.innerText = `${totalTasksCount}`;
+      const kpiSubDetail = document.getElementById('kpiStatTasksSubDetail');
+      if (kpiSubDetail) kpiSubDetail.innerText = `${numericTasksCount} định lượng · ${symbolTasksCount} quy chuẩn`;
 
-      document.getElementById('kpiStatTaskCoverageRate').innerText = `${taskCoverageRate}%`;
-      document.getElementById('kpiStatActiveTasksDetail').innerText = `${activeTasksCount}/${totalTasksCount} đầu việc có phát sinh`;
+      const kpiCoverage = document.getElementById('kpiStatTaskCoverageRate');
+      if (kpiCoverage) kpiCoverage.innerText = `${taskCoverageRate}%`;
+      const kpiActiveDetail = document.getElementById('kpiStatActiveTasksDetail');
+      if (kpiActiveDetail) kpiActiveDetail.innerText = `${activeTasksCount}/${totalTasksCount} đầu việc có phát sinh`;
 
-      document.getElementById('kpiStatAdherenceRate').innerText = `${adherenceRate}%`;
-      document.getElementById('kpiStatActiveDays').innerText = `${activeDaysCount}/${data.dayCols.length} ngày ghi nhận`;
+      const kpiAdherence = document.getElementById('kpiStatAdherenceRate');
+      if (kpiAdherence) kpiAdherence.innerText = `${adherenceRate}%`;
+      const kpiActiveDays = document.getElementById('kpiStatActiveDays');
+      if (kpiActiveDays) kpiActiveDays.innerText = `${activeDaysCount}/${data.dayCols.length} ngày ghi nhận`;
       const pBar = document.getElementById('kpiCompletionProgressBar');
       if (pBar) pBar.style.width = `${adherenceRate}%`;
 
-      document.getElementById('kpiTopDeptName').innerText = topDeptName;
-      document.getElementById('kpiTopDeptMetric').innerText = topDeptScore >= 0 
-        ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
-        : `Chưa có phát sinh`;
+      const kpiDept = document.getElementById('kpiTopDeptName');
+      if (kpiDept) kpiDept.innerText = topDeptName;
+      const kpiDeptMetric = document.getElementById('kpiTopDeptMetric');
+      if (kpiDeptMetric) {
+        kpiDeptMetric.innerText = topDeptScore >= 0 
+          ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
+          : `Chưa có phát sinh`;
+      }
 
       renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length, fullPeriodMatrixCache || data);
       renderActivityRhythmChart(data, dailyActiveTasksMap);
