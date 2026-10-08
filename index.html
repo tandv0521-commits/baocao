@@ -2884,6 +2884,19 @@
       if (hasInitializedApp) return;
       hasInitializedApp = true;
 
+      // Tự động thanh lọc các bản snapshot bị lỗi/phân rã "Chung bộ phận" trong localStorage
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('ops_matrix_snapshot_')) {
+            const val = localStorage.getItem(key);
+            if (val && (val.includes('"staffName":"Chung bộ phận"') || val.includes('"department":"Chưa phân bộ phận"'))) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      } catch(e) {}
+
       const today = new Date().toISOString().split('T')[0];
       const entryDateEl = document.getElementById('modalEntryDate');
       if (entryDateEl) {
@@ -6358,17 +6371,20 @@
             let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || "")));
             groupUserId = leadUser ? leadUser.id : deptMembers[0].id;
           } else {
-            const u = (dbUsers || []).find(u => u.id === t.assigned_user_id) || t.users;
+            const u = assignedUser;
             displayStaffName = u ? `${u.full_name}${u.role ? ' (' + u.role + ')' : ''}` : deptName;
-            groupUserId = u ? u.id : t.assigned_user_id;
+            groupUserId = u ? u.id : effectiveUserId;
           }
         } else {
           // BỘ PHẬN CÁ NHÂN (NHÓM THƯỜNG): Hiển thị họ tên thuần túy, bỏ thông tin vai trò
-          const u = (dbUsers || []).find(u => u.id === t.assigned_user_id) || t.users;
+          const u = assignedUser;
           if (u) {
             let cleanName = (u.full_name || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
             displayStaffName = cleanName;
             groupUserId = u.id;
+          } else if (effectiveUserId) {
+            displayStaffName = `Nhân sự #${effectiveUserId}`;
+            groupUserId = effectiveUserId;
           } else {
             displayStaffName = "Chung bộ phận";
           }
@@ -6442,13 +6458,19 @@
         if (savedSnapshot) {
           try {
             const parsed = JSON.parse(savedSnapshot);
-            if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+            const isCorrupted = !parsed || !parsed.staffGroups || parsed.staffGroups.length === 0 ||
+              parsed.staffGroups.some(g => g.staffName === "Chung bộ phận" || g.department === "Chưa phân bộ phận");
+            if (isCorrupted) {
+              localStorage.removeItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`);
+            } else if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
               applyClientFilterAndRender();
               return;
             }
-          } catch(e) {}
+          } catch(e) {
+            localStorage.removeItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`);
+          }
         }
       }
 
