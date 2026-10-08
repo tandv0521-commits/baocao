@@ -972,10 +972,14 @@
         <!-- Hàng 2: Đối tượng đang xem & Nút nhảy ngày thông minh -->
         <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
           <div id="staffTitleContainer" class="flex items-center gap-2 min-w-0">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+            <span id="staffTitleDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
             <span class="text-xs sm:text-sm font-bold text-slate-700 truncate">
               <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
             </span>
+            <button type="button" id="btnResetFollowUpFilter" onclick="resetMatrixFollowUpFilter()" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition shadow-2xs cursor-pointer active:scale-95 shrink-0" title="Xem lại tất cả công việc">
+              <i class="fa-solid fa-rotate-left text-amber-700 text-[10px]"></i>
+              <span>Xem lại tất cả</span>
+            </button>
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
@@ -3206,6 +3210,16 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function escapeJsStr(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\r/g, '')
+        .replace(/\n/g, ' ');
     }
 
     function removeAccents(str) {
@@ -5793,6 +5807,14 @@
       }
       document.getElementById('displayViewingStaffName').innerText = titleName;
 
+      const resetBtn = document.getElementById('btnResetFollowUpFilter');
+      if (resetBtn) resetBtn.classList.add('hidden');
+      const dotEl = document.getElementById('staffTitleDot');
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+      document.querySelectorAll('.followup-item-card').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+      });
+
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
       // 1. Lọc theo bộ phận: CHỈ GIỮ LẠI ĐÚNG BỘ PHẬN ĐƯỢC CHỌN (KHÔNG DÍNH DÒNG QUẢN LÝ KHÁC PHÒNG)
@@ -7018,9 +7040,9 @@
         ? `Độ phủ: ${topDeptCoverage}% · Tuân thủ: ${topDeptAdherence}%` 
         : `Chưa có phát sinh`;
 
-      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length, data);
+      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length, fullPeriodMatrixCache || data);
       renderActivityRhythmChart(data, dailyActiveTasksMap);
-      renderDeptLeaderboard(deptAggregation, data);
+      renderDeptLeaderboard(deptAggregation, fullPeriodMatrixCache || data);
       updateHeaderTodayStatus(data);
     }
 
@@ -7090,7 +7112,7 @@
           let html = '';
           completedList.forEach(item => {
             html += `
-              <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <span class="w-5 h-5 rounded-lg ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-[10px] shrink-0">
                     <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -7751,7 +7773,7 @@
             : item.unreportedDaysList.slice(-3).map(d => 'ngày ' + d).join(', ') + ` (+${item.unreportedDaysList.length - 3} ngày)`;
 
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
@@ -7796,7 +7818,7 @@
         let html = '';
         completedList.forEach(item => {
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -7823,26 +7845,152 @@
       }
     }
 
-    function locateStaffOrGroupInMatrix(displayName, deptName) {
-      scrollToElement('matrixCard');
-      setTimeout(() => {
-        const rows = document.querySelectorAll('#matrixTableBody tr');
-        let found = false;
-        rows.forEach(tr => {
-          const text = tr.innerText || '';
-          if ((displayName && text.includes(displayName)) || (deptName && text.includes(deptName))) {
-            if (!found) {
-              tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              found = true;
-            }
-            tr.classList.add('bg-amber-100/90', 'transition-colors', 'duration-300');
-            setTimeout(() => {
-              tr.classList.remove('bg-amber-100/90');
-            }, 3000);
-          }
+    /**
+     * BẤM VÀO NHÂN SỰ / NHÓM GỘP TỪ BẢNG THEO DÕI:
+     * Nhảy lên bảng ma trận và lọc hiển thị chính xác các đầu việc của đối tượng đó
+     */
+    function locateStaffOrGroupInMatrix(displayName, deptName, isGroup, evt) {
+      if (!displayName) return;
+      const isGrp = (isGroup === true || isGroup === 'true') || isSharedGroupDeptClient(deptName) || isSharedGroupDeptClient(displayName);
+
+      const allGroups = (fullPeriodMatrixCache && fullPeriodMatrixCache.staffGroups && fullPeriodMatrixCache.staffGroups.length > 0)
+        ? fullPeriodMatrixCache.staffGroups
+        : (currentMatrixData && currentMatrixData.staffGroups ? currentMatrixData.staffGroups : []);
+
+      if (allGroups.length === 0) {
+        showToast("Dữ liệu đang tải, vui lòng thử lại sau giây lát!", true);
+        return;
+      }
+
+      let matchedGroups = [];
+
+      if (isGrp) {
+        // 1. Nhóm gộp / Tổ kho: Tìm các nhóm kho có department tương ứng
+        matchedGroups = allGroups.filter(grp => {
+          const grpIsShared = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+          if (!grpIsShared) return false;
+          return isDeptEquivalent(grp.department, deptName) || 
+                 isDeptEquivalent(grp.department, displayName) ||
+                 normalizeDeptKey(grp.department) === normalizeDeptKey(deptName) ||
+                 normalizeDeptKey(grp.department) === normalizeDeptKey(displayName);
         });
-        showToast(`Đang xem vị trí: ${displayName}`);
-      }, 350);
+
+        // Nếu chưa thấy, thử tìm lỏng hơn theo normalizeDeptKey
+        if (matchedGroups.length === 0) {
+          matchedGroups = allGroups.filter(grp => {
+            const grpNorm = normalizeDeptKey(grp.department);
+            const targetNorm = normalizeDeptKey(deptName || displayName);
+            return grpNorm.includes(targetNorm) || targetNorm.includes(grpNorm);
+          });
+        }
+      } else {
+        // 2. Nhân sự cá nhân: Lọc đúng nhân sự này
+        matchedGroups = allGroups.filter(grp => {
+          const grpIsShared = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+          if (grpIsShared) return false;
+
+          const staffMatch = isStaffMatchedInCell(displayName, grp.staffName) ||
+            (removeAccents(grp.staffName || '').toLowerCase().includes(removeAccents(displayName || '').toLowerCase())) ||
+            (removeAccents(displayName || '').toLowerCase().includes(removeAccents(grp.staffName || '').toLowerCase()));
+
+          if (!staffMatch) return false;
+          if (deptName) {
+            return isDeptEquivalent(grp.department, deptName);
+          }
+          return true;
+        });
+
+        // Nếu chưa thấy (ví dụ nhân sự đổi phòng), tìm chỉ theo tên
+        if (matchedGroups.length === 0) {
+          matchedGroups = allGroups.filter(grp => {
+            const grpIsShared = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+            if (grpIsShared) return false;
+            return isStaffMatchedInCell(displayName, grp.staffName) ||
+              (removeAccents(grp.staffName || '').toLowerCase().includes(removeAccents(displayName || '').toLowerCase()));
+          });
+        }
+      }
+
+      // Đếm tổng số đầu việc tìm thấy
+      const totalTasksCount = matchedGroups.reduce((acc, g) => acc + (g.tasks ? g.tasks.length : 0), 0);
+
+      // Tạo cấu trúc dữ liệu hiển thị riêng cho ma trận
+      const filteredViewData = Object.assign({}, fullPeriodMatrixCache || currentMatrixData, {
+        staffGroups: matchedGroups,
+        queryDept: deptName || "TẤT CẢ",
+        queryStaff: displayName
+      });
+      currentMatrixData = filteredViewData;
+
+      // Render lại bảng ma trận với đúng các công việc của người/nhóm được chọn
+      renderMatrixTable(filteredViewData);
+
+      // Cập nhật giao diện tiêu đề đang xem & hiện nút [Xem lại tất cả]
+      const titleEl = document.getElementById('displayViewingStaffName');
+      const resetBtn = document.getElementById('btnResetFollowUpFilter');
+      const dotEl = document.getElementById('staffTitleDot');
+
+      if (titleEl) {
+        if (isGrp) {
+          titleEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-amber-900 font-black"><i class="fa-solid fa-users text-amber-600"></i>${escapeHtml(displayName)}</span> <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 ml-1">Nhóm gộp • ${totalTasksCount} đầu việc</span>`;
+        } else {
+          titleEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-amber-900 font-black"><i class="fa-solid fa-user text-amber-600"></i>${escapeHtml(displayName)}</span> <span class="text-[11px] font-medium text-slate-500 ml-1">(${escapeHtml(deptName || 'Bộ phận')} • <b class="text-amber-800">${totalTasksCount} đầu việc</b>)</span>`;
+        }
+      }
+      if (resetBtn) resetBtn.classList.remove('hidden');
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping flex-shrink-0";
+
+      // Đánh dấu active item trong danh sách theo dõi
+      document.querySelectorAll('.followup-item-card').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+      });
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+      }
+
+      // Cuộn mượt lên bảng ma trận công việc
+      scrollToElement('matrixCard');
+      const scroller = document.getElementById('tableScrollContainer');
+      if (scroller) {
+        scroller.scrollTop = 0;
+      }
+
+      // Hiệu ứng highlight nhẹ nhàng các dòng công việc vừa render
+      setTimeout(() => {
+        const rows = document.querySelectorAll('#sheetTableBody tr');
+        rows.forEach(r => {
+          r.classList.add('bg-amber-100/70', 'transition-colors', 'duration-500');
+          setTimeout(() => r.classList.remove('bg-amber-100/70'), 1500);
+        });
+      }, 300);
+
+      if (matchedGroups.length > 0) {
+        showToast(`Đang hiển thị ${totalTasksCount} việc của: ${displayName}`);
+      } else {
+        showToast(`Không tìm thấy đầu việc phân công cho: ${displayName}`, true);
+      }
+    }
+
+    /**
+     * HOÀN TÁC BỘ LỌC ĐÔN ĐỐC:
+     * Trở về hiển thị đầy đủ công việc của toàn bộ nhân sự theo cấu hình bộ lọc gốc
+     */
+    function resetMatrixFollowUpFilter() {
+      const resetBtn = document.getElementById('btnResetFollowUpFilter');
+      if (resetBtn) resetBtn.classList.add('hidden');
+      const dotEl = document.getElementById('staffTitleDot');
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+
+      document.querySelectorAll('.followup-item-card').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+      });
+
+      if (fullPeriodMatrixCache) {
+        applyClientFilterAndRender();
+      } else {
+        loadMatrixData(false);
+      }
+      showToast("Đã hiển thị lại toàn bộ nội dung công việc");
     }
 
     function filterDashboardFromLeaderboard(deptName) {
