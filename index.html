@@ -1366,17 +1366,12 @@
             <span>Chép ngày trước</span>
           </button>
 
-          <button type="button" onclick="quickFillCompleteX()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
-            <i class="fa-solid fa-check-double text-[11px]"></i>
-            <span>Đánh dấu X</span>
-          </button>
-
           <button type="button" id="btnRestoreDraft" onclick="restoreLocalDraft()" class="hidden px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer">
             <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
             <span>Phục hồi nháp</span>
           </button>
 
-          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer" title="Xóa trắng số liệu để nhập lại">
             <i class="fa-solid fa-eraser"></i>
           </button>
         </div>
@@ -1393,32 +1388,45 @@
           <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>
         </div>
 
-        <div id="noReportDayCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-3.5 transition">
-          <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none">
-              <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
-              <span class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-calendar-xmark text-slate-400"></i>
-                <span>Ngày này không có báo cáo số liệu (Nghỉ phép, Nghỉ ốm, Đi họp...)</span>
-              </span>
+        <!-- DÒNG NỔI BẬT DÀNH CHO CÁC NGÀY NGHỈ / KHÔNG CÓ SỐ LIỆU ĐỂ NHÂN SỰ TÍCH CHỌN -->
+        <div id="noReportDayCard" class="bg-gradient-to-r from-amber-50/95 via-orange-50/70 to-amber-50/95 border-2 border-amber-300 hover:border-amber-400 rounded-2xl p-3.5 sm:p-4 shadow-sm transition space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
+              <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-5 h-5 text-amber-600 rounded-lg border-2 border-amber-400 focus:ring-amber-500 focus:ring-offset-1 cursor-pointer accent-amber-600 transition shrink-0">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm font-black text-amber-950 flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-xmark text-amber-600 text-sm"></i>
+                    <span>Ngày này không có báo cáo số liệu / Ngày nghỉ</span>
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-200/90 text-amber-900 border border-amber-300 font-num shrink-0">Tích chọn để điền nhanh</span>
+                </div>
+                <p class="text-[11px] text-amber-800/80 font-medium mt-0.5 truncate sm:whitespace-normal">Áp dụng cho ngày Nghỉ phép, Nghỉ ốm, Công tác, Việc riêng, Nghỉ tuần, Nghỉ Lễ/Tết...</p>
+              </div>
             </label>
-            <span id="noReportBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">Đang kích hoạt</span>
+            <span id="noReportBadge" class="hidden text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-600 text-white shadow-xs shrink-0 flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Đang chọn</span>
+            </span>
           </div>
 
-          <div id="noReportReasonContainer" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-2.5">
+          <div id="noReportReasonContainer" class="hidden pt-3 border-t border-amber-200/80 space-y-2.5">
             <div class="flex flex-wrap items-center gap-1.5">
-              <span class="text-[11px] font-semibold text-slate-400 mr-1">Khai báo nhanh:</span>
-              <button type="button" onclick="setQuickReason('P', 'Nghỉ phép')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ phép năm/chế độ"><b class="font-black text-amber-700">P</b> Phép</button>
-              <button type="button" onclick="setQuickReason('Ô', 'Nghỉ ốm')" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ ốm đau/khám bệnh"><b class="font-black text-purple-700">Ô</b> Ốm</button>
-              <button type="button" onclick="setQuickReason('CT', 'Đi công tác')" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Đi công tác/đào tạo"><b class="font-black text-sky-700">CT</b> Công tác</button>
-              <button type="button" onclick="setQuickReason('VR', 'Việc riêng')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ việc riêng có phép"><b class="font-black text-slate-700">VR</b> Việc riêng</button>
-              <button type="button" onclick="setQuickReason('HT', 'Nghỉ hàng tuần')" class="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ hàng tuần theo quy định"><b class="font-black text-teal-700">HT</b> Nghỉ tuần</button>
-              <button type="button" onclick="setQuickReason('H', 'Học tập/Đào tạo')" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Học tập/tập huấn"><b class="font-black text-indigo-700">H</b> Học</button>
-              <button type="button" onclick="setQuickReason('L', 'Nghỉ Lễ/Tết')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ Lễ/Tết theo luật định"><b class="font-black text-rose-700">L</b> Lễ/Tết</button>
+              <span class="text-[11px] font-black text-amber-900 mr-1 flex items-center gap-1">
+                <i class="fa-solid fa-tag text-amber-600"></i>
+                <span>Chọn lý do nghỉ:</span>
+              </span>
+              <button type="button" onclick="setQuickReason('P', 'Nghỉ phép')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ phép năm/chế độ"><b class="font-black text-amber-700">P</b> Phép</button>
+              <button type="button" onclick="setQuickReason('Ô', 'Nghỉ ốm')" class="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ ốm đau/khám bệnh"><b class="font-black text-purple-700">Ô</b> Ốm</button>
+              <button type="button" onclick="setQuickReason('CT', 'Đi công tác')" class="px-2.5 py-1 bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Đi công tác/đào tạo"><b class="font-black text-sky-700">CT</b> Công tác</button>
+              <button type="button" onclick="setQuickReason('VR', 'Việc riêng')" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ việc riêng có phép"><b class="font-black text-slate-700">VR</b> Việc riêng</button>
+              <button type="button" onclick="setQuickReason('HT', 'Nghỉ hàng tuần')" class="px-2.5 py-1 bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ hàng tuần theo quy định"><b class="font-black text-teal-700">HT</b> Nghỉ tuần</button>
+              <button type="button" onclick="setQuickReason('H', 'Học tập/Đào tạo')" class="px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Học tập/tập huấn"><b class="font-black text-indigo-700">H</b> Học</button>
+              <button type="button" onclick="setQuickReason('L', 'Nghỉ Lễ/Tết')" class="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ Lễ/Tết theo luật định"><b class="font-black text-rose-700">L</b> Lễ/Tết</button>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do vắng mặt hoặc công tác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-              <button type="button" onclick="applyReasonToAllTasks(document.getElementById('noReportReasonInput').value)" class="px-3.5 h-10 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs flex-shrink-0 cursor-pointer">
+              <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do nghỉ hoặc công tác khác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-amber-300 rounded-xl text-slate-800 font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs" />
+              <button type="button" onclick="applyReasonToAllTasks(document.getElementById('noReportReasonInput').value)" class="px-4 h-10 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-amber-600/20 flex-shrink-0 cursor-pointer">
                 <i class="fa-solid fa-check"></i>
                 <span>Điền tất cả</span>
               </button>
@@ -6464,21 +6472,30 @@
           }
 
           let dayCellsHtml = '';
+          const isLastTaskOfStaff = (tIdx === grp.tasks.length - 1);
+
           data.dayCols.forEach((dc, cIdx) => {
             const rawVal = t.dailyValues[dc.colIndex] !== undefined ? String(t.dailyValues[dc.colIndex]).trim() : '';
             const isToday = dc.isToday;
             const dateObj = new Date(currentSelectedYear, currentSelectedMonth - 1, dc.dayNum);
             const isSunday = (dateObj.getDay() === 0);
 
+            const symInfo = getSmartSymbolInfo(rawVal);
+            const isLeaveDay = !!(symInfo && symInfo.isLeave);
+
             let cellBgClass = "";
-            if (isToday) {
+            let cellStyle = "";
+
+            if (isLeaveDay) {
+              // NGÀY NGHỈ: TÔ MÀU TRONG Ô MA TRẬN, BỎ CÁC ĐƯỜNG KẺ Ô CẮT NGANG
+              cellStyle = `background-color: ${symInfo.bg} !important; ${!isLastTaskOfStaff ? 'border-bottom: 1px solid transparent !important;' : ''}`;
+            } else if (isToday) {
               cellBgClass = "bg-emerald-50/40 border-x-2 border-emerald-300 font-semibold";
             } else if (isSunday) {
               cellBgClass = "col-sunday-cell bg-rose-50/25";
             }
 
             let cellContentHtml = '';
-            const symInfo = getSmartSymbolInfo(rawVal);
 
             if (canEditThisRow && !currentPeriodLocked) {
               let displayVal = '';
@@ -6486,7 +6503,12 @@
               let titleAttr = '';
               let extraClasses = '';
 
-              if (symInfo) {
+              if (isLeaveDay) {
+                displayVal = symInfo.code;
+                badgeStyles = `background-color: transparent !important; color: ${symInfo.text} !important; border: none !important; box-shadow: none !important; font-weight: 900 !important; text-align: center;`;
+                titleAttr = `title="${escapeHtml(symInfo.tooltip)}"`;
+                extraClasses = 'matrix-badge-cell';
+              } else if (symInfo) {
                 displayVal = symInfo.code;
                 badgeStyles = `background-color: ${symInfo.bg} !important; color: ${symInfo.text} !important; border: 1px solid ${symInfo.border} !important; font-weight: 900 !important;`;
                 titleAttr = `title="${escapeHtml(symInfo.tooltip)}"`;
@@ -6514,7 +6536,15 @@
                   oninput="formatNumberInputLive(this)" />
               `;
             } else {
-              if (symInfo) {
+              if (isLeaveDay) {
+                cellContentHtml = `
+                  <span class="inline-flex items-center justify-center font-black text-xs select-none" 
+                    style="color: ${symInfo.text};" 
+                    title="${escapeHtml(symInfo.tooltip)}">
+                    ${symInfo.code}
+                  </span>
+                `;
+              } else if (symInfo) {
                 cellContentHtml = `
                   <span class="inline-flex items-center justify-center min-w-[24px] h-[22px] px-1.5 rounded-md text-[11px] font-black border shadow-2xs select-none ${symInfo.badgeClass}" 
                     style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" 
@@ -6540,7 +6570,7 @@
             }
 
             dayCellsHtml += `
-              <td class="py-1 px-1 border-r border-b border-slate-200 text-center ${cellBgClass} relative">
+              <td class="py-1 px-1 border-r ${(!isLeaveDay || isLastTaskOfStaff) ? 'border-b border-slate-200' : ''} text-center ${cellBgClass} relative" style="${cellStyle}">
                 ${cellContentHtml}
               </td>
             `;
@@ -6655,7 +6685,18 @@
       const symInfo = getSmartSymbolInfo(rawVal);
       const normalizedVal = symInfo ? symInfo.code : rawVal;
 
-      if (symInfo) {
+      const tdElem = inputElem.closest('td');
+      if (symInfo && symInfo.isLeave) {
+        inputElem.value = symInfo.code;
+        inputElem.style.setProperty('background-color', 'transparent', 'important');
+        inputElem.style.setProperty('color', symInfo.text, 'important');
+        inputElem.style.setProperty('border', 'none', 'important');
+        inputElem.style.setProperty('box-shadow', 'none', 'important');
+        inputElem.style.setProperty('font-weight', '900', 'important');
+        inputElem.title = symInfo.tooltip;
+        inputElem.classList.add('matrix-badge-cell');
+        if (tdElem) tdElem.style.setProperty('background-color', symInfo.bg, 'important');
+      } else if (symInfo) {
         inputElem.value = symInfo.code;
         inputElem.style.setProperty('background-color', symInfo.bg, 'important');
         inputElem.style.setProperty('color', symInfo.text, 'important');
@@ -6663,6 +6704,7 @@
         inputElem.style.setProperty('font-weight', '900', 'important');
         inputElem.title = symInfo.tooltip;
         inputElem.classList.add('matrix-badge-cell');
+        if (tdElem) tdElem.style.removeProperty('background-color');
       } else {
         inputElem.style.backgroundColor = '';
         inputElem.style.color = '';
@@ -6670,6 +6712,7 @@
         inputElem.style.fontWeight = '';
         inputElem.title = '';
         inputElem.classList.remove('matrix-badge-cell');
+        if (tdElem) tdElem.style.removeProperty('background-color');
       }
 
       if (oldVal === normalizedVal) return;
@@ -6724,7 +6767,17 @@
         inputElem.value = valToCache;
         inputElem.classList.remove('cell-saving');
 
-        if (symInfo) {
+        if (symInfo && symInfo.isLeave) {
+          inputElem.style.setProperty('background-color', 'transparent', 'important');
+          inputElem.style.setProperty('color', symInfo.text, 'important');
+          inputElem.style.setProperty('border', 'none', 'important');
+          inputElem.style.setProperty('box-shadow', 'none', 'important');
+          inputElem.style.setProperty('font-weight', '900', 'important');
+          inputElem.title = symInfo.tooltip;
+          inputElem.classList.add('matrix-badge-cell');
+          const tdElem = inputElem.closest('td');
+          if (tdElem) tdElem.style.setProperty('background-color', symInfo.bg, 'important');
+        } else if (symInfo) {
           inputElem.style.setProperty('background-color', symInfo.bg, 'important');
           inputElem.style.setProperty('color', symInfo.text, 'important');
           inputElem.style.setProperty('border', `1px solid ${symInfo.border}`, 'important');
@@ -9180,6 +9233,36 @@
         });
 
         currentDayEntryTasks = tasksForDay;
+
+        // Tự động nhận diện nếu ngày được chọn đã có dữ liệu nghỉ
+        let existingLeaveSym = null;
+        let existingLeaveRaw = '';
+        if (tasksForDay.length > 0) {
+          const lTask = tasksForDay.find(t => {
+            const sym = getSmartSymbolInfo(t.currentValue);
+            return sym && sym.isLeave;
+          });
+          if (lTask) {
+            existingLeaveSym = getSmartSymbolInfo(lTask.currentValue);
+            existingLeaveRaw = lTask.currentValue;
+          }
+        }
+
+        if (chk) chk.checked = !!existingLeaveSym;
+        if (reasonContainer) {
+          if (existingLeaveSym) {
+            reasonContainer.classList.remove('hidden');
+            const rInput = document.getElementById('noReportReasonInput');
+            if (rInput) rInput.value = existingLeaveSym ? `${existingLeaveSym.title} (${existingLeaveSym.code})` : existingLeaveRaw;
+          } else {
+            reasonContainer.classList.add('hidden');
+          }
+        }
+        if (badge) {
+          if (existingLeaveSym) badge.classList.remove('hidden');
+          else badge.classList.add('hidden');
+        }
+
         populateModalTaskSelectOptions(allTaskList);
         renderDayEntryTasks({
           tasks: tasksForDay,
@@ -9327,27 +9410,15 @@
         let inputControl = '';
         if (t.isSymbolTask) {
           inputControl = `
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="-" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-14 h-10 bg-white border border-slate-300 rounded-xl text-center font-black text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
-              ${!isReadOnly ? `
-                <div class="flex items-center gap-1 flex-wrap">
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'dayInput_')" class="h-9 px-2.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đạt/Hoàn thành">X</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'dayInput_')" class="h-9 px-2.5 bg-green-50 hover:bg-green-600 border border-green-200 text-green-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đang làm/Đạt chuẩn">Đ</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'dayInput_')" class="h-9 px-2.5 bg-red-50 hover:bg-red-600 border border-red-200 text-red-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Chưa đạt">C</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'dayInput_')" class="h-9 px-2 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Ô', 'dayInput_')" class="h-9 px-2 bg-purple-50 hover:bg-purple-600 border border-purple-200 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ ốm">Ô</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'CT', 'dayInput_')" class="h-9 px-2 bg-sky-50 hover:bg-sky-600 border border-sky-200 text-sky-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Công tác">CT</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'VR', 'dayInput_')" class="h-9 px-2 bg-slate-100 hover:bg-slate-300 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Việc riêng">VR</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, '', 'dayInput_')" class="h-9 px-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-600 rounded-xl text-xs transition cursor-pointer" title="Xóa"><i class="fa-solid fa-eraser"></i></button>
-                </div>
-              ` : ''}
+            <div class="w-full sm:w-64">
+              <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập ký hiệu hoặc kết quả...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(t.currentValue);
           inputControl = `
             <div class="w-full sm:w-64">
-              <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng hoặc ghi chú...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         }
@@ -9399,32 +9470,33 @@
 
       res.days.forEach((d, idx) => {
         const item = document.createElement('div');
-        item.className = `p-3 bg-white border ${d.isToday ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition`;
+        const hasNoData = (!d.value || d.value === '-' || d.value === '0');
+        const sym = getSmartSymbolInfo(d.value);
+        const isLeave = !!(sym && sym.isLeave);
+
+        let rowHighlightClass = "bg-white border-slate-200";
+        if (d.isToday) {
+          rowHighlightClass = "border-emerald-300 bg-emerald-50/20";
+        } else if (isLeave) {
+          rowHighlightClass = "border-amber-300 bg-amber-50/50";
+        } else if (hasNoData) {
+          rowHighlightClass = "border-dashed border-slate-300 bg-slate-50/60 hover:bg-amber-50/20";
+        }
+
+        item.className = `p-3 border rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition ${rowHighlightClass}`;
 
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
-            <div class="flex items-center gap-1">
-              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="-" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-12 h-9 bg-white border border-slate-300 rounded-xl text-center font-black text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
-              ${!isReadOnly ? `
-                <div class="flex items-center gap-1 flex-wrap">
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'taskDayInput_')" class="h-9 px-2.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đạt/Hoàn thành">X</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'taskDayInput_')" class="h-9 px-2.5 bg-green-50 hover:bg-green-600 border border-green-200 text-green-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đang làm/Đạt chuẩn">Đ</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'taskDayInput_')" class="h-9 px-2.5 bg-red-50 hover:bg-red-600 border border-red-200 text-red-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Chưa đạt">C</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'taskDayInput_')" class="h-9 px-2 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Ô', 'taskDayInput_')" class="h-9 px-2 bg-purple-50 hover:bg-purple-600 border border-purple-200 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ ốm">Ô</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'CT', 'taskDayInput_')" class="h-9 px-2 bg-sky-50 hover:bg-sky-600 border border-sky-200 text-sky-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Công tác">CT</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, 'VR', 'taskDayInput_')" class="h-9 px-2 bg-slate-100 hover:bg-slate-300 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Việc riêng">VR</button>
-                  <button type="button" onclick="setModalInputSymbol(${idx}, '', 'taskDayInput_')" class="h-9 px-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-600 rounded-xl text-xs transition cursor-pointer" title="Xóa"><i class="fa-solid fa-eraser"></i></button>
-                </div>
-              ` : ''}
+            <div class="w-48 sm:w-64">
+              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập ký hiệu...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(d.value);
           inputControl = `
             <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng hoặc ghi chú...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         }
