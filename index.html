@@ -247,9 +247,13 @@
     .person-row-inner td {
       border-bottom: 1px solid #e8edf2 !important; /* Nét kẻ mảnh dịu mắt giữa các đầu việc của cùng 1 người */
     }
-    td.person-merged-tt, td.person-merged-name, td.person-merged-leave-cell {
-      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT, Họ tên và Ngày nghỉ khớp chuẩn xác với vạch phân cách xanh ngọc */
+    td.person-merged-tt, td.person-merged-name {
+      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT và Họ tên khớp chuẩn xác với vạch phân cách */
       border-right: 1.5px solid #cbd5e1 !important;
+    }
+    td.person-merged-leave-cell {
+      border-bottom: 2px solid #059669 !important; /* Đáy ô gộp ngày nghỉ khớp chuẩn xác với vạch phân cách */
+      border-right: 1px solid #e2e8f0 !important;
     }
     td.col-fixed-task {
       border-right: 2px solid #cbd5e1 !important; /* Ngăn cách rõ ràng giữa Cột nội dung công việc và các cột ngày */
@@ -3604,6 +3608,28 @@
     };
 
     /**
+     * KIỂM TRA NGÀY TƯƠNG LAI: KHÔNG CHO PHÉP ĐIỀN BÁO CÁO TRƯỚC
+     * Ví dụ: Hôm nay là ngày 07 thì chỉ được điền từ 01 đến 07, ngày 08 trở đi không được phép điền.
+     */
+    function isFutureDay(dayNum, month = currentSelectedMonth, year = currentSelectedYear) {
+      if (!dayNum) return false;
+      const now = new Date();
+      const nowY = now.getFullYear();
+      const nowM = now.getMonth() + 1;
+      const nowD = now.getDate();
+
+      const targetY = parseInt(year, 10);
+      const targetM = parseInt(month, 10);
+      const targetD = parseInt(dayNum, 10);
+
+      if (targetY > nowY) return true;
+      if (targetY < nowY) return false;
+      if (targetM > nowM) return true;
+      if (targetM < nowM) return false;
+      return targetD > nowD;
+    }
+
+    /**
      * NHẬN DIỆN THÔNG MINH KÝ HIỆU HOẶC LÝ DO NGHỈ ĐỂ THU GỌN THÀNH HUY HIỆU GỌN GÀNG
      */
     function getSmartSymbolInfo(val) {
@@ -6475,6 +6501,9 @@
           const isLastTaskOfStaff = (tIdx === grp.tasks.length - 1);
 
           data.dayCols.forEach((dc, cIdx) => {
+            const isFuture = isFutureDay(dc.dayNum, currentSelectedMonth, currentSelectedYear);
+            const canEditThisCell = canEditThisRow && !currentPeriodLocked && !isFuture;
+
             // Kiểm tra xem nhân sự này trong ngày dc có ký hiệu nghỉ hay không
             const staffLeaveSym = grp.tasks
               .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
@@ -6485,7 +6514,7 @@
               if (tIdx === 0) {
                 // Chỉ tạo 1 ô duy nhất ở dòng đầu tiên với rowspan = totalStaffRows
                 let mergedInputHtml = '';
-                if (canEditThisRow && !currentPeriodLocked) {
+                if (canEditThisCell) {
                   mergedInputHtml = `
                     <input type="text" 
                       class="matrix-input-cell font-num matrix-badge-cell" 
@@ -6516,7 +6545,7 @@
                 }
 
                 dayCellsHtml += `
-                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell py-1 px-1 border-r text-center align-middle relative font-num" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important; border-right: 1px solid #cbd5e1 !important;">
+                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
                     <div class="flex items-center justify-center h-full w-full">
                       ${mergedInputHtml}
                     </div>
@@ -6540,17 +6569,18 @@
             let cellStyle = "";
 
             if (isLeaveDay) {
-              const btmBorder = isLastTaskOfStaff ? 'border-bottom: 2px solid #059669 !important;' : 'border-bottom: 1px solid #e8edf2 !important;';
-              cellStyle = `background-color: ${symInfo.bg} !important; ${btmBorder} border-right: 1px solid #cbd5e1 !important;`;
+              cellStyle = `background-color: ${symInfo.bg} !important;`;
             } else if (isToday) {
               cellBgClass = "bg-emerald-50/40 border-x-2 border-emerald-300 font-semibold";
             } else if (isSunday) {
               cellBgClass = "col-sunday-cell bg-rose-50/25";
+            } else if (isFuture) {
+              cellBgClass = "bg-slate-50/50 cursor-not-allowed select-none opacity-60";
             }
 
             let cellContentHtml = '';
 
-            if (canEditThisRow && !currentPeriodLocked) {
+            if (canEditThisCell) {
               let displayVal = '';
               let badgeStyles = '';
               let titleAttr = '';
@@ -6617,13 +6647,15 @@
                 } else {
                   cellContentHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border bg-slate-100 text-slate-700 border-slate-200 max-w-[50px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
                 }
+              } else if (isFuture) {
+                cellContentHtml = `<span class="text-[10px] text-slate-300 font-num select-none" title="Chưa đến ngày báo cáo (Chỉ được báo cáo từ ngày 01 đến hôm nay)">·</span>`;
               } else {
                 cellContentHtml = '';
               }
             }
 
             dayCellsHtml += `
-              <td class="py-1 px-1 border-r ${isLastTaskOfStaff ? 'border-b-2 border-emerald-600' : 'border-b border-slate-200'} text-center ${cellBgClass} relative" style="${cellStyle}">
+              <td class="py-1 px-1 border-r border-slate-200 text-center ${cellBgClass} relative" style="${cellStyle}">
                 ${cellContentHtml}
               </td>
             `;
@@ -6778,6 +6810,13 @@
     }
 
     async function saveSingleMatrixCellReport(taskId, userId, dayNum, val, inputElem) {
+      if (isFutureDay(dayNum, currentSelectedMonth, currentSelectedYear)) {
+        inputElem.classList.remove('cell-saving');
+        inputElem.value = inputElem.dataset.oldValue || '';
+        showToast(`Không được phép điền trước cho ngày ${dayNum}! Chỉ được báo cáo từ ngày 01 đến hôm nay.`, true);
+        return;
+      }
+
       inputElem.classList.add('cell-saving');
       const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
       const dFormatted = (dayNum < 10 ? '0' : '') + dayNum;
@@ -9360,8 +9399,10 @@
       } else {
         if (currentTaskEntryMeta && currentTaskEntryMeta.isSymbolTask) {
           currentTaskEntryDays.forEach((d, idx) => {
-            const el = document.getElementById(`taskDayInput_${idx}`);
-            if (el) { el.value = "X"; filledCount++; }
+            if (!isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear)) {
+              const el = document.getElementById(`taskDayInput_${idx}`);
+              if (el && !el.disabled) { el.value = "X"; filledCount++; }
+            }
           });
         }
       }
@@ -9398,6 +9439,16 @@
       if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
         showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
         return;
+      }
+
+      const now = new Date();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const dateInp = document.getElementById('modalEntryDate');
+      if (dateInp) {
+        dateInp.max = todayIso;
+        if (!dateInp.value || dateInp.value > todayIso) {
+          dateInp.value = todayIso;
+        }
       }
 
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
@@ -9446,7 +9497,18 @@
 
     function fetchDayEntryTasks() {
       let targetStaff = currentUser.fullName;
-      const targetDate = document.getElementById('modalEntryDate').value;
+      const now = new Date();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const entryDateEl = document.getElementById('modalEntryDate');
+      if (entryDateEl) entryDateEl.max = todayIso;
+
+      let targetDate = entryDateEl ? entryDateEl.value : todayIso;
+      if (targetDate > todayIso) {
+        showToast("Không được phép điền báo cáo trước! Chỉ được báo cáo từ ngày 01 đến hôm nay.", true);
+        targetDate = todayIso;
+        if (entryDateEl) entryDateEl.value = todayIso;
+      }
+
       const parts = targetDate.split('-');
       const targetDay = parseInt(parts[2], 10);
 
@@ -9755,9 +9817,13 @@
         const hasNoData = (!d.value || d.value === '-' || d.value === '0');
         const sym = getSmartSymbolInfo(d.value);
         const isLeave = !!(sym && sym.isLeave);
+        const isFuture = isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear);
+        const isDayReadOnly = isReadOnly || isFuture;
 
         let rowHighlightClass = "bg-white border-slate-200";
-        if (d.isToday) {
+        if (isFuture) {
+          rowHighlightClass = "opacity-60 bg-slate-50/70 border-slate-200 cursor-not-allowed";
+        } else if (d.isToday) {
           rowHighlightClass = "border-emerald-300 bg-emerald-50/20";
         } else if (isLeave) {
           rowHighlightClass = "border-amber-300 bg-amber-50/50";
@@ -9767,30 +9833,32 @@
 
         item.className = `p-3 border rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition ${rowHighlightClass}`;
 
+        const placeholderText = isFuture ? 'Chưa đến ngày' : (isReadOnly ? 'Chỉ xem' : (isSymbol ? 'Nhập ký hiệu...' : 'Nhập số lượng...'));
+
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
             <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập ký hiệu...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(d.value);
           inputControl = `
             <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
             </div>
           `;
         }
 
         item.innerHTML = `
           <div class="flex items-center gap-2.5">
-            <span class="w-9 h-9 rounded-2xl ${d.isToday ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 font-bold'} text-xs font-num flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <span class="w-9 h-9 rounded-2xl ${d.isToday ? 'bg-emerald-600 text-white font-black' : (isFuture ? 'bg-slate-100 text-slate-400 font-medium' : 'bg-slate-100 text-slate-700 font-bold')} text-xs font-num flex items-center justify-center flex-shrink-0 shadow-2xs">
               ${d.dayNum}
             </span>
             <div>
-              <p class="text-xs font-bold text-slate-800 leading-tight">Ngày ${d.label}</p>
-              ${d.isToday ? '<span class="text-[9px] font-bold text-emerald-700 uppercase">Hôm nay</span>' : ''}
+              <p class="text-xs font-bold ${isFuture ? 'text-slate-400' : 'text-slate-800'} leading-tight">Ngày ${d.label}</p>
+              ${d.isToday ? '<span class="text-[9px] font-bold text-emerald-700 uppercase">Hôm nay</span>' : (isFuture ? '<span class="text-[9px] font-semibold text-slate-400">Chưa đến ngày</span>' : '')}
             </div>
           </div>
           <div>${inputControl}</div>
@@ -9879,7 +9947,15 @@
       if (currentReportInputMode === 'day') {
         if (currentDayEntryTasks.length === 0) return;
         const curDate = document.getElementById('modalEntryDate').value;
-        const targetDay = parseInt(curDate.split('-')[2], 10);
+        const parts = curDate.split('-');
+        const targetYear = parseInt(parts[0], 10);
+        const targetMonth = parseInt(parts[1], 10);
+        const targetDay = parseInt(parts[2], 10);
+
+        if (isFutureDay(targetDay, targetMonth, targetYear)) {
+          showToast("Không được phép điền báo cáo trước! Chỉ được báo cáo từ ngày 01 đến hôm nay.", true);
+          return;
+        }
 
         updates = currentDayEntryTasks.map((t, idx) => {
           let val = document.getElementById(`dayInput_${idx}`).value.trim().replace(/,/g, '');
@@ -9896,18 +9972,21 @@
         if (!currentTaskEntryMeta || currentTaskEntryDays.length === 0) return;
         const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
 
-        updates = currentTaskEntryDays.map((d, idx) => {
-          let val = document.getElementById(`taskDayInput_${idx}`).value.trim().replace(/,/g, '');
-          if (val === '0') val = '';
-          const dFormatted = (d.dayNum < 10 ? '0' : '') + d.dayNum;
-          return {
-            taskId: currentTaskEntryMeta.taskId,
-            userId: currentTaskEntryMeta.userId,
-            reportDate: `${currentSelectedYear}-${mFormatted}-${dFormatted}`,
-            dayNum: d.dayNum,
-            value: val
-          };
-        });
+        updates = currentTaskEntryDays
+          .filter(d => !isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear))
+          .map((d, idx) => {
+            const inp = document.getElementById(`taskDayInput_${idx}`);
+            let val = inp ? inp.value.trim().replace(/,/g, '') : '';
+            if (val === '0') val = '';
+            const dFormatted = (d.dayNum < 10 ? '0' : '') + d.dayNum;
+            return {
+              taskId: currentTaskEntryMeta.taskId,
+              userId: currentTaskEntryMeta.userId,
+              reportDate: `${currentSelectedYear}-${mFormatted}-${dFormatted}`,
+              dayNum: d.dayNum,
+              value: val
+            };
+          });
       }
 
       // ĐỒNG BỘ 7 KÝ HIỆU NGÀY NGHỈ (P, Ô, CT, VR, HT, H, L):
@@ -9942,6 +10021,20 @@
             }
           });
         }
+      }
+
+      // LỌC BỎ HOÀN TOÀN MỌI BẢN GHI CỦA NGÀY TƯƠNG LAI TRƯỚC KHI GHI NHẬN
+      updates = updates.filter(u => {
+        const parts = u.reportDate ? u.reportDate.split('-') : [];
+        const y = parts[0] ? parseInt(parts[0], 10) : currentSelectedYear;
+        const m = parts[1] ? parseInt(parts[1], 10) : currentSelectedMonth;
+        const d = parts[2] ? parseInt(parts[2], 10) : u.dayNum;
+        return !isFutureDay(d, m, y);
+      });
+
+      if (updates.length === 0) {
+        showToast("Không có số liệu hợp lệ để lưu (không được phép điền trước các ngày tương lai)!", true);
+        return;
       }
 
       [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
