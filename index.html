@@ -6184,6 +6184,23 @@
       return "-";
     }
 
+    // ================= TIỆN ÍCH QUẢN LÝ VÀ SẮP XẾP THỨ TỰ CÔNG VIỆC TÙY CHỈNH =================
+    function cleanTaskGuide(rawGuide) {
+      if (!rawGuide) return "";
+      return rawGuide.replace(/<!--ord:\d+-->/g, '').trim();
+    }
+
+    function parseTaskOrder(rawGuide, fallbackIndex = 999999) {
+      if (!rawGuide) return fallbackIndex;
+      const match = rawGuide.match(/<!--ord:(\d+)-->/);
+      return match ? parseInt(match[1], 10) : fallbackIndex;
+    }
+
+    function formatTaskGuideWithOrder(cleanGuide, orderIndex) {
+      const pureGuide = cleanTaskGuide(cleanGuide);
+      return pureGuide ? `${pureGuide} <!--ord:${orderIndex}-->` : `<!--ord:${orderIndex}-->`;
+    }
+
     // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ THÁNG CŨ & LỌC CÔNG VIỆC THEO THỜI GIAN =================
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
@@ -6421,6 +6438,18 @@
           dailyValues: dailyValues,
           monthTotal: monthTotal
         });
+      });
+
+      // SẮP XẾP CÁC ĐẦU VIỆC TRONG TỪNG NHÓM THEO THỨ TỰ TÙY CHỈNH (DRAG-AND-DROP HOẶC MẶC ĐỊNH)
+      Object.values(staffGroupsMap).forEach(grp => {
+        if (grp.tasks && grp.tasks.length > 1) {
+          grp.tasks.sort((a, b) => {
+            const ordA = parseTaskOrder(a.guide, 999999);
+            const ordB = parseTaskOrder(b.guide, 999999);
+            if (ordA !== ordB) return ordA - ordB;
+            return (a.taskId || 0) - (b.taskId || 0);
+          });
+        }
       });
 
       const matrixResult = {
@@ -6781,7 +6810,7 @@
             }
           }
 
-          const guideHtml = t.guide ? `<span class="italic text-[10px] text-slate-400 block mt-0.5 leading-snug break-words">${escapeHtml(t.guide)}</span>` : '';
+          const guideHtml = t.guide ? `<span class="italic text-[10px] text-slate-400 block mt-0.5 leading-snug break-words">${escapeHtml(cleanTaskGuide(t.guide))}</span>` : '';
 
           const taskBadgeHtml = (totalStaffRows > 1)
             ? `<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold shrink-0 border border-emerald-200/90 font-num select-none mt-0.5">${tIdx + 1}</span>`
@@ -9793,7 +9822,7 @@
           currentTaskEntryMeta = targetTask;
           currentTaskEntryMeta.userId = targetUserId;
           document.getElementById('modeTaskCurrentTitle').innerText = targetTask.taskName;
-          document.getElementById('modeTaskCurrentGuide').innerText = targetTask.guide || "Ghi nhận tiến độ công việc trong tháng";
+          document.getElementById('modeTaskCurrentGuide').innerText = cleanTaskGuide(targetTask.guide) || "Ghi nhận tiến độ công việc trong tháng";
 
           populateModalTaskSelectOptions(allTaskList);
 
@@ -9888,7 +9917,7 @@
               <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-100">${idx + 1}</span>
               <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug break-words">${escapeHtml(t.taskName)}</h4>
             </div>
-            <p class="text-[11px] text-slate-400 italic ml-7 break-words">${escapeHtml(t.guide)}</p>
+            <p class="text-[11px] text-slate-400 italic ml-7 break-words">${escapeHtml(cleanTaskGuide(t.guide))}</p>
           </div>
           <div class="self-end sm:self-center flex-shrink-0 w-full sm:w-auto">${inputControl}</div>
         `;
@@ -10233,6 +10262,7 @@
 
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.remove('hidden');
+      initAssignTasksDragAndDrop();
 
       try {
         const deptSelect = document.getElementById('modalAssignDeptSelect');
@@ -10648,15 +10678,91 @@
           taskDataIds = new Set((repData || []).map(r => r.task_id));
         }
 
-        renderAssignTaskRows(tasks.map(t => ({
+        // Sắp xếp các đầu việc theo thứ tự tùy chỉnh đã lưu (thẻ ord trong guide) hoặc theo ID
+        const sortedTasks = (tasks || []).slice().sort((a, b) => {
+          const ordA = parseTaskOrder(a.guide, 999999);
+          const ordB = parseTaskOrder(b.guide, 999999);
+          if (ordA !== ordB) return ordA - ordB;
+          return (a.id || 0) - (b.id || 0);
+        });
+
+        renderAssignTaskRows(sortedTasks.map(t => ({
           taskId: t.id,
           taskName: t.task_name,
-          guide: t.guide,
+          guide: cleanTaskGuide(t.guide),
           hasData: taskDataIds.has(t.id)
         })));
       } catch (err) {
         container.innerHTML = `<p class="empty-assign-msg text-xs text-rose-500 py-3 text-center">Lỗi tải dữ liệu: ${err.message}</p>`;
       }
+    }
+
+    // ================= XỬ LÝ KÉO THẢ (DRAG & DROP) VÀ THỨ TỰ ĐẦU VIỆC =================
+    let hasInitAssignDrag = false;
+    function initAssignTasksDragAndDrop() {
+      const container = document.getElementById('assignTasksListEditor');
+      if (!container || hasInitAssignDrag) return;
+      hasInitAssignDrag = true;
+
+      let draggedRow = null;
+
+      container.addEventListener('dragstart', (e) => {
+        if (['INPUT', 'TEXTAREA', 'BUTTON'].includes(e.target.tagName)) {
+          e.preventDefault();
+          return;
+        }
+        const row = e.target.closest('.assign-task-row');
+        if (!row) return;
+        draggedRow = row;
+        row.classList.add('opacity-40', 'border-emerald-500', 'bg-emerald-50/40', 'scale-[0.99]');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', row.dataset.taskId || '');
+      });
+
+      container.addEventListener('dragend', (e) => {
+        if (draggedRow) {
+          draggedRow.classList.remove('opacity-40', 'border-emerald-500', 'bg-emerald-50/40', 'scale-[0.99]');
+        }
+        draggedRow = null;
+        updateAssignTaskOrderNumbers();
+      });
+
+      container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!draggedRow) return;
+        const targetRow = e.target.closest('.assign-task-row');
+        if (!targetRow || targetRow === draggedRow) return;
+
+        const rect = targetRow.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        container.insertBefore(draggedRow, next && targetRow.nextSibling !== draggedRow ? targetRow.nextSibling : targetRow);
+        updateAssignTaskOrderNumbers();
+      });
+    }
+
+    function updateAssignTaskOrderNumbers() {
+      const container = document.getElementById('assignTasksListEditor');
+      if (!container) return;
+      const rows = container.querySelectorAll('.assign-task-row');
+      rows.forEach((r, idx) => {
+        const numEl = r.querySelector('.task-order-num');
+        if (numEl) numEl.innerText = idx + 1;
+      });
+    }
+
+    function moveAssignTaskRowUp(btn) {
+      const row = btn.closest('.assign-task-row');
+      if (!row || !row.previousElementSibling || !row.previousElementSibling.classList.contains('assign-task-row')) return;
+      row.parentNode.insertBefore(row, row.previousElementSibling);
+      updateAssignTaskOrderNumbers();
+    }
+
+    function moveAssignTaskRowDown(btn) {
+      const row = btn.closest('.assign-task-row');
+      if (!row || !row.nextElementSibling || !row.nextElementSibling.classList.contains('assign-task-row')) return;
+      row.parentNode.insertBefore(row.nextElementSibling, row);
+      updateAssignTaskOrderNumbers();
     }
 
     function renderAssignTaskRows(tasks) {
@@ -10669,9 +10775,10 @@
         return;
       }
 
-      tasks.forEach(t => {
-        appendAssignTaskRowElement(t.taskName, t.guide, t.hasData, t.taskName, t.taskId);
+      tasks.forEach((t, idx) => {
+        appendAssignTaskRowElement(t.taskName, t.guide, t.hasData, t.taskName, t.taskId, idx + 1);
       });
+      updateAssignTaskOrderNumbers();
     }
 
     function addNewAssignTaskRow() {
@@ -10680,39 +10787,54 @@
       const emptyMsg = container.querySelector('.empty-assign-msg');
       if (emptyMsg) emptyMsg.remove();
       appendAssignTaskRowElement("", "Ghi số lượng phát sinh trong ngày", false, "", null);
+      updateAssignTaskOrderNumbers();
     }
 
-    function appendAssignTaskRowElement(taskName, guide, hasData, originalTaskName, taskId) {
+    function appendAssignTaskRowElement(taskName, guide, hasData, originalTaskName, taskId, orderNum = null) {
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
       const row = document.createElement('div');
-      row.className = "assign-task-row bg-white p-2.5 rounded-xl border border-slate-200 flex items-start gap-2 shadow-2xs transition hover:border-slate-300";
+      row.className = "assign-task-row bg-white p-2.5 rounded-xl border border-slate-200 flex items-start gap-2 shadow-2xs transition hover:border-slate-300 cursor-default select-none";
+      row.draggable = true;
       row.dataset.originalTaskName = originalTaskName || "";
       row.dataset.hasData = hasData ? "true" : "false";
       row.dataset.taskId = taskId || "";
+
+      const currentRowsCount = container.querySelectorAll('.assign-task-row').length;
+      const displayNum = orderNum || (currentRowsCount + 1);
 
       const dataBadge = hasData 
         ? `<span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap"><i class="fa-solid fa-database mr-1"></i>Đã có số liệu</span>` 
         : `<span class="text-[9px] bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">Chưa có số</span>`;
 
       row.innerHTML = `
-        <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-1">
-          <i class="fa-solid fa-pen text-[9px]"></i>
-        </span>
-        <div class="flex-1 space-y-1.5 min-w-0">
+        <div class="task-drag-handle flex items-center justify-center p-1.5 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 mt-0.5 transition" title="Kéo thả chuột để đổi vị trí công việc">
+          <i class="fa-solid fa-grip-vertical text-xs pointer-events-none"></i>
+        </div>
+        <div class="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
+          <button type="button" onclick="moveAssignTaskRowUp(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển lên trên">
+            <i class="fa-solid fa-chevron-up text-[8px] pointer-events-none"></i>
+          </button>
+          <button type="button" onclick="moveAssignTaskRowDown(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển xuống dưới">
+            <i class="fa-solid fa-chevron-down text-[8px] pointer-events-none"></i>
+          </button>
+        </div>
+        <span class="task-order-num w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-1">${displayNum}</span>
+        <div class="flex-1 space-y-1.5 min-w-0 cursor-auto select-text">
           <div class="flex items-center justify-between gap-2">
             <input type="text" value="${escapeHtml(taskName)}" placeholder="Tên nội dung công việc..." oninput="onAssignTaskNameInput(this)" class="assign-task-name w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
             ${dataBadge}
           </div>
           <input type="text" value="${escapeHtml(guide)}" placeholder="Hướng dẫn điền báo cáo..." class="assign-task-guide w-full px-2.5 py-1 text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none" />
-          <p class="edit-warn-msg hidden text-[10px] text-rose-500 italic"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Đã đổi tên công việc: số liệu cũ của dòng này sẽ được làm mới khi lưu!</p>
+          <p class="edit-warn-msg hidden text-[10px] text-emerald-600 italic"><i class="fa-solid fa-check-circle mr-1"></i>Đã đổi tên công việc (vị trí và số liệu được bảo lưu nguyên vẹn khi lưu).</p>
         </div>
-        <button type="button" onclick="deleteAssignTaskRow(this)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Xóa đầu việc này">
-          <i class="fa-solid fa-trash-can text-xs"></i>
+        <button type="button" onclick="deleteAssignTaskRow(this)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer flex-shrink-0" title="Xóa đầu việc này">
+          <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
         </button>
       `;
 
       container.appendChild(row);
+      updateAssignTaskOrderNumbers();
     }
 
     function onAssignTaskNameInput(inputElem) {
@@ -10739,6 +10861,7 @@
 
       if (!taskId) {
         row.remove();
+        updateAssignTaskOrderNumbers();
         return;
       }
 
@@ -10786,6 +10909,7 @@
 
         if (pendingDeleteTaskRowElem) {
           pendingDeleteTaskRowElem.remove();
+          updateAssignTaskOrderNumbers();
         }
 
         showToast("Đã cập nhật danh mục công việc thành công!");
@@ -10797,7 +10921,7 @@
       }
     }
 
-    // ================= KHẮC PHỤC TRIỆT ĐỂ LỖI NULL VALUE TRONG CỘT ID CỦA BẢNG TASKS =================
+    // ================= LƯU PHÂN CÔNG CÔNG VIỆC: BẢO TOÀN VỊ TRÍ & HỖ TRỢ KÉO THẢ =================
     async function submitAdminAssign() {
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể sửa đổi phân công công việc của kỳ này!", true);
@@ -10814,37 +10938,36 @@
       }
 
       const rows = document.querySelectorAll('#assignTasksListEditor .assign-task-row');
-      const tasksToUpdate = [];
+      const tasksToUpdateDirect = [];
       const tasksToInsert = [];
 
-      rows.forEach(r => {
+      rows.forEach((r, idx) => {
         const nameInput = r.querySelector('.assign-task-name');
         const guideInput = r.querySelector('.assign-task-guide');
         const tName = nameInput ? nameInput.value.trim() : "";
         const tGuide = guideInput ? guideInput.value.trim() : "";
         const taskId = r.dataset.taskId;
-        const origTaskName = r.dataset.originalTaskName || "";
-        const hasData = r.dataset.hasData === "true";
+        const orderIndex = idx + 1; // Giữ nguyên vị trí chính xác người dùng đã sắp xếp
 
         if (tName) {
           if (taskId && taskId !== "" && taskId !== "null" && taskId !== "undefined") {
-            tasksToUpdate.push({
+            tasksToUpdateDirect.push({
               id: parseInt(taskId, 10),
               task_name: tName,
-              guide: tGuide,
-              originalTaskName: origTaskName,
-              hasData: hasData
+              guide: formatTaskGuideWithOrder(tGuide, orderIndex),
+              orderIndex: orderIndex
             });
           } else {
             tasksToInsert.push({
               task_name: tName,
-              guide: tGuide
+              guide: formatTaskGuideWithOrder(tGuide, orderIndex),
+              orderIndex: orderIndex
             });
           }
         }
       });
 
-      if (tasksToUpdate.length === 0 && tasksToInsert.length === 0) {
+      if (tasksToUpdateDirect.length === 0 && tasksToInsert.length === 0) {
         showToast("Vui lòng nhập ít nhất một nội dung công việc!", true);
         return;
       }
@@ -10871,44 +10994,21 @@
         if (!uId && user && user[0]) uId = user[0].id;
         if (!uId) uId = 1;
 
-        const tasksToUpdateDirect = [];
-        const unassignOldTasks = [];
+        // BẢO TOÀN VỊ TRÍ VÀ DỮ LIỆU: Cập nhật trực tiếp tên và thứ tự vào công việc hiện có (không tạo duplicate)
+        const updatePayload = tasksToUpdateDirect.map(t => ({
+          id: t.id,
+          department_id: dId,
+          assigned_user_id: uId,
+          task_name: t.task_name,
+          guide: t.guide
+        }));
 
-        tasksToUpdate.forEach(t => {
-          const isNameChanged = (cleanNameStr(t.task_name) !== cleanNameStr(t.originalTaskName));
-          if (t.hasData && isNameChanged) {
-            // BẢO LƯU NGUYÊN VẸN ĐẦU VIỆC & SỐ LIỆU KỲ TRƯỚC:
-            // Không ghi đè tên task cũ! Giữ nguyên task cũ cho tháng trước, tạo task mới cho tháng này
-            unassignOldTasks.push(t.id);
-            tasksToInsert.push({
-              task_name: t.task_name,
-              guide: t.guide
-            });
-          } else {
-            tasksToUpdateDirect.push({
-              id: t.id,
-              department_id: dId,
-              assigned_user_id: uId,
-              task_name: t.task_name,
-              guide: t.guide
-            });
-          }
-        });
-
-        // Gỡ phân công công việc cũ khỏi kỳ mới (bảo toàn row trong tasks để tháng cũ đọc)
-        if (unassignOldTasks.length > 0) {
-          for (const oldId of unassignOldTasks) {
-            await supabase.from('tasks').update({ assigned_user_id: null }).eq('id', oldId);
-          }
-        }
-
-        // 1. Cập nhật các việc trực tiếp (tên không đổi hoặc chưa có số liệu lịch sử)
-        if (tasksToUpdateDirect.length > 0) {
-          const { error: upErr } = await supabase.from('tasks').upsert(tasksToUpdateDirect);
+        if (updatePayload.length > 0) {
+          const { error: upErr } = await supabase.from('tasks').upsert(updatePayload);
           if (upErr) throw upErr;
         }
 
-        // 2. Thêm mới các việc (kèm created_at chuẩn để không bị hiển thị ngược về các kỳ quá khứ)
+        // Thêm mới các việc kèm thứ tự tùy chỉnh và created_at
         if (tasksToInsert.length > 0) {
           const insertPayload = tasksToInsert.map(t => ({
             department_id: dId,
