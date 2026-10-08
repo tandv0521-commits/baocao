@@ -1677,46 +1677,54 @@
   </div>
 
 
-  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC ================= -->
-  <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in fade-in zoom-in-95 duration-150">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
-        <div class="flex items-center gap-2.5 text-slate-800 font-bold text-base">
-          <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
-            <i class="fa-solid fa-list-check text-sm"></i>
+  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC (THIẾT KẾ RỘNG RÃI, HIỆN ĐẠI & TRỰC QUAN) ================= -->
+  <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
+    <div class="bg-white border border-slate-200/90 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col p-5 sm:p-7 shadow-2xl ring-1 ring-slate-900/5 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER MODAL -->
+      <div class="flex items-start sm:items-center justify-between pb-3.5 border-b border-slate-100 flex-shrink-0 gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+            <i class="fa-solid fa-clipboard-list text-lg"></i>
           </div>
-          <span>Phân Công & Quản Lý Công Việc</span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">Phân Công & Quản Lý Danh Mục Công Việc</h3>
+              <span id="modalAssignPeriodBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">Kỳ hiện tại</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium truncate mt-0.5">Sắp xếp thứ tự bằng kéo thả chuột, đổi tên hoặc thêm công việc. Các kỳ cũ được bảo lưu 100% nguyên vẹn.</p>
+          </div>
         </div>
-        <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+        <button onclick="closeAssignModal()" class="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer shrink-0" title="Đóng cửa sổ">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <!-- BỘ LỌC BỘ PHẬN VÀ NHÂN SỰ PHÂN CÔNG CAO CẤP ĐỒNG BỘ VỚI MÀN HÌNH ĐĂNG NHẬP -->
-      <div class="relative z-30 flex-shrink-0 grid grid-cols-2 gap-3">
+      <!-- BỘ LỌC BỘ PHẬN VÀ NHÂN SỰ PHÂN CÔNG -->
+      <div class="relative z-30 flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
         <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
         <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
 
         <!-- 1. BỘ PHẬN PHÂN CÔNG: CUSTOM PICKER -->
         <div class="relative" id="modalAssignDeptPickerWrapper">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
-            <span>1. Lọc theo Bộ phận</span>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+            <span>1. Chọn Bộ phận</span>
           </label>
-          <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-            <div class="flex items-center gap-2 min-w-0">
-              <span id="modalAssignDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+          <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span id="modalAssignDeptIconBox" class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
                 <i class="fa-solid fa-layer-group"></i>
               </span>
               <span id="modalAssignDeptText" class="truncate font-bold text-slate-800">Đang tải bộ phận...</span>
             </div>
-            <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
+            <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
           </button>
 
           <!-- Dropdown menu chọn bộ phận -->
           <div id="modalAssignDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
               <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                 <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
@@ -1728,26 +1736,26 @@
 
         <!-- 2. NHÂN SỰ PHÂN CÔNG: CUSTOM PICKER -->
         <div class="relative" id="modalAssignStaffPickerWrapper">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-user-check text-emerald-600 text-[11px]"></i>
-            <span>2. Nhân sự phân công <span class="text-rose-500">*</span></span>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+            <span>2. Chọn Nhân sự phân công <span class="text-rose-500">*</span></span>
           </label>
-          <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/40 hover:bg-emerald-50 border border-emerald-300 hover:border-emerald-500 rounded-xl px-2.5 py-2 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-            <div class="flex items-center gap-2 min-w-0">
-              <span id="modalAssignStaffAvatarBox" class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs">
-                <i class="fa-solid fa-user text-[10px]"></i>
+          <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/30 hover:bg-emerald-50/60 border border-emerald-300 hover:border-emerald-500 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span id="modalAssignStaffAvatarBox" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs">
+                <i class="fa-solid fa-user text-[11px]"></i>
               </span>
               <div class="min-w-0 flex flex-col leading-tight">
                 <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950">Chọn nhân sự...</span>
                 <span id="modalAssignStaffSubText" class="truncate text-[10px] text-emerald-700 font-medium hidden"></span>
               </div>
             </div>
-            <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-[10px] shrink-0 transition-transform duration-200"></i>
+            <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-xs shrink-0 transition-transform duration-200"></i>
           </button>
 
           <!-- Dropdown menu chọn nhân sự -->
           <div id="modalAssignStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
               <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                 <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
@@ -1758,31 +1766,65 @@
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1 relative z-10">
-
-        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-              <i class="fa-solid fa-tasks text-emerald-700"></i>
-              <span class="text-xs font-bold text-slate-800 uppercase tracking-tight">Danh mục công việc:</span>
-            </div>
-            <button type="button" onclick="addNewAssignTaskRow()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer">
-              <i class="fa-solid fa-plus text-[10px]"></i>
-              <span>Thêm việc</span>
-            </button>
-          </div>
-
-          <div id="assignTasksListEditor" class="space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1"></div>
+      <!-- THANH THÔNG BÁO TRẠNG THÁI & HƯỚNG DẪN KÉO THẢ -->
+      <div class="bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-100/90 rounded-2xl px-4 py-2.5 flex items-center justify-between gap-3 text-xs flex-shrink-0">
+        <div class="flex items-center gap-2 text-slate-700 font-medium min-w-0">
+          <i class="fa-solid fa-circle-info text-emerald-600 text-sm shrink-0"></i>
+          <span id="modalAssignActiveStaffNote" class="truncate">Vui lòng chọn nhân sự để quản lý phân công công việc.</span>
+        </div>
+        <div class="flex items-center gap-2 text-[11px] text-slate-500 shrink-0 font-medium hidden sm:flex">
+          <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 font-bold shadow-2xs">
+            <i class="fa-solid fa-grip-vertical text-emerald-600"></i> Kéo thả
+          </span>
+          <span>hoặc dùng</span>
+          <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 font-bold shadow-2xs">
+            ↑ ↓ Mũi tên
+          </span>
+          <span>để đổi vị trí hàng</span>
         </div>
       </div>
 
-      <div class="pt-3 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0">
-        <button onclick="closeAssignModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy</button>
-        <button onclick="submitAdminAssign()" id="btnSubmitAssign" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-check"></i>
-          <span>Lưu phân công</span>
-        </button>
+      <!-- KHU VỰC DANH MỤC CÔNG VIỆC RỘNG RÃI & HIỆN ĐẠI -->
+      <div class="flex-1 flex flex-col min-h-0 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 space-y-3 relative z-10">
+        <!-- Header danh mục -->
+        <div class="flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Danh Mục Đầu Việc Phân Công</span>
+            <span id="modalAssignTaskCountBadge" class="ml-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-emerald-800 border border-slate-200/90 shadow-2xs">0 công việc</span>
+          </div>
+          <button type="button" onclick="addNewAssignTaskRow()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 cursor-pointer">
+            <i class="fa-solid fa-plus text-[11px]"></i>
+            <span>Thêm công việc</span>
+          </button>
+        </div>
+
+        <!-- Tiêu đề cột gợi ý -->
+        <div class="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-slate-100/90 rounded-xl text-[11px] font-bold text-slate-500 uppercase tracking-wider flex-shrink-0">
+          <div class="w-24 text-center shrink-0">Vị trí / STT</div>
+          <div class="flex-1">Tên nội dung công việc & Hướng dẫn chi tiết</div>
+          <div class="w-10 text-center shrink-0">Xóa</div>
+        </div>
+
+        <!-- Khung cuộn danh sách công việc -->
+        <div id="assignTasksListEditor" class="flex-1 space-y-2.5 overflow-y-auto custom-scroll pr-1.5 min-h-[220px] max-h-[46vh]"></div>
       </div>
+
+      <!-- FOOTER MODAL -->
+      <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+        <div class="text-[11px] text-slate-500 flex items-center gap-1.5 w-full sm:w-auto">
+          <i class="fa-solid fa-shield-halved text-emerald-600 text-xs shrink-0"></i>
+          <span>Khi đổi tên hoặc sắp xếp ở kỳ hiện tại, <b>các tháng cũ bảo lưu 100%</b> tên và số liệu gốc.</span>
+        </div>
+        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <button onclick="closeAssignModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy bỏ</button>
+          <button onclick="submitAdminAssign()" id="btnSubmitAssign" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-check"></i>
+            <span>Lưu phân công</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -5257,7 +5299,7 @@
       }
 
       fullPeriodMatrixCache = null;
-      loadMatrixData(true);
+      loadMatrixData(false);
     }
 
     function onDepartmentChange() {
@@ -10264,6 +10306,12 @@
       if (modal) modal.classList.remove('hidden');
       initAssignTasksDragAndDrop();
 
+      const pBadge = document.getElementById('modalAssignPeriodBadge');
+      if (pBadge) {
+        const mStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+        pBadge.innerText = `Kỳ Tháng ${mStr}/${currentSelectedYear}`;
+      }
+
       try {
         const deptSelect = document.getElementById('modalAssignDeptSelect');
         if (deptSelect) {
@@ -10620,6 +10668,14 @@
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
 
+      const deptVal = document.getElementById('modalAssignDeptSelect')?.value || "";
+      const noteEl = document.getElementById('modalAssignActiveStaffNote');
+      if (noteEl) {
+        noteEl.innerHTML = staffName 
+          ? `Đang quản lý danh mục công việc của: <b class="text-slate-800 font-bold">${escapeHtml(staffName)}</b> <span class="text-slate-400 font-normal">(${escapeHtml(deptVal)})</span>`
+          : "Vui lòng chọn nhân sự để phân công và quản lý các đầu việc.";
+      }
+
       if (!staffName) {
         container.innerHTML = '<p class="empty-assign-msg text-xs text-slate-400 italic py-4 text-center">Vui lòng chọn nhân viên để phân công</p>';
         return;
@@ -10714,14 +10770,14 @@
         const row = e.target.closest('.assign-task-row');
         if (!row) return;
         draggedRow = row;
-        row.classList.add('opacity-40', 'border-emerald-500', 'bg-emerald-50/40', 'scale-[0.99]');
+        row.classList.add('opacity-40', 'border-emerald-500', 'bg-emerald-50/60', 'scale-[0.99]', 'shadow-lg');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', row.dataset.taskId || '');
       });
 
       container.addEventListener('dragend', (e) => {
         if (draggedRow) {
-          draggedRow.classList.remove('opacity-40', 'border-emerald-500', 'bg-emerald-50/40', 'scale-[0.99]');
+          draggedRow.classList.remove('opacity-40', 'border-emerald-500', 'bg-emerald-50/60', 'scale-[0.99]', 'shadow-lg');
         }
         draggedRow = null;
         updateAssignTaskOrderNumbers();
@@ -10749,6 +10805,10 @@
         const numEl = r.querySelector('.task-order-num');
         if (numEl) numEl.innerText = idx + 1;
       });
+      const countBadge = document.getElementById('modalAssignTaskCountBadge');
+      if (countBadge) {
+        countBadge.innerText = `${rows.length} công việc`;
+      }
     }
 
     function moveAssignTaskRowUp(btn) {
@@ -10771,7 +10831,16 @@
       container.innerHTML = '';
 
       if (!tasks || tasks.length === 0) {
-        container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Nhân sự này chưa có đầu việc nào. Bấm "+ Thêm việc" để giao việc mới.</p>';
+        container.innerHTML = `
+          <div class="empty-assign-msg py-10 px-4 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-white/60">
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto mb-2 text-sm">
+              <i class="fa-solid fa-clipboard-question"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">Nhân sự này chưa có danh mục công việc</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Bấm nút "Thêm công việc" phía trên để tạo đầu việc phân công mới.</p>
+          </div>
+        `;
+        updateAssignTaskOrderNumbers();
         return;
       }
 
@@ -10788,13 +10857,21 @@
       if (emptyMsg) emptyMsg.remove();
       appendAssignTaskRowElement("", "Ghi số lượng phát sinh trong ngày", false, "", null);
       updateAssignTaskOrderNumbers();
+      setTimeout(() => {
+        const rows = container.querySelectorAll('.assign-task-row');
+        const lastRow = rows[rows.length - 1];
+        if (lastRow) {
+          const nameInput = lastRow.querySelector('.assign-task-name');
+          if (nameInput) nameInput.focus();
+        }
+      }, 50);
     }
 
     function appendAssignTaskRowElement(taskName, guide, hasData, originalTaskName, taskId, orderNum = null) {
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
       const row = document.createElement('div');
-      row.className = "assign-task-row bg-white p-2.5 rounded-xl border border-slate-200 flex items-start gap-2 shadow-2xs transition hover:border-slate-300 cursor-default select-none";
+      row.className = "assign-task-row bg-white hover:bg-slate-50/60 p-3 sm:p-3.5 rounded-2xl border border-slate-200/90 hover:border-emerald-300 shadow-2xs hover:shadow-xs transition flex items-start gap-2.5 sm:gap-3 group select-none";
       row.draggable = true;
       row.dataset.originalTaskName = originalTaskName || "";
       row.dataset.hasData = hasData ? "true" : "false";
@@ -10804,33 +10881,48 @@
       const displayNum = orderNum || (currentRowsCount + 1);
 
       const dataBadge = hasData 
-        ? `<span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap"><i class="fa-solid fa-database mr-1"></i>Đã có số liệu</span>` 
-        : `<span class="text-[9px] bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">Chưa có số</span>`;
+        ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-lg font-bold whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs"><i class="fa-solid fa-database text-[9px]"></i><span>Đã có số</span></span>` 
+        : `<span class="text-[10px] bg-slate-100 text-slate-500 border border-slate-200/80 px-2 py-0.5 rounded-lg font-medium whitespace-nowrap shrink-0">Chưa có số</span>`;
 
       row.innerHTML = `
-        <div class="task-drag-handle flex items-center justify-center p-1.5 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-grab active:cursor-grabbing flex-shrink-0 mt-0.5 transition" title="Kéo thả chuột để đổi vị trí công việc">
-          <i class="fa-solid fa-grip-vertical text-xs pointer-events-none"></i>
+        <!-- ĐIỀU KHIỂN THỨ TỰ & KÉO THẢ -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 pt-1">
+          <div class="task-drag-handle flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100/80 hover:bg-emerald-50 text-slate-400 hover:text-emerald-700 cursor-grab active:cursor-grabbing transition shrink-0" title="Kéo thả chuột để đổi vị trí công việc">
+            <i class="fa-solid fa-grip-vertical text-xs pointer-events-none"></i>
+          </div>
+          <div class="flex flex-col gap-0.5 shrink-0">
+            <button type="button" onclick="moveAssignTaskRowUp(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển lên trên">
+              <i class="fa-solid fa-chevron-up text-[9px] pointer-events-none"></i>
+            </button>
+            <button type="button" onclick="moveAssignTaskRowDown(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển xuống dưới">
+              <i class="fa-solid fa-chevron-down text-[9px] pointer-events-none"></i>
+            </button>
+          </div>
+          <span class="task-order-num w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">${displayNum}</span>
         </div>
-        <div class="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
-          <button type="button" onclick="moveAssignTaskRowUp(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển lên trên">
-            <i class="fa-solid fa-chevron-up text-[8px] pointer-events-none"></i>
-          </button>
-          <button type="button" onclick="moveAssignTaskRowDown(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển xuống dưới">
-            <i class="fa-solid fa-chevron-down text-[8px] pointer-events-none"></i>
-          </button>
-        </div>
-        <span class="task-order-num w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[10px] flex items-center justify-center flex-shrink-0 mt-1">${displayNum}</span>
+
+        <!-- NỘI DUNG TÊN CÔNG VIỆC VÀ HƯỚNG DẪN -->
         <div class="flex-1 space-y-1.5 min-w-0 cursor-auto select-text">
-          <div class="flex items-center justify-between gap-2">
-            <input type="text" value="${escapeHtml(taskName)}" placeholder="Tên nội dung công việc..." oninput="onAssignTaskNameInput(this)" class="assign-task-name w-full px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+          <div class="flex items-center gap-2">
+            <input type="text" value="${escapeHtml(taskName)}" placeholder="Nhập tên nội dung công việc (VD: Kiểm tra khối lượng và đơn giá)..." oninput="onAssignTaskNameInput(this)" class="assign-task-name flex-1 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-800 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-2xs" />
             ${dataBadge}
           </div>
-          <input type="text" value="${escapeHtml(guide)}" placeholder="Hướng dẫn điền báo cáo..." class="assign-task-guide w-full px-2.5 py-1 text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none" />
-          <p class="edit-warn-msg hidden text-[10px] text-emerald-600 italic"><i class="fa-solid fa-check-circle mr-1"></i>Đã đổi tên công việc (vị trí và số liệu được bảo lưu nguyên vẹn khi lưu).</p>
+          <div class="relative">
+            <i class="fa-regular fa-lightbulb absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" value="${escapeHtml(guide)}" placeholder="Hướng dẫn điền số liệu (VD: Nhập số lượng hồ sơ)..." class="assign-task-guide w-full pl-7 pr-3 py-1 sm:py-1.5 text-xs text-slate-600 bg-slate-50/40 border border-slate-200/70 rounded-lg focus:bg-white focus:border-emerald-400 focus:outline-none transition" />
+          </div>
+          <p class="edit-warn-msg hidden text-[11px] text-emerald-700 font-medium flex items-center gap-1.5 mt-1 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-200/60">
+            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+            <span>Đã đổi tên công việc — Vị trí này sẽ áp dụng tên mới ở kỳ hiện tại, toàn bộ tháng cũ giữ nguyên vẹn 100% tên gốc.</span>
+          </p>
         </div>
-        <button type="button" onclick="deleteAssignTaskRow(this)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer flex-shrink-0" title="Xóa đầu việc này">
-          <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
-        </button>
+
+        <!-- THAO TÁC XÓA -->
+        <div class="pt-1 shrink-0">
+          <button type="button" onclick="deleteAssignTaskRow(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition cursor-pointer" title="Xóa đầu việc này">
+            <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
+          </button>
+        </div>
       `;
 
       container.appendChild(row);
@@ -10839,11 +10931,11 @@
 
     function onAssignTaskNameInput(inputElem) {
       const row = inputElem.closest('.assign-task-row');
+      if (!row) return;
       const orig = row.dataset.originalTaskName || "";
-      const hasData = row.dataset.hasData === "true";
       const warn = row.querySelector('.edit-warn-msg');
 
-      if (hasData && orig && cleanNameStr(inputElem.value) !== cleanNameStr(orig)) {
+      if (orig && cleanNameStr(inputElem.value) !== cleanNameStr(orig)) {
         if (warn) warn.classList.remove('hidden');
       } else {
         if (warn) warn.classList.add('hidden');
@@ -10889,19 +10981,28 @@
 
       try {
         if (taskId) {
-          const { data: repData } = await supabase
+          const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+
+          // Kiểm tra xem công việc này có báo cáo ở các kỳ trước không
+          const { data: priorReps } = await supabase
             .from('daily_reports')
             .select('id')
             .eq('task_id', taskId)
+            .lt('report_date', currentPeriodStartDate)
             .limit(1);
 
-          if (repData && repData.length > 0) {
-            // Task này ĐÃ CÓ SỐ LIỆU BÁO CÁO LỊCH SỬ:
-            // BẢO LƯU NGUYÊN VẸN CHO CÁC THÁNG TRƯỚC, TUYỆT ĐỐI KHÔNG XÓA CỨNG KHỎI DB!
-            // Chỉ gỡ phân công khỏi nhân sự để kỳ mới không còn xuất hiện:
+          // Xóa các báo cáo thuộc kỳ hiện tại nếu có
+          await supabase
+            .from('daily_reports')
+            .delete()
+            .eq('task_id', taskId)
+            .gte('report_date', currentPeriodStartDate);
+
+          if (priorReps && priorReps.length > 0) {
+            // Task này có dữ liệu ở kỳ cũ: Giữ nguyên trong DB cho kỳ cũ, chỉ gỡ gán khỏi nhân sự để kỳ hiện tại không hiển thị
             await supabase.from('tasks').update({ assigned_user_id: null }).eq('id', taskId);
           } else {
-            // Task chưa từng có số liệu báo cáo nào: Xóa sạch an toàn khỏi DB
+            // Không có dữ liệu ở kỳ cũ: Xóa an toàn khỏi DB
             const { error } = await supabase.from('tasks').delete().eq('id', taskId);
             if (error) throw error;
           }
@@ -10921,7 +11022,7 @@
       }
     }
 
-    // ================= LƯU PHÂN CÔNG CÔNG VIỆC: BẢO TOÀN VỊ TRÍ & HỖ TRỢ KÉO THẢ =================
+    // ================= LƯU PHÂN CÔNG CÔNG VIỆC: BẢO TOÀN NGUYÊN VẸN KỲ CŨ & BẢO LƯU VỊ TRÍ =================
     async function submitAdminAssign() {
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể sửa đổi phân công công việc của kỳ này!", true);
@@ -10938,36 +11039,31 @@
       }
 
       const rows = document.querySelectorAll('#assignTasksListEditor .assign-task-row');
-      const tasksToUpdateDirect = [];
-      const tasksToInsert = [];
+      const processedTasks = [];
 
       rows.forEach((r, idx) => {
         const nameInput = r.querySelector('.assign-task-name');
         const guideInput = r.querySelector('.assign-task-guide');
         const tName = nameInput ? nameInput.value.trim() : "";
         const tGuide = guideInput ? guideInput.value.trim() : "";
-        const taskId = r.dataset.taskId;
-        const orderIndex = idx + 1; // Giữ nguyên vị trí chính xác người dùng đã sắp xếp
+        const taskIdStr = r.dataset.taskId;
+        const taskId = (taskIdStr && taskIdStr !== "" && taskIdStr !== "null" && taskIdStr !== "undefined") ? parseInt(taskIdStr, 10) : null;
+        const origName = r.dataset.originalTaskName ? r.dataset.originalTaskName.trim() : "";
+        const orderIndex = idx + 1; // Vị trí chính xác theo thứ tự hiển thị (kéo thả hoặc mặc định)
 
         if (tName) {
-          if (taskId && taskId !== "" && taskId !== "null" && taskId !== "undefined") {
-            tasksToUpdateDirect.push({
-              id: parseInt(taskId, 10),
-              task_name: tName,
-              guide: formatTaskGuideWithOrder(tGuide, orderIndex),
-              orderIndex: orderIndex
-            });
-          } else {
-            tasksToInsert.push({
-              task_name: tName,
-              guide: formatTaskGuideWithOrder(tGuide, orderIndex),
-              orderIndex: orderIndex
-            });
-          }
+          processedTasks.push({
+            taskId: taskId,
+            tName: tName,
+            origName: origName,
+            tGuide: tGuide,
+            orderIndex: orderIndex,
+            isRenamed: taskId && origName && (cleanNameStr(tName) !== cleanNameStr(origName))
+          });
         }
       });
 
-      if (tasksToUpdateDirect.length === 0 && tasksToInsert.length === 0) {
+      if (processedTasks.length === 0) {
         showToast("Vui lòng nhập ít nhất một nội dung công việc!", true);
         return;
       }
@@ -10994,31 +11090,104 @@
         if (!uId && user && user[0]) uId = user[0].id;
         if (!uId) uId = 1;
 
-        // BẢO TOÀN VỊ TRÍ VÀ DỮ LIỆU: Cập nhật trực tiếp tên và thứ tự vào công việc hiện có (không tạo duplicate)
-        const updatePayload = tasksToUpdateDirect.map(t => ({
-          id: t.id,
-          department_id: dId,
-          assigned_user_id: uId,
-          task_name: t.task_name,
-          guide: t.guide
-        }));
+        const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
 
-        if (updatePayload.length > 0) {
-          const { error: upErr } = await supabase.from('tasks').upsert(updatePayload);
-          if (upErr) throw upErr;
-        }
+        for (const item of processedTasks) {
+          const formattedGuide = formatTaskGuideWithOrder(item.tGuide, item.orderIndex);
 
-        // Thêm mới các việc kèm thứ tự tùy chỉnh và created_at
-        if (tasksToInsert.length > 0) {
-          const insertPayload = tasksToInsert.map(t => ({
-            department_id: dId,
-            assigned_user_id: uId,
-            task_name: t.task_name,
-            guide: t.guide,
-            created_at: new Date().toISOString()
-          }));
-          const { error: inErr } = await supabase.from('tasks').insert(insertPayload);
-          if (inErr) throw inErr;
+          if (item.taskId) {
+            if (item.isRenamed) {
+              // KIỂM TRA XEM CÔNG VIỆC CŨ CÓ PHÁT SINH SỐ LIỆU Ở KỲ TRƯỚC HOẶC ĐƯỢC TẠO TỪ KỲ TRƯỚC KHÔNG:
+              const { data: priorReps } = await supabase
+                .from('daily_reports')
+                .select('id')
+                .eq('task_id', item.taskId)
+                .lt('report_date', currentPeriodStartDate)
+                .limit(1);
+
+              const { data: existingTask } = await supabase
+                .from('tasks')
+                .select('created_at, task_name')
+                .eq('id', item.taskId)
+                .limit(1);
+
+              const hasPriorReports = priorReps && priorReps.length > 0;
+              const isCreatedBefore = existingTask && existingTask[0] && existingTask[0].created_at && (new Date(existingTask[0].created_at) < new Date(currentPeriodStartDate));
+
+              if (hasPriorReports || isCreatedBefore) {
+                // BẢO VỆ TUYỆT ĐỐI KỲ CŨ:
+                // 1. Phục hồi tên gốc cho công việc cũ (bảo vệ lịch sử) và gỡ phân công khỏi nhân sự này ở kỳ hiện tại
+                await supabase
+                  .from('tasks')
+                  .update({
+                    task_name: item.origName,
+                    assigned_user_id: null
+                  })
+                  .eq('id', item.taskId);
+
+                // 2. Tạo công việc mới với tên mới cho kỳ hiện tại
+                const { data: insertedNew, error: inErr } = await supabase
+                  .from('tasks')
+                  .insert({
+                    department_id: dId,
+                    assigned_user_id: uId,
+                    task_name: item.tName,
+                    guide: formattedGuide,
+                    created_at: new Date().toISOString()
+                  })
+                  .select('id');
+
+                if (inErr) throw inErr;
+
+                // 3. Di chuyển các báo cáo đã nhập ở kỳ hiện tại (nếu có) sang công việc mới
+                if (insertedNew && insertedNew[0]) {
+                  await supabase
+                    .from('daily_reports')
+                    .update({ task_id: insertedNew[0].id })
+                    .eq('task_id', item.taskId)
+                    .gte('report_date', currentPeriodStartDate);
+                }
+              } else {
+                // Công việc được tạo trong chính kỳ này (chưa có kỳ cũ): Cập nhật trực tiếp
+                const { error: upErr } = await supabase
+                  .from('tasks')
+                  .update({
+                    task_name: item.tName,
+                    guide: formattedGuide,
+                    department_id: dId,
+                    assigned_user_id: uId
+                  })
+                  .eq('id', item.taskId);
+
+                if (upErr) throw upErr;
+              }
+            } else {
+              // Không đổi tên: Cập nhật thứ tự và hướng dẫn
+              const { error: upErr } = await supabase
+                .from('tasks')
+                .update({
+                  guide: formattedGuide,
+                  department_id: dId,
+                  assigned_user_id: uId
+                })
+                .eq('id', item.taskId);
+
+              if (upErr) throw upErr;
+            }
+          } else {
+            // Công việc thêm mới hoàn toàn (+ Thêm việc):
+            const { error: inErr } = await supabase
+              .from('tasks')
+              .insert({
+                department_id: dId,
+                assigned_user_id: uId,
+                task_name: item.tName,
+                guide: formattedGuide,
+                created_at: new Date().toISOString()
+              });
+
+            if (inErr) throw inErr;
+          }
         }
 
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
