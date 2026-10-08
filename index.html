@@ -286,6 +286,23 @@
       background-color: #ecfdf5 !important;
       color: #047857 !important;
     }
+    .matrix-input-cell.matrix-badge-cell {
+      font-weight: 900 !important;
+      font-size: 11px !important;
+      letter-spacing: -0.02em !important;
+      text-transform: uppercase !important;
+      border-radius: 6px !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+    }
+    .matrix-input-cell.matrix-badge-cell:focus {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.3) !important;
+      font-weight: 700 !important;
+      cursor: text;
+    }
 
     .staff-avatar-glow {
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
@@ -1033,6 +1050,27 @@
           </table>
         </div>
 
+        <!-- BẢNG CHÚ THÍCH KÝ HIỆU BÁO CÁO & NGÀY NGHỈ (PHƯƠNG ÁN 1) -->
+        <div id="matrixSymbolLegendBar" class="border-t border-slate-200/90 bg-slate-50/80 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] select-none">
+          <div class="flex items-center gap-1.5 text-slate-500 font-bold">
+            <i class="fa-solid fa-tags text-emerald-600 text-[11px]"></i>
+            <span class="text-slate-700">Quy chuẩn ký hiệu:</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 font-semibold text-slate-600">
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black shadow-2xs" title="Nghỉ phép năm / Phép chế độ"><b class="font-black">P</b> Phép</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-300 text-[10px] font-black shadow-2xs" title="Nghỉ ốm đau / Đi khám bệnh"><b class="font-black">Ô</b> Ốm</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-300 text-[10px] font-black shadow-2xs" title="Đi công tác / Đào tạo bên ngoài"><b class="font-black">CT</b> Công tác</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-black shadow-2xs" title="Nghỉ việc riêng có phép"><b class="font-black">VR</b> Việc riêng</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-300 text-[10px] font-black shadow-2xs" title="Nghỉ hàng tuần theo quy định"><b class="font-black">HT</b> Nghỉ tuần</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-black shadow-2xs" title="Đi học / Tập huấn / Đào tạo nội bộ"><b class="font-black">H</b> Học</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-300 text-[10px] font-black shadow-2xs" title="Nghỉ Lễ / Tết theo luật định"><b class="font-black">L</b> Lễ/Tết</span>
+            <span class="text-slate-300">|</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black shadow-2xs" title="Đạt / Hoàn thành công việc"><b class="font-black">X</b> Đạt</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-green-50 text-green-800 border border-green-300 text-[10px] font-black shadow-2xs" title="Đang tiến hành / Đạt chuẩn"><b class="font-black">Đ</b> Đang làm</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-50 text-red-800 border border-red-300 text-[10px] font-black shadow-2xs" title="Chưa đạt / Cần xem xét"><b class="font-black">C</b> Chưa đạt</span>
+          </div>
+        </div>
+
         <div id="loadingTasksBox" class="py-24 text-center">
           <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-600 mb-3"></i>
           <p class="text-sm text-slate-400 font-medium">Đang đồng bộ dữ liệu tiến độ công việc...</p>
@@ -1453,10 +1491,14 @@
 
           <div id="noReportReasonContainer" class="hidden mt-3 pt-3 border-t border-slate-200 space-y-2.5">
             <div class="flex flex-wrap items-center gap-1.5">
-              <span class="text-[11px] font-semibold text-slate-400 mr-1">Gợi ý nhanh:</span>
-              <button type="button" onclick="setQuickReason('Nghỉ phép')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ phép</button>
-              <button type="button" onclick="setQuickReason('Nghỉ ốm')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Nghỉ ốm</button>
-              <button type="button" onclick="setQuickReason('Đi họp')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer">Đi họp</button>
+              <span class="text-[11px] font-semibold text-slate-400 mr-1">Khai báo nhanh:</span>
+              <button type="button" onclick="setQuickReason('P', 'Nghỉ phép')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ phép năm/chế độ"><b class="font-black text-amber-700">P</b> Phép</button>
+              <button type="button" onclick="setQuickReason('Ô', 'Nghỉ ốm')" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ ốm đau/khám bệnh"><b class="font-black text-purple-700">Ô</b> Ốm</button>
+              <button type="button" onclick="setQuickReason('CT', 'Đi công tác')" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Đi công tác/đào tạo"><b class="font-black text-sky-700">CT</b> Công tác</button>
+              <button type="button" onclick="setQuickReason('VR', 'Việc riêng')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ việc riêng có phép"><b class="font-black text-slate-700">VR</b> Việc riêng</button>
+              <button type="button" onclick="setQuickReason('HT', 'Nghỉ hàng tuần')" class="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ hàng tuần theo quy định"><b class="font-black text-teal-700">HT</b> Nghỉ tuần</button>
+              <button type="button" onclick="setQuickReason('H', 'Học tập/Đào tạo')" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Học tập/tập huấn"><b class="font-black text-indigo-700">H</b> Học</button>
+              <button type="button" onclick="setQuickReason('L', 'Nghỉ Lễ/Tết')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ Lễ/Tết theo luật định"><b class="font-black text-rose-700">L</b> Lễ/Tết</button>
             </div>
             <div class="flex items-center gap-2">
               <input type="text" id="noReportReasonInput" oninput="applyReasonToAllTasks(this.value)" placeholder="Nhập lý do vắng mặt hoặc công tác..." class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
@@ -3530,13 +3572,180 @@
     }
 
     /**
+     * BẢNG QUY CHUẨN KÝ HIỆU BÁO CÁO & NGÀY NGHỈ THẨM MỸ CAO (PHƯƠNG ÁN 1)
+     */
+    const STANDARDIZED_SYMBOLS = {
+      'P': {
+        code: 'P',
+        title: 'Nghỉ phép',
+        desc: 'Nghỉ phép năm / Phép chế độ',
+        bg: '#fffbeb',        // amber-50
+        text: '#92400e',      // amber-800
+        border: '#fcd34d',    // amber-300
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-300',
+        isLeave: true
+      },
+      'Ô': {
+        code: 'Ô',
+        altCodes: ['O'],
+        title: 'Nghỉ ốm',
+        desc: 'Nghỉ ốm đau / Đi khám bệnh',
+        bg: '#faf5ff',        // purple-50
+        text: '#6b21a8',      // purple-800
+        border: '#d8b4fe',    // purple-300
+        badgeClass: 'bg-purple-50 text-purple-800 border-purple-300',
+        isLeave: true
+      },
+      'CT': {
+        code: 'CT',
+        title: 'Công tác',
+        desc: 'Đi công tác / Đào tạo bên ngoài',
+        bg: '#f0f9ff',        // sky-50
+        text: '#075985',      // sky-800
+        border: '#7dd3fc',    // sky-300
+        badgeClass: 'bg-sky-50 text-sky-800 border-sky-300',
+        isLeave: true
+      },
+      'VR': {
+        code: 'VR',
+        title: 'Việc riêng',
+        desc: 'Nghỉ việc riêng có phép',
+        bg: '#f1f5f9',        // slate-100
+        text: '#334155',      // slate-700
+        border: '#cbd5e1',    // slate-300
+        badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
+        isLeave: true
+      },
+      'HT': {
+        code: 'HT',
+        title: 'Nghỉ tuần',
+        desc: 'Nghỉ hàng tuần theo quy định',
+        bg: '#f0fdfa',        // teal-50
+        text: '#115e59',      // teal-800
+        border: '#5eead4',    // teal-300
+        badgeClass: 'bg-teal-50 text-teal-800 border-teal-300',
+        isLeave: true
+      },
+      'H': {
+        code: 'H',
+        title: 'Học tập',
+        desc: 'Đi học / Tập huấn / Đào tạo nội bộ',
+        bg: '#eef2ff',        // indigo-50
+        text: '#3730a3',      // indigo-800
+        border: '#a5b4fc',    // indigo-300
+        badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-300',
+        isLeave: true
+      },
+      'L': {
+        code: 'L',
+        title: 'Nghỉ lễ',
+        desc: 'Nghỉ Lễ / Tết theo luật định',
+        bg: '#fff1f2',        // rose-50
+        text: '#9f1239',      // rose-800
+        border: '#fda4af',    // rose-300
+        badgeClass: 'bg-rose-50 text-rose-800 border-rose-300',
+        isLeave: true
+      },
+      'X': {
+        code: 'X',
+        title: 'Hoàn thành',
+        desc: 'Đạt / Hoàn thành công việc',
+        bg: '#ecfdf5',        // emerald-50
+        text: '#065f46',      // emerald-800
+        border: '#6ee7b7',    // emerald-300
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+        isLeave: false
+      },
+      'Đ': {
+        code: 'Đ',
+        altCodes: ['D'],
+        title: 'Đang làm',
+        desc: 'Đang tiến hành / Đạt chuẩn quy định',
+        bg: '#f0fdf4',        // green-50
+        text: '#166534',      // green-800
+        border: '#86efac',    // green-300
+        badgeClass: 'bg-green-50 text-green-800 border-green-300',
+        isLeave: false
+      },
+      'C': {
+        code: 'C',
+        title: 'Chưa đạt',
+        desc: 'Chưa đạt / Cần xem xét giải trình',
+        bg: '#fef2f2',        // red-50
+        text: '#991b1b',      // red-800
+        border: '#fca5a5',    // red-300
+        badgeClass: 'bg-rose-50 text-rose-800 border-rose-300',
+        isLeave: false
+      }
+    };
+
+    /**
+     * NHẬN DIỆN THÔNG MINH KÝ HIỆU HOẶC LÝ DO NGHỈ ĐỂ THU GỌN THÀNH HUY HIỆU GỌN GÀNG
+     */
+    function getSmartSymbolInfo(val) {
+      if (val === undefined || val === null) return null;
+      const s = String(val).trim();
+      if (!s || s === '-' || s === '·' || s === '0') return null;
+
+      const cleanNum = s.replace(/,/g, '');
+      if (!isNaN(cleanNum) && !isNaN(parseFloat(cleanNum))) {
+        return null;
+      }
+
+      const sUpper = s.toUpperCase();
+      const sNorm = removeAccents(s).toLowerCase();
+
+      // 1. Khớp mã quy chuẩn chính xác
+      if (sUpper === 'P') return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: 'P • Nghỉ phép năm / Phép chế độ' };
+      if (sUpper === 'Ô' || sUpper === 'O') return { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: 'Ô • Nghỉ ốm đau / Đi khám bệnh' };
+      if (sUpper === 'CT') return { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: 'CT • Đi công tác / Đào tạo bên ngoài' };
+      if (sUpper === 'VR') return { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: 'VR • Nghỉ việc riêng có phép' };
+      if (sUpper === 'HT') return { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: 'HT • Nghỉ hàng tuần theo quy định' };
+      if (sUpper === 'H') return { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: 'H • Đi học / Tập huấn / Đào tạo nội bộ' };
+      if (sUpper === 'L') return { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: 'L • Nghỉ Lễ / Tết theo luật định' };
+      if (sUpper === 'X') return { ...STANDARDIZED_SYMBOLS['X'], raw: s, tooltip: 'X • Đạt / Hoàn thành công việc' };
+      if (sUpper === 'Đ' || sUpper === 'D') return { ...STANDARDIZED_SYMBOLS['Đ'], raw: s, tooltip: 'Đ • Đang tiến hành / Đạt chuẩn quy định' };
+      if (sUpper === 'C') return { ...STANDARDIZED_SYMBOLS['C'], raw: s, tooltip: 'C • Chưa đạt / Cần xem xét' };
+
+      // 2. Nhận diện thông minh chữ tiếng Việt / cụm từ
+      if (sNorm.includes('phep') || /^(nghi\s*phep|xin\s*phep)/.test(sNorm)) {
+        return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ phép: ${s}` };
+      }
+      if (sNorm.includes('om') || sNorm.includes('kham') || sNorm.includes('vien') || /^(nghi\s*om|benh|dau)/.test(sNorm)) {
+        return { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: `[Ô] Nghỉ ốm: ${s}` };
+      }
+      if (sNorm.includes('cong tac') || sNorm.includes('ctac') || /^(di\s*ct|ct\b)/.test(sNorm)) {
+        return { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: `[CT] Đi công tác: ${s}` };
+      }
+      if (sNorm.includes('viec rieng') || sNorm.includes('rieng') || sNorm.includes('ban gia dinh') || sNorm.includes('gia dinh')) {
+        return { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: `[VR] Việc riêng: ${s}` };
+      }
+      if (sNorm.includes('hang tuan') || sNorm.includes('nghi tuan') || sNorm.includes('nghi ca')) {
+        return { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: `[HT] Nghỉ hàng tuần: ${s}` };
+      }
+      if (sNorm.includes('tap huan') || sNorm.includes('dao tao') || sNorm.includes('di hoc') || /^(hoc\b|training)/.test(sNorm)) {
+        return { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: `[H] Học tập/Đào tạo: ${s}` };
+      }
+      if (sNorm.includes('tet') || sNorm.includes('nghi le') || /^(le\b|nghi\s*le)/.test(sNorm)) {
+        return { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: `[L] Nghỉ Lễ/Tết: ${s}` };
+      }
+      if (sNorm.startsWith('nghi') || sNorm.includes('nghi')) {
+        return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ: ${s}` };
+      }
+
+      return null;
+    }
+
+    /**
      * TỰ ĐỘNG ẨN SỐ 0: NẾU GIÁ TRỊ LÀ 0 THÌ TRẢ VỀ RỖNG (ẨN ĐI)
      */
     function formatNumberWithCommas(val) {
       if (val === undefined || val === null || val === '') return '';
       let s = String(val).trim();
       if (s === '0' || s === 0) return '';
-      if (['X', 'P', 'Đ', 'C', '-', '·'].includes(s.toUpperCase())) return s;
+      const symInfo = getSmartSymbolInfo(s);
+      if (symInfo) return symInfo.code;
+      if (['-', '·'].includes(s)) return s;
       let clean = s.replace(/,/g, '');
       if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
         let num = parseFloat(clean);
@@ -5947,16 +6156,16 @@
               hasNumber = true;
             }
           } else {
-            let symUpper = strVal.toUpperCase();
-            let symClean = removeAccents(strVal).toLowerCase();
-
-            if (symUpper === 'P' || symClean.includes('nghi') || symClean.includes('om') || symClean.includes('phep') || symClean.includes('hop') || symClean.includes('cong tac')) {
-              continue;
+            const symInfo = getSmartSymbolInfo(strVal);
+            if (symInfo) {
+              if (symInfo.isLeave) {
+                // Bỏ qua tất cả ngày nghỉ (P, Ô, CT, VR, HT, H, L) khỏi tổng số lượng công việc
+                continue;
+              }
+              if (symInfo.code === 'X') { symbolCounts['X']++; totalSymbols++; }
+              else if (symInfo.code === 'Đ') { symbolCounts['Đ']++; totalSymbols++; }
+              else if (symInfo.code === 'C') { symbolCounts['C']++; totalSymbols++; }
             }
-
-            if (symUpper === 'X') { symbolCounts['X']++; totalSymbols++; }
-            else if (symUpper === 'Đ' || symUpper === 'D') { symbolCounts['Đ']++; totalSymbols++; }
-            else if (symUpper === 'C') { symbolCounts['C']++; totalSymbols++; }
           }
         }
       }
@@ -6353,11 +6562,26 @@
             }
 
             let cellContentHtml = '';
+            const symInfo = getSmartSymbolInfo(rawVal);
+
             if (canEditThisRow && !currentPeriodLocked) {
-              let displayVal = (rawVal === '-' || rawVal === '·' || rawVal === '0') ? '' : rawVal;
+              let displayVal = '';
+              let badgeStyles = '';
+              let titleAttr = '';
+              let extraClasses = '';
+
+              if (symInfo) {
+                displayVal = symInfo.code;
+                badgeStyles = `background-color: ${symInfo.bg} !important; color: ${symInfo.text} !important; border: 1px solid ${symInfo.border} !important; font-weight: 900 !important;`;
+                titleAttr = `title="${escapeHtml(symInfo.tooltip)}"`;
+                extraClasses = 'matrix-badge-cell';
+              } else if (rawVal !== '' && rawVal !== '-' && rawVal !== '·' && rawVal !== '0') {
+                displayVal = rawVal;
+              }
+
               cellContentHtml = `
                 <input type="text" 
-                  class="matrix-input-cell font-num" 
+                  class="matrix-input-cell font-num ${extraClasses}" 
                   data-row="${currentRowIndex}" 
                   data-col="${cIdx}" 
                   data-task-id="${t.taskId}" 
@@ -6365,38 +6589,34 @@
                   data-day="${dc.dayNum}" 
                   data-old-value="${displayVal}"
                   value="${displayVal}" 
+                  style="${badgeStyles}"
+                  ${titleAttr}
                   placeholder="" 
-                  onfocus="scrollMatrixCellIntoView(this)"
+                  onfocus="handleMatrixCellFocus(this)"
                   onkeydown="handleMatrixCellKeydown(event, ${currentRowIndex}, ${cIdx})" 
                   onblur="handleMatrixCellBlur(this)" 
                   oninput="formatNumberInputLive(this)" />
               `;
             } else {
-              if (rawVal !== '' && rawVal !== '-' && rawVal !== '0') {
-                const sym = rawVal.toUpperCase();
-                if (['X', 'P', 'Đ', 'C'].includes(sym)) {
-                  let colorCls = "bg-emerald-50 text-emerald-800 border-emerald-200";
-                  if (sym === 'P') colorCls = "bg-amber-50 text-amber-700 border-amber-200";
-                  if (sym === 'Đ') colorCls = "bg-teal-50 text-teal-700 border-teal-200";
-                  if (sym === 'C') colorCls = "bg-rose-50 text-rose-700 border-rose-200";
-                  cellContentHtml = `<span class="inline-block w-6 py-0.5 rounded font-black text-xs border ${colorCls}">${sym}</span>`;
-                } else {
-                  let clean = rawVal.replace(/,/g, '');
-                  if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
-                    let parsedVal = parseFloat(clean);
-                    if (parsedVal === 0) {
-                      cellContentHtml = '';
-                    } else {
-                      cellContentHtml = `<span class="font-num font-bold text-slate-900 text-xs">${formatNumberWithCommas(rawVal)}</span>`;
-                    }
+              if (symInfo) {
+                cellContentHtml = `
+                  <span class="inline-flex items-center justify-center min-w-[24px] h-[22px] px-1.5 rounded-md text-[11px] font-black border shadow-2xs select-none ${symInfo.badgeClass}" 
+                    style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" 
+                    title="${escapeHtml(symInfo.tooltip)}">
+                    ${symInfo.code}
+                  </span>
+                `;
+              } else if (rawVal !== '' && rawVal !== '-' && rawVal !== '0') {
+                let clean = rawVal.replace(/,/g, '');
+                if (!isNaN(clean) && !isNaN(parseFloat(clean))) {
+                  let parsedVal = parseFloat(clean);
+                  if (parsedVal === 0) {
+                    cellContentHtml = '';
                   } else {
-                    let lowVal = removeAccents(rawVal).toLowerCase();
-                    let tagCls = "bg-slate-100 text-slate-700 border-slate-200";
-                    if (lowVal.includes('nghi') || lowVal.includes('om') || lowVal.includes('phep')) tagCls = "bg-rose-50 text-rose-700 border-rose-200";
-                    else if (lowVal.includes('hop')) tagCls = "bg-sky-50 text-sky-700 border-sky-200";
-                    else if (lowVal.includes('cong tac')) tagCls = "bg-purple-50 text-purple-700 border-purple-200";
-                    cellContentHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border ${tagCls} max-w-[70px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
+                    cellContentHtml = `<span class="font-num font-bold text-slate-900 text-xs">${formatNumberWithCommas(rawVal)}</span>`;
                   }
+                } else {
+                  cellContentHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border bg-slate-100 text-slate-700 border-slate-200 max-w-[50px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
                 }
               } else {
                 cellContentHtml = '';
@@ -6502,22 +6722,47 @@
       }
     }
 
+    function handleMatrixCellFocus(inputElem) {
+      scrollMatrixCellIntoView(inputElem);
+      inputElem.select();
+    }
+
     /**
      * TỰ ĐỘNG LƯU BÁO CÁO KHI RỜI Ô TRÊN MA TRẬN
      */
     async function handleMatrixCellBlur(inputElem) {
       const oldVal = (inputElem.dataset.oldValue || "").trim();
-      let newVal = inputElem.value.trim().replace(/,/g, '');
+      let rawVal = inputElem.value.trim().replace(/,/g, '');
 
-      if (newVal === '0') newVal = '';
+      if (rawVal === '0') rawVal = '';
 
-      if (oldVal === newVal) return;
+      const symInfo = getSmartSymbolInfo(rawVal);
+      const normalizedVal = symInfo ? symInfo.code : rawVal;
+
+      if (symInfo) {
+        inputElem.value = symInfo.code;
+        inputElem.style.setProperty('background-color', symInfo.bg, 'important');
+        inputElem.style.setProperty('color', symInfo.text, 'important');
+        inputElem.style.setProperty('border', `1px solid ${symInfo.border}`, 'important');
+        inputElem.style.setProperty('font-weight', '900', 'important');
+        inputElem.title = symInfo.tooltip;
+        inputElem.classList.add('matrix-badge-cell');
+      } else {
+        inputElem.style.backgroundColor = '';
+        inputElem.style.color = '';
+        inputElem.style.border = '';
+        inputElem.style.fontWeight = '';
+        inputElem.title = '';
+        inputElem.classList.remove('matrix-badge-cell');
+      }
+
+      if (oldVal === normalizedVal) return;
 
       const taskId = parseInt(inputElem.dataset.taskId, 10);
       const userId = parseInt(inputElem.dataset.userId, 10);
       const dayNum = parseInt(inputElem.dataset.day, 10);
 
-      await saveSingleMatrixCellReport(taskId, userId, dayNum, newVal, inputElem);
+      await saveSingleMatrixCellReport(taskId, userId, dayNum, rawVal, inputElem);
     }
 
     async function saveSingleMatrixCellReport(taskId, userId, dayNum, val, inputElem) {
@@ -6527,11 +6772,17 @@
       const reportDate = `${currentSelectedYear}-${mFormatted}-${dFormatted}`;
 
       let numV = null, symV = null, textV = null;
-      if (val !== '' && !isNaN(val) && !isNaN(parseFloat(val))) {
+      const symInfo = getSmartSymbolInfo(val);
+      const valToCache = symInfo ? symInfo.code : val;
+
+      if (symInfo) {
+        symV = symInfo.code;
+        if (val !== symInfo.code) {
+          textV = val; // Giữ lý do giải trình chi tiết
+        }
+      } else if (val !== '' && !isNaN(val) && !isNaN(parseFloat(val))) {
         let p = parseFloat(val);
         if (p !== 0) numV = p;
-      } else if (['X', 'P', 'Đ', 'C'].includes((val || '').toUpperCase())) {
-        symV = (val || '').toUpperCase();
       } else if (val && val !== '0') {
         textV = val;
       }
@@ -6553,8 +6804,18 @@
 
         if (error) throw error;
 
-        inputElem.dataset.oldValue = val;
+        inputElem.dataset.oldValue = valToCache;
+        inputElem.value = valToCache;
         inputElem.classList.remove('cell-saving');
+
+        if (symInfo) {
+          inputElem.style.setProperty('background-color', symInfo.bg, 'important');
+          inputElem.style.setProperty('color', symInfo.text, 'important');
+          inputElem.style.setProperty('border', `1px solid ${symInfo.border}`, 'important');
+          inputElem.style.setProperty('font-weight', '900', 'important');
+          inputElem.title = symInfo.tooltip;
+          inputElem.classList.add('matrix-badge-cell');
+        }
 
         // Đồng bộ giá trị mới vào cả fullPeriodMatrixCache và currentMatrixData
         [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
@@ -6562,7 +6823,7 @@
             targetCache.staffGroups.forEach(grp => {
               const matchedTask = grp.tasks.find(t => t.taskId === taskId);
               if (matchedTask) {
-                matchedTask.dailyValues[dayNum] = val;
+                matchedTask.dailyValues[dayNum] = valToCache;
                 matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
               }
             });
@@ -7240,8 +7501,8 @@
                     <span class="text-[9.5px] text-slate-400 block truncate leading-tight">${item.isGroup ? 'Đại diện bộ phận' : escapeHtml(item.subDeptName)}</span>
                   </div>
                 </div>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 whitespace-nowrap font-num shrink-0 border border-emerald-200/80">
-                  ✓ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border-amber-200/90' : 'bg-emerald-100 text-emerald-800 border-emerald-200/80'} whitespace-nowrap font-num shrink-0 border">
+                  ${item.targetDayLeaveInfo ? `✓ Nghỉ (${item.targetDayLeaveInfo.code})` : `✓ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày`}
                 </span>
               </div>
             `;
@@ -7469,23 +7730,34 @@
                     topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${displayVal}</span>`;
                   }
                 } else {
-                  // ĐIỀN CHỮ / KÝ HIỆU TRONG ĐẦU VIỆC ĐỊNH LƯỢNG (Ví dụ: HT, X, Đ, Nghỉ...):
-                  // Cột sẽ ở mức THẤP NHẤT (baseline) đúng theo logic nghiệp vụ
-                  displayVal = strVal;
+                  // ĐIỀN CHỮ / KÝ HIỆU TRONG ĐẦU VIỆC ĐỊNH LƯỢNG (Ví dụ: P, Ô, CT, VR, HT, H, L, X, Đ, C...):
+                  const symInfo = getSmartSymbolInfo(strVal);
                   heightPercent = 12; // Mức thấp nhất cho dữ liệu chữ / ký hiệu
                   barColor = isToday 
                     ? "bg-gradient-to-t from-teal-500 to-emerald-400 ring-2 ring-emerald-400 shadow-xs" 
                     : "bg-teal-400/80 group-hover:bg-teal-500";
-                  topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
+                  if (symInfo) {
+                    displayVal = symInfo.code;
+                    topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" title="${escapeHtml(symInfo.tooltip)}">${symInfo.code}</span>`;
+                  } else {
+                    displayVal = strVal;
+                    topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
+                  }
                 }
               } else {
-                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN (X, Đ, C...)
-                displayVal = strVal;
+                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN (X, Đ, C, P...)
+                const symInfo = getSmartSymbolInfo(strVal);
                 heightPercent = 16; // Mức tượng trưng thấp đồng đều
                 barColor = isToday
                   ? "bg-gradient-to-t from-teal-600 to-emerald-500 ring-2 ring-emerald-400 shadow-xs"
                   : "bg-gradient-to-t from-teal-500 to-emerald-400 group-hover:from-teal-600";
-                topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
+                if (symInfo) {
+                  displayVal = symInfo.code;
+                  topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" title="${escapeHtml(symInfo.tooltip)}">${symInfo.code}</span>`;
+                } else {
+                  displayVal = strVal;
+                  topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
+                }
               }
             } else {
               topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
@@ -7747,12 +8019,18 @@
 
         // 1. Kiểm tra ngày mục tiêu (targetDayNum)
         let targetDayLoggedCount = 0;
+        let targetDayLeaveInfo = null;
+
         allTasks.forEach(t => {
           const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
           if (val !== undefined && val !== null && String(val).trim() !== '') {
             const s = String(val).trim();
             if (s !== '-' && s !== '·' && s !== '0') {
               targetDayLoggedCount++;
+              const sym = getSmartSymbolInfo(s);
+              if (sym && sym.isLeave && !targetDayLeaveInfo) {
+                targetDayLeaveInfo = sym;
+              }
             }
           }
         });
@@ -7792,6 +8070,7 @@
           staffName: entry.staffName,
           totalTasks: totalTasks,
           targetDayLoggedCount: targetDayLoggedCount,
+          targetDayLeaveInfo: targetDayLeaveInfo,
           reportedDaysCount: reportedDaysCount,
           unreportedDaysCount: unreportedDaysCount,
           unreportedDaysList: unreportedDaysList,
@@ -7991,7 +8270,7 @@
                   <i class="fa-solid fa-check text-emerald-600 text-[9px]"></i>
                   <span>Đã nộp ${item.reportedDaysCount}/${totalDaysToEval} ngày</span>
                 </span>
-                <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? '✓ Đã có số liệu ' + targetDateLabel : 'Đầy đủ kỳ này'}</p>
+                <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này'}</p>
               </div>
             </div>
           `;
@@ -9122,11 +9401,16 @@
             <div class="flex items-center gap-1.5 flex-wrap">
               <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="-" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-14 h-10 bg-white border border-slate-300 rounded-xl text-center font-black text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
               ${!isReadOnly ? `
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'dayInput_')" class="h-10 px-3.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">X</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'dayInput_')" class="h-10 px-3.5 bg-teal-50 hover:bg-teal-600 border border-teal-200 text-teal-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">Đ</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'dayInput_')" class="h-10 px-3.5 bg-rose-50 hover:bg-rose-600 border border-rose-200 text-rose-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">C</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'dayInput_')" class="h-10 px-3.5 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, '', 'dayInput_')" class="h-10 px-3 bg-slate-200/80 hover:bg-slate-300 text-slate-600 rounded-xl text-xs transition cursor-pointer" title="Xóa"><i class="fa-solid fa-eraser"></i></button>
+                <div class="flex items-center gap-1 flex-wrap">
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'dayInput_')" class="h-9 px-2.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đạt/Hoàn thành">X</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'dayInput_')" class="h-9 px-2.5 bg-green-50 hover:bg-green-600 border border-green-200 text-green-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đang làm/Đạt chuẩn">Đ</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'dayInput_')" class="h-9 px-2.5 bg-red-50 hover:bg-red-600 border border-red-200 text-red-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Chưa đạt">C</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'dayInput_')" class="h-9 px-2 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Ô', 'dayInput_')" class="h-9 px-2 bg-purple-50 hover:bg-purple-600 border border-purple-200 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ ốm">Ô</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'CT', 'dayInput_')" class="h-9 px-2 bg-sky-50 hover:bg-sky-600 border border-sky-200 text-sky-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Công tác">CT</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'VR', 'dayInput_')" class="h-9 px-2 bg-slate-100 hover:bg-slate-300 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Việc riêng">VR</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, '', 'dayInput_')" class="h-9 px-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-600 rounded-xl text-xs transition cursor-pointer" title="Xóa"><i class="fa-solid fa-eraser"></i></button>
+                </div>
               ` : ''}
             </div>
           `;
@@ -9194,10 +9478,16 @@
             <div class="flex items-center gap-1">
               <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="-" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-12 h-9 bg-white border border-slate-300 rounded-xl text-center font-black text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
               ${!isReadOnly ? `
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'taskDayInput_')" class="h-9 px-2.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">X</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'taskDayInput_')" class="h-9 px-2.5 bg-teal-50 hover:bg-teal-600 border border-teal-200 text-teal-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">Đ</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'taskDayInput_')" class="h-9 px-2.5 bg-rose-50 hover:bg-rose-600 border border-rose-200 text-rose-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer">C</button>
-                <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'taskDayInput_')" class="h-9 px-2.5 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
+                <div class="flex items-center gap-1 flex-wrap">
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'X', 'taskDayInput_')" class="h-9 px-2.5 bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đạt/Hoàn thành">X</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Đ', 'taskDayInput_')" class="h-9 px-2.5 bg-green-50 hover:bg-green-600 border border-green-200 text-green-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Đang làm/Đạt chuẩn">Đ</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'C', 'taskDayInput_')" class="h-9 px-2.5 bg-red-50 hover:bg-red-600 border border-red-200 text-red-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Chưa đạt">C</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'P', 'taskDayInput_')" class="h-9 px-2 bg-amber-50 hover:bg-amber-600 border border-amber-200 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ phép">P</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'Ô', 'taskDayInput_')" class="h-9 px-2 bg-purple-50 hover:bg-purple-600 border border-purple-200 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Nghỉ ốm">Ô</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'CT', 'taskDayInput_')" class="h-9 px-2 bg-sky-50 hover:bg-sky-600 border border-sky-200 text-sky-700 hover:text-white rounded-xl text-xs font-bold transition cursor-pointer" title="Công tác">CT</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, 'VR', 'taskDayInput_')" class="h-9 px-2 bg-slate-100 hover:bg-slate-300 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer" title="Việc riêng">VR</button>
+                  <button type="button" onclick="setModalInputSymbol(${idx}, '', 'taskDayInput_')" class="h-9 px-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-600 rounded-xl text-xs transition cursor-pointer" title="Xóa"><i class="fa-solid fa-eraser"></i></button>
+                </div>
               ` : ''}
             </div>
           `;
@@ -9240,8 +9530,8 @@
           return el ? el.value : '';
         });
 
-        if (!reasonInput.value.trim()) reasonInput.value = 'Nghỉ phép';
-        applyReasonToAllTasks(reasonInput.value.trim());
+        if (!reasonInput.value.trim()) reasonInput.value = 'Nghỉ phép (P)';
+        applyReasonToAllTasks('P');
         reasonInput.focus();
         reasonInput.select();
       } else {
@@ -9259,14 +9549,15 @@
       triggerDraftAutosave();
     }
 
-    function setQuickReason(reason) {
+    function setQuickReason(code, desc) {
       const reasonInput = document.getElementById('noReportReasonInput');
-      reasonInput.value = reason;
-      applyReasonToAllTasks(reason);
+      if (reasonInput) reasonInput.value = desc ? `${desc} (${code})` : code;
+      applyReasonToAllTasks(code);
     }
 
     function applyReasonToAllTasks(reason) {
-      const val = String(reason || '').trim();
+      const symInfo = getSmartSymbolInfo(reason);
+      const val = symInfo ? symInfo.code : String(reason || '').trim();
       currentDayEntryTasks.forEach((t, idx) => {
         const el = document.getElementById(`dayInput_${idx}`);
         if (el) el.value = val;
@@ -9342,7 +9633,9 @@
             targetCache.staffGroups.forEach(grp => {
               const matchedTask = grp.tasks.find(t => t.taskId === u.taskId);
               if (matchedTask) {
-                matchedTask.dailyValues[u.dayNum] = u.value;
+                const symInfo = getSmartSymbolInfo(u.value);
+                const valToCache = symInfo ? symInfo.code : u.value;
+                matchedTask.dailyValues[u.dayNum] = valToCache;
                 matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
               }
             });
@@ -9358,11 +9651,15 @@
 
       const dbRecords = updates.map(u => {
         let numV = null, symV = null, textV = null;
-        if (u.value !== '' && !isNaN(u.value) && !isNaN(parseFloat(u.value))) {
+        const symInfo = getSmartSymbolInfo(u.value);
+        if (symInfo) {
+          symV = symInfo.code;
+          if (u.value !== symInfo.code) {
+            textV = u.value;
+          }
+        } else if (u.value !== '' && !isNaN(u.value) && !isNaN(parseFloat(u.value))) {
           let p = parseFloat(u.value);
           if (p !== 0) numV = p;
-        } else if (['X', 'P', 'Đ', 'C'].includes((u.value || '').toUpperCase())) {
-          symV = (u.value || '').toUpperCase();
         } else if (u.value && u.value !== '0') {
           textV = u.value;
         }
