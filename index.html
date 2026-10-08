@@ -1177,20 +1177,20 @@
             </div>
           </div>
 
-          <!-- 2. BẢNG CẦN ĐÔN ĐỐC BÁM SÁT TIẾN ĐỘ (Đổi vị trí lên trên: Đôn đốc nhân sự & nhóm gộp chưa báo cáo) -->
+          <!-- 2. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (Thống kê số ngày chưa báo cáo của từng người & nhóm gộp) -->
           <div id="deptLeaderboardCard" class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 flex flex-col">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <span id="followUpCardIconBox" class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shadow-2xs">
-                  <i id="followUpCardIcon" class="fa-solid fa-triangle-exclamation"></i>
+                  <i id="followUpCardIcon" class="fa-solid fa-clipboard-check"></i>
                 </span>
                 <div>
-                  <h4 id="followUpCardTitle" class="text-xs font-black uppercase tracking-wider text-slate-800">Cần Đôn Đốc Bám Sát</h4>
-                  <p id="followUpCardSubtitle" class="text-[11px] text-slate-400">Chưa báo cáo tiến độ</p>
+                  <h4 id="followUpCardTitle" class="text-xs font-black uppercase tracking-wider text-slate-800">Theo Dõi & Đôn Đốc Tiến Độ</h4>
+                  <p id="followUpCardSubtitle" class="text-[11px] text-slate-400">Thống kê số ngày chưa báo cáo</p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5">
-                <span id="followUpPendingBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 font-num">Đôn đốc</span>
+                <span id="followUpPendingBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 font-num">Theo dõi tiến độ</span>
               </div>
             </div>
 
@@ -1254,7 +1254,7 @@
                 </span>
                 <span id="insightLeaderboardBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 font-num">0 hoàn thành</span>
               </div>
-              <p id="insightLeaderboardSubtitle" class="text-[10px] text-slate-500 italic">Đã hoàn thành báo cáo</p>
+              <p id="insightLeaderboardSubtitle" class="text-[10px] text-slate-500 italic">Đã hoàn thành báo cáo đến ngày ...</p>
               <div id="insightAttentionTasks" class="flex-1 space-y-1.5 text-xs text-slate-700 max-h-36 overflow-y-auto custom-scroll pr-1"></div>
             </div>
           </div>
@@ -7077,7 +7077,7 @@
         const { targetDateLabel, completedList } = progressData;
 
         if (leaderboardSubtitle) {
-          leaderboardSubtitle.innerText = `Đã hoàn thành báo cáo ngày ${targetDateLabel}`;
+          leaderboardSubtitle.innerText = `Đã hoàn thành báo cáo đến ngày ${targetDateLabel}`;
         }
 
         if (leaderboardBadge) {
@@ -7085,7 +7085,7 @@
         }
 
         if (completedList.length === 0) {
-          leaderboardBox.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo ngày ${targetDateLabel}</p>`;
+          leaderboardBox.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo đến ngày ${targetDateLabel}</p>`;
         } else {
           let html = '';
           completedList.forEach(item => {
@@ -7104,7 +7104,7 @@
                   </div>
                 </div>
                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 whitespace-nowrap font-num shrink-0 border border-emerald-200/80">
-                  ✓ ${item.loggedTaskCount}/${item.totalTasks} việc
+                  ✓ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày
                 </span>
               </div>
             `;
@@ -7497,13 +7497,13 @@
       container.innerHTML = html;
     }
 
-    // ================= BỘ TÍNH TOÁN BÁM SÁT TIẾN ĐỘ BÁO CÁO THEO NGÀY (CẦN ĐÔN ĐỐC & THI ĐUA) =================
+    // ================= BỘ TÍNH TOÁN BÁM SÁT TIẾN ĐỘ BÁO CÁO THEO NGÀY (THEO DÕI ĐÔN ĐỐC & THI ĐUA) =================
     let _cachedFollowUpProgressData = null;
-    let _currentFollowUpTab = 'pending'; // 'pending' = Cần đôn đốc | 'completed' = Thi đua đã hoàn thành
+    let _currentFollowUpTab = 'pending'; // 'pending' = Chưa báo cáo (Cần đôn đốc) | 'completed' = Đã hoàn thành (Thi đua)
 
     function getDailyReportingProgressData(data) {
       if (!data || !data.staffGroups || !data.dayCols || data.staffGroups.length === 0) {
-        return { targetDateLabel: '', targetDayNum: 1, pendingList: [], completedList: [] };
+        return { targetDateLabel: '', targetDayNum: 1, totalDaysToEval: 1, pendingList: [], completedList: [] };
       }
 
       const now = new Date();
@@ -7529,6 +7529,10 @@
         targetDayNum = 1;
       }
 
+      // Danh sách các cột ngày cần xét duyệt từ ngày 1 đến ngày targetDayNum
+      const evalDayCols = data.dayCols.filter(dc => dc.dayNum <= targetDayNum);
+      const totalDaysToEval = evalDayCols.length;
+
       const targetDayCol = data.dayCols.find(dc => dc.dayNum === targetDayNum);
       const targetColIdx = targetDayCol ? targetDayCol.colIndex : targetDayNum;
 
@@ -7536,11 +7540,10 @@
       const targetMonthStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
       const targetDateLabel = `${targetDayStr}/${targetMonthStr}`;
 
-      const uniquePendingMap = new Map();
-      const uniqueCompletedMap = new Map();
+      // Gom nhóm theo uniqueKey để nhóm gộp chỉ xuất hiện 1 dòng duy nhất
+      const memberGroupMap = new Map();
 
       data.staffGroups.forEach(grp => {
-        // Xác định nhóm gộp
         const isGroup = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
         let displayName = "";
         let subDeptName = "";
@@ -7559,63 +7562,114 @@
           uniqueKey = "STAFF___" + displayName + "___" + (grp.department || "");
         }
 
-        // Đếm số đầu việc có số liệu ghi nhận trong ngày xét duyệt
-        let loggedTaskCount = 0;
-        const totalTasks = grp.tasks ? grp.tasks.length : 0;
+        if (!memberGroupMap.has(uniqueKey)) {
+          memberGroupMap.set(uniqueKey, {
+            isGroup: isGroup,
+            displayName: displayName,
+            subDeptName: subDeptName,
+            department: grp.department,
+            staffName: grp.staffName,
+            tasks: [...(grp.tasks || [])]
+          });
+        } else {
+          const existing = memberGroupMap.get(uniqueKey);
+          existing.tasks.push(...(grp.tasks || []));
+        }
+      });
 
-        if (grp.tasks && grp.tasks.length > 0) {
-          grp.tasks.forEach(t => {
-            const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
+      const pendingList = [];
+      const completedList = [];
+
+      memberGroupMap.forEach((entry, key) => {
+        const allTasks = entry.tasks || [];
+        const totalTasks = allTasks.length;
+
+        // 1. Kiểm tra ngày mục tiêu (targetDayNum)
+        let targetDayLoggedCount = 0;
+        allTasks.forEach(t => {
+          const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            const s = String(val).trim();
+            if (s !== '-' && s !== '·' && s !== '0') {
+              targetDayLoggedCount++;
+            }
+          }
+        });
+
+        // 2. Thống kê số ngày chưa báo cáo tính từ đầu kỳ đến ngày targetDayNum
+        let reportedDaysCount = 0;
+        let unreportedDaysCount = 0;
+        const unreportedDaysList = [];
+
+        evalDayCols.forEach(dc => {
+          let hasDataOnDay = false;
+          allTasks.forEach(t => {
+            const val = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
             if (val !== undefined && val !== null && String(val).trim() !== '') {
               const s = String(val).trim();
               if (s !== '-' && s !== '·' && s !== '0') {
-                loggedTaskCount++;
+                hasDataOnDay = true;
               }
             }
           });
-        }
+
+          if (hasDataOnDay) {
+            reportedDaysCount++;
+          } else {
+            unreportedDaysCount++;
+            unreportedDaysList.push(dc.label.split('/')[0]); // ví dụ '07'
+          }
+        });
+
+        const hasReportedTargetDay = targetDayLoggedCount > 0;
 
         const itemObj = {
-          isGroup: isGroup,
-          displayName: displayName,
-          subDeptName: subDeptName,
-          department: grp.department,
-          staffName: grp.staffName,
-          loggedTaskCount: loggedTaskCount,
+          isGroup: entry.isGroup,
+          displayName: entry.displayName,
+          subDeptName: entry.subDeptName,
+          department: entry.department,
+          staffName: entry.staffName,
           totalTasks: totalTasks,
-          hasReported: loggedTaskCount > 0,
-          groupRef: grp
+          targetDayLoggedCount: targetDayLoggedCount,
+          reportedDaysCount: reportedDaysCount,
+          unreportedDaysCount: unreportedDaysCount,
+          unreportedDaysList: unreportedDaysList,
+          hasReportedTargetDay: hasReportedTargetDay,
+          totalDaysToEval: totalDaysToEval
         };
 
-        if (loggedTaskCount > 0) {
-          if (uniqueCompletedMap.has(uniqueKey)) {
-            uniqueCompletedMap.get(uniqueKey).loggedTaskCount += loggedTaskCount;
-            uniqueCompletedMap.get(uniqueKey).totalTasks += totalTasks;
-          } else {
-            uniqueCompletedMap.set(uniqueKey, itemObj);
-          }
-        } else {
-          if (!uniquePendingMap.has(uniqueKey)) {
-            uniquePendingMap.set(uniqueKey, itemObj);
-          } else {
-            uniquePendingMap.get(uniqueKey).totalTasks += totalTasks;
-          }
+        // Phân loại:
+        // Nếu người/nhóm có ngày chưa báo cáo (unreportedDaysCount > 0) -> Đưa vào bảng đôn đốc
+        if (unreportedDaysCount > 0) {
+          pendingList.push(itemObj);
+        }
+
+        // Nếu đã hoàn thành báo cáo đến ngày targetDayNum -> Đưa vào bảng thi đua
+        if (hasReportedTargetDay || unreportedDaysCount === 0) {
+          completedList.push(itemObj);
         }
       });
 
-      // Nếu 1 nhóm gộp đã có bất kỳ đầu việc nào được gửi báo cáo thì xếp vào danh sách đã hoàn thành
-      uniqueCompletedMap.forEach((val, key) => {
-        if (uniquePendingMap.has(key)) {
-          uniquePendingMap.delete(key);
+      // SẮP XẾP BẢNG CẦN ĐÔN ĐỐC: SỐ NGÀY CHƯA BÁO CÁO NHIỀU NHẤT ĐƯỢC ĐƯA LÊN ĐẦU TIÊN
+      pendingList.sort((a, b) => {
+        if (b.unreportedDaysCount !== a.unreportedDaysCount) {
+          return b.unreportedDaysCount - a.unreportedDaysCount;
         }
+        return a.displayName.localeCompare(b.displayName, 'vi');
       });
 
-      const pendingList = Array.from(uniquePendingMap.values());
-      const completedList = Array.from(uniqueCompletedMap.values());
+      // SẮP XẾP BẢNG THI ĐUA: Tỷ lệ hoàn thành cao nhất lên đầu
+      completedList.sort((a, b) => {
+        if (b.reportedDaysCount !== a.reportedDaysCount) {
+          return b.reportedDaysCount - a.reportedDaysCount;
+        }
+        return a.displayName.localeCompare(b.displayName, 'vi');
+      });
 
       return {
         targetDateLabel,
         targetDayNum,
+        totalDaysToEval,
         pendingList,
         completedList
       };
@@ -7643,13 +7697,13 @@
       const tabBtnCompleted = document.getElementById('tabBtnCompleted');
 
       if (!progressData) return;
-      const { targetDateLabel, pendingList, completedList } = progressData;
+      const { targetDateLabel, pendingList, completedList, totalDaysToEval } = progressData;
 
       if (tabCountPending) tabCountPending.innerText = pendingList.length;
       if (tabCountCompleted) tabCountCompleted.innerText = completedList.length;
 
       if (subTitle) {
-        subTitle.innerText = `Tính đến ngày ${targetDateLabel} (Còn ${pendingList.length} chưa nộp)`;
+        subTitle.innerText = `Thống kê số ngày chưa báo cáo tính đến ngày ${targetDateLabel}`;
       }
 
       if (badge) {
@@ -7658,7 +7712,7 @@
           badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>100% Hoàn thành`;
         } else {
           badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
-          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Còn ${pendingList.length} chưa nộp`;
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa nộp: ${pendingList.length} nhân sự/nhóm`;
         }
       }
 
@@ -7675,15 +7729,15 @@
       if (!container) return;
 
       if (_currentFollowUpTab === 'pending') {
-        // TAB 1: CẦN ĐÔN ĐỐC BÁM SÁT (Chưa báo cáo)
+        // TAB 1: THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (Chưa báo cáo - Xếp người chưa báo cáo nhiều ngày nhất lên đầu)
         if (pendingList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-gradient-to-b from-emerald-50/80 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-1.5">
               <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shadow-2xs">
                 <i class="fa-solid fa-circle-check"></i>
               </div>
-              <h5 class="text-xs font-black text-emerald-900">100% Đã Báo Cáo Tiến Độ!</h5>
-              <p class="text-[11px] text-emerald-700 font-medium">Tất cả nhân sự và nhóm gộp đều đã gửi số liệu ngày <b>${targetDateLabel}</b>.</p>
+              <h5 class="text-xs font-black text-emerald-900">100% Đã Báo Cáo Đầy Đủ!</h5>
+              <p class="text-[11px] text-emerald-700 font-medium">Tất cả nhân sự và nhóm gộp đều đã hoàn thành báo cáo đến ngày <b>${targetDateLabel}</b>.</p>
             </div>
           `;
           return;
@@ -7691,10 +7745,15 @@
 
         let html = '';
         pendingList.forEach(item => {
+          const isDanger = item.unreportedDaysCount >= 3;
+          const missDaysStr = item.unreportedDaysList.length <= 4 
+            ? item.unreportedDaysList.map(d => 'ngày ' + d).join(', ')
+            : item.unreportedDaysList.slice(-3).map(d => 'ngày ' + d).join(', ') + ` (+${item.unreportedDaysList.length - 3} ngày)`;
+
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-7 h-7 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-amber-100 text-amber-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
                 </span>
                 <div class="min-w-0">
@@ -7702,23 +7761,33 @@
                     <p class="text-xs font-black text-slate-800 truncate group-hover:text-amber-950 transition">${escapeHtml(item.displayName)}</p>
                     ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                   </div>
-                  <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
+                  <div class="flex items-center gap-1 text-[10.5px] text-slate-500 mt-0.5 truncate">
+                    <span class="truncate">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="${isDanger ? 'text-rose-700 font-bold' : 'text-amber-800 font-medium'} truncate font-num">
+                      Thiếu: ${missDaysStr}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <span class="px-2 py-1 rounded-xl text-[9.5px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200/90 shrink-0 whitespace-nowrap shadow-2xs">
-                <i class="fa-solid fa-clock-rotate-left mr-1"></i>Chưa báo cáo
-              </span>
+              <div class="text-right shrink-0">
+                <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isDanger ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
+                  <i class="${isDanger ? 'fa-solid fa-triangle-exclamation text-rose-600' : 'fa-solid fa-clock text-amber-700'} text-[9px]"></i>
+                  <span>Chưa nộp ${item.unreportedDaysCount} ngày</span>
+                </span>
+                <p class="text-[9.5px] text-slate-400 font-num font-medium mt-0.5">Đã nộp: ${item.reportedDaysCount}/${totalDaysToEval} ngày</p>
+              </div>
             </div>
           `;
         });
         container.innerHTML = html;
       } else {
-        // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo)
+        // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo đến ngày mục tiêu)
         if (completedList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">
               <i class="fa-solid fa-inbox text-base mb-1 block"></i>
-              Chưa ghi nhận nhân sự hoặc nhóm gộp nào gửi báo cáo ngày ${targetDateLabel}.
+              Chưa ghi nhận nhân sự hoặc nhóm gộp nào hoàn thành báo cáo đến ngày ${targetDateLabel}.
             </div>
           `;
           return;
@@ -7729,7 +7798,7 @@
           html += `
             <div onclick="locateStaffOrGroupInMatrix('${escapeHtml(item.displayName)}', '${escapeHtml(item.department)}')" class="p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để định vị đến ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-7 h-7 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
                 </span>
                 <div class="min-w-0">
@@ -7740,9 +7809,13 @@
                   <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
                 </div>
               </div>
-              <span class="px-2 py-1 rounded-xl text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/90 shrink-0 whitespace-nowrap font-num shadow-2xs">
-                <i class="fa-solid fa-check mr-1"></i>${item.loggedTaskCount}/${item.totalTasks} việc
-              </span>
+              <div class="text-right shrink-0">
+                <span class="px-2.5 py-1 rounded-xl text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/90 shrink-0 whitespace-nowrap font-num shadow-2xs inline-flex items-center gap-1">
+                  <i class="fa-solid fa-check text-emerald-600 text-[9px]"></i>
+                  <span>Đã nộp ${item.reportedDaysCount}/${totalDaysToEval} ngày</span>
+                </span>
+                <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? '✓ Đã có số liệu ' + targetDateLabel : 'Đầy đủ kỳ này'}</p>
+              </div>
             </div>
           `;
         });
