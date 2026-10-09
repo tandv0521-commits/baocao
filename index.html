@@ -1030,7 +1030,7 @@
               <span>Ngày 01</span>
             </button>
 
-            <!-- CỤM ĐIỀU HƯỚNG HIỆN ĐẠI: HÔM QUA - HÔM NAY (Ở GIỮA) - NGÀY MAI -->
+            <!-- CỤM ĐIỀU HƯỚNG HIỆN ĐẠI: HÔM QUA - HÔM NAY -->
             <div class="inline-flex items-center p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/90 shadow-2xs">
               <!-- Nút Hôm qua -->
               <button type="button" id="btnScrollYesterday" onclick="scrollToYesterday()" data-tooltip="Cuộn đến ngày hôm qua" 
@@ -1039,18 +1039,11 @@
                 <span id="labelScrollYesterday">Hôm qua</span>
               </button>
 
-              <!-- Nút Hôm nay (Nằm ở giữa, Nổi bật) -->
+              <!-- Nút Hôm nay (Nổi bật) -->
               <button type="button" id="btnScrollToday" onclick="scrollToToday()" data-tooltip="Cuộn đến ngày hôm nay" 
                 class="px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs active:scale-95 transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                 <i class="fa-solid fa-calendar-check text-[11px] text-current opacity-90"></i>
                 <span id="labelScrollToday">Hôm nay</span>
-              </button>
-
-              <!-- Nút Ngày mai -->
-              <button type="button" id="btnScrollTomorrow" onclick="scrollToTomorrow()" data-tooltip="Cuộn đến ngày mai" 
-                class="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-white active:scale-95 transition flex items-center gap-1 cursor-pointer">
-                <span id="labelScrollTomorrow">Ngày mai</span>
-                <i class="fa-solid fa-chevron-right text-[9px] text-current opacity-70"></i>
               </button>
             </div>
           </div>
@@ -7736,15 +7729,14 @@
     let currentHighlightedColIndex = null;
 
     function setActiveDateNavButton(mode) {
-      // mode: 'yesterday' | 'today' | 'tomorrow' | 'other'
+      // mode: 'yesterday' | 'today' | 'other'
       const btnYesterday = document.getElementById('btnScrollYesterday');
       const btnToday = document.getElementById('btnScrollToday');
-      const btnTomorrow = document.getElementById('btnScrollTomorrow');
 
       const activeCls = ["bg-emerald-600", "text-white", "font-black", "shadow-xs", "hover:bg-emerald-700"];
       const inactiveCls = ["text-slate-600", "font-bold", "hover:text-slate-900", "hover:bg-white"];
 
-      [btnYesterday, btnToday, btnTomorrow].forEach(btn => {
+      [btnYesterday, btnToday].forEach(btn => {
         if (!btn) return;
         btn.classList.remove(...activeCls);
         btn.classList.remove(...inactiveCls);
@@ -7763,14 +7755,6 @@
           btnToday.classList.add(...activeCls);
         } else {
           btnToday.classList.add(...inactiveCls);
-        }
-      }
-
-      if (btnTomorrow) {
-        if (mode === 'tomorrow') {
-          btnTomorrow.classList.add(...activeCls);
-        } else {
-          btnTomorrow.classList.add(...inactiveCls);
         }
       }
     }
@@ -7851,18 +7835,14 @@
       
       const btnYesterday = document.getElementById('btnScrollYesterday');
       const btnToday = document.getElementById('btnScrollToday');
-      const btnTomorrow = document.getElementById('btnScrollTomorrow');
       const lblYesterday = document.getElementById('labelScrollYesterday');
       const lblToday = document.getElementById('labelScrollToday');
-      const lblTomorrow = document.getElementById('labelScrollTomorrow');
 
-      if (!btnYesterday || !btnToday || !btnTomorrow) return;
+      if (!btnYesterday || !btnToday) return;
 
       if (isCurrentPeriod) {
         const todayNum = now.getDate();
         const yesterdayNum = todayNum - 1;
-        const tomorrowNum = todayNum + 1;
-        const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
 
         if (lblYesterday) {
           const yStr = yesterdayNum >= 1 ? (yesterdayNum < 10 ? '0' + yesterdayNum : yesterdayNum) : '';
@@ -7876,20 +7856,12 @@
         }
         btnToday.setAttribute('data-tooltip', `Cuộn đến ngày hôm nay (Ngày ${todayNum < 10 ? '0' + todayNum : todayNum})`);
 
-        if (lblTomorrow) {
-          const tmStr = tomorrowNum <= daysInMonth ? (tomorrowNum < 10 ? '0' + tomorrowNum : tomorrowNum) : '';
-          lblTomorrow.innerHTML = `Ngày mai ${tmStr ? '<span class="hidden md:inline text-[10px] opacity-75 font-num">(' + tmStr + ')</span>' : ''}`;
-        }
-        btnTomorrow.setAttribute('data-tooltip', tomorrowNum <= daysInMonth ? `Cuộn đến ngày mai (Ngày ${tomorrowNum < 10 ? '0' + tomorrowNum : tomorrowNum})` : `Ngày mai thuộc tháng tiếp theo`);
         setActiveDateNavButton('today');
       } else {
         if (lblYesterday) lblYesterday.innerText = `Đầu tháng`;
         if (lblToday) lblToday.innerText = `Về hôm nay`;
-        if (lblTomorrow) lblTomorrow.innerText = `Cuối tháng`;
         btnYesterday.setAttribute('data-tooltip', `Cuộn về ngày 01 đầu tháng`);
         btnToday.setAttribute('data-tooltip', `Chuyển về kỳ báo cáo tháng hiện tại`);
-        const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
-        btnTomorrow.setAttribute('data-tooltip', `Cuộn đến ngày ${daysInMonth} cuối tháng`);
         setActiveDateNavButton('other');
       }
     }
@@ -7998,42 +7970,6 @@
       }
     }
 
-    function scrollToTomorrow() {
-      const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
-      const daysInMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
-      if (!isCurrentPeriod) {
-        scrollColumnToCenter(daysInMonth, true);
-        setActiveDateNavButton('other');
-        const dStr = (daysInMonth < 10 ? '0' : '') + daysInMonth;
-        showToast(`Đã chuyển đến: Ngày ${dStr} cuối tháng`);
-        return;
-      }
-      const todayDayNum = now.getDate();
-      const tomorrowDayNum = todayDayNum + 1;
-
-      let targetDay;
-      if (currentNavActiveDay === tomorrowDayNum) {
-        targetDay = currentNavActiveDay + 1;
-      } else {
-        targetDay = tomorrowDayNum;
-      }
-
-      if (targetDay > daysInMonth) {
-        showToast("Đã đến ngày cuối tháng. Ngày mai thuộc kỳ báo cáo tháng tiếp theo!");
-        return;
-      }
-
-      setActiveDateNavButton('tomorrow');
-      scrollColumnToCenter(targetDay, true);
-
-      const dStr = (targetDay < 10 ? '0' : '') + targetDay;
-      if (targetDay === tomorrowDayNum) {
-        showToast(`Đã chuyển đến: Ngày mai (Ngày ${dStr})`);
-      } else {
-        showToast(`Đã chuyển đến: Ngày ${dStr}`);
-      }
-    }
 
     function scrollToStartOfMonth() {
       setActiveDateNavButton('other');
