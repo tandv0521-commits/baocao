@@ -757,12 +757,6 @@
           <span>Điền báo cáo</span>
         </button>
 
-        <!-- Nút Xuất Excel nhanh: 1 chạm chuẩn báo cáo -->
-        <button id="btnQuickExportExcel" onclick="exportToExcel()" data-tooltip="Xuất file Excel chuẩn báo cáo" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95">
-          <i class="fa-solid fa-file-excel text-emerald-600 text-xs sm:text-sm"></i>
-          <span class="hidden md:inline">Xuất Excel</span>
-        </button>
-
         <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
         <div class="relative" id="headerActionsDropdownWrapper">
           <button type="button" id="headerActionsMenuBtn" onclick="toggleHeaderActionsMenu(event)" data-tooltip="Danh mục chức năng" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 hover:border-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-95">
@@ -7708,8 +7702,9 @@
      * Tự động tính toán lại và re-render Bảng Đôn Đốc và Bảng Thi Đua ngay lập tức
      */
     function refreshReportingProgressRealtime() {
-      const activeData = fullPeriodMatrixCache || currentMatrixData;
-      if (!activeData) return;
+      const baseData = currentMatrixData || fullPeriodMatrixCache;
+      if (!baseData) return;
+      const activeData = getScopedDataForCurrentUser(baseData);
 
       // 1. Tính toán lại tiến độ và cập nhật Bảng Theo Dõi & Đôn Đốc Tiến Độ
       _cachedFollowUpProgressData = getDailyReportingProgressData(activeData);
@@ -8049,6 +8044,52 @@
       }
     }
 
+    // ================= PHÂN QUYỀN DỮ LIỆU BÁO CÁO & PHÂN TÍCH =================
+    function isCurrentUserExecutiveOrManager() {
+      if (!currentUser) return false;
+      return isAdminOrManager(currentUser.role, currentUser.username) || 
+             isDirectorOrAdmin(currentUser.role, currentUser.username) || 
+             isDeputyDirector(currentUser.role, currentUser.username);
+    }
+
+    /**
+     * GIỚI HẠN PHẠM VI DỮ LIỆU THEO QUYỀN HẠN:
+     * - Quản lý / Lãnh đạo: Xem theo bộ phận đã chọn hoặc toàn ban.
+     * - Nhân viên thường: CHỈ xem công việc và số liệu của CHÍNH MÌNH (và việc chung tổ kho mình thuộc về).
+     */
+    function getScopedDataForCurrentUser(data) {
+      if (!data || !data.staffGroups) return data;
+      if (isCurrentUserExecutiveOrManager()) {
+        return data;
+      }
+
+      const myName = (currentUser?.fullName || '').trim();
+      const myDept = (currentUser?.department || '').trim();
+
+      const scopedGroups = (data.staffGroups || []).filter(grp => {
+        // 1. Việc cá nhân trong nhóm gộp: chỉ lấy của chính mình
+        if (grp.isPersonalInShared) {
+          return isStaffMatchedInCell(myName, grp.staffName);
+        }
+
+        // 2. Nếu khác bộ phận: loại trừ hoàn toàn
+        if (myDept && !isDeptEquivalent(grp.department, myDept)) {
+          return false;
+        }
+
+        // 3. Nhóm gộp (Tổ kho): việc chung chỉ giữ lại nếu mình là thành viên tổ kho đó
+        const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+        if (isShared) {
+          return isStaffMatchedInCell(myName, grp.staffName);
+        }
+
+        // 4. Bộ phận thông thường: chỉ lấy dòng của chính mình
+        return isStaffMatchedInCell(myName, grp.staffName);
+      });
+
+      return Object.assign({}, data, { staffGroups: scopedGroups });
+    }
+
     // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU =================
     function renderAnalyticsSection(data) {
       const section = document.getElementById('analyticsSection');
@@ -8056,10 +8097,21 @@
         section.classList.add('hidden');
         return;
       }
+
+      // Giới hạn phạm vi dữ liệu: Nhân viên chỉ thấy số liệu của chính mình
+      const isExec = isCurrentUserExecutiveOrManager();
+      const scopedData = getScopedDataForCurrentUser(data);
+
+      if (!scopedData || !scopedData.staffGroups || scopedData.staffGroups.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
       section.classList.remove('hidden');
 
       let staffTitle = "";
-      if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
+      if (!isExec && currentUser) {
+        staffTitle = `👤 ${currentUser.fullName}`;
+      } else if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
         const rawSearch = document.getElementById('adminStaffSearchInput')?.value || '';
         staffTitle = `Tìm kiếm: "${rawSearch}"`;
       } else if (currentSelectedDept === "TẤT CẢ" && currentSelectedStaff === "TẤT CẢ") {
@@ -8082,7 +8134,7 @@
       let activeTasksCount = 0;
 
       let dailyActiveTasksMap = {};
-      data.dayCols.forEach(dc => { dailyActiveTasksMap[dc.label] = 0; });
+      scopedData.dayCols.forEach(dc => { dailyActiveTasksMap[dc.label] = 0; });
 
       let deptAggregation = {};
       let totalPossibleTaskDays = 0;
@@ -8096,7 +8148,7 @@
         'Hành chính & Quản trị': 0
       };
 
-      data.staffGroups.forEach(grp => {
+      scopedData.staffGroups.forEach(grp => {
         const dName = grp.department || "Chưa phân bộ phận";
         if (!deptAggregation[dName]) {
           deptAggregation[dName] = {
@@ -8213,10 +8265,10 @@
           : `Chưa có phát sinh`;
       }
 
-      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), data.dayCols.length, fullPeriodMatrixCache || data);
-      renderActivityRhythmChart(data, dailyActiveTasksMap);
-      renderDeptLeaderboard(deptAggregation, fullPeriodMatrixCache || data);
-      updateHeaderTodayStatus(data);
+      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), scopedData.dayCols.length, scopedData);
+      renderActivityRhythmChart(scopedData, dailyActiveTasksMap);
+      renderDeptLeaderboard(deptAggregation, scopedData);
+      updateHeaderTodayStatus(scopedData);
     }
 
     function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod, rawData) {
@@ -8358,13 +8410,13 @@
       let dailyMap = {};
 
       if (dataOrDailyMap && dataOrDailyMap.dayCols) {
-        data = dataOrDailyMap;
+        data = getScopedDataForCurrentUser(dataOrDailyMap);
         dayCols = data.dayCols || [];
         dailyMap = maybeDayCols || {};
         cachedRhythmData = data;
         cachedDailyActiveTasksMap = dailyMap;
       } else if (cachedRhythmData) {
-        data = cachedRhythmData;
+        data = getScopedDataForCurrentUser(cachedRhythmData);
         dayCols = data.dayCols || [];
         dailyMap = dataOrDailyMap || cachedDailyActiveTasksMap || {};
       } else {
@@ -8378,7 +8430,7 @@
         lastDayLabel.innerText = `Ngày ${dayCols[dayCols.length - 1].label}`;
       }
 
-      // Trích xuất toàn bộ danh sách đầu việc có trong ma trận
+      // Trích xuất toàn bộ danh sách đầu việc có trong ma trận (đã giới hạn theo quyền hạn)
       const allTasks = [];
       if (data && data.staffGroups) {
         data.staffGroups.forEach((grp, gIdx) => {
@@ -8402,7 +8454,11 @@
       // Cập nhật các tùy chọn trong dropdown Đầu việc (nếu có select element)
       if (taskSelect) {
         const prevSelected = currentRhythmSelectedTaskKey;
-        taskSelect.innerHTML = `<option value="ALL">📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ</option>`;
+        const isExec = isCurrentUserExecutiveOrManager();
+        const allOptionLabel = (!isExec && currentUser)
+          ? `📊 [Tổng hợp] ${allTasks.length} đầu việc của bạn trong kỳ`
+          : `📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ`;
+        taskSelect.innerHTML = `<option value="ALL">${allOptionLabel}</option>`;
         
         allTasks.forEach(t => {
           let activeDays = 0;
@@ -8632,10 +8688,18 @@
       }
 
       if (titleLabel) {
-        titleLabel.innerHTML = `
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-          <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
-        `;
+        const isExec = isCurrentUserExecutiveOrManager();
+        if (!isExec && currentUser) {
+          titleLabel.innerHTML = `
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+            <span class="font-black text-slate-900">Tổng hợp ${allTasks.length} đầu việc của ${escapeHtml(currentUser.fullName)}</span>
+          `;
+        } else {
+          titleLabel.innerHTML = `
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+            <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
+          `;
+        }
       }
 
       if (scaleModeLabel) {
@@ -8741,9 +8805,11 @@
     }
 
     function getDailyReportingProgressData(data) {
-      if (!data || !data.staffGroups || !data.dayCols || data.staffGroups.length === 0) {
+      const scopedData = getScopedDataForCurrentUser(data);
+      if (!scopedData || !scopedData.staffGroups || !scopedData.dayCols || scopedData.staffGroups.length === 0) {
         return { targetDateLabel: '', targetDayNum: 1, totalDaysToEval: 1, pendingList: [], completedList: [] };
       }
+      data = scopedData;
 
       const now = new Date();
       const todayDate = now.getDate();
