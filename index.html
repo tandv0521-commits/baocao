@@ -88,6 +88,15 @@
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
+    /* Gợi ý placeholder chung: chữ in nghiêng nhỏ mảnh, sắc nét và trang nhã */
+    #modalTasksListContainer input::placeholder {
+      font-style: italic !important;
+      font-weight: 400 !important;
+      font-size: 11px !important;
+      color: #94a3b8 !important;
+      letter-spacing: -0.01em !important;
+    }
+
     /* ================= THẺ GỢI Ý (TOOLTIP) BẮT MẮT & HIỆN ĐẠI ================= */
     [data-tooltip] {
       position: relative;
@@ -2103,6 +2112,7 @@
               <option value="Tổ trưởng">Tổ trưởng</option>
               <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
+              <option value="Phó Giám Đốc">Phó Giám Đốc</option>
             </select>
           </div>
           <!-- Huy hiệu cố định vai trò cho Giám đốc / Admin (không cho chọn vai trò thông thường) -->
@@ -2197,6 +2207,7 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Vai trò mới của bạn sau khi chuyển giao quyền</label>
           <select id="transferAdminFormerRoleSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
             <option value="Quản lý" selected>Quản lý (Khuyến nghị)</option>
+            <option value="Phó Giám Đốc">Phó Giám Đốc</option>
             <option value="Nhân viên">Nhân viên</option>
           </select>
         </div>
@@ -2351,6 +2362,7 @@
               <option value="Tổ trưởng">Tổ trưởng</option>
               <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
+              <option value="Phó Giám Đốc">Phó Giám Đốc</option>
             </select>
           </div>
           <div>
@@ -2461,6 +2473,7 @@
               <option value="Tổ trưởng">Tổ trưởng</option>
               <option value="Trưởng nhóm">Trưởng nhóm</option>
               <option value="Quản lý">Quản lý</option>
+              <option value="Phó Giám Đốc">Phó Giám Đốc</option>
             </select>
           </div>
         </div>
@@ -2468,7 +2481,7 @@
         <div class="relative" id="addDeptPickerWrapper">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
-            <span>Bộ phận công tác <span class="text-rose-500">*</span></span>
+            <span>Bộ phận công tác <span class="text-slate-400 font-normal lowercase">(tùy chọn - có thể phân bổ sau)</span></span>
           </label>
           <select id="addDeptSelect" class="hidden"></select>
           <button type="button" id="addDeptBtn" onclick="toggleAddDeptPicker(event)" class="w-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
@@ -3315,8 +3328,17 @@
       return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho");
     }
 
+    function isDeputyDirector(roleStr, usernameStr) {
+      if (!roleStr && !usernameStr) return false;
+      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      return r.includes("phogiamdoc") || r.includes("phogd") || r === "pgd" ||
+             u.includes("phogiamdoc") || u.includes("phogd") || u.startsWith("pgd.");
+    }
+
     function isDirectorOrAdmin(roleStr, usernameStr) {
       if (!roleStr && !usernameStr) return false;
+      if (isDeputyDirector(roleStr, usernameStr)) return false;
       var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       return r.includes("giamdoc") || r.includes("lanhdao") || r.includes("admin") || r.includes("quantri") ||
@@ -3325,12 +3347,80 @@
 
     function isAdminOrManager(roleStr, usernameStr) {
       if (!roleStr && !usernameStr) return false;
+      if (isDeputyDirector(roleStr, usernameStr)) return true;
       var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       return r.includes("admin") || r.includes("quantri") || r.includes("quanly") || 
              r.includes("giamdoc") || r.includes("lanhdao") || r.includes("truongphong") || 
              r.includes("phophong") || r.includes("leader") || r.includes("manager") || r === "ql" ||
              u.includes("admin") || u.includes("quanly") || u.includes("manager") || u.includes("giamdoc");
+    }
+
+    /**
+     * KIỂM TRA HẠN NGẠCH (QUOTA) LÃNH ĐẠO: TỐI ĐA 1 GIÁM ĐỐC VÀ 2 PHÓ GIÁM ĐỐC
+     * @param {string} targetRole - Vai trò dự kiến gán
+     * @param {string} excludeUsername - Username tài khoản đang chỉnh sửa (nếu có)
+     */
+    async function validateExecutiveRoleQuota(targetRole, excludeUsername = '') {
+      if (!targetRole) return { allowed: true, message: '' };
+
+      const isTargetDirector = isDirectorOrAdmin(targetRole, '');
+      const isTargetDeputy = isDeputyDirector(targetRole, '');
+
+      if (!isTargetDirector && !isTargetDeputy) {
+        return { allowed: true, message: '' };
+      }
+
+      let allUsers = [];
+      try {
+        const { data, error } = await supabase.from('users').select('id, username, role, full_name, status');
+        if (!error && data) allUsers = data;
+        else allUsers = (adminManageUsersCache?.users || []);
+      } catch (e) {
+        allUsers = (adminManageUsersCache?.users || []);
+      }
+
+      const normExclude = (excludeUsername || '').trim().toLowerCase();
+
+      // KIỂM TRA HẠN NGẠCH PHÓ GIÁM ĐỐC (TỐI ĐA 2)
+      if (isTargetDeputy) {
+        const currentDeputies = allUsers.filter(u => {
+          const uName = (u.username || '').trim().toLowerCase();
+          if (uName === normExclude) return false;
+          const st = removeAccents(u.status || '').toLowerCase();
+          if (st.includes('khoa') && !st.includes('tam')) return false;
+          return isDeputyDirector(u.role, u.username);
+        });
+
+        if (currentDeputies.length >= 2) {
+          const names = currentDeputies.map(u => u.full_name || u.fullName || u.username).join(', ');
+          return {
+            allowed: false,
+            message: `Hệ thống chỉ cho phép tối đa 2 Phó Giám đốc! Hiện tại đã đủ 2 Phó Giám đốc (${names}).`
+          };
+        }
+      }
+
+      // KIỂM TRA HẠN NGẠCH GIÁM ĐỐC (TỐI ĐA 1)
+      if (isTargetDirector) {
+        const currentDirectors = allUsers.filter(u => {
+          const uName = (u.username || '').trim().toLowerCase();
+          if (uName === normExclude) return false;
+          const st = removeAccents(u.status || '').toLowerCase();
+          if (st.includes('khoa') && !st.includes('tam')) return false;
+          return isDirectorOrAdmin(u.role, u.username);
+        });
+
+        if (currentDirectors.length >= 1) {
+          const names = currentDirectors.map(u => u.full_name || u.fullName || u.username).join(', ');
+          return {
+            allowed: false,
+            message: `Hệ thống chỉ cho phép tối đa 1 Giám đốc (${names})! Để chuyển đổi Giám đốc, vui lòng dùng chức năng 'Chuyển quyền Giám Đốc'.`
+          };
+        }
+      }
+
+      return { allowed: true, message: '' };
     }
 
     function cleanNameStr(str) {
@@ -5734,7 +5824,7 @@
             id: user.id,
             username: user.username,
             fullName: user.full_name,
-            department: user.departments ? user.departments.name : "Chưa phân",
+            department: user.departments ? user.departments.name : "Chưa phân bổ",
             department_id: user.department_id,
             role: user.role,
             status: user.status
@@ -5755,20 +5845,32 @@
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('mainDashboard').classList.remove('hidden');
 
+      const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
+      const isDep = isDeputyDirector(currentUser.role, currentUser.username);
+
       document.getElementById('userFullnameLabel').innerText = currentUser.fullName;
       document.getElementById('userAvatarChar').innerText = currentUser.fullName.charAt(0);
-      document.getElementById('userDeptLabel').innerText = currentUser.department;
-      document.getElementById('userRoleBadge').innerText = currentUser.role;
+      document.getElementById('userDeptLabel').innerText = currentUser.department || "Ban Điều Hành DVKH";
+
+      const roleBadgeEl = document.getElementById('userRoleBadge');
+      if (roleBadgeEl) {
+        roleBadgeEl.innerText = currentUser.role;
+        if (isDir) {
+          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs";
+        } else if (isDep) {
+          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-2xs";
+        } else if (isAdminOrManager(currentUser.role, currentUser.username)) {
+          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300";
+        }
+      }
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
-      const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
-
       if (btnDayEntry) {
-        if (isDir) btnDayEntry.classList.add('hidden');
+        if (isDir || isDep) btnDayEntry.classList.add('hidden');
         else btnDayEntry.classList.remove('hidden');
       }
 
-      if (isDir) {
+      if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
         currentSelectedDept = "TẤT CẢ";
         currentSelectedStaff = "TẤT CẢ";
       } else {
@@ -6623,11 +6725,11 @@
         }
       });
 
-      // SẮP XẾP CÁC NHÓM TRÊN BẢNG MA TRẬN: VIỆC CHUNG CỦA TỔ KHO LÊN ĐẦU, VIỆC CÁ NHÂN THEO SAU
+      // SẮP XẾP CÁC NHÓM TRÊN BẢNG MA TRẬN: VIỆC CÁ NHÂN LÊN TRÊN CÙNG, VIỆC CHUNG CỦA TỔ KHO THEO SAU
       const sortedStaffGroups = Object.values(staffGroupsMap).sort((a, b) => {
         if (isDeptEquivalent(a.department, b.department)) {
           if (a.isPersonalInShared !== b.isPersonalInShared) {
-            return a.isPersonalInShared ? 1 : -1;
+            return a.isPersonalInShared ? -1 : 1;
           }
           if (a.isPersonalInShared && b.isPersonalInShared) {
             return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
@@ -10170,14 +10272,14 @@
         if (t.isSymbolTask) {
           inputControl = `
             <div class="w-full sm:w-64">
-              <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập ký hiệu hoặc kết quả...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(t.currentValue);
           inputControl = `
             <div class="w-full sm:w-64">
-              <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập số lượng...'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+              <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
             </div>
           `;
         }
@@ -10248,20 +10350,20 @@
 
         item.className = `p-3 border rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition ${rowHighlightClass}`;
 
-        const placeholderText = isFuture ? 'Chưa đến ngày' : (isReadOnly ? 'Chỉ xem' : (isSymbol ? 'Nhập ký hiệu...' : 'Nhập số lượng...'));
+        const placeholderText = isFuture ? 'Chưa đến ngày' : (isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc');
 
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
             <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(d.value);
           inputControl = `
             <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
             </div>
           `;
         }
@@ -11753,28 +11855,32 @@
           return 1; // Hoạt động ưu tiên lên đầu
         }
 
-        // XẾP BẬC VAI TRÒ CHUẨN XÁC: GIÁM ĐỐC (1) -> QUẢN LÝ (2) -> CÒN LẠI (3)
+        // XẾP BẬC VAI TRÒ CHUẨN XÁC: GIÁM ĐỐC (1) -> PHÓ GIÁM ĐỐC (2) -> QUẢN LÝ (3) -> CÒN LẠI (4)
         function getUserRolePriority(u) {
           const r = removeAccents(u.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
           const un = removeAccents(u.username || "").toLowerCase().replace(/[\s\-_]+/g, "");
 
           // 1. Giám đốc ban / Ban Giám đốc / Lãnh đạo / Admin đưa lên đầu
-          if (r.includes("giamdoc") || un.includes("giamdoc") || r.includes("lanhdao") || un.includes("lanhdao") || r.includes("admin") || un.includes("admin")) {
+          if (isDirectorOrAdmin(u.role, u.username)) {
             return 1;
           }
-          // 2. Đến Quản lý / Trưởng phòng / Phó phòng / Leader / Manager
-          if (r.includes("quanly") || r.includes("truongphong") || r.includes("phophong") || r.includes("manager") || r.includes("leader") || r === "ql") {
+          // 2. Phó Giám Đốc
+          if (isDeputyDirector(u.role, u.username)) {
             return 2;
           }
-          // 3. Toàn bộ nhân sự còn lại
-          return 3;
+          // 3. Đến Quản lý / Trưởng phòng / Phó phòng / Leader / Manager
+          if (r.includes("quanly") || r.includes("truongphong") || r.includes("phophong") || r.includes("manager") || r.includes("leader") || r === "ql") {
+            return 3;
+          }
+          // 4. Toàn bộ nhân sự còn lại
+          return 4;
         }
 
         const mappedUsers = validUsers.map(u => ({
           id: u.id,
           username: u.username,
           fullName: u.full_name,
-          dept: u.departments ? u.departments.name : "Chưa phân",
+          dept: u.departments ? u.departments.name : "Chưa phân bổ",
           department_id: u.department_id,
           role: u.role,
           status: u.status,
@@ -11902,6 +12008,24 @@
         </div>
       `;
 
+      const isUnassignedSelected = (currentVal === 'Chưa phân bổ' || currentVal === 'Chưa phân');
+      html += `
+        <div onclick="selectUserFilterDept('Chưa phân bổ')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isUnassignedSelected ? 'border-amber-300 bg-amber-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-amber-500 mb-1">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-amber-950">Chưa phân bộ phận</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-800 border-amber-300">Chờ phân</span>
+            ${isUnassignedSelected ? '<i class="fa-solid fa-check text-xs text-amber-600 ml-1"></i>' : ''}
+          </div>
+        </div>
+      `;
+
       (depts || []).forEach(d => {
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
@@ -11933,6 +12057,12 @@
         if (iconBox) {
           iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
           iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+      } else if (deptName === 'Chưa phân bổ' || deptName === 'Chưa phân') {
+        if (textEl) textEl.innerText = "Chưa phân bộ phận";
+        if (iconBox) {
+          iconBox.className = "w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i>';
         }
       } else {
         const s = getDeptStyle(deptName);
@@ -12005,7 +12135,11 @@
 
       const filtered = adminManageUsersCache.users.filter(u => {
         const matchName = u.fullName.toLowerCase().includes(query) || u.username.toLowerCase().includes(query);
-        const matchDept = filterDept ? isDeptEquivalent(u.dept, filterDept) : true;
+        const matchDept = filterDept 
+          ? ((filterDept === 'Chưa phân bổ' || filterDept === 'Chưa phân')
+              ? (!u.dept || u.dept === 'Chưa phân' || u.dept === 'Chưa phân bổ')
+              : isDeptEquivalent(u.dept, filterDept))
+          : true;
         const matchStatus = filterStatus ? (u.status === filterStatus) : true;
         return matchName && matchDept && matchStatus;
       });
@@ -12040,10 +12174,13 @@
         }
 
         const isDir = isDirectorOrAdmin(u.role, u.username);
+        const isDep = isDeputyDirector(u.role, u.username);
         const isMgr = isAdminOrManager(u.role, u.username);
         let roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-500">${escapeHtml(u.role)}</span>`;
         if (isDir) {
-          roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">Giám đốc ban</span>`;
+          roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-crown text-[9px] text-amber-600"></i>Giám đốc ban</span>`;
+        } else if (isDep) {
+          roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-user-shield text-[9px] text-indigo-600"></i>Phó Giám Đốc</span>`;
         } else if (isMgr) {
           roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">${escapeHtml(u.role)}</span>`;
         }
@@ -12084,13 +12221,17 @@
           `;
         }
 
+        const deptDisplay = (!u.dept || u.dept === 'Chưa phân' || u.dept === 'Chưa phân bổ' || u.dept === 'Chưa phân bộ phận')
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-clock-rotate-left text-[9px]"></i>Chưa phân bộ phận</span>`
+          : escapeHtml(u.dept);
+
         tr.innerHTML = `
           <td class="py-2.5 px-3 text-center text-slate-400 font-num">${idx + 1}</td>
           <td class="py-2.5 px-3">
             <p class="font-bold text-slate-800 leading-tight">${escapeHtml(u.fullName)}</p>
             <p class="text-[11px] text-slate-400 font-mono">${escapeHtml(u.username)}</p>
           </td>
-          <td class="py-2.5 px-3 font-semibold text-emerald-800">${escapeHtml(u.dept)}</td>
+          <td class="py-2.5 px-3 font-semibold text-emerald-800">${deptDisplay}</td>
           <td class="py-2.5 px-3 text-center">${roleBadge}</td>
           <td class="py-2.5 px-3 text-center">${statusBadge}</td>
           <td class="py-2.5 px-3 text-center">
@@ -12199,6 +12340,7 @@
             <option value="Tổ trưởng">Tổ trưởng</option>
             <option value="Trưởng nhóm">Trưởng nhóm</option>
             <option value="Quản lý">Quản lý</option>
+            <option value="Phó Giám Đốc">Phó Giám Đốc</option>
           `;
           let currentRole = user.role || "Nhân viên";
           if (currentRole.toLowerCase().includes("admin")) {
@@ -12289,6 +12431,18 @@
 
       if (!fullName || !newUsername) {
         showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
+        return;
+      }
+
+      // KIỂM TRA HẠN NGẠCH VAI TRÒ (TỐI ĐA 1 GIÁM ĐỐC, 2 PHÓ GIÁM ĐỐC)
+      const quotaCheck = await validateExecutiveRoleQuota(finalRole, origUsername);
+      if (!quotaCheck.allowed) {
+        playAlarmSound();
+        if (errBox && errMsg) {
+          errMsg.innerText = quotaCheck.message;
+          errBox.classList.remove('hidden');
+        }
+        showToast(quotaCheck.message, true);
         return;
       }
 
@@ -13038,7 +13192,7 @@
     /**
      * BẤM NÚT LƯU ĐIỀU CHUYỂN & GHI NHẬN TÊN CHỨC DANH TÙY BIẾN
      */
-    function submitUserTransfer() {
+    async function submitUserTransfer() {
       const username = document.getElementById('transferUsernameInput').value.trim();
       const fullName = document.getElementById('transferFullNameInput').value.trim();
       const dept = document.getElementById('transferDeptSelect').value.trim();
@@ -13066,6 +13220,14 @@
 
       if (role && role.toLowerCase().includes("admin")) {
         role = "Quản lý";
+      }
+
+      // KIỂM TRA HẠN NGẠCH VAI TRÒ (TỐI ĐA 1 GIÁM ĐỐC, 2 PHÓ GIÁM ĐỐC)
+      const quotaCheck = await validateExecutiveRoleQuota(role, username);
+      if (!quotaCheck.allowed) {
+        playAlarmSound();
+        showToast(quotaCheck.message, true);
+        return;
       }
 
       const updateData = {
@@ -13319,7 +13481,7 @@
       document.getElementById('addRoleSelect').value = 'Nhân viên';
 
       const deptSelect = document.getElementById('addDeptSelect');
-      deptSelect.innerHTML = '<option value="">-- Chọn bộ phận có sẵn --</option>';
+      deptSelect.innerHTML = '<option value="">-- Chưa phân bộ phận (Phân bổ sau) --</option>';
       
       const depts = (globalInitData && globalInitData.departments) ? globalInitData.departments : [];
       depts.forEach(d => {
@@ -13329,12 +13491,10 @@
         deptSelect.appendChild(opt);
       });
 
-      if (depts.length > 0) {
-        deptSelect.selectedIndex = 1;
-      }
+      deptSelect.value = '';
       addDeptCache = depts;
       renderAddDeptList(depts);
-      updateAddDeptUI(deptSelect.value);
+      updateAddDeptUI('');
     }
 
     function closeAddUserModal() {
@@ -13392,32 +13552,45 @@
       if (!container) return;
       const currentVal = document.getElementById('addDeptSelect')?.value || '';
 
-      if (!depts || depts.length === 0) {
-        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy bộ phận</div>';
-        return;
-      }
-
-      let html = '';
-      depts.forEach(d => {
-        const s = getDeptStyle(d);
-        const isSelected = (d === currentVal);
-        html += `
-          <div onclick="selectAddDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
-                <i class="${s.icon}"></i>
-              </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
-              </div>
+      let html = `
+        <div onclick="selectAddDept('')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${!currentVal ? 'border-amber-300 bg-amber-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-amber-500 mb-1">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+              <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
-              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            <div class="min-w-0">
+              <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-amber-950">-- Chưa phân bộ phận (Phân bổ sau) --</span>
             </div>
           </div>
-        `;
-      });
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-800 border-amber-300">Tùy chọn</span>
+            ${!currentVal ? '<i class="fa-solid fa-check text-xs text-amber-600 ml-1"></i>' : ''}
+          </div>
+        </div>
+      `;
+
+      if (depts && depts.length > 0) {
+        depts.forEach(d => {
+          const s = getDeptStyle(d);
+          const isSelected = (d === currentVal);
+          html += `
+            <div onclick="selectAddDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                  <i class="${s.icon}"></i>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+        });
+      }
       container.innerHTML = html;
     }
 
@@ -13425,10 +13598,10 @@
       const textEl = document.getElementById('addDeptText');
       const iconBox = document.getElementById('addDeptIconBox');
       if (!deptName) {
-        if (textEl) textEl.innerText = "-- Chọn bộ phận có sẵn --";
+        if (textEl) textEl.innerText = "-- Chưa phân bộ phận (Phân bổ sau) --";
         if (iconBox) {
-          iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
-          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+          iconBox.className = "w-6 h-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i>';
         }
       } else {
         const s = getDeptStyle(deptName);
@@ -13455,8 +13628,20 @@
 
       if (errBox) errBox.classList.add('hidden');
 
-      if (!fullName || !username || !dept) {
-        showToast("Vui lòng điền đầy đủ các thông tin bắt buộc!", true);
+      if (!fullName || !username) {
+        showToast("Vui lòng điền họ tên và tên đăng nhập!", true);
+        return;
+      }
+
+      // KIỂM TRA HẠN NGẠCH VAI TRÒ (TỐI ĐA 1 GIÁM ĐỐC, 2 PHÓ GIÁM ĐỐC)
+      const quotaCheck = await validateExecutiveRoleQuota(role, '');
+      if (!quotaCheck.allowed) {
+        playAlarmSound();
+        if (errBox && errMsg) {
+          errMsg.innerText = quotaCheck.message;
+          errBox.classList.remove('hidden');
+        }
+        showToast(quotaCheck.message, true);
         return;
       }
 
@@ -13481,8 +13666,11 @@
       autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
 
       try {
-        const { data: dData } = await supabase.from('departments').select('id').eq('name', dept).limit(1);
-        const dId = dData && dData[0] ? dData[0].id : null;
+        let dId = null;
+        if (dept) {
+          const { data: dData } = await supabase.from('departments').select('id').eq('name', dept).limit(1);
+          dId = dData && dData[0] ? dData[0].id : null;
+        }
 
         const securePass = password || '123456';
         const { error } = await supabase
