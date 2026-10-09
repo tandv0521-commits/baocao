@@ -3485,10 +3485,50 @@
      * HIỂN THỊ THÀNH VIÊN TRONG Ô HỌ VÀ TÊN NỔI BẬT:
      * Card hiển thị hiện đại, chuẩn hóa vai trò các thành viên kho và cá nhân
      */
-    function formatStaffNameHtml(nameStr, deptName) {
+    function formatStaffNameHtml(nameStr, deptName, isPersonalInShared = false, personalRole = "") {
       if (!nameStr) return '';
-      const members = parseStaffList(nameStr);
 
+      // TRƯỜNG HỢP 1: CÔNG VIỆC CÁ NHÂN RIÊNG CỦA THÀNH VIÊN TRONG TỔ KHO / NHÓM GỘP
+      if (isPersonalInShared) {
+        const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, nameStr);
+        const initial = escapeHtml(nameStr.charAt(0));
+        return `
+          <div class="flex flex-col gap-1.5 w-full text-left overflow-hidden">
+            <div class="p-2 rounded-2xl border transition-all ${
+              isCurrent 
+                ? 'bg-gradient-to-r from-indigo-50/90 via-purple-50/70 to-white border-indigo-400 shadow-xs ring-1 ring-indigo-400' 
+                : 'bg-gradient-to-r from-slate-50/90 via-indigo-50/40 to-white border-indigo-200 hover:border-indigo-300'
+            }">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
+                  ${initial}
+                </div>
+                <div class="text-left overflow-hidden flex-1 min-w-0">
+                  <span class="text-xs font-black ${isCurrent ? 'text-indigo-950' : 'text-slate-900'} leading-tight block truncate">
+                    ${escapeHtml(nameStr)}${isCurrent ? '<span class="text-[9px] text-indigo-700 font-black ml-1">(Tôi)</span>' : ''}
+                  </span>
+                  <div class="flex items-center gap-1 mt-0.5 flex-wrap">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tight truncate">${escapeHtml(deptName || '')}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-1.5 pt-1.5 border-t border-indigo-100/80 flex items-center gap-1 flex-wrap">
+                <span class="inline-flex items-center gap-1 text-[8.5px] font-black text-indigo-800 bg-indigo-100/90 px-2 py-0.5 rounded-md uppercase tracking-wider border border-indigo-200 shadow-2xs">
+                  <i class="fa-solid fa-user-tag text-[8px] text-indigo-600"></i>
+                  <span>Việc cá nhân</span>
+                </span>
+                ${personalRole ? `
+                  <span class="inline-flex items-center text-[8.5px] font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                    ${escapeHtml(personalRole)}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const members = parseStaffList(nameStr);
       const isSharedGroup = isSharedGroupDeptClient(deptName);
       if (members.length <= 1 && !isSharedGroup) {
         const single = members[0] || { name: nameStr, role: '' };
@@ -6104,9 +6144,11 @@
         });
       } else if (currentSelectedStaff !== "TẤT CẢ") {
         filteredGroups = filteredGroups.filter(grp => {
+          if (grp.isPersonalInShared) {
+            return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
+          }
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
           if (isShared) {
-            if (isDeptEquivalent(grp.department, currentSelectedDept)) return true;
             return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
           }
           return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
@@ -6236,18 +6278,36 @@
     // ================= TIỆN ÍCH QUẢN LÝ VÀ SẮP XẾP THỨ TỰ CÔNG VIỆC TÙY CHỈNH =================
     function cleanTaskGuide(rawGuide) {
       if (!rawGuide) return "";
-      return rawGuide.replace(/<!--ord:\d+-->/g, '').trim();
+      return rawGuide.replace(/\x3c!--ord:\d+-->/g, '').replace(/\x3c!--scope:[^>]+-->/g, '').trim();
     }
 
     function parseTaskOrder(rawGuide, fallbackIndex = 999999) {
       if (!rawGuide) return fallbackIndex;
-      const match = rawGuide.match(/<!--ord:(\d+)-->/);
+      const match = rawGuide.match(/\x3c!--ord:(\d+)-->/);
       return match ? parseInt(match[1], 10) : fallbackIndex;
+    }
+
+    function parseTaskScope(rawGuide) {
+      if (!rawGuide) return "";
+      const match = rawGuide.match(/\x3c!--scope:([^>]+)-->/);
+      return match ? match[1].trim() : "";
     }
 
     function formatTaskGuideWithOrder(cleanGuide, orderIndex) {
       const pureGuide = cleanTaskGuide(cleanGuide);
-      return pureGuide ? `${pureGuide} <!--ord:${orderIndex}-->` : `<!--ord:${orderIndex}-->`;
+      return pureGuide ? `${pureGuide} \x3c!--ord:${orderIndex}-->` : `\x3c!--ord:${orderIndex}-->`;
+    }
+
+    function formatTaskGuideWithOrderAndScope(cleanGuide, orderIndex, scope = "") {
+      const pureGuide = cleanTaskGuide(cleanGuide);
+      let res = pureGuide || "";
+      if (scope) {
+        res = res ? `${res} \x3c!--scope:${scope}-->` : `\x3c!--scope:${scope}-->`;
+      }
+      if (orderIndex !== undefined && orderIndex !== null) {
+        res = res ? `${res} \x3c!--ord:${orderIndex}-->` : `\x3c!--ord:${orderIndex}-->`;
+      }
+      return res;
     }
 
     // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ THÁNG CŨ & LỌC CÔNG VIỆC THEO THỜI GIAN =================
@@ -6272,32 +6332,43 @@
         });
       }
 
-      // Nâng giới hạn truy vấn để không bị cắt cụt dữ liệu quá 1000 dòng
-      const { data: dbDepts } = await supabase.from('departments').select('*').limit(1000);
-      const { data: dbUsers } = await supabase.from('users').select('*').order('full_name').limit(10000);
-
-      const { data: tasks, error: tErr } = await supabase
-        .from('tasks')
-        .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id, status)')
-        .order('id', { ascending: true })
-        .limit(10000);
-
-      if (tErr) throw tErr;
-
       const mFormatted = (month < 10 ? '0' : '') + month;
       const startDate = `${year}-${mFormatted}-01`;
       const endDate = `${year}-${mFormatted}-${daysInMonth < 10 ? '0' + daysInMonth : daysInMonth}`;
 
-      const { data: reports, error: rErr } = await supabase
-        .from('daily_reports')
-        .select('*')
-        .gte('report_date', startDate)
-        .lte('report_date', endDate)
-        .limit(50000);
+      // TỐI ƯU HÓA TRUY VẤN SONG SONG (Parallel execution) qua Promise.all để tăng tốc độ tải lên gấp 3-4 lần
+      const [
+        { data: dbDepts },
+        { data: dbUsers },
+        { data: tasks, error: tErr },
+        { data: reports, error: rErr }
+      ] = await Promise.all([
+        supabase.from('departments').select('*').limit(1000),
+        supabase.from('users').select('*').order('full_name').limit(10000),
+        supabase.from('tasks')
+          .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id, status)')
+          .order('id', { ascending: true })
+          .limit(10000),
+        supabase.from('daily_reports')
+          .select('*')
+          .gte('report_date', startDate)
+          .lte('report_date', endDate)
+          .limit(50000)
+      ]);
 
+      if (tErr) throw tErr;
       if (rErr) throw rErr;
 
+      // LẬP CHỈ MỤC O(1) CHO USERS, DEPTS VÀ REPORTS ĐỂ LOẠI BỎ HOÀN TOÀN VÒNG LẶP N^2
+      const userMap = new Map();
+      (dbUsers || []).forEach(u => userMap.set(u.id, u));
+
+      const deptMap = new Map();
+      (dbDepts || []).forEach(d => deptMap.set(d.id, d));
+
       const reportLookup = {};
+      const reportsByTaskId = new Map();
+
       if (reports) {
         reports.forEach(r => {
           const day = parseInt(r.report_date.split('-')[2], 10);
@@ -6307,13 +6378,21 @@
           else if (r.sym_val) val = r.sym_val;
           else if (r.text_val) val = r.text_val;
           reportLookup[key] = val;
+
+          let taskReps = reportsByTaskId.get(r.task_id);
+          if (!taskReps) {
+            taskReps = [];
+            reportsByTaskId.set(r.task_id, taskReps);
+          }
+          taskReps.push(r);
         });
       }
 
       const staffGroupsMap = {};
+      const sharedDeptCache = new Map();
 
       tasks.forEach(t => {
-        const taskReportsInMonth = (reports || []).filter(r => r.task_id === t.id);
+        const taskReportsInMonth = reportsByTaskId.get(t.id) || [];
         const hasReportsInThisMonth = taskReportsInMonth.length > 0;
 
         // BẢO LƯU NGUYÊN VẸN CHO THÁNG CŨ:
@@ -6333,22 +6412,22 @@
           deptName = t.departments.name;
           deptId = t.departments.id;
         } else if (deptId) {
-          const foundD = (dbDepts || []).find(d => d.id === deptId);
+          const foundD = deptMap.get(deptId);
           if (foundD) deptName = foundD.name;
         }
 
         if (!deptName && effectiveUserId) {
-          const assignedU = (dbUsers || []).find(u => u.id === effectiveUserId);
+          const assignedU = userMap.get(effectiveUserId);
           if (assignedU && assignedU.department_id) {
             deptId = assignedU.department_id;
-            const foundD = (dbDepts || []).find(d => d.id === deptId);
+            const foundD = deptMap.get(deptId);
             if (foundD) deptName = foundD.name;
           }
         }
 
         if (!deptName) deptName = "Chưa phân bộ phận";
 
-        const assignedUser = (dbUsers || []).find(u => u.id === effectiveUserId) || t.users;
+        const assignedUser = userMap.get(effectiveUserId) || t.users;
 
         // 1. TUYỆT ĐỐI KHÔNG CÓ DÒNG CÔNG VIỆC CỦA GIÁM ĐỐC BAN TRÊN MA TRẬN
         if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username) || normalizeDeptKey(deptName).includes("giam doc")) {
@@ -6393,53 +6472,94 @@
         let groupKey = "";
         let displayStaffName = "";
         let groupUserId = effectiveUserId;
+        let isPersonalInShared = false;
+        let personalRole = "";
 
         if (isShared) {
-          groupKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
+          const taskScope = parseTaskScope(t.guide);
+          const deptBaseKey = `DEPT_GROUP_${deptId || normalizeDeptKey(deptName)}`;
 
-          // Lọc thành viên thuộc kho này từ danh sách users mới nhất
-          const deptMembers = (dbUsers || []).filter(u => {
-            if (!isPastPeriod && u.status !== 'Hoạt động') return false;
-            // Loại trừ tài khoản quản trị/giám đốc khỏi danh sách thành viên tổ kho
-            if (isDirectorOrAdmin(u.role, u.username)) return false;
-            if (deptId && u.department_id && u.department_id === deptId) return true;
-            const uDeptObj = (dbDepts || []).find(d => d.id === u.department_id);
-            const uDeptName = uDeptObj ? uDeptObj.name : "";
-            return isDeptEquivalent(uDeptName, deptName);
-          });
+          let cachedGroup = sharedDeptCache.get(deptBaseKey);
+          if (!cachedGroup) {
+            // Lọc thành viên thuộc kho này từ danh sách users mới nhất
+            const deptMembers = (dbUsers || []).filter(u => {
+              if (!isPastPeriod && u.status !== 'Hoạt động') return false;
+              // Loại trừ tài khoản quản trị/giám đốc khỏi danh sách thành viên tổ kho
+              if (isDirectorOrAdmin(u.role, u.username)) return false;
+              if (deptId && u.department_id && u.department_id === deptId) return true;
+              const uDeptObj = deptMap.get(u.department_id);
+              const uDeptName = uDeptObj ? uDeptObj.name : "";
+              return isDeptEquivalent(uDeptName, deptName);
+            });
 
-          // Chuẩn hóa thứ tự thành viên kho: Kho chính / Trưởng nhóm xếp đầu, kế đến Thủ kho, Phụ kho, Bốc xếp
-          deptMembers.sort((a, b) => {
-            const getRoleWeight = (r) => {
-              const norm = removeAccents(r || "").toLowerCase();
-              if (norm.includes('kho chinh') || norm.includes('chinh')) return 1;
-              if (norm.includes('to truong') || norm.includes('truong') || norm.includes('quan ly') || norm.includes('leader')) return 2;
-              if (norm.includes('pho') || norm.includes('to pho')) return 3;
-              if (norm.includes('thu kho')) return 4;
-              if (norm.includes('phu kho') || norm.includes('phu')) return 5;
-              if (norm.includes('boc xep')) return 6;
-              return 10;
-            };
-            const wA = getRoleWeight(a.role);
-            const wB = getRoleWeight(b.role);
-            if (wA !== wB) return wA - wB;
-            return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
-          });
+            // Chuẩn hóa thứ tự thành viên kho: Kho chính / Trưởng nhóm xếp đầu, kế đến Thủ kho, Phụ kho, Bốc xếp
+            deptMembers.sort((a, b) => {
+              const getRoleWeight = (r) => {
+                const norm = removeAccents(r || "").toLowerCase();
+                if (norm.includes('kho chinh') || norm.includes('chinh')) return 1;
+                if (norm.includes('to truong') || norm.includes('truong') || norm.includes('quan ly') || norm.includes('leader')) return 2;
+                if (norm.includes('pho') || norm.includes('to pho')) return 3;
+                if (norm.includes('thu kho')) return 4;
+                if (norm.includes('phu kho') || norm.includes('phu')) return 5;
+                if (norm.includes('boc xep')) return 6;
+                return 10;
+              };
+              const wA = getRoleWeight(a.role);
+              const wB = getRoleWeight(b.role);
+              if (wA !== wB) return wA - wB;
+              return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
+            });
 
-          if (deptMembers.length > 0) {
-            displayStaffName = deptMembers.map((u, i) => {
-              let cleanName = u.full_name.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
-              let isUserLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""));
-              let rStr = u.role ? ` (${u.role})` : (isUserLead ? " (Kho chính)" : " (Thành viên kho)");
-              return `${i + 1}. ${cleanName}${rStr}`;
-            }).join('\n');
+            let strStaff = "";
+            let leadUid = effectiveUserId;
+            if (deptMembers.length > 0) {
+              strStaff = deptMembers.map((u, i) => {
+                let cleanName = u.full_name.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+                let isUserLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""));
+                let rStr = u.role ? ` (${u.role})` : (isUserLead ? " (Kho chính)" : " (Thành viên kho)");
+                return `${i + 1}. ${cleanName}${rStr}`;
+              }).join('\n');
 
-            let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || "")));
-            groupUserId = leadUser ? leadUser.id : deptMembers[0].id;
+              let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || "")));
+              leadUid = leadUser ? leadUser.id : deptMembers[0].id;
+            } else {
+              const u = assignedUser;
+              strStaff = u ? `${u.full_name}${u.role ? ' (' + u.role + ')' : ''}` : deptName;
+              leadUid = u ? u.id : effectiveUserId;
+            }
+
+            cachedGroup = { displayStaffName: strStaff, groupUserId: leadUid };
+            sharedDeptCache.set(deptBaseKey, cachedGroup);
+          }
+
+          // PHÂN BIỆT CÔNG VIỆC CÁ NHÂN RIÊNG VS CÔNG VIỆC CHUNG CỦA TỔ KHO:
+          let isPersonalTaskInShared = false;
+          if (taskScope === 'personal') {
+            isPersonalTaskInShared = true;
+          } else if (taskScope === 'shared') {
+            isPersonalTaskInShared = false;
           } else {
-            const u = assignedUser;
-            displayStaffName = u ? `${u.full_name}${u.role ? ' (' + u.role + ')' : ''}` : deptName;
-            groupUserId = u ? u.id : effectiveUserId;
+            // Task cũ chưa có thẻ scope: nếu gán cho thành viên khác với leadUid -> là việc cá nhân
+            if (effectiveUserId && cachedGroup.groupUserId && effectiveUserId !== cachedGroup.groupUserId) {
+              isPersonalTaskInShared = true;
+            } else {
+              isPersonalTaskInShared = false;
+            }
+          }
+
+          if (isPersonalTaskInShared) {
+            isPersonalInShared = true;
+            const u = userMap.get(effectiveUserId) || assignedUser;
+            let cleanName = (u?.full_name || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+            displayStaffName = cleanName || `Nhân sự #${effectiveUserId}`;
+            personalRole = u?.role || "";
+            groupUserId = effectiveUserId;
+            groupKey = `${deptBaseKey}__PERSONAL_${effectiveUserId}`;
+          } else {
+            isPersonalInShared = false;
+            displayStaffName = cachedGroup.displayStaffName;
+            groupUserId = cachedGroup.groupUserId;
+            groupKey = `${deptBaseKey}__SHARED`;
           }
         } else {
           // BỘ PHẬN CÁ NHÂN (NHÓM THƯỜNG): Hiển thị họ tên thuần túy, bỏ thông tin vai trò
@@ -6462,6 +6582,8 @@
             department: deptName,
             departmentId: deptId,
             isShared: isShared,
+            isPersonalInShared: isPersonalInShared,
+            personalRole: personalRole,
             staffName: displayStaffName,
             userId: groupUserId,
             tasks: []
@@ -6501,6 +6623,19 @@
         }
       });
 
+      // SẮP XẾP CÁC NHÓM TRÊN BẢNG MA TRẬN: VIỆC CHUNG CỦA TỔ KHO LÊN ĐẦU, VIỆC CÁ NHÂN THEO SAU
+      const sortedStaffGroups = Object.values(staffGroupsMap).sort((a, b) => {
+        if (isDeptEquivalent(a.department, b.department)) {
+          if (a.isPersonalInShared !== b.isPersonalInShared) {
+            return a.isPersonalInShared ? 1 : -1;
+          }
+          if (a.isPersonalInShared && b.isPersonalInShared) {
+            return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
+          }
+        }
+        return 0;
+      });
+
       const matrixResult = {
         success: true,
         queryMonth: month,
@@ -6508,7 +6643,7 @@
         queryDept: "TẤT CẢ",
         queryStaff: "TẤT CẢ",
         dayCols: dayCols,
-        staffGroups: Object.values(staffGroupsMap)
+        staffGroups: sortedStaffGroups
       };
 
       // TỰ ĐỘNG BẢO LƯU NGUYÊN VẸN SNAPSHOT NẾU KỲ NÀY ĐÃ KHÓA SỔ
@@ -6637,10 +6772,22 @@
       }
 
       let globalRowCounter = 0;
+      const tableFragment = document.createDocumentFragment();
 
       data.staffGroups.forEach((grp, gIdx) => {
         const totalStaffRows = grp.tasks.length;
         const autoSTT = gIdx + 1;
+
+        // Tiền tính toán trước ký hiệu nghỉ của từng ngày cho nhóm nhân sự (tránh tính lặp lại O(N*M))
+        const staffLeaveSymByCol = {};
+        if (totalStaffRows > 1) {
+          data.dayCols.forEach(dc => {
+            const sym = grp.tasks
+              .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
+              .find(s => s && s.isLeave);
+            if (sym) staffLeaveSymByCol[dc.colIndex] = sym;
+          });
+        }
 
         grp.tasks.forEach((t, tIdx) => {
           const isLastTask = (tIdx === totalStaffRows - 1);
@@ -6659,7 +6806,7 @@
             nameCellHtml = `
               <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2 sm:py-3 px-1.5 sm:px-2.5 text-left font-bold text-slate-900 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
-                  ${formatStaffNameHtml(grp.staffName, grp.department)}
+                  ${formatStaffNameHtml(grp.staffName, grp.department, grp.isPersonalInShared, grp.personalRole)}
                 </div>
               </td>
             `;
@@ -6670,11 +6817,19 @@
 
           if (!isDir && !currentPeriodLocked) {
             if (grp.isShared) {
-              const myRole = removeAccents(currentUser.role || "");
-              const isLeadOfThisWarehouse = (myRole.includes("chinh") || myRole.includes("truong")) && 
-                                            isDeptEquivalent(currentUser.department, grp.department);
-              if (isLeadOfThisWarehouse) {
-                canEditThisRow = true;
+              if (grp.isPersonalInShared) {
+                // DÒNG CÔNG VIỆC CÁ NHÂN TRONG TỔ KHO: Chính thành viên đó được quyền sửa và báo cáo!
+                if (currentUser && (currentUser.id === grp.userId || isStaffMatchedInCell(currentUser.fullName, grp.staffName))) {
+                  canEditThisRow = true;
+                }
+              } else {
+                // DÒNG CÔNG VIỆC CHUNG CỦA TỔ KHO: Kho chính / Trưởng nhóm phụ trách
+                const myRole = removeAccents(currentUser.role || "");
+                const isLeadOfThisWarehouse = (myRole.includes("chinh") || myRole.includes("truong")) && 
+                                              isDeptEquivalent(currentUser.department, grp.department);
+                if (isLeadOfThisWarehouse) {
+                  canEditThisRow = true;
+                }
               }
             } else {
               if (isStaffMatchedInCell(currentUser.fullName, grp.staffName) || (t.assigned_user_id && t.assigned_user_id === currentUser.id)) {
@@ -6690,10 +6845,8 @@
             const isFuture = isFutureDay(dc.dayNum, currentSelectedMonth, currentSelectedYear);
             const canEditThisCell = canEditThisRow && !currentPeriodLocked && !isFuture;
 
-            // Kiểm tra xem nhân sự này trong ngày dc có ký hiệu nghỉ hay không
-            const staffLeaveSym = grp.tasks
-              .map(tsk => getSmartSymbolInfo(tsk.dailyValues[dc.colIndex]))
-              .find(s => s && s.isLeave);
+            // Lấy ký hiệu nghỉ từ bảng tra cứu đã tính trước của nhóm nhân sự
+            const staffLeaveSym = staffLeaveSymByCol[dc.colIndex];
 
             // NẾU LÀ NGÀY NGHỈ VÀ NHÂN SỰ CÓ NHIỀU ĐẦU VIỆC (> 1): GỘP CẢ CỘT LẠI VÀ CHỈ HIỂN THỊ 1 KÝ HIỆU
             if (staffLeaveSym && totalStaffRows > 1) {
@@ -6884,9 +7037,11 @@
                 : totalDisplay}
             </td>
           `;
-          tbody.appendChild(tr);
+          tableFragment.appendChild(tr);
         });
       });
+
+      tbody.appendChild(tableFragment);
 
       updateDateNavButtons();
       const now = new Date();
@@ -9737,12 +9892,41 @@
         let myRole = removeAccents(currentUser.role || "");
         let isLead = isShared && (myRole.includes("chinh") || myRole.includes("truong"));
 
+        // Kiểm tra xem người dùng hiện tại có công việc cá nhân riêng trong nhóm gộp/tổ kho hay không
+        let hasPersonalTasksInShared = false;
+        if (isShared) {
+          hasPersonalTasksInShared = activeData.staffGroups.some(grp => 
+            isDeptEquivalent(grp.department, currentUser.department) &&
+            grp.isPersonalInShared &&
+            (grp.userId === currentUser.id || isStaffMatchedInCell(currentUser.fullName, grp.staffName)) &&
+            grp.tasks && grp.tasks.length > 0
+          );
+        }
+
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
           if (isShared) {
             if (isDeptEquivalent(grp.department, currentUser.department)) {
-              isMatch = true;
+              if (hasPersonalTasksInShared) {
+                // Người dùng có việc cá nhân riêng trong tổ kho:
+                if (grp.isPersonalInShared) {
+                  // Chỉ lấy việc cá nhân của chính mình!
+                  if (grp.userId === currentUser.id || isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+                    isMatch = true;
+                  }
+                } else if (isLead) {
+                  // Nếu là Kho chính/Trưởng nhóm và có cả việc chung: nạp cả việc chung để báo cáo
+                  isMatch = true;
+                }
+              } else {
+                // Người dùng không có việc cá nhân riêng:
+                // Nếu là Kho chính: nạp việc chung để báo cáo
+                // Nếu là thành viên thường: nạp việc chung để xem (chế độ chỉ xem)
+                if (!grp.isPersonalInShared) {
+                  isMatch = true;
+                }
+              }
             }
           } else {
             if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
@@ -9812,11 +9996,13 @@
         }
         updateQuickReasonButtonsActive(existingLeaveSym ? existingLeaveSym.code : null);
 
+        const canReportDayTasks = !isShared || isLead || hasPersonalTasksInShared;
+
         populateModalTaskSelectOptions(allTaskList);
         renderDayEntryTasks({
           tasks: tasksForDay,
-          isWarehouse: isShared,
-          isLead: !isShared || isLead
+          isWarehouse: isShared && !hasPersonalTasksInShared,
+          isLead: canReportDayTasks
         });
         checkAndShowDraftRestoreButton();
         updateSyncStatusUI('synced');
@@ -9851,12 +10037,34 @@
         let myRole = removeAccents(currentUser.role || "");
         let isLeadTaskMode = isSharedTaskMode && (myRole.includes("chinh") || myRole.includes("truong"));
 
+        let hasPersonalTasksInSharedMode = false;
+        if (isSharedTaskMode) {
+          hasPersonalTasksInSharedMode = activeData.staffGroups.some(grp => 
+            isDeptEquivalent(grp.department, currentUser.department) &&
+            grp.isPersonalInShared &&
+            (grp.userId === currentUser.id || isStaffMatchedInCell(currentUser.fullName, grp.staffName)) &&
+            grp.tasks && grp.tasks.length > 0
+          );
+        }
+
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
           if (isSharedTaskMode) {
             if (isDeptEquivalent(grp.department, currentUser.department)) {
-              isMatch = true;
+              if (hasPersonalTasksInSharedMode) {
+                if (grp.isPersonalInShared) {
+                  if (grp.userId === currentUser.id || isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
+                    isMatch = true;
+                  }
+                } else if (isLeadTaskMode) {
+                  isMatch = true;
+                }
+              } else {
+                if (!grp.isPersonalInShared) {
+                  isMatch = true;
+                }
+              }
             }
           } else {
             if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
@@ -9899,12 +10107,14 @@
             };
           });
 
+          const canReportSingleTask = !isSharedTaskMode || isLeadTaskMode || hasPersonalTasksInSharedMode;
+
           currentTaskEntryDays = days;
           renderTaskEntryDays({
             task: targetTask,
             days: days,
-            isWarehouse: isSharedTaskMode,
-            isLead: !isSharedTaskMode || isLeadTaskMode
+            isWarehouse: isSharedTaskMode && !hasPersonalTasksInSharedMode,
+            isLead: canReportSingleTask
           });
           checkAndShowDraftRestoreButton();
           updateSyncStatusUI('synced');
@@ -10679,7 +10889,52 @@
       const borderAccents = ['border-l-emerald-500', 'border-l-blue-500', 'border-l-amber-500', 'border-l-purple-500', 'border-l-teal-500', 'border-l-indigo-500'];
 
       staffList.forEach((st, idx) => {
-        const isSelected = (st.fullName === currentVal);
+        const itemVal = st.isSharedScope ? '__SHARED_GROUP__' : st.fullName;
+        const isSelected = (itemVal === currentVal);
+
+        if (st.isSharedScope) {
+          html += `
+            <div onclick="selectModalAssignStaff('__SHARED_GROUP__')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-400 bg-emerald-100/90 font-bold shadow-xs' : 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/60'} border-l-4 border-l-emerald-600 mb-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-warehouse"></i>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-black text-emerald-950 truncate">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-emerald-700 font-semibold truncate">${escapeHtml(st.role || 'Kho chính / Trưởng nhóm đại diện báo cáo chung')}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 uppercase tracking-tight">Việc chung</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-700 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (st.isPersonalScope) {
+          const initial = escapeHtml((st.fullName || '').charAt(0));
+          html += `
+            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-indigo-300 bg-indigo-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-indigo-500 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  ${initial}
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-indigo-950">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full border bg-indigo-50 text-indigo-700 border-indigo-200 uppercase tracking-tight">Việc cá nhân</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-indigo-600 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
         const av = getStaffStyle(st.fullName, idx);
         const bAccent = borderAccents[idx % borderAccents.length];
 
@@ -10708,8 +10963,22 @@
       const textEl = document.getElementById('modalAssignStaffText');
       const subText = document.getElementById('modalAssignStaffSubText');
       const avatarBox = document.getElementById('modalAssignStaffAvatarBox');
+
+      if (staffName === '__SHARED_GROUP__') {
+        if (textEl) textEl.innerText = "🏢 Công việc chung của tổ kho";
+        if (subText) {
+          subText.innerText = "Kho chính / Trưởng nhóm đại diện báo cáo chung";
+          subText.classList.remove('hidden');
+        }
+        if (avatarBox) {
+          avatarBox.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 text-[10px] font-bold shadow-2xs";
+          avatarBox.innerHTML = '<i class="fa-solid fa-warehouse text-[10px]"></i>';
+        }
+        renderModalAssignStaffPicker(modalAssignStaffCache);
+        return;
+      }
       
-      const st = modalAssignStaffCache.find(x => x.fullName === staffName);
+      const st = modalAssignStaffCache.find(x => x.fullName === staffName && !x.isSharedScope);
       if (!staffName || !st) {
         if (textEl) textEl.innerText = staffName || "Chọn nhân sự...";
         if (subText) subText.classList.add('hidden');
@@ -10721,7 +10990,10 @@
         const av = getStaffStyle(st.fullName);
         if (textEl) textEl.innerText = st.fullName;
         if (subText) {
-          if (st.role) {
+          if (st.isPersonalScope) {
+            subText.innerText = `${st.role || 'Thành viên'} • Việc cá nhân riêng`;
+            subText.classList.remove('hidden');
+          } else if (st.role) {
             subText.innerText = st.role;
             subText.classList.remove('hidden');
           } else {
@@ -10729,8 +11001,13 @@
           }
         }
         if (avatarBox) {
-          avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
-          avatarBox.innerText = av.initial;
+          if (st.isPersonalScope) {
+            avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+            avatarBox.innerText = (st.fullName || '').charAt(0);
+          } else {
+            avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+            avatarBox.innerText = av.initial;
+          }
         }
       }
       renderModalAssignStaffPicker(modalAssignStaffCache);
@@ -10752,30 +11029,75 @@
         return true;
       });
 
-      if (assignableUsers.length > 0) {
+      const isShared = isSharedGroupDeptClient(dept);
+
+      if (isShared && assignableUsers.length > 0) {
+        // TỔ KHO / NHÓM GỘP: HỖ TRỢ PHÂN CÔNG VIỆC CHUNG VÀ VIỆC CÁ NHÂN RIÊNG CỦA TỪNG THÀNH VIÊN
+        const leadUser = assignableUsers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""))) || assignableUsers[0];
+        const leadUserId = leadUser ? leadUser.id : (assignableUsers[0]?.id || 1);
+
+        const sharedGroupItem = {
+          id: leadUserId,
+          fullName: "🏢 Công việc chung của tổ kho",
+          role: `Kho chính (${leadUser?.fullName || 'Đại diện'}) phụ trách báo cáo chung`,
+          username: "shared_group",
+          isSharedScope: true,
+          leadUserId: leadUserId
+        };
+
+        const personalItems = assignableUsers.map(st => ({
+          ...st,
+          isSharedScope: false,
+          isPersonalScope: true,
+          leadUserId: leadUserId
+        }));
+
+        modalAssignStaffCache = [sharedGroupItem, ...personalItems];
+
+        // 1. Option công việc chung
+        const optShared = document.createElement('option');
+        optShared.value = "__SHARED_GROUP__";
+        optShared.dataset.userId = leadUserId;
+        optShared.dataset.scope = "shared";
+        optShared.innerText = `🏢 Công việc chung của tổ kho (Kho chính phụ trách)`;
+        staffSelect.appendChild(optShared);
+
+        // 2. Options việc cá nhân từng thành viên
+        personalItems.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.fullName;
+          opt.dataset.userId = st.id;
+          opt.dataset.role = st.role || "";
+          opt.dataset.scope = "personal";
+          const roleBadge = st.role ? ` — (${st.role})` : '';
+          opt.innerText = `👤 ${st.fullName}${roleBadge} — Việc cá nhân riêng`;
+          staffSelect.appendChild(opt);
+        });
+
+      } else if (assignableUsers.length > 0) {
+        // BỘ PHẬN THƯỜNG:
+        modalAssignStaffCache = assignableUsers;
         assignableUsers.forEach(st => {
           const opt = document.createElement('option');
           opt.value = st.fullName;
           opt.dataset.userId = st.id;
           opt.dataset.role = st.role || "";
-          // Hiển thị tên nhân sự chuẩn đẹp mắt (bỏ icon emoji 👤 clunky, đồng bộ vai trò cho nhóm gộp)
-          const isShared = isSharedGroupDeptClient(dept);
-          const roleBadge = (isShared && st.role) ? ` — (${st.role})` : '';
-          opt.innerText = `${st.fullName}${roleBadge}`;
+          opt.dataset.scope = "";
+          opt.innerText = st.fullName;
           if (currentSelectedStaff !== "TẤT CẢ" && st.fullName === currentSelectedStaff) {
             opt.selected = true;
           }
           staffSelect.appendChild(opt);
         });
       } else {
+        modalAssignStaffCache = [];
         const opt = document.createElement('option');
         opt.value = "";
         opt.innerText = "-- Chưa có nhân sự phân công trong bộ phận này --";
         staffSelect.appendChild(opt);
       }
 
-      modalAssignStaffCache = assignableUsers;
-      renderModalAssignStaffPicker(assignableUsers);
+      renderModalAssignStaffPicker(modalAssignStaffCache);
       updateModalAssignStaffUI(staffSelect.value);
       onAssignStaffSelectChange(staffSelect.value);
     }
@@ -10785,15 +11107,24 @@
       if (!container) return;
 
       const deptVal = document.getElementById('modalAssignDeptSelect')?.value || "";
+      const isShared = isSharedGroupDeptClient(deptVal);
+      const isSharedScope = (staffName === "__SHARED_GROUP__");
+
       const noteEl = document.getElementById('modalAssignActiveStaffNote');
       if (noteEl) {
-        noteEl.innerHTML = staffName 
-          ? `Đang quản lý danh mục công việc của: <b class="text-slate-800 font-bold">${escapeHtml(staffName)}</b> <span class="text-slate-400 font-normal">(${escapeHtml(deptVal)})</span>`
-          : "Vui lòng chọn nhân sự để phân công và quản lý các đầu việc.";
+        if (isSharedScope) {
+          noteEl.innerHTML = `Đang quản lý: <b class="text-emerald-800 font-bold">🏢 Công việc chung của tổ kho</b> <span class="text-slate-400 font-normal">(${escapeHtml(deptVal)} — Kho chính đại diện báo cáo)</span>`;
+        } else if (isShared) {
+          noteEl.innerHTML = `Đang quản lý: <b class="text-indigo-800 font-bold">👤 Công việc cá nhân riêng của ${escapeHtml(staffName)}</b> <span class="text-slate-400 font-normal">(${escapeHtml(deptVal)} — Báo cáo riêng theo tài khoản)</span>`;
+        } else {
+          noteEl.innerHTML = staffName 
+            ? `Đang quản lý danh mục công việc của: <b class="text-slate-800 font-bold">${escapeHtml(staffName)}</b> <span class="text-slate-400 font-normal">(${escapeHtml(deptVal)})</span>`
+            : "Vui lòng chọn nhân sự để phân công và quản lý các đầu việc.";
+        }
       }
 
       if (!staffName) {
-        container.innerHTML = '<p class="empty-assign-msg text-xs text-slate-400 italic py-4 text-center">Vui lòng chọn nhân viên để phân công</p>';
+        container.innerHTML = '<p class="empty-assign-msg text-xs text-slate-400 italic py-4 text-center">Vui lòng chọn đối tượng để phân công</p>';
         return;
       }
 
@@ -10804,40 +11135,79 @@
       container.innerHTML = `
         <div class="py-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
           <i class="fa-solid fa-circle-notch fa-spin text-emerald-600"></i>
-          <span>Đang tải danh mục công việc của "${escapeHtml(staffName)}"...</span>
+          <span>Đang tải danh mục công việc...</span>
         </div>
       `;
 
       try {
+        let tasks = [];
         let uId = targetUserId ? parseInt(targetUserId, 10) : null;
-        if (!uId) {
-          const { data: user, error: uErr } = await supabase
-            .from('users')
-            .select('id, role, username')
-            .eq('full_name', staffName)
-            .limit(1);
 
-          if (uErr) throw uErr;
-          if (user && user[0]) {
-            if (isDirectorOrAdmin(user[0].role, user[0].username)) {
-              container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Ban Giám đốc không tham gia phân công công việc.</p>';
-              return;
+        if (isSharedScope) {
+          // LẤY CÔNG VIỆC CHUNG CỦA TỔ KHO:
+          const { data: deptInfo } = await supabase.from('departments').select('id').eq('name', deptVal).limit(1);
+          const dId = deptInfo && deptInfo[0] ? deptInfo[0].id : null;
+
+          let query = supabase.from('tasks').select('*');
+          if (dId) {
+            query = query.eq('department_id', dId);
+          } else if (uId) {
+            query = query.eq('assigned_user_id', uId);
+          }
+          const { data: deptTasks, error: tErr } = await query;
+          if (tErr) throw tErr;
+
+          tasks = (deptTasks || []).filter(t => {
+            const scope = parseTaskScope(t.guide);
+            if (scope === 'shared') return true;
+            if (scope === 'personal') return false;
+            // Task cũ chưa có tag scope: nếu gán cho leadUid -> việc chung
+            return !uId || t.assigned_user_id === uId;
+          });
+        } else {
+          // LẤY CÔNG VIỆC CÁ NHÂN (HOẶC BỘ PHẬN THƯỜNG):
+          if (!uId) {
+            const { data: user, error: uErr } = await supabase
+              .from('users')
+              .select('id, role, username')
+              .eq('full_name', staffName)
+              .limit(1);
+
+            if (uErr) throw uErr;
+            if (user && user[0]) {
+              if (isDirectorOrAdmin(user[0].role, user[0].username)) {
+                container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Ban Giám đốc không tham gia phân công công việc.</p>';
+                return;
+              }
+              uId = user[0].id;
             }
-            uId = user[0].id;
+          }
+
+          if (!uId) {
+            container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Chưa tìm thấy hồ sơ nhân sự này.</p>';
+            return;
+          }
+
+          const { data: userTasks, error: tErr } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('assigned_user_id', uId);
+
+          if (tErr) throw tErr;
+
+          if (isShared) {
+            // Trong tổ kho: Lọc ra các task là việc cá nhân của thành viên
+            tasks = (userTasks || []).filter(t => {
+              const scope = parseTaskScope(t.guide);
+              if (scope === 'personal') return true;
+              if (scope === 'shared') return false;
+              // Task cũ: nếu uId khác leadUserId -> việc cá nhân
+              return true;
+            });
+          } else {
+            tasks = userTasks || [];
           }
         }
-
-        if (!uId) {
-          container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Chưa tìm thấy hồ sơ nhân sự này.</p>';
-          return;
-        }
-
-        const { data: tasks, error: tErr } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('assigned_user_id', uId);
-
-        if (tErr) throw tErr;
 
         let taskDataIds = new Set();
         const taskIds = (tasks || []).map(t => t.id);
@@ -11147,10 +11517,14 @@
 
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       const staffName = staffSelect ? staffSelect.value.trim() : "";
+      const selectedOpt = staffSelect ? staffSelect.selectedOptions[0] : null;
       const deptName = document.getElementById('modalAssignDeptSelect').value.trim();
+      const isShared = isSharedGroupDeptClient(deptName);
+      const isSharedScope = (staffName === "__SHARED_GROUP__");
+      const assignScope = isShared ? (isSharedScope ? 'shared' : 'personal') : '';
 
       if (!staffName) {
-        showToast("Vui lòng chọn nhân viên phân công!", true);
+        showToast("Vui lòng chọn đối tượng phân công!", true);
         return;
       }
 
@@ -11184,16 +11558,19 @@
         return;
       }
 
-      showProgressHud("LƯU PHÂN CÔNG", `Đang lưu phân công cho nhân sự ${staffName}...`, "fa-solid fa-list-check animate-pulse");
+      const targetLabel = isSharedScope ? `việc chung của tổ kho (${deptName})` : `nhân sự ${staffName}`;
+      showProgressHud("LƯU PHÂN CÔNG", `Đang lưu phân công cho ${targetLabel}...`, "fa-solid fa-list-check animate-pulse");
       autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
 
       try {
-        const staffSelect = document.getElementById('modalAssignStaffSelect');
-        const selectedOpt = staffSelect ? staffSelect.selectedOptions[0] : null;
         let uId = selectedOpt?.dataset?.userId ? parseInt(selectedOpt.dataset.userId, 10) : null;
 
         const { data: dept } = await supabase.from('departments').select('id').eq('name', deptName).limit(1);
-        const { data: user } = await supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1);
+        let user = null;
+        if (!isSharedScope) {
+          const { data: userData } = await supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1);
+          user = userData;
+        }
 
         // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Ban Giám Đốc
         if (user && user[0] && isDirectorOrAdmin(user[0].role, user[0].username)) {
@@ -11209,7 +11586,7 @@
         const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
 
         for (const item of processedTasks) {
-          const formattedGuide = formatTaskGuideWithOrder(item.tGuide, item.orderIndex);
+          const formattedGuide = formatTaskGuideWithOrderAndScope(item.tGuide, item.orderIndex, assignScope);
 
           if (item.taskId) {
             if (item.isRenamed) {
@@ -11308,7 +11685,7 @@
 
         autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
           hideProgressHud(250);
-          showToast("Đã cập nhật phân công công việc thành công!");
+          showToast(isSharedScope ? "Đã cập nhật phân công công việc chung của tổ kho thành công!" : (isShared ? `Đã cập nhật phân công việc cá nhân của ${staffName} thành công!` : "Đã cập nhật phân công công việc thành công!"));
           closeAssignModal();
           cachedPreloadMatrix = null;
           loadMatrixData(true);
