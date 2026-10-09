@@ -4021,6 +4021,16 @@
           });
         });
 
+        // XÁC ĐỊNH TẬP HỢP BỘ PHẬN CỦA QUẢN LÝ / GIÁM ĐỐC / PHÓ GIÁM ĐỐC
+        const managerDeptNames = new Set();
+        validUsers.forEach(u => {
+          const isExec = isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+          if (isExec) {
+            const d = depts.find(x => x.id === u.department_id);
+            if (d && d.name) managerDeptNames.add(normalizeDeptKey(d.name));
+          }
+        });
+
         const deptNames = depts.map(d => d.name);
 
         const now = new Date();
@@ -4079,6 +4089,8 @@
         globalInitData = {
           departments: deptNames,
           deptMap: deptMap,
+          allUsers: validUsers,
+          managerDeptNames: Array.from(managerDeptNames),
           currentMonth: currentSelectedMonth || curM,
           currentYear: currentSelectedYear || curY,
           availablePeriods: availablePeriods
@@ -4298,6 +4310,13 @@
         let bIsGDB = removeAccents(b).includes("giam doc ban");
         if (aIsGDB && !bIsGDB) return -1;
         if (!aIsGDB && bIsGDB) return 1;
+
+        const cachedMgr = (globalInitData && globalInitData.managerDeptNames) ? globalInitData.managerDeptNames : [];
+        let aIsMgr = cachedMgr.some(cmd => isDeptEquivalent(cmd, a));
+        let bIsMgr = cachedMgr.some(cmd => isDeptEquivalent(cmd, b));
+        if (aIsMgr && !bIsMgr) return -1;
+        if (!aIsMgr && bIsMgr) return 1;
+
         return a.localeCompare(b, 'vi');
       });
 
@@ -5955,6 +5974,13 @@
             let bIsGDB = removeAccents(b).includes("giam doc ban");
             if (aIsGDB && !bIsGDB) return -1;
             if (!aIsGDB && bIsGDB) return 1;
+
+            const cachedMgr = (globalInitData && globalInitData.managerDeptNames) ? globalInitData.managerDeptNames : [];
+            let aIsMgr = cachedMgr.some(cmd => isDeptEquivalent(cmd, a));
+            let bIsMgr = cachedMgr.some(cmd => isDeptEquivalent(cmd, b));
+            if (aIsMgr && !bIsMgr) return -1;
+            if (!aIsMgr && bIsMgr) return 1;
+
             return a.localeCompare(b, 'vi');
           });
 
@@ -6417,45 +6443,100 @@
 
     /**
      * SẮP XẾP ĐỒNG BỘ CÁC DÒNG NHÂN SỰ TRÊN BẢNG MA TRẬN:
-     * - Gom các nhóm thuộc cùng một bộ phận lại với nhau liền kề
+     * - KHI CHẠY TẤT CẢ BAN:
+     *   + Sắp xếp bộ phận của Quản lý / Giám đốc lên đầu tiên (Giám đốc ban, Bộ phận tính giá, Phân xe 10m...).
+     *   + Tiếp theo là các bộ phận văn phòng / tác nghiệp khác (Hóa đơn, Kế hoạch, Tiếp nhận thông tin...).
+     *   + Sau cùng là các bộ phận Kho / Nhóm gộp.
      * - ĐỐI VỚI NHÓM GỘP / TỔ KHO (Kho ống to, Kho ống nhỏ, Kho phụ tùng...):
      *   + DÒNG CÔNG VIỆC CÁ NHÂN (isPersonalInShared === true) PHẢI LUÔN XẾP LÊN TRÊN CÙNG
      *   + DÒNG CÔNG VIỆC CHUNG CỦA TỔ KHO (isPersonalInShared === false) PHẢI XẾP Ở DƯỚI
      *   + Nếu có nhiều nhân sự có việc cá nhân trong cùng tổ kho: Sắp xếp theo họ tên A-Z
+     * - ĐỐI VỚI BỘ PHẬN THƯỜNG / VĂN PHÒNG:
+     *   + Nhân sự giữ vai trò Quản lý / Giám đốc xếp lên trước các nhân viên trong bộ phận đó.
      */
     function sortStaffGroupsUniformly(groupsList) {
       if (!groupsList || groupsList.length <= 1) return groupsList;
 
-      const deptsOrder = (globalInitData && globalInitData.departments) ? globalInitData.departments : [];
-      const getDeptRank = (dName) => {
-        if (!dName) return 999;
-        const idx = deptsOrder.findIndex(d => isDeptEquivalent(d, dName));
-        return idx !== -1 ? idx : 500;
+      const cachedMgrDepts = (globalInitData && globalInitData.managerDeptNames) ? globalInitData.managerDeptNames : [];
+
+      const isManagerDept = (dName, grp) => {
+        if (!dName) return false;
+        if (grp && (grp.isManagerDept || grp.isManagerStaff)) return true;
+        const norm = normalizeDeptKey(dName);
+        if (norm.includes("giam doc") || norm.includes("quan ly") || norm.includes("lanh dao") || norm.includes("dieu hanh")) {
+          return true;
+        }
+        if (cachedMgrDepts.some(cmd => isDeptEquivalent(cmd, dName))) return true;
+        const uList = (globalInitData && globalInitData.allUsers) ? globalInitData.allUsers : ((adminManageUsersCache && adminManageUsersCache.users) ? adminManageUsersCache.users : []);
+        if (uList && uList.length > 0) {
+          return uList.some(u => {
+            const uDept = u.dept || (u.departments ? u.departments.name : "");
+            if (isDeptEquivalent(uDept, dName)) {
+              return isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+            }
+            return false;
+          });
+        }
+        return false;
+      };
+
+      const getDeptCategoryRank = (grp) => {
+        const dNorm = normalizeDeptKey(grp.department);
+        // Hạng 1: Giám Đốc Ban / Ban Giám Đốc
+        if (dNorm.includes("giam doc ban") || dNorm.includes("ban giam doc") || dNorm.includes("lanh dao")) {
+          return 10;
+        }
+        // Hạng 2: Bộ phận của Quản lý / Phó Giám đốc
+        if (isManagerDept(grp.department, grp)) {
+          return 20;
+        }
+        // Hạng 4: Bộ phận Kho / Nhóm gộp
+        const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+        if (isShared) {
+          return 80;
+        }
+        // Hạng 3: Các bộ phận văn phòng / tác nghiệp khác
+        return 50;
       };
 
       return [...groupsList].sort((a, b) => {
-        // 1. So sánh theo BỘ PHẬN: Gom tất cả các khối cùng bộ phận lại liền kề nhau
+        // 1. SO SÁNH NẾU KHÁC BỘ PHẬN:
         if (!isDeptEquivalent(a.department, b.department)) {
-          const rankA = getDeptRank(a.department);
-          const rankB = getDeptRank(b.department);
+          const rankA = getDeptCategoryRank(a);
+          const rankB = getDeptCategoryRank(b);
           if (rankA !== rankB) return rankA - rankB;
           return (a.department || "").localeCompare(b.department || "", 'vi');
         }
 
         // 2. TRONG CÙNG MỘT BỘ PHẬN:
-        // Đưa DÒNG VIỆC CÁ NHÂN (isPersonalInShared: true) LÊN TRÊN CÙNG
-        const aPersonal = !!a.isPersonalInShared;
-        const bPersonal = !!b.isPersonalInShared;
-        if (aPersonal !== bPersonal) {
-          return aPersonal ? -1 : 1; // Việc cá nhân (-1) xếp trước việc chung (1)
-        }
+        const isShared = (a.isShared !== undefined) ? a.isShared : isSharedGroupDeptClient(a.department);
 
-        // 3. Nếu cùng là việc cá nhân của các nhân sự trong tổ kho: Sắp xếp theo họ tên A-Z
-        if (aPersonal && bPersonal) {
+        // 2.1: ĐỐI VỚI NHÓM GỘP / TỔ KHO:
+        // Đưa DÒNG VIỆC CÁ NHÂN (isPersonalInShared: true) LÊN TRÊN CÙNG
+        if (isShared) {
+          const aPersonal = !!a.isPersonalInShared;
+          const bPersonal = !!b.isPersonalInShared;
+          if (aPersonal !== bPersonal) {
+            return aPersonal ? -1 : 1; // Việc cá nhân (-1) đứng trước việc chung (1)
+          }
+
+          // Nếu cùng là việc cá nhân của các nhân sự trong tổ kho: Sắp xếp theo họ tên A-Z
+          if (aPersonal && bPersonal) {
+            return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
+          }
+
+          // Dòng việc chung ở sau
           return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
         }
 
-        // 4. Các trường hợp còn lại trong cùng bộ phận
+        // 2.2: ĐỐI VỚI BỘ PHẬN THƯỜNG / VĂN PHÒNG:
+        // Nhân sự Quản lý lên đầu trong bộ phận đó
+        const aIsMgr = !!(a.isManagerStaff || (a.userRole && /quan ly|giam doc|pho giam|admin|manager/i.test(removeAccents(a.userRole))));
+        const bIsMgr = !!(b.isManagerStaff || (b.userRole && /quan ly|giam doc|pho giam|admin|manager/i.test(removeAccents(b.userRole))));
+        if (aIsMgr !== bIsMgr) {
+          return aIsMgr ? -1 : 1;
+        }
+
         return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
       });
     }
@@ -6515,6 +6596,16 @@
 
       const deptMap = new Map();
       (dbDepts || []).forEach(d => deptMap.set(d.id, d));
+
+      // TẬP HỢP TẤT CẢ CÁC BỘ PHẬN CÓ NHÂN SỰ LÃNH ĐẠO / QUẢN LÝ / GIÁM ĐỐC
+      const managerDeptNamesSet = new Set();
+      (dbUsers || []).forEach(u => {
+        const isExec = isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+        if (isExec) {
+          const d = deptMap.get(u.department_id);
+          if (d && d.name) managerDeptNamesSet.add(normalizeDeptKey(d.name));
+        }
+      });
 
       const reportLookup = {};
       const reportsByTaskId = new Map();
@@ -6727,6 +6818,12 @@
           groupKey = `${deptName}___${displayStaffName}`;
         }
 
+        const activeUserObj = userMap.get(groupUserId) || assignedUser;
+        const curUserRole = activeUserObj?.role || personalRole || "";
+        const curUsername = activeUserObj?.username || "";
+        const isMgrStaffRow = isAdminOrManager(curUserRole, curUsername) || isDirectorOrAdmin(curUserRole, curUsername) || isDeputyDirector(curUserRole, curUsername);
+        const isMgrDeptRow = managerDeptNamesSet.has(normalizeDeptKey(deptName)) || normalizeDeptKey(deptName).includes("giam doc") || normalizeDeptKey(deptName).includes("quan ly");
+
         if (!staffGroupsMap[groupKey]) {
           staffGroupsMap[groupKey] = {
             department: deptName,
@@ -6736,8 +6833,14 @@
             personalRole: personalRole,
             staffName: displayStaffName,
             userId: groupUserId,
+            userRole: curUserRole,
+            isManagerStaff: isMgrStaffRow,
+            isManagerDept: isMgrDeptRow,
             tasks: []
           };
+        } else {
+          if (isMgrStaffRow) staffGroupsMap[groupKey].isManagerStaff = true;
+          if (isMgrDeptRow) staffGroupsMap[groupKey].isManagerDept = true;
         }
 
         const dailyValues = {};
