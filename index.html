@@ -11380,6 +11380,7 @@
           const opt = document.createElement('option');
           opt.value = st.fullName;
           opt.dataset.userId = st.id;
+          opt.dataset.leadUserId = leadUserId;
           opt.dataset.role = st.role || "";
           opt.dataset.scope = "personal";
           const roleBadge = st.role ? ` — (${st.role})` : '';
@@ -11509,12 +11510,17 @@
           if (tErr) throw tErr;
 
           if (isShared) {
-            // Trong tổ kho: Lọc ra các task là việc cá nhân của thành viên
+            // Trong tổ kho / nhóm gộp: Lọc CHÍNH XÁC các task là việc cá nhân của thành viên
+            const leadUserId = selectedOpt?.dataset?.leadUserId ? parseInt(selectedOpt.dataset.leadUserId, 10) : null;
             tasks = (userTasks || []).filter(t => {
               const scope = parseTaskScope(t.guide);
               if (scope === 'personal') return true;
               if (scope === 'shared') return false;
-              // Task cũ: nếu uId khác leadUserId -> việc cá nhân
+              // Nếu task chưa có tag scope:
+              // - Nếu uId là leadUserId (Kho chính): Các task này là VIỆC CHUNG CỦA TỔ KHO -> TUYỆT ĐỐI KHÔNG NẠP VÀO VIỆC CÁ NHÂN!
+              // - Việc chung chỉ được quản lý khi người dùng chọn "__SHARED_GROUP__".
+              if (leadUserId && uId === leadUserId) return false;
+              // Nếu uId khác leadUserId mà được tạo từ trước -> việc cá nhân
               return true;
             });
           } else {
