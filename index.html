@@ -3366,7 +3366,7 @@
 
       let allUsers = [];
       try {
-        const { data, error } = await supabase.from('users').select('id, username, role, full_name, status');
+        const { data, error } = await supabase.from('users').select('id, username, role, full_name, status').limit(5000);
         if (!error && data) allUsers = data;
         else allUsers = (adminManageUsersCache?.users || []);
       } catch (e) {
@@ -4001,7 +4001,16 @@
         depts.forEach(d => { deptMap[d.name] = []; });
         validUsers.forEach(u => {
           const d = depts.find(x => x.id === u.department_id);
-          const dName = d ? d.name : "Chưa phân bộ phận";
+          let dName = d ? d.name : "Chưa phân bộ phận";
+
+          // NẾU LÀ GIÁM ĐỐC HOẶC PHÓ GIÁM ĐỐC:
+          // Luôn gom vào bộ phận Ban Giám Đốc
+          const isExec = isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+          if (isExec) {
+            const bgdDept = depts.find(x => normalizeDeptKey(x.name).includes("giam doc") || normalizeDeptKey(x.name).includes("ban giam"));
+            if (bgdDept) dName = bgdDept.name;
+          }
+
           if (!deptMap[dName]) deptMap[dName] = [];
           deptMap[dName].push({
             id: u.id,
@@ -4012,6 +4021,19 @@
             department_id: u.department_id,
             password_hash: u.password_hash
           });
+        });
+
+        // SẮP XẾP NHÂN SỰ TRONG BAN GIÁM ĐỐC: Giám Đốc lên trước, Phó Giám Đốc tiếp theo
+        Object.keys(deptMap).forEach(dk => {
+          if (normalizeDeptKey(dk).includes("giam doc") || normalizeDeptKey(dk).includes("ban giam")) {
+            deptMap[dk].sort((a, b) => {
+              const aIsDir = isDirectorOrAdmin(a.role, a.username);
+              const bIsDir = isDirectorOrAdmin(b.role, b.username);
+              if (aIsDir && !bIsDir) return -1;
+              if (!aIsDir && bIsDir) return 1;
+              return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
+            });
+          }
         });
 
         // XÁC ĐỊNH TẬP HỢP BỘ PHẬN CỦA QUẢN LÝ / GIÁM ĐỐC / PHÓ GIÁM ĐỐC
@@ -4299,8 +4321,8 @@
       let depts = [...globalInitData.departments];
 
       depts.sort((a, b) => {
-        let aIsGDB = removeAccents(a).includes("giam doc ban");
-        let bIsGDB = removeAccents(b).includes("giam doc ban");
+        let aIsGDB = removeAccents(a).includes("giam doc") || removeAccents(a).includes("ban giam");
+        let bIsGDB = removeAccents(b).includes("giam doc") || removeAccents(b).includes("ban giam");
         if (aIsGDB && !bIsGDB) return -1;
         if (!aIsGDB && bIsGDB) return 1;
 
@@ -4461,6 +4483,15 @@
         const bAccent = borderAccents[idx % borderAccents.length];
         const bStyle = badgeStyles[idx % badgeStyles.length];
         const isSelected = (st.username === currentVal);
+        let roleBadge = '';
+        if (isDirectorOrAdmin(st.role, st.username)) {
+          roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200 shrink-0">Giám Đốc</span>';
+        } else if (isDeputyDirector(st.role, st.username)) {
+          roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">Phó Giám Đốc</span>';
+        } else if (isAdminOrManager(st.role, st.username)) {
+          roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-200 shrink-0">Quản Lý</span>';
+        }
+
         html += `
           <div onclick="selectStaff('${escapeHtml(st.username)}', '${escapeHtml(st.fullName)}')" data-staff-name="${escapeHtml(st.fullName)}" class="staff-picker-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -4468,7 +4499,10 @@
                 ${av.initial}
               </div>
               <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                  ${roleBadge}
+                </div>
                 <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.username)}</span>
               </div>
             </div>
@@ -5457,12 +5491,45 @@
       staffSelect.innerHTML = '<option value="">-- Chọn Họ và tên --</option>';
 
       let staffList = [];
-      if (dept && globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) {
-        staffList = globalInitData.deptMap[dept];
+      if (dept && globalInitData && globalInitData.deptMap) {
+        staffList = globalInitData.deptMap[dept] ? [...globalInitData.deptMap[dept]] : [];
+        if (!staffList || staffList.length === 0) {
+          const matchedKey = Object.keys(globalInitData.deptMap).find(k => isDeptEquivalent(k, dept));
+          if (matchedKey) staffList = [...(globalInitData.deptMap[matchedKey] || [])];
+        }
+
+        // ĐẶC BIỆT: NẾU LÀ "BAN GIÁM ĐỐC": Luôn đảm bảo gom TẤT CẢ nhân sự là Giám Đốc và Phó Giám Đốc
+        if (normalizeDeptKey(dept).includes("giam doc") || normalizeDeptKey(dept).includes("ban giam")) {
+          const allUsers = (globalInitData.allUsers || []);
+          const execs = allUsers.filter(u => isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username));
+          execs.forEach(eu => {
+            if (!staffList.some(s => s.username === eu.username)) {
+              staffList.push({
+                id: eu.id,
+                username: eu.username,
+                fullName: eu.full_name,
+                role: eu.role,
+                status: eu.status,
+                department_id: eu.department_id,
+                password_hash: eu.password_hash
+              });
+            }
+          });
+          // Sắp xếp: Giám Đốc lên trước, Phó Giám Đốc lên sau
+          staffList.sort((a, b) => {
+            const aIsDir = isDirectorOrAdmin(a.role, a.username);
+            const bIsDir = isDirectorOrAdmin(b.role, b.username);
+            if (aIsDir && !bIsDir) return -1;
+            if (!aIsDir && bIsDir) return 1;
+            return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
+          });
+        }
+
         staffList.forEach(st => {
           const opt = document.createElement('option');
           opt.value = st.username;
-          opt.innerText = `👤 ${st.fullName}`;
+          const roleLabel = isDirectorOrAdmin(st.role, st.username) ? ' (Giám Đốc)' : (isDeputyDirector(st.role, st.username) ? ' (Phó Giám Đốc)' : '');
+          opt.innerText = `👤 ${st.fullName}${roleLabel}`;
           staffSelect.appendChild(opt);
         });
       }
@@ -5963,8 +6030,8 @@
         if (globalInitData && globalInitData.departments) {
           depts = [...globalInitData.departments];
           depts.sort((a, b) => {
-            let aIsGDB = removeAccents(a).includes("giam doc ban");
-            let bIsGDB = removeAccents(b).includes("giam doc ban");
+            let aIsGDB = removeAccents(a).includes("giam doc") || removeAccents(a).includes("ban giam");
+            let bIsGDB = removeAccents(b).includes("giam doc") || removeAccents(b).includes("ban giam");
             if (aIsGDB && !bIsGDB) return -1;
             if (!aIsGDB && bIsGDB) return 1;
 
@@ -11328,7 +11395,7 @@
           const { data: deptInfo } = await supabase.from('departments').select('id').eq('name', deptVal).limit(1);
           const dId = deptInfo && deptInfo[0] ? deptInfo[0].id : null;
 
-          let query = supabase.from('tasks').select('*');
+          let query = supabase.from('tasks').select('*').limit(5000);
           if (dId) {
             query = query.eq('department_id', dId);
           } else if (uId) {
