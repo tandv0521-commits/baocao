@@ -208,6 +208,11 @@
       thead .col-fixed-name { position: static !important; z-index: 30 !important; }
       thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 45 !important; }
       thead .col-fixed-total { position: static !important; z-index: 30 !important; }
+
+      /* ẨN NÚT ĐIỀN BÁO CÁO Ở HEADER TRÊN DI ĐỘNG (< 768px): VÌ ĐÃ CÓ NÚT BÁO CÁO TẠI BOTTOM NAV */
+      #btnOpenDayEntry {
+        display: none !important;
+      }
     }
 
     /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn với z-index cao hơn ô nhập */
@@ -751,7 +756,7 @@
       <!-- Khối nút chức năng: THIẾT KẾ ĐẸP MẮT & GỘP GỌN MENU CHỨC NĂNG -->
       <div class="flex items-center gap-2 flex-wrap ml-auto">
 
-        <!-- Nút Điền báo cáo: Nổi bật và ưu tiên cao nhất -->
+        <!-- Nút Điền báo cáo: Hiển thị trên Desktop, tự động ẩn trên điện thoại qua CSS media query -->
         <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo công việc" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
@@ -1249,7 +1254,7 @@
         <span class="text-[10px] font-bold mt-0.5">Nhịp độ</span>
       </button>
       <!-- Nút Điền báo cáo nổi bật ở giữa -->
-      <button type="button" onclick="openDayEntryModal()" class="flex flex-col items-center justify-center -mt-5 group active:scale-95 transition cursor-pointer">
+      <button type="button" id="mobileBottomNavReportBtn" onclick="openDayEntryModal()" class="flex flex-col items-center justify-center -mt-5 group active:scale-95 transition cursor-pointer">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30 group-hover:scale-105 transition">
           <i class="fa-solid fa-pen-to-square"></i>
         </div>
@@ -5045,16 +5050,33 @@
 
       if (btnDayEntry && currentUser) {
         const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
-        if (isDir) {
+        const isDep = isDeputyDirector(currentUser.role, currentUser.username);
+        if (isDir || isDep) {
           btnDayEntry.classList.add('hidden');
         } else {
           btnDayEntry.removeAttribute('title');
+          btnDayEntry.classList.remove('hidden');
           if (isLocked) {
             btnDayEntry.classList.add('opacity-40', 'cursor-not-allowed');
             btnDayEntry.setAttribute('data-tooltip', 'Kỳ báo cáo này đã khóa sổ');
           } else {
-            btnDayEntry.classList.remove('opacity-40', 'cursor-not-allowed', 'hidden');
+            btnDayEntry.classList.remove('opacity-40', 'cursor-not-allowed');
             btnDayEntry.setAttribute('data-tooltip', 'Điền báo cáo');
+          }
+        }
+      }
+
+      const mobileReportBtn = document.getElementById('mobileBottomNavReportBtn');
+      if (mobileReportBtn && currentUser) {
+        const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
+        const isDep = isDeputyDirector(currentUser.role, currentUser.username);
+        if (isDir || isDep) {
+          mobileReportBtn.classList.add('hidden');
+        } else {
+          if (isLocked) {
+            mobileReportBtn.classList.add('opacity-40', 'pointer-events-none');
+          } else {
+            mobileReportBtn.classList.remove('opacity-40', 'pointer-events-none', 'hidden');
           }
         }
       }
@@ -5939,8 +5961,17 @@
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
       if (btnDayEntry) {
-        if (isDir || isDep) btnDayEntry.classList.add('hidden');
-        else btnDayEntry.classList.remove('hidden');
+        if (isDir || isDep) {
+          btnDayEntry.classList.add('hidden');
+        } else {
+          btnDayEntry.classList.remove('hidden');
+        }
+      }
+
+      const mobileReportBtn = document.getElementById('mobileBottomNavReportBtn');
+      if (mobileReportBtn) {
+        if (isDir || isDep) mobileReportBtn.classList.add('hidden');
+        else mobileReportBtn.classList.remove('hidden');
       }
 
       if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
