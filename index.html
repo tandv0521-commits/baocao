@@ -228,6 +228,66 @@
       thead .col-fixed-total { position: sticky !important; right: 0; z-index: 50 !important; }
     }
 
+    /* ================= CROSSHAIR TRACKER: RỌI SÁNG HÀNG & CỘT MA TRẬN KHI RÊ CHUỘT ================= */
+    .matrix-day-td {
+      transition: background-color 0.1s ease;
+    }
+    tr.matrix-row-hover > td:not(.col-fixed-tt):not(.col-fixed-name):not(.col-fixed-total) {
+      background-color: rgba(236, 253, 245, 0.5) !important;
+    }
+    tr.matrix-row-hover > td.col-fixed-task {
+      background-color: #f0fdf4 !important;
+      color: #065f46 !important;
+      font-weight: 700 !important;
+    }
+    tr.matrix-row-hover > td.col-fixed-name,
+    tr.matrix-row-hover > td.col-fixed-tt {
+      background-color: #f0fdf4 !important;
+    }
+    th.matrix-col-highlight {
+      background-color: #d1fae5 !important;
+      color: #065f46 !important;
+      box-shadow: inset 0 -3px 0 #059669 !important;
+      transition: all 0.1s ease;
+    }
+    td.matrix-col-highlight:not(.matrix-cell-active) {
+      background-color: rgba(240, 253, 244, 0.45) !important;
+    }
+    td.matrix-cell-active {
+      background-color: #ecfdf5 !important;
+      outline: 2px solid #059669 !important;
+      outline-offset: -2px;
+      z-index: 20 !important;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22) !important;
+    }
+
+    /* ================= CHẾ ĐỘ THU GỌN (COMPACT DENSITY) CHO MÁY TÍNH ================= */
+    #tableScrollContainer.matrix-compact table th {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+      font-size: 11px !important;
+    }
+    #tableScrollContainer.matrix-compact table td {
+      padding-top: 0.2rem !important;
+      padding-bottom: 0.2rem !important;
+      font-size: 11px !important;
+    }
+    #tableScrollContainer.matrix-compact .col-fixed-task {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
+      font-size: 11px !important;
+      line-height: 1.25 !important;
+    }
+    #tableScrollContainer.matrix-compact .person-merged-name {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+    }
+    #tableScrollContainer.matrix-compact .matrix-input-cell {
+      height: 22px !important;
+      font-size: 11px !important;
+      padding: 0 2px !important;
+    }
+
     /* Tiêu đề bảng công thái học chống lóa */
     thead .col-fixed-tt { 
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important; 
@@ -1022,6 +1082,13 @@
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
+            <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
+            <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()" data-tooltip="Chuyển chế độ xem Thu gọn / Tiêu chuẩn" 
+              class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
+              <i id="densityToggleIcon" class="fa-solid fa-compress text-emerald-700 text-[11px]"></i>
+              <span id="densityToggleText">Thu gọn</span>
+            </button>
+
             <!-- Nút Ngày 01 (Đầu tháng) -->
             <button type="button" onclick="scrollToStartOfMonth()" data-tooltip="Cuộn về ngày 01 đầu tháng" 
               class="px-2 sm:px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
@@ -7213,7 +7280,7 @@
                 }
 
                 dayCellsHtml += `
-                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
+                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell matrix-day-td py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" data-col="${cIdx}" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
                     <div class="flex items-center justify-center h-full w-full">
                       ${mergedInputHtml}
                     </div>
@@ -7323,7 +7390,7 @@
             }
 
             dayCellsHtml += `
-              <td class="py-1 px-1 border-r border-slate-200 text-center ${cellBgClass} relative" style="${cellStyle}">
+              <td class="matrix-day-td py-1 px-1 border-r border-slate-200 text-center ${cellBgClass} relative" data-col="${cIdx}" style="${cellStyle}">
                 ${cellContentHtml}
               </td>
             `;
@@ -7372,6 +7439,9 @@
 
       tbody.appendChild(tableFragment);
 
+      initMatrixCrosshairTracker();
+      applySavedMatrixDensity();
+
       updateDateNavButtons();
       const now = new Date();
       const isCurrentMonthNow = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
@@ -7382,6 +7452,99 @@
           scrollColumnToCenter(1, true);
           setActiveDateNavButton('other');
         }, 250);
+      }
+    }
+
+    // ================= TIỆN ÍCH QUAN SÁT MA TRẬN: CROSSHAIR TRACKER & DENSITY TOGGLE =================
+    function initMatrixCrosshairTracker() {
+      const tbody = document.getElementById('sheetTableBody');
+      if (!tbody || tbody.dataset.crosshairInit === "true") return;
+      tbody.dataset.crosshairInit = "true";
+
+      let currentHoveredCol = null;
+      let currentHoveredRow = null;
+
+      function clearCrosshairColHighlight() {
+        document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
+        tbody.querySelectorAll('td.matrix-day-td[data-col]').forEach(el => el.classList.remove('matrix-col-highlight'));
+      }
+
+      tbody.addEventListener('mouseover', function(e) {
+        const cell = e.target.closest('td.matrix-day-td');
+        if (!cell) return;
+
+        const colIdx = cell.dataset.col;
+        const row = cell.closest('tr');
+
+        if (currentHoveredRow !== row) {
+          if (currentHoveredRow) currentHoveredRow.classList.remove('matrix-row-hover');
+          if (row) row.classList.add('matrix-row-hover');
+          currentHoveredRow = row;
+        }
+
+        if (currentHoveredCol !== colIdx) {
+          clearCrosshairColHighlight();
+          if (colIdx !== undefined) {
+            const th = document.getElementById(`th-col-${colIdx}`);
+            if (th) th.classList.add('matrix-col-highlight');
+            const sameColCells = tbody.querySelectorAll(`td.matrix-day-td[data-col="${colIdx}"]`);
+            sameColCells.forEach(c => c.classList.add('matrix-col-highlight'));
+            currentHoveredCol = colIdx;
+          }
+        }
+
+        cell.classList.add('matrix-cell-active');
+      });
+
+      tbody.addEventListener('mouseout', function(e) {
+        const cell = e.target.closest('td.matrix-day-td');
+        if (cell) cell.classList.remove('matrix-cell-active');
+      });
+
+      const tableContainer = document.getElementById('tableScrollContainer');
+      if (tableContainer && !tableContainer.dataset.crosshairLeaveInit) {
+        tableContainer.dataset.crosshairLeaveInit = "true";
+        tableContainer.addEventListener('mouseleave', function() {
+          if (currentHoveredRow) {
+            currentHoveredRow.classList.remove('matrix-row-hover');
+            currentHoveredRow = null;
+          }
+          clearCrosshairColHighlight();
+          currentHoveredCol = null;
+        });
+      }
+    }
+
+    function toggleMatrixDensity() {
+      const container = document.getElementById('tableScrollContainer');
+      const textEl = document.getElementById('densityToggleText');
+      const iconEl = document.getElementById('densityToggleIcon');
+      if (!container) return;
+
+      const isCompact = container.classList.toggle('matrix-compact');
+      const mode = isCompact ? 'compact' : 'comfortable';
+      localStorage.setItem('tp_matrix_density', mode);
+
+      if (textEl) textEl.innerText = isCompact ? 'Tiêu chuẩn' : 'Thu gọn';
+      if (iconEl) iconEl.className = isCompact ? 'fa-solid fa-expand text-emerald-700 text-[11px]' : 'fa-solid fa-compress text-emerald-700 text-[11px]';
+      showToast(isCompact ? "Đã bật chế độ xem Thu gọn (tối ưu nhiều dòng)" : "Đã bật chế độ xem Tiêu chuẩn (thoáng đãng)");
+    }
+
+    function applySavedMatrixDensity() {
+      const saved = localStorage.getItem('tp_matrix_density');
+      const container = document.getElementById('tableScrollContainer');
+      const textEl = document.getElementById('densityToggleText');
+      const iconEl = document.getElementById('densityToggleIcon');
+      if (!container) return;
+
+      if (saved === 'compact') {
+        container.classList.add('matrix-compact');
+        if (textEl) textEl.innerText = 'Tiêu chuẩn';
+        if (iconEl) iconEl.className = 'fa-solid fa-expand text-emerald-700 text-[11px]';
+      } else {
+        container.classList.remove('matrix-compact');
+        if (textEl) textEl.innerText = 'Thu gọn';
+        if (iconEl) iconEl.className = 'fa-solid fa-compress text-emerald-700 text-[11px]';
       }
     }
 
@@ -10137,6 +10300,159 @@
       }
     }
 
+    // ================= TIỆN ÍCH TĂNG TỐC ĐIỀN BÁO CÁO: GIỌNG NÓI, CHÉP NHANH, TĂNG GIẢM SỐ =================
+    let activeSpeechRecognition = null;
+    let activeVoiceBtnEl = null;
+
+    function toggleVoiceInput(inputId, btnEl) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast("Trình duyệt chưa hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome, Microsoft Edge hoặc Safari!", true);
+        return;
+      }
+
+      const inputEl = document.getElementById(inputId);
+      if (!inputEl) return;
+
+      if (activeSpeechRecognition) {
+        activeSpeechRecognition.stop();
+        activeSpeechRecognition = null;
+        if (activeVoiceBtnEl) {
+          activeVoiceBtnEl.classList.remove('bg-rose-100', 'text-rose-600', 'animate-pulse');
+          activeVoiceBtnEl.innerHTML = '<i class="fa-solid fa-microphone text-xs"></i>';
+        }
+        return;
+      }
+
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'vi-VN';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+          activeSpeechRecognition = recognition;
+          activeVoiceBtnEl = btnEl;
+          if (btnEl) {
+            btnEl.classList.add('bg-rose-100', 'text-rose-600', 'animate-pulse');
+            btnEl.innerHTML = '<i class="fa-solid fa-circle text-xs text-rose-600"></i>';
+          }
+          showToast("Đang lắng nghe tiếng Việt... Hãy nói nội dung báo cáo!");
+        };
+
+        recognition.onresult = function(event) {
+          let transcript = event.results[0][0].transcript.trim();
+          if (transcript) {
+            const lower = transcript.toLowerCase();
+            const textToNumMap = {
+              'không': '0', 'một': '1', 'hai': '2', 'ba': '3', 'bốn': '4',
+              'năm': '5', 'sáu': '6', 'bảy': '7', 'tám': '8', 'chín': '9',
+              'mười': '10', 'mười một': '11', 'mười hai': '12', 'mười lăm': '15',
+              'hai mươi': '20', 'hai lăm': '25', 'ba mươi': '30',
+              'hoàn thành': 'X', 'xong': 'X', 'đạt': 'X'
+            };
+
+            let finalVal = textToNumMap[lower] !== undefined ? textToNumMap[lower] : transcript;
+            const cleanNum = finalVal.replace(/,/g, '');
+            if (!isNaN(cleanNum) && cleanNum !== '') {
+              finalVal = formatNumberWithCommas(cleanNum);
+            }
+
+            inputEl.value = finalVal;
+            formatNumberInputLive(inputEl);
+            triggerDraftAutosave();
+            showToast(`Đã nhận diện: "${finalVal}"`);
+          }
+        };
+
+        recognition.onerror = function(event) {
+          console.warn("Lỗi nhận diện giọng nói:", event.error);
+          if (event.error === 'not-allowed') {
+            showToast("Vui lòng cấp quyền Micro trong cài đặt trình duyệt!", true);
+          } else {
+            showToast("Không nghe rõ âm thanh hoặc môi trường ồn!", true);
+          }
+        };
+
+        recognition.onend = function() {
+          if (activeVoiceBtnEl) {
+            activeVoiceBtnEl.classList.remove('bg-rose-100', 'text-rose-600', 'animate-pulse');
+            activeVoiceBtnEl.innerHTML = '<i class="fa-solid fa-microphone text-xs"></i>';
+          }
+          activeSpeechRecognition = null;
+          activeVoiceBtnEl = null;
+        };
+
+        recognition.start();
+      } catch (err) {
+        console.error("Lỗi khởi động SpeechRecognition:", err);
+        showToast("Không thể khởi động micro: " + err.message, true);
+      }
+    }
+
+    function copySingleTaskPreviousValue(taskIdx) {
+      const curT = currentDayEntryTasks[taskIdx];
+      if (!curT || !curT.taskRef) {
+        showToast("Chưa có dữ liệu của đầu việc này!", true);
+        return;
+      }
+
+      const curDateInput = document.getElementById('modalEntryDate');
+      const curParts = (curDateInput ? curDateInput.value : "").split('-');
+      if (curParts.length < 3) return;
+      const currentDayNum = parseInt(curParts[2], 10);
+
+      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      if (!activeData) return;
+
+      const candidateCols = activeData.dayCols
+        .filter(dc => dc.dayNum < currentDayNum)
+        .sort((a, b) => b.dayNum - a.dayNum);
+
+      let foundVal = null;
+      let foundDayLabel = "";
+
+      for (const dc of candidateCols) {
+        const v = curT.taskRef.dailyValues[dc.colIndex];
+        if (v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== '-' && String(v).trim() !== '·' && String(v).trim() !== '0') {
+          foundVal = v;
+          foundDayLabel = dc.label;
+          break;
+        }
+      }
+
+      if (foundVal !== null) {
+        const el = document.getElementById(`dayInput_${taskIdx}`);
+        if (el) {
+          el.value = formatNumberWithCommas(foundVal);
+          formatNumberInputLive(el);
+          triggerDraftAutosave();
+          showToast(`Đã lấy số liệu "${foundVal}" từ ngày ${foundDayLabel}!`);
+        }
+      } else {
+        showToast("Đầu việc này chưa có số liệu ở các ngày trước để sao chép!", true);
+      }
+    }
+
+    function adjustQuickNumber(inputId, delta) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      let curVal = el.value.replace(/,/g, '').trim();
+      let num = parseInt(curVal, 10);
+      if (isNaN(num)) num = 0;
+      num = Math.max(0, num + delta);
+      el.value = num === 0 ? '' : formatNumberWithCommas(num);
+      formatNumberInputLive(el);
+      triggerDraftAutosave();
+    }
+
+    function setQuickValue(inputId, val) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      el.value = val;
+      triggerDraftAutosave();
+    }
+
     // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
     function openDayEntryModal() {
       if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
@@ -10513,15 +10829,62 @@
         let inputControl = '';
         if (t.isSymbolTask) {
           inputControl = `
-            <div class="w-full sm:w-64">
-              <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+            <div class="w-full sm:w-72 flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <div class="relative flex-1">
+                  <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                  ${!isReadOnly ? `
+                    <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
+                      <i class="fa-solid fa-microphone text-xs"></i>
+                    </button>
+                  ` : ''}
+                </div>
+                ${!isReadOnly ? `
+                  <button type="button" onclick="copySingleTaskPreviousValue(${idx})" class="w-10 h-10 rounded-xl bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 flex items-center justify-center transition active:scale-95 shrink-0 shadow-2xs cursor-pointer" title="Lấy số liệu ngày trước của việc này">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                  </button>
+                ` : ''}
+              </div>
+              ${!isReadOnly ? `
+                <div class="flex items-center justify-end gap-1">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mr-1 hidden sm:inline">Nhanh:</span>
+                  <button type="button" onclick="setQuickValue('dayInput_${idx}', 'X')" class="h-6 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black border border-emerald-200 shadow-2xs active:scale-95 transition cursor-pointer">X</button>
+                  <button type="button" onclick="setQuickValue('dayInput_${idx}', '0')" class="h-6 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold border border-slate-200 shadow-2xs active:scale-95 transition cursor-pointer">0</button>
+                  <button type="button" onclick="setQuickValue('dayInput_${idx}', '')" class="h-6 px-2 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 text-[10px] font-bold border border-slate-200 transition cursor-pointer" title="Xóa">✕</button>
+                </div>
+              ` : ''}
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(t.currentValue);
           inputControl = `
-            <div class="w-full sm:w-64">
-              <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 px-3.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+            <div class="w-full sm:w-72 flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <div class="relative flex-1">
+                  <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                  ${!isReadOnly ? `
+                    <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập số liệu">
+                      <i class="fa-solid fa-microphone text-xs"></i>
+                    </button>
+                  ` : ''}
+                </div>
+                ${!isReadOnly ? `
+                  <button type="button" onclick="copySingleTaskPreviousValue(${idx})" class="w-10 h-10 rounded-xl bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 flex items-center justify-center transition active:scale-95 shrink-0 shadow-2xs cursor-pointer" title="Lấy số liệu ngày trước của việc này">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                  </button>
+                ` : ''}
+              </div>
+              ${!isReadOnly ? `
+                <div class="flex items-center justify-end gap-1">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mr-1 hidden sm:inline">Nhanh:</span>
+                  <button type="button" onclick="adjustQuickNumber('dayInput_${idx}', -1)" class="h-6 px-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-black border border-slate-200 shadow-2xs active:scale-95 transition cursor-pointer">-1</button>
+                  <button type="button" onclick="adjustQuickNumber('dayInput_${idx}', 1)" class="h-6 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black border border-emerald-200 shadow-2xs active:scale-95 transition cursor-pointer">+1</button>
+                  <button type="button" onclick="adjustQuickNumber('dayInput_${idx}', 2)" class="h-6 px-2 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-black border border-teal-200 shadow-2xs active:scale-95 transition cursor-pointer">+2</button>
+                  <button type="button" onclick="adjustQuickNumber('dayInput_${idx}', 5)" class="h-6 px-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[11px] font-black border border-emerald-300 shadow-2xs active:scale-95 transition cursor-pointer">+5</button>
+                  <button type="button" onclick="adjustQuickNumber('dayInput_${idx}', 10)" class="h-6 px-2 rounded-lg bg-emerald-200 hover:bg-emerald-300 text-emerald-950 text-[11px] font-black border border-emerald-400 shadow-2xs active:scale-95 transition cursor-pointer">+10</button>
+                  <button type="button" onclick="setQuickValue('dayInput_${idx}', '')" class="h-6 px-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 text-[10px] font-bold border border-slate-200 transition cursor-pointer" title="Xóa">✕</button>
+                </div>
+              ` : ''}
             </div>
           `;
         }
@@ -10597,15 +10960,41 @@
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
-            <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+            <div class="flex items-center gap-1.5">
+              <div class="relative w-36 sm:w-48">
+                <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+                ${!isDayReadOnly ? `
+                  <button type="button" id="voiceBtn_task_${idx}" onclick="toggleVoiceInput('taskDayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
+                    <i class="fa-solid fa-microphone text-[10px]"></i>
+                  </button>
+                ` : ''}
+              </div>
+              ${!isDayReadOnly ? `
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="setQuickValue('taskDayInput_${idx}', 'X')" class="h-8 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black border border-emerald-200 active:scale-95 transition cursor-pointer">X</button>
+                  <button type="button" onclick="setQuickValue('taskDayInput_${idx}', '0')" class="h-8 px-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition cursor-pointer">0</button>
+                </div>
+              ` : ''}
             </div>
           `;
         } else {
           const formattedVal = formatNumberWithCommas(d.value);
           inputControl = `
-            <div class="w-48 sm:w-64">
-              <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+            <div class="flex items-center gap-1.5">
+              <div class="relative w-36 sm:w-48">
+                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+                ${!isDayReadOnly ? `
+                  <button type="button" id="voiceBtn_task_${idx}" onclick="toggleVoiceInput('taskDayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập số liệu">
+                    <i class="fa-solid fa-microphone text-[10px]"></i>
+                  </button>
+                ` : ''}
+              </div>
+              ${!isDayReadOnly ? `
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="adjustQuickNumber('taskDayInput_${idx}', 1)" class="h-8 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black border border-emerald-200 active:scale-95 transition cursor-pointer">+1</button>
+                  <button type="button" onclick="adjustQuickNumber('taskDayInput_${idx}', 5)" class="h-8 px-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-black border border-emerald-300 active:scale-95 transition cursor-pointer">+5</button>
+                </div>
+              ` : ''}
             </div>
           `;
         }
