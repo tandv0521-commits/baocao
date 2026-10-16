@@ -97,32 +97,31 @@
       letter-spacing: -0.01em !important;
     }
 
-    /* ================= THẺ GỢI Ý (TOOLTIP) BẮT MẮT & HIỆN ĐẠI ================= */
+    /* ================= THẺ GỢI Ý (TOOLTIP) NỀN SÁNG THANH LỊCH & TINH TẾ ================= */
     [data-tooltip] {
       position: relative;
     }
     [data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
-      top: calc(100% + 6px);
+      top: calc(100% + 7px);
       left: 50%;
       transform: translateX(-50%) translateY(-2px) scale(0.96);
-      background: rgba(15, 23, 42, 0.94);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #ffffff;
-      padding: 5px 9px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 5.5px 10px;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: -0.01em;
       border-radius: 9px;
+      border: 1px solid #cbd5e1;
       white-space: nowrap;
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 100;
-      box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
     }
     [data-tooltip]::before {
       content: '';
@@ -132,11 +131,11 @@
       transform: translateX(-50%) translateY(-2px);
       border-width: 0 5px 5px 5px;
       border-style: solid;
-      border-color: transparent transparent rgba(15, 23, 42, 0.94) transparent;
+      border-color: transparent transparent #cbd5e1 transparent;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 100;
+      transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
     }
     [data-tooltip]:hover::after {
       opacity: 1;
@@ -148,11 +147,50 @@
       visibility: visible;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* ĐỊNH VỊ TOOLTIP HƯỚNG LÊN TRÊN (TOP) CHO CÁC THẺ Ở ĐÁY BẢNG MA TRẬN */
+    [data-tooltip-pos="top"]::after {
+      top: auto;
+      bottom: calc(100% + 7px);
+      transform: translateX(-50%) translateY(2px) scale(0.96);
+    }
+    [data-tooltip-pos="top"]::before {
+      top: auto;
+      bottom: calc(100% + 1px);
+      border-width: 5px 5px 0 5px;
+      border-style: solid;
+      border-color: #cbd5e1 transparent transparent transparent;
+      transform: translateX(-50%) translateY(2px);
+    }
+    [data-tooltip-pos="top"]:hover::after {
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    [data-tooltip-pos="top"]:hover::before {
+      transform: translateX(-50%) translateY(0);
+    }
+
     @media (hover: none) {
       [data-tooltip]::after,
       [data-tooltip]::before {
         display: none !important;
       }
+    }
+
+    /* TẮT TRIỆT ĐỂ POPUP VÀ BIỂU TƯỢNG GỢI Ý ĐEN (SAVED INFO / AUTOFILL) CỦA EDGE & CHROME */
+    input::-webkit-contacts-auto-fill-button,
+    input::-webkit-credentials-auto-fill-button {
+      visibility: hidden !important;
+      display: none !important;
+      pointer-events: none !important;
+      height: 0 !important;
+      width: 0 !important;
+      margin: 0 !important;
+    }
+    input::-ms-clear,
+    input::-ms-reveal {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
 
     /* ================= CẤU TRÚC BẢNG CỐ ĐỊNH CHỐNG CHE KHUẤT ================= */
@@ -178,7 +216,8 @@
         width: 32px !important; 
         min-width: 32px !important; 
         max-width: 32px !important; 
-        z-index: 25 !important; 
+        z-index: 35 !important; 
+        background-color: #ffffff !important;
       }
       .col-fixed-name { 
         position: static !important; 
@@ -186,6 +225,7 @@
         min-width: 125px !important; 
         max-width: 125px !important; 
         box-shadow: none !important; 
+        background-color: #ffffff !important;
       }
       .col-fixed-task { 
         position: sticky !important; 
@@ -194,7 +234,8 @@
         min-width: 132px !important; 
         max-width: 132px !important; 
         box-shadow: 3px 0 8px -2px rgba(15, 23, 42, 0.12) !important; 
-        z-index: 25 !important; 
+        z-index: 35 !important; 
+        background-color: #ffffff !important;
       }
       .col-fixed-total { 
         position: static !important; 
@@ -204,9 +245,9 @@
         box-shadow: none !important; 
       }
 
-      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 45 !important; }
+      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 60 !important; }
       thead .col-fixed-name { position: static !important; z-index: 30 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 45 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 60 !important; }
       thead .col-fixed-total { position: static !important; z-index: 30 !important; }
 
       /* ẨN NÚT ĐIỀN BÁO CÁO Ở HEADER TRÊN DI ĐỘNG (< 768px): VÌ ĐÃ CÓ NÚT BÁO CÁO TẠI BOTTOM NAV */
@@ -215,34 +256,45 @@
       }
     }
 
-    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn với z-index cao hơn ô nhập */
+    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn với z-index cao hơn hẳn các ô ngày */
     @media (min-width: 768px) {
-      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 25 !important; }
-      .col-fixed-name { position: sticky !important; left: 44px; width: 255px; min-width: 255px; max-width: 255px; z-index: 25 !important; }
-      .col-fixed-task { position: sticky !important; left: 299px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 25 !important; }
-      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.05); z-index: 25 !important; }
+      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 35 !important; background-color: #ffffff !important; }
+      .col-fixed-name { position: sticky !important; left: 44px; width: 275px; min-width: 275px; max-width: 275px; z-index: 35 !important; background-color: #ffffff !important; }
+      .col-fixed-task { position: sticky !important; left: 319px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 35 !important; background-color: #ffffff !important; }
+      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 35 !important; background-color: #f8fafc !important; }
 
-      thead .col-fixed-tt { position: sticky !important; left: 0; z-index: 50 !important; }
-      thead .col-fixed-name { position: sticky !important; left: 44px; z-index: 50 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 299px; z-index: 50 !important; }
-      thead .col-fixed-total { position: sticky !important; right: 0; z-index: 50 !important; }
+      thead .col-fixed-tt { position: sticky !important; left: 0; z-index: 60 !important; }
+      thead .col-fixed-name { position: sticky !important; left: 44px; z-index: 60 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 319px; z-index: 60 !important; }
+      thead .col-fixed-total { position: sticky !important; right: 0; z-index: 60 !important; }
     }
 
     /* ================= CROSSHAIR TRACKER: RỌI SÁNG HÀNG & CỘT MA TRẬN KHI RÊ CHUỘT ================= */
     .matrix-day-td {
       transition: background-color 0.1s ease;
     }
-    tr.matrix-row-hover > td:not(.col-fixed-tt):not(.col-fixed-name):not(.col-fixed-total) {
+    tr.matrix-row-hover > td:not(.col-fixed-tt):not(.col-fixed-name):not(.col-fixed-task):not(.col-fixed-total) {
       background-color: rgba(236, 253, 245, 0.5) !important;
     }
-    tr.matrix-row-hover > td.col-fixed-task {
+    /* ĐẢM BẢO 100% CÁC CỘT CỐ ĐỊNH CÓ NỀN ĐẶC RẮN KHI HOVER - TUYỆT ĐỐI CHE KÍN CÁC Ô NGÀY CUỘN PHÍA SAU */
+    tr.matrix-row-hover > td.col-fixed-task,
+    tbody tr:hover > td.col-fixed-task {
       background-color: #f0fdf4 !important;
       color: #065f46 !important;
       font-weight: 700 !important;
+      opacity: 1 !important;
     }
     tr.matrix-row-hover > td.col-fixed-name,
-    tr.matrix-row-hover > td.col-fixed-tt {
+    tr.matrix-row-hover > td.col-fixed-tt,
+    tbody tr:hover > td.col-fixed-name,
+    tbody tr:hover > td.col-fixed-tt {
       background-color: #f0fdf4 !important;
+      opacity: 1 !important;
+    }
+    tr.matrix-row-hover > td.col-fixed-total,
+    tbody tr:hover > td.col-fixed-total {
+      background-color: #ecfdf5 !important;
+      opacity: 1 !important;
     }
     th.matrix-col-highlight {
       background-color: #d1fae5 !important;
@@ -310,9 +362,20 @@
       border-bottom: 2px solid #6ee7b7 !important; 
     }
 
-    tbody td.col-fixed-tt, tbody td.col-fixed-name, tbody td.col-fixed-task { background-color: #ffffff !important; }
-    tbody tr:hover td.col-fixed-tt, tbody tr:hover td.col-fixed-task { background-color: #f8fafc !important; }
-    tbody td.col-fixed-total { background-color: #f8fafc !important; }
+    tbody td.col-fixed-tt, tbody td.col-fixed-name, tbody td.col-fixed-task { 
+      background-color: #ffffff !important; 
+      opacity: 1 !important; 
+      -webkit-backdrop-filter: none !important; 
+      backdrop-filter: none !important; 
+    }
+    tbody tr:hover td.col-fixed-tt, tbody tr:hover td.col-fixed-task { 
+      background-color: #f0fdf4 !important; 
+      opacity: 1 !important; 
+    }
+    tbody td.col-fixed-total { 
+      background-color: #f8fafc !important; 
+      opacity: 1 !important; 
+    }
 
     /* Đường kẻ phân cách & bao quanh nhân sự trong bảng ma trận - THẨM MỸ CAO CẤP 10/10 */
     .person-row-last td {
@@ -324,6 +387,8 @@
     td.person-merged-tt, td.person-merged-name {
       border-bottom: 2px solid #059669 !important; /* Đáy ô gộp TT và Họ tên khớp chuẩn xác với vạch phân cách */
       border-right: 1.5px solid #cbd5e1 !important;
+      background-color: #ffffff !important;
+      opacity: 1 !important;
     }
     td.person-merged-leave-cell {
       border-bottom: 2px solid #059669 !important; /* Đáy ô gộp ngày nghỉ khớp chuẩn xác với vạch phân cách */
@@ -331,6 +396,8 @@
     }
     td.col-fixed-task {
       border-right: 2px solid #cbd5e1 !important; /* Ngăn cách rõ ràng giữa Cột nội dung công việc và các cột ngày */
+      background-color: #ffffff !important;
+      opacity: 1 !important;
     }
 
     /* Màu nhận diện cột ngày Chủ nhật (CN) */
@@ -967,13 +1034,13 @@
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
     <main class="flex-1 p-2 sm:p-5 pb-20 md:pb-6 w-full mx-auto space-y-3.5 flex flex-col">
       <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (CÓ THÊM Ô TÌM KIẾM NHÂN SỰ) -->
-      <div class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
+      <div id="mainPeriodFilterContainer" class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
-              <i class="fa-solid fa-calendar-check text-emerald-700 text-xs"></i>
-              <span class="text-[10px] sm:text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Kỳ báo cáo:</span>
-              <select id="reportPeriodSelect" onchange="onPeriodChange()" class="bg-transparent text-xs font-black text-emerald-900 focus:outline-none cursor-pointer">
+            <div class="flex items-center gap-2 bg-emerald-50/70 border border-emerald-200/90 px-3 py-1.5 rounded-xl shadow-2xs hover:border-emerald-300 transition-colors">
+              <i class="fa-solid fa-calendar-days text-emerald-600 text-xs shrink-0"></i>
+              <span class="text-[10.5px] sm:text-[11px] font-bold text-emerald-800 uppercase tracking-wider shrink-0">Kỳ báo cáo:</span>
+              <select id="reportPeriodSelect" onchange="onPeriodChange()" class="bg-transparent text-xs sm:text-[12.5px] font-bold text-emerald-950 focus:outline-none cursor-pointer">
               </select>
             </div>
 
@@ -1003,21 +1070,21 @@
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
-                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[120px] sm:max-w-[170px]">Tất cả ban DVKH</span>
+                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[160px] sm:max-w-[240px]" title="Tất cả ban DVKH">Tất cả ban DVKH</span>
                   </div>
                 </div>
                 <i id="filterDeptPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
               </button>
 
               <!-- Menu xổ xuống chọn bộ phận với tìm kiếm và dải màu gợi ý -->
-              <div id="filterDeptPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+              <div id="filterDeptPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
                   <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                    <input type="text" id="filterDeptSearchInput" oninput="filterDashboardDeptPickerList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                    <input type="text" id="filterDeptSearchInput" oninput="filterDashboardDeptPickerList()" placeholder="Tìm nhanh bộ phận..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
                   </div>
                 </div>
-                <div id="filterDeptPickerList" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
+                <div id="filterDeptPickerList" class="max-h-72 overflow-y-auto custom-scroll p-2 space-y-1.5">
                   <!-- Được tạo động với dải gợi ý màu sắc sinh động -->
                 </div>
               </div>
@@ -1032,18 +1099,18 @@
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Họ và tên:</span>
-                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[130px] sm:max-w-[180px]">Tất cả nhân viên</span>
+                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[150px] sm:max-w-[220px]" title="Tất cả nhân viên">Tất cả nhân viên</span>
                   </div>
                 </div>
                 <i id="filterStaffPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
               </button>
 
               <!-- Menu xổ xuống chọn nhân sự với avatar và dải màu tươi sáng -->
-              <div id="filterStaffPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-84 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div id="filterStaffPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-[340px] sm:w-[420px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                 <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                   <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                    <input type="text" id="filterStaffSearchInput" oninput="filterDashboardStaffPickerList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                    <input type="text" id="filterStaffSearchInput" oninput="filterDashboardStaffPickerList()" placeholder="Tìm tên nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
                   </div>
                 </div>
                 <div id="filterStaffPickerList" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
@@ -1055,7 +1122,7 @@
             <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ -->
             <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
               <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-24 sm:w-32 transition" />
+              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly');" class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-24 sm:w-32 transition" />
               <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
                 <i class="fa-solid fa-xmark"></i>
               </button>
@@ -1070,18 +1137,18 @@
 
         <!-- Hàng 2: Đối tượng đang xem & Nút nhảy ngày thông minh -->
         <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-          <div id="staffTitleContainer" class="flex items-center gap-2 min-w-0">
+          <div id="staffTitleContainer" class="flex items-center gap-2 min-w-0 flex-wrap">
             <span id="staffTitleDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
             <span class="text-xs sm:text-sm font-bold text-slate-700 truncate">
               <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
             </span>
-            <button type="button" id="btnResetFollowUpFilter" onclick="resetMatrixFollowUpFilter()" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold transition shadow-2xs cursor-pointer active:scale-95 shrink-0" title="Xem lại tất cả công việc">
-              <i class="fa-solid fa-rotate-left text-amber-700 text-[10px]"></i>
-              <span>Xem lại tất cả</span>
+            <button type="button" id="btnResetFollowUpFilter" onclick="resetMatrixFollowUpFilter()" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200/90 hover:from-amber-200 hover:to-amber-300 text-amber-950 border border-amber-300/90 text-xs font-black transition shadow-xs cursor-pointer active:scale-95 shrink-0" title="Thu gọn về trang tổng quan">
+              <i class="fa-solid fa-compress text-amber-800 text-[11px]"></i>
+              <span>Thu gọn về trang tổng quan</span>
             </button>
           </div>
 
-          <div class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
+          <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
             <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
             <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()" data-tooltip="Chuyển chế độ xem Thu gọn / Tiêu chuẩn" 
               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
@@ -1139,13 +1206,13 @@
             <span class="text-slate-700">Quy chuẩn ký hiệu:</span>
           </div>
           <div class="flex flex-wrap items-center gap-1.5 font-semibold text-slate-600">
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black shadow-2xs" title="Nghỉ phép năm / Phép chế độ"><b class="font-black">P</b> Phép</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-300 text-[10px] font-black shadow-2xs" title="Nghỉ ốm đau / Đi khám bệnh"><b class="font-black">Ô</b> Ốm</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-300 text-[10px] font-black shadow-2xs" title="Đi công tác / Đào tạo bên ngoài"><b class="font-black">CT</b> Công tác</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-black shadow-2xs" title="Nghỉ việc riêng có phép"><b class="font-black">VR</b> Việc riêng</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-300 text-[10px] font-black shadow-2xs" title="Nghỉ hàng tuần theo quy định"><b class="font-black">HT</b> Nghỉ tuần</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-black shadow-2xs" title="Đi học / Tập huấn / Đào tạo nội bộ"><b class="font-black">H</b> Học</span>
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-300 text-[10px] font-black shadow-2xs" title="Nghỉ Lễ / Tết theo luật định"><b class="font-black">L</b> Lễ/Tết</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Nghỉ phép năm / Phép chế độ" data-tooltip-pos="top"><b class="font-black">P</b> Phép</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Nghỉ ốm đau / Đi khám bệnh" data-tooltip-pos="top"><b class="font-black">Ô</b> Ốm</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Đi công tác / Đào tạo bên ngoài" data-tooltip-pos="top"><b class="font-black">CT</b> Công tác</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Nghỉ việc riêng có phép" data-tooltip-pos="top"><b class="font-black">VR</b> Việc riêng</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Nghỉ hàng tuần theo quy định" data-tooltip-pos="top"><b class="font-black">HT</b> Nghỉ tuần</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Đi học / Tập huấn / Đào tạo nội bộ" data-tooltip-pos="top"><b class="font-black">H</b> Học</span>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-300 text-[10px] font-black shadow-2xs cursor-help" data-tooltip="Nghỉ Lễ / Tết theo luật định" data-tooltip-pos="top"><b class="font-black">L</b> Lễ/Tết</span>
           </div>
         </div>
 
@@ -1234,7 +1301,13 @@
                 <i class="fa-solid fa-chart-column"></i>
               </span>
               <div>
-                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhịp Độ Phát Sinh & Số Liệu Từng Đầu Việc</h4>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Nhịp Độ Phát Sinh & Số Liệu Từng Đầu Việc</h4>
+                  <span id="rhythmFilterSubjectBadge" class="hidden px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10.5px] font-bold items-center gap-1.5 cursor-pointer shadow-2xs transition" onclick="resetMatrixFollowUpFilter()" title="Đang xem nhịp độ của đối tượng này. Nhấp để xem lại nhịp độ toàn ban">
+                    <span id="rhythmFilterSubjectText">...</span>
+                    <i class="fa-solid fa-xmark text-amber-700 hover:text-rose-600 text-xs ml-0.5"></i>
+                  </span>
+                </div>
                 <p class="text-[11px] text-slate-400">Xem diễn biến số liệu nhập vào qua từng ngày của từng đầu việc cụ thể</p>
               </div>
             </div>
@@ -1498,13 +1571,13 @@
                 <i class="fa-solid fa-tag text-amber-600"></i>
                 <span>Chọn lý do nghỉ:</span>
               </span>
-              <button type="button" data-reason-code="P" onclick="setQuickReason('P', 'Nghỉ phép')" class="reason-quick-btn px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ phép năm/chế độ"><b class="font-black text-amber-700">P</b><span>Phép</span><i class="fa-solid fa-check text-[10px] hidden text-emerald-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="Ô" onclick="setQuickReason('Ô', 'Nghỉ ốm')" class="reason-quick-btn px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ ốm đau/khám bệnh"><b class="font-black text-purple-700">Ô</b><span>Ốm</span><i class="fa-solid fa-check text-[10px] hidden text-purple-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="CT" onclick="setQuickReason('CT', 'Đi công tác')" class="reason-quick-btn px-2.5 py-1 bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Đi công tác/đào tạo"><b class="font-black text-sky-700">CT</b><span>Công tác</span><i class="fa-solid fa-check text-[10px] hidden text-sky-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="VR" onclick="setQuickReason('VR', 'Việc riêng')" class="reason-quick-btn px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ việc riêng có phép"><b class="font-black text-slate-700">VR</b><span>Việc riêng</span><i class="fa-solid fa-check text-[10px] hidden text-slate-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="HT" onclick="setQuickReason('HT', 'Nghỉ hàng tuần')" class="reason-quick-btn px-2.5 py-1 bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ hàng tuần theo quy định"><b class="font-black text-teal-700">HT</b><span>Nghỉ tuần</span><i class="fa-solid fa-check text-[10px] hidden text-teal-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="H" onclick="setQuickReason('H', 'Học tập/Đào tạo')" class="reason-quick-btn px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Học tập/tập huấn"><b class="font-black text-indigo-700">H</b><span>Học</span><i class="fa-solid fa-check text-[10px] hidden text-indigo-700 ml-0.5"></i></button>
-              <button type="button" data-reason-code="L" onclick="setQuickReason('L', 'Nghỉ Lễ/Tết')" class="reason-quick-btn px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" title="Nghỉ Lễ/Tết theo luật định"><b class="font-black text-rose-700">L</b><span>Lễ/Tết</span><i class="fa-solid fa-check text-[10px] hidden text-rose-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="P" onclick="setQuickReason('P', 'Nghỉ phép')" class="reason-quick-btn px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Nghỉ phép năm/chế độ" data-tooltip-pos="top"><b class="font-black text-amber-700">P</b><span>Phép</span><i class="fa-solid fa-check text-[10px] hidden text-emerald-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="Ô" onclick="setQuickReason('Ô', 'Nghỉ ốm')" class="reason-quick-btn px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-900 border border-purple-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Nghỉ ốm đau/khám bệnh" data-tooltip-pos="top"><b class="font-black text-purple-700">Ô</b><span>Ốm</span><i class="fa-solid fa-check text-[10px] hidden text-purple-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="CT" onclick="setQuickReason('CT', 'Đi công tác')" class="reason-quick-btn px-2.5 py-1 bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Đi công tác/đào tạo" data-tooltip-pos="top"><b class="font-black text-sky-700">CT</b><span>Công tác</span><i class="fa-solid fa-check text-[10px] hidden text-sky-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="VR" onclick="setQuickReason('VR', 'Việc riêng')" class="reason-quick-btn px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Nghỉ việc riêng có phép" data-tooltip-pos="top"><b class="font-black text-slate-700">VR</b><span>Việc riêng</span><i class="fa-solid fa-check text-[10px] hidden text-slate-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="HT" onclick="setQuickReason('HT', 'Nghỉ hàng tuần')" class="reason-quick-btn px-2.5 py-1 bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Nghỉ hàng tuần theo quy định" data-tooltip-pos="top"><b class="font-black text-teal-700">HT</b><span>Nghỉ tuần</span><i class="fa-solid fa-check text-[10px] hidden text-teal-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="H" onclick="setQuickReason('H', 'Học tập/Đào tạo')" class="reason-quick-btn px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Học tập/tập huấn" data-tooltip-pos="top"><b class="font-black text-indigo-700">H</b><span>Học</span><i class="fa-solid fa-check text-[10px] hidden text-indigo-700 ml-0.5"></i></button>
+              <button type="button" data-reason-code="L" onclick="setQuickReason('L', 'Nghỉ Lễ/Tết')" class="reason-quick-btn px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1" data-tooltip="Nghỉ Lễ/Tết theo luật định" data-tooltip-pos="top"><b class="font-black text-rose-700">L</b><span>Lễ/Tết</span><i class="fa-solid fa-check text-[10px] hidden text-rose-700 ml-0.5"></i></button>
             </div>
             <div class="relative">
               <i class="fa-solid fa-pen-fancy absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 text-xs pointer-events-none"></i>
@@ -1972,7 +2045,7 @@
         <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[240px]">
           <div class="relative w-full max-w-xs">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly');" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
 
           <!-- Native selects giữ nguyên để tương thích 100% logic hệ thống -->
@@ -1993,14 +2066,14 @@
                 </span>
                 <div class="min-w-0 flex flex-col leading-tight">
                   <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
-                  <span id="userFilterDeptText" class="truncate font-bold text-slate-800 max-w-[130px] sm:max-w-[170px]">Tất cả bộ phận</span>
+                  <span id="userFilterDeptText" class="truncate font-bold text-slate-800 max-w-[160px] sm:max-w-[240px]" title="Tất cả bộ phận">Tất cả bộ phận</span>
                 </div>
               </div>
               <i id="userFilterDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
             </button>
 
             <!-- Menu xổ xuống chọn bộ phận -->
-            <div id="userFilterDeptMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div id="userFilterDeptMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-[340px] sm:w-[420px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
               <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                 <div class="relative">
                   <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -2877,6 +2950,7 @@
 
     let draftSaveTimeout = null;
     let pendingTransferData = null;
+    let isDirectorDashboardInitial = false; // Cờ kiểm soát trạng thái ma trận trống khi Ban Giám Đốc đăng nhập
     // ================= DUY TRÌ GIAO DIỆN SÁNG MẶC ĐỊNH GỐC BAN ĐẦU =================
     try {
       localStorage.removeItem('ops_portal_theme');
@@ -3023,9 +3097,36 @@
       if (entryDateEl) {
         entryDateEl.value = today;
       }
+
+      initGlobalLightTooltipSystem();
+
       loadInitialData(() => {
         checkAndFillRememberedPassword();
       });
+    }
+
+    /**
+     * HỆ THỐNG GỢI Ý (TOOLTIP) NỀN SÁNG CAO CẤP TOÀN CỤC:
+     * Tự động chuyển đổi toàn bộ thuộc tính title mặc định của trình duyệt sang tooltip nền sáng sang trọng,
+     * xóa bỏ hoàn toàn hiện tượng hộp đen tối thô của Windows.
+     */
+    function initGlobalLightTooltipSystem() {
+      document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[title]');
+        if (!target) return;
+
+        const titleText = target.getAttribute('title');
+        if (titleText && titleText.trim()) {
+          if (!target.hasAttribute('data-tooltip')) {
+            target.setAttribute('data-tooltip', titleText.trim());
+            const rect = target.getBoundingClientRect();
+            if (rect.top > window.innerHeight * 0.55 || target.closest('#matrixSymbolLegendBar')) {
+              target.setAttribute('data-tooltip-pos', 'top');
+            }
+          }
+          target.removeAttribute('title');
+        }
+      }, true);
     }
 
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
@@ -3404,6 +3505,14 @@
              u.includes("giamdoc") || u.includes("lanhdao") || u.includes("admin");
     }
 
+    /**
+     * KIỂM TRA TÀI KHOẢN THUỘC BAN GIÁM ĐỐC (GIÁM ĐỐC HOẶC PHÓ GIÁM ĐỐC)
+     */
+    function isBoardOfDirectors(user = currentUser) {
+      if (!user) return false;
+      return isDirectorOrAdmin(user.role, user.username) || isDeputyDirector(user.role, user.username);
+    }
+
     function isAdminOrManager(roleStr, usernameStr) {
       if (!roleStr && !usernameStr) return false;
       if (isDeputyDirector(roleStr, usernameStr)) return true;
@@ -3634,7 +3743,7 @@
      * HIỂN THỊ THÀNH VIÊN TRONG Ô HỌ VÀ TÊN NỔI BẬT:
      * Card hiển thị hiện đại, chuẩn hóa vai trò các thành viên kho và cá nhân
      */
-    function formatStaffNameHtml(nameStr, deptName, isPersonalInShared = false, personalRole = "") {
+    function formatStaffNameHtml(nameStr, deptName, isPersonalInShared = false, personalRole = "", taskCount = 1) {
       if (!nameStr) return '';
 
       // TRƯỜNG HỢP 1: CÔNG VIỆC CÁ NHÂN RIÊNG CỦA THÀNH VIÊN TRONG TỔ KHO / NHÓM GỘP
@@ -3642,35 +3751,27 @@
         const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, nameStr);
         const initial = escapeHtml(nameStr.charAt(0));
         return `
-          <div class="flex flex-col gap-1.5 w-full text-left overflow-hidden">
-            <div class="p-2 rounded-2xl border transition-all ${
-              isCurrent 
-                ? 'bg-gradient-to-r from-indigo-50/90 via-purple-50/70 to-white border-indigo-400 shadow-xs ring-1 ring-indigo-400' 
-                : 'bg-gradient-to-r from-slate-50/90 via-indigo-50/40 to-white border-indigo-200 hover:border-indigo-300'
-            }">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div class="flex flex-col justify-center h-full py-1.5 px-1 text-left">
+            <div class="flex items-center gap-2.5">
+              <div class="relative shrink-0">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 text-white font-bold text-xs flex items-center justify-center shadow-xs border-2 border-white">
                   ${initial}
                 </div>
-                <div class="text-left overflow-hidden flex-1 min-w-0">
-                  <span class="text-xs font-black ${isCurrent ? 'text-indigo-950' : 'text-slate-900'} leading-tight block truncate">
-                    ${escapeHtml(nameStr)}${isCurrent ? '<span class="text-[9px] text-indigo-700 font-black ml-1">(Tôi)</span>' : ''}
-                  </span>
-                  <div class="flex items-center gap-1 mt-0.5 flex-wrap">
-                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tight truncate">${escapeHtml(deptName || '')}</span>
-                  </div>
-                </div>
+                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-500 border-2 border-white rounded-full"></span>' : ''}
               </div>
-              <div class="mt-1.5 pt-1.5 border-t border-indigo-100/80 flex items-center gap-1 flex-wrap">
-                <span class="inline-flex items-center gap-1 text-[8.5px] font-black text-indigo-800 bg-indigo-100/90 px-2 py-0.5 rounded-md uppercase tracking-wider border border-indigo-200 shadow-2xs">
-                  <i class="fa-solid fa-user-tag text-[8px] text-indigo-600"></i>
-                  <span>Việc cá nhân</span>
-                </span>
-                ${personalRole ? `
-                  <span class="inline-flex items-center text-[8.5px] font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                    ${escapeHtml(personalRole)}
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-bold text-slate-800 leading-snug break-words">
+                    ${escapeHtml(nameStr)}
                   </span>
-                ` : ''}
+                  ${isCurrent ? '<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.2 rounded-full">Tôi</span>' : ''}
+                </div>
+                <div class="mt-1">
+                  <span class="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full">
+                    <i class="fa-solid fa-user-tag text-[8px] text-indigo-500"></i>
+                    <span>Việc cá nhân</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -3681,15 +3782,39 @@
       const isSharedGroup = isSharedGroupDeptClient(deptName);
       if (members.length <= 1 && !isSharedGroup) {
         const single = members[0] || { name: nameStr, role: '' };
+        const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, single.name);
+        const initial = escapeHtml(single.name.charAt(0));
         return `
-          <div class="flex items-center gap-2 p-1.5 sm:p-2 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border border-emerald-300 rounded-2xl shadow-xs transition hover:border-emerald-500">
-            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xs sm:text-sm flex items-center justify-center staff-avatar-glow flex-shrink-0 shadow-sm">
-              ${escapeHtml(single.name.charAt(0))}
-            </div>
-            <div class="text-left overflow-hidden flex-1 min-w-0">
-              <span class="text-xs font-black text-slate-900 leading-tight block truncate">${escapeHtml(single.name)}</span>
-              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                <span class="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-tight truncate">${escapeHtml(deptName || '')}</span>
+          <div class="flex flex-col justify-center h-full py-1.5 px-1 text-left">
+            <div class="flex items-start gap-2.5">
+              <div class="relative shrink-0">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-700 to-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-xs border-2 border-white">
+                  ${initial}
+                </div>
+                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>' : ''}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-bold text-slate-800 leading-snug break-words">
+                    ${escapeHtml(single.name)}
+                  </span>
+                  ${isCurrent ? '<span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded-full">Tôi</span>' : ''}
+                </div>
+
+                <div class="mt-1 flex items-center gap-1 text-slate-500">
+                  <i class="fa-regular fa-building text-[9px] text-emerald-600/80 shrink-0"></i>
+                  <span class="text-[11px] font-medium leading-snug break-words text-slate-600" title="${escapeHtml(deptName || '')}">
+                    ${escapeHtml(deptName || 'Chưa phân bộ phận')}
+                  </span>
+                </div>
+
+                ${single.role ? `
+                  <div class="mt-1.5">
+                    <span class="inline-flex items-center text-[9px] font-semibold text-teal-800 bg-teal-50 border border-teal-200/80 px-2 py-0.5 rounded-full">
+                      ${escapeHtml(single.role)}
+                    </span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           </div>
@@ -3697,50 +3822,43 @@
       }
 
       return `
-        <div class="flex flex-col gap-1.5 w-full text-left overflow-hidden">
-          <div class="flex flex-col gap-1 pb-1.5 border-b border-emerald-100">
-            <div class="flex items-center gap-1.5">
-              <i class="fa-solid fa-warehouse text-emerald-600 text-xs"></i>
-              <span class="text-[10.5px] font-black text-emerald-900 uppercase tracking-wider">Tổ kho (${members.length} nhân sự)</span>
-            </div>
-            ${deptName ? `
-              <div>
-                <span class="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md uppercase tracking-wide">
-                  <i class="fa-solid fa-tag text-[8px] text-emerald-600"></i>
-                  <span>${escapeHtml(deptName)}</span>
-                </span>
+        <div class="flex flex-col gap-1.5 w-full text-left py-1.5 px-0.5">
+          <div class="flex items-center justify-between gap-1 pb-1.5 border-b border-slate-100">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <div class="w-6 h-6 rounded-lg bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0 text-xs">
+                <i class="fa-solid fa-warehouse text-[10px]"></i>
               </div>
-            ` : ''}
+              <span class="text-xs font-bold text-emerald-950 truncate">${escapeHtml(deptName || 'Tổ kho')}</span>
+            </div>
+            <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
+              ${members.length} nhân sự
+            </span>
           </div>
-          <div class="space-y-1.5 w-full">
+          <div class="space-y-1 w-full mt-0.5">
             ${members.map(m => {
               const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, m.name);
               return `
-                <div class="p-1.5 rounded-xl border transition-all overflow-hidden ${
+                <div class="flex items-center justify-between p-1.5 rounded-lg border transition-all ${
                   isCurrent 
-                    ? 'bg-emerald-100/90 border-emerald-400 shadow-xs ring-1 ring-emerald-400' 
-                    : (m.isLead ? 'bg-amber-50/90 border-amber-300 shadow-2xs' : 'bg-slate-50/90 border-slate-200 hover:border-slate-300')
+                    ? 'bg-emerald-50/90 border-emerald-300 font-bold' 
+                    : (m.isLead ? 'bg-amber-50/80 border-amber-200' : 'bg-slate-50/80 border-slate-100 hover:border-slate-200')
                 }">
-                  <div class="flex items-start gap-1.5 w-full overflow-hidden">
-                    <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 mt-0.5 ${
-                      m.isLead ? 'bg-amber-500 text-white shadow-2xs' : (isCurrent ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600')
+                  <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                    <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
+                      m.isLead ? 'bg-amber-500 text-white' : (isCurrent ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600')
                     }">
                       ${m.index}
                     </span>
-                    <span class="text-[11px] font-bold ${isCurrent ? 'text-emerald-950 font-black' : (m.isLead ? 'text-amber-950 font-black' : 'text-slate-800')} leading-snug break-words flex-1">
-                      ${escapeHtml(m.name)}${isCurrent ? '<span class="text-[9px] text-emerald-700 font-black ml-0.5">(Tôi)</span>' : ''}
+                    <span class="text-[11px] ${isCurrent ? 'text-emerald-950 font-bold' : (m.isLead ? 'text-amber-950 font-bold' : 'text-slate-700 font-medium')} truncate">
+                      ${escapeHtml(m.name)}${isCurrent ? '<span class="text-[9px] text-emerald-700 font-bold ml-0.5">(Tôi)</span>' : ''}
                     </span>
                   </div>
                   ${m.role ? `
-                    <div class="pl-5.5 mt-0.5">
-                      <span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tight ${
-                        m.isLead 
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs' 
-                          : 'bg-teal-50 text-teal-800 border border-teal-200'
-                      }">
-                        ${escapeHtml(m.role)}
-                      </span>
-                    </div>
+                    <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1 ${
+                      m.isLead ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-white text-slate-600 border border-slate-200'
+                    }">
+                      ${escapeHtml(m.role)}
+                    </span>
                   ` : ''}
                 </div>
               `;
@@ -4182,8 +4300,9 @@
 
         populateDepartmentSelect();
         populatePeriodDropdown(availablePeriods);
-
-        preloadMatrixDataInBackground();
+        if (currentUser) {
+          preloadMatrixDataInBackground();
+        }
 
         const cached = localStorage.getItem('ops_portal_session_final_v48');
         if (cached) {
@@ -4430,17 +4549,17 @@
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
         html += `
-          <div onclick="selectDepartment('${escapeHtml(d)}')" data-dept-name="${escapeHtml(d)}" class="dept-picker-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2.5 min-w-0">
+          <div onclick="selectDepartment('${escapeHtml(d)}')" data-dept-name="${escapeHtml(d)}" class="dept-picker-item group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
               <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                 <i class="${s.icon}"></i>
               </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
               ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
             </div>
           </div>
@@ -4830,17 +4949,17 @@
       // 1. Tùy chọn "Tất cả ban DVKH"
       const isAllSelected = (!currentVal || currentVal === 'TẤT CẢ');
       html += `
-        <div onclick="selectDashboardDepartment('TẤT CẢ')" class="dashboard-dept-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isAllSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-600 mb-1">
-          <div class="flex items-center gap-2 min-w-0">
-            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+        <div onclick="selectDashboardDepartment('TẤT CẢ')" class="dashboard-dept-item group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isAllSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-emerald-600 mb-1.5">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
               <i class="fa-solid fa-users"></i>
             </div>
-            <div class="min-w-0">
-              <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">Tất cả ban DVKH</span>
+            <div class="min-w-0 flex-1">
+              <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">Tất cả ban DVKH</span>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 shrink-0 ml-2">
-            <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Toàn ban</span>
+          <div class="flex items-center gap-1.5 shrink-0 ml-1">
+            <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300">Toàn ban</span>
             ${isAllSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
           </div>
         </div>
@@ -4850,17 +4969,17 @@
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
         html += `
-          <div onclick="selectDashboardDepartment('${escapeHtml(d)}')" class="dashboard-dept-item group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+          <div onclick="selectDashboardDepartment('${escapeHtml(d)}')" class="dashboard-dept-item group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+              <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                 <i class="${s.icon}"></i>
               </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
               ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
             </div>
           </div>
@@ -4874,14 +4993,20 @@
       const textEl = document.getElementById('filterDeptPickerText');
       const iconBox = document.getElementById('filterDeptPickerIconBox');
       if (!deptName || deptName === "TẤT CẢ") {
-        if (textEl) textEl.innerText = "Tất cả ban DVKH";
+        if (textEl) {
+          textEl.innerText = "Tất cả ban DVKH";
+          textEl.title = "Tất cả ban DVKH";
+        }
         if (iconBox) {
           iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
           iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
         }
       } else {
         const s = getDeptStyle(deptName);
-        if (textEl) textEl.innerText = deptName;
+        if (textEl) {
+          textEl.innerText = deptName;
+          textEl.title = deptName;
+        }
         if (iconBox) {
           iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
           iconBox.innerHTML = `<i class="${s.icon}"></i>`;
@@ -5052,6 +5177,12 @@
       if (!select || !periods) return;
       select.innerHTML = '';
 
+      if (!currentSelectedMonth || !currentSelectedYear) {
+        const now = new Date();
+        currentSelectedMonth = now.getMonth() + 1;
+        currentSelectedYear = now.getFullYear();
+      }
+
       periods.forEach(p => {
         const opt = document.createElement('option');
         opt.value = `${p.month}_${p.year}`;
@@ -5069,7 +5200,43 @@
         select.appendChild(opt);
       });
 
+      if (select.selectedIndex === -1 && select.options.length > 0) {
+        select.selectedIndex = 0;
+      }
+
       updatePeriodLockUI(currentPeriodLocked);
+    }
+
+    /**
+     * BẢO ĐẢM DANH SÁCH KỲ BÁO CÁO LUÔN ĐƯỢC HIỂN THỊ RÕ RÀNG VÀ CHÍNH XÁC
+     */
+    function ensurePeriodDropdownPopulated() {
+      const select = document.getElementById('reportPeriodSelect');
+      if (!select) return;
+      if (select.options.length > 0) return;
+
+      if (globalInitData && globalInitData.availablePeriods && globalInitData.availablePeriods.length > 0) {
+        populatePeriodDropdown(globalInitData.availablePeriods);
+        return;
+      }
+
+      // Tự động sinh danh sách 12 kỳ báo cáo (gồm tháng hiện tại và 11 tháng trước)
+      const periods = [];
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(curY, curM - 1 - i, 1);
+        const m = d.getMonth() + 1;
+        const y = d.getFullYear();
+        periods.push({
+          month: m,
+          year: y,
+          label: i === 0 ? `Tháng ${m < 10 ? '0' + m : m} / ${y} (Hiện tại)` : `Tháng ${m < 10 ? '0' + m : m} / ${y}`,
+          isLocked: i > 1
+        });
+      }
+      populatePeriodDropdown(periods);
     }
 
     /**
@@ -5923,31 +6090,73 @@
         return;
       }
 
-      // CHẠY TIẾN TRÌNH ÊM ÁI TRỰC TIẾP TRÊN NÚT (15% -> 80%)
-      autoSimulateLoginButton(15, 80, "Đang xác thực", 20);
+      // CHẠY TIẾN TRÌNH ÊM ÁI TRỰC TIẾP TRÊN NÚT
+      autoSimulateLoginButton(15, 65, "Đang xác thực", 15);
 
       try {
-        const { data: users, error } = await supabase
-          .from('users')
-          .select('*, departments(id, name)')
-          .eq('username', username)
-          .limit(1);
+        let user = null;
 
-        if (error) throw error;
-        if (!users || users.length === 0) {
-          resetLoginButton();
-          showLoginErrorGeneral("Tài khoản không tồn tại", `Tên đăng nhập "${escapeHtml(username)}" không tồn tại trên hệ thống!`);
-          return;
+        // BƯỚC 1: FAST-PATH ZERO-LATENCY (TÌM KIẾM TRONG BỘ NHỚ RAM ĐÃ TẢI SẴN)
+        // Khi người dùng chọn từ dropdown hoặc danh sách đã tải, thông tin user đã có sẵn 100% trong RAM.
+        // Xác thực ngay tại chỗ không phụ thuộc vào độ trễ mạng hoặc máy chủ Supabase bận giờ cao điểm!
+        if (globalInitData && globalInitData.allUsers && globalInitData.allUsers.length > 0) {
+          const uFound = globalInitData.allUsers.find(u => (u.username || '').toLowerCase() === username.toLowerCase());
+          if (uFound) {
+            let deptName = "Chưa phân bổ";
+            if (globalInitData.departments) {
+              const dObj = globalInitData.departments.find(d => d.id === uFound.department_id);
+              if (dObj) deptName = dObj.name;
+            }
+            if (deptName === "Chưa phân bổ" && globalInitData.deptMap) {
+              for (const dk of Object.keys(globalInitData.deptMap)) {
+                if ((globalInitData.deptMap[dk] || []).some(x => x.username === uFound.username)) {
+                  deptName = dk;
+                  break;
+                }
+              }
+            }
+            user = {
+              id: uFound.id,
+              username: uFound.username,
+              full_name: uFound.full_name || uFound.fullName,
+              role: uFound.role,
+              status: uFound.status,
+              department_id: uFound.department_id,
+              password_hash: uFound.password_hash,
+              departments: { id: uFound.department_id, name: deptName }
+            };
+          }
         }
 
-        const user = users[0];
+        // BƯỚC 2: NẾU CHƯA CÓ TRONG RAM (User mới tinh nhập từ tab Username), TRUY VẤN SUPABASE VỚI TIMEOUT BẢO VỆ 4.5S
+        if (!user) {
+          const fetchPromise = supabase
+            .from('users')
+            .select('*, departments(id, name)')
+            .eq('username', username)
+            .limit(1);
+
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Máy chủ phản hồi chậm do quá tải mạng. Vui lòng bấm thử lại hoặc chọn đăng nhập [Theo Bộ phận]!")), 4500)
+          );
+
+          const { data: users, error } = await Promise.race([fetchPromise, timeoutPromise]);
+          if (error) throw error;
+          if (!users || users.length === 0) {
+            resetLoginButton();
+            showLoginErrorGeneral("Tài khoản không tồn tại", `Tên đăng nhập "${escapeHtml(username)}" không tồn tại trên hệ thống!`);
+            return;
+          }
+          user = users[0];
+        }
+
         if (user.status === 'Khóa') {
           resetLoginButton();
           showLoginErrorGeneral("Tài khoản đã bị khóa", "Tài khoản này đã bị Quản trị viên vô hiệu hóa. Vui lòng liên hệ phòng CNTT hoặc Ban DVKH!");
           return;
         }
 
-        // 2. XÁC THỰC MẬT KHẨU BẢO MẬT DOANH NGHIỆP (TƯƠNG THÍCH MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
+        // 3. XÁC THỰC MẬT KHẨU BẢO MẬT DOANH NGHIỆP (TƯƠNG THÍCH MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
         const isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
         if (!isPasswordValid) {
           const failedCount = recordFailedLoginAttempt(username);
@@ -5980,8 +6189,8 @@
           localStorage.removeItem('ops_portal_remembered_auth_v49');
         }
 
-        // Hoàn tất tiến trình 80% -> 100% êm ái trên nút và chuyển cảnh mượt mà vào Dashboard
-        autoSimulateLoginButton(80, 100, "Xác thực thành công", 12, () => {
+        // Hoàn tất tiến trình 65% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
+        autoSimulateLoginButton(65, 100, "Xác thực thành công", 8, () => {
           currentUser = Object.freeze({
             id: user.id,
             username: user.username,
@@ -5995,11 +6204,11 @@
           setTimeout(() => {
             initMainDashboard();
             resetLoginButton();
-          }, 180);
+          }, 120);
         });
       } catch (err) {
         resetLoginButton();
-        showLoginErrorGeneral("Lỗi kết nối máy chủ", "Lỗi kết nối máy chủ: " + (err.message || err));
+        showLoginErrorGeneral("Lỗi kết nối", err.message || err);
       }
     }
 
@@ -6041,14 +6250,21 @@
         else mobileReportBtn.classList.remove('hidden');
       }
 
-      if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
+      if (isBoardOfDirectors(currentUser)) {
+        isDirectorDashboardInitial = true;
+        currentSelectedDept = "TẤT CẢ";
+        currentSelectedStaff = "TẤT CẢ";
+      } else if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
+        isDirectorDashboardInitial = false;
         currentSelectedDept = "TẤT CẢ";
         currentSelectedStaff = "TẤT CẢ";
       } else {
+        isDirectorDashboardInitial = false;
         currentSelectedDept = currentUser.department;
         currentSelectedStaff = currentUser.fullName;
       }
 
+      ensurePeriodDropdownPopulated();
       setupRoleControls();
       preloadAdminDataInBackground();
       setupDailyReportsRealtimeListener();
@@ -6275,6 +6491,9 @@
       if (!selected) return;
       currentSelectedDept = selected;
 
+      isDirectorDashboardInitial = false; // Khi chọn thông tin bộ phận, thoát trạng thái tổng quan để hiện ma trận
+      updateDirectorOverviewButtonUI();
+
       updateDashboardDeptPickerUI(currentSelectedDept);
 
       const isLead = isDirectorOrAdmin(currentUser.role, currentUser.username);
@@ -6302,6 +6521,9 @@
       const selected = document.getElementById('adminStaffSelect').value;
       if (!selected) return;
       currentSelectedStaff = selected;
+
+      isDirectorDashboardInitial = false; // Khi chọn thông tin nhân sự, hiện ma trận
+      updateDirectorOverviewButtonUI();
 
       updateDashboardStaffPickerUI(currentSelectedStaff);
 
@@ -6335,6 +6557,9 @@
         return;
       }
 
+      isDirectorDashboardInitial = false; // Khi tìm kiếm nhân sự, hiện ma trận
+      updateDirectorOverviewButtonUI();
+
       currentSelectedStaff = "SEARCH_" + q;
       applyClientFilterAndRender();
     }
@@ -6352,6 +6577,9 @@
     function selectViewAllCompanyStaff() {
       currentSelectedDept = "TẤT CẢ";
       currentSelectedStaff = "TẤT CẢ";
+      isDirectorDashboardInitial = false; // Mở toàn bộ ma trận
+      updateDirectorOverviewButtonUI();
+
       const deptSelect = document.getElementById('adminDeptSelect');
       if (deptSelect) deptSelect.value = "TẤT CẢ";
       const staffSelect = document.getElementById('adminStaffSelect');
@@ -6385,6 +6613,27 @@
         return;
       }
 
+      // ĐỐI VỚI BAN GIÁM ĐỐC KHI ĐĂNG NHẬP BAN ĐẦU:
+      // Bảng ma trận công việc ở trạng thái trống/chờ để đẩy các thông tin "Theo dõi & Thi đua", "Đôn đốc bám sát", "Nhịp độ" lên trên
+      if (isBoardOfDirectors(currentUser) && isDirectorDashboardInitial) {
+        const titleEl = document.getElementById('displayViewingStaffName');
+        if (titleEl) {
+          titleEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-emerald-800 font-black"><i class="fa-solid fa-chart-line text-emerald-600"></i>Tổng quan điều hành ban DVKH</span>`;
+        }
+        const resetBtn = document.getElementById('btnResetFollowUpFilter');
+        if (resetBtn) resetBtn.classList.add('hidden');
+        const dotEl = document.getElementById('staffTitleDot');
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+        document.querySelectorAll('.followup-item-card').forEach(el => {
+          el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+        });
+
+        renderMatrixDirectorEmptyState(fullPeriodMatrixCache);
+        renderAnalyticsSection(fullPeriodMatrixCache);
+        updateDirectorOverviewButtonUI();
+        return;
+      }
+
       let titleName = "";
       if (currentSelectedStaff && currentSelectedStaff.startsWith("SEARCH_")) {
         const rawSearch = document.getElementById('adminStaffSearchInput')?.value || '';
@@ -6399,7 +6648,13 @@
       document.getElementById('displayViewingStaffName').innerText = titleName;
 
       const resetBtn = document.getElementById('btnResetFollowUpFilter');
-      if (resetBtn) resetBtn.classList.add('hidden');
+      if (resetBtn) {
+        if (isBoardOfDirectors(currentUser) && !isDirectorDashboardInitial) {
+          resetBtn.classList.remove('hidden');
+        } else {
+          resetBtn.classList.add('hidden');
+        }
+      }
       const dotEl = document.getElementById('staffTitleDot');
       if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
       document.querySelectorAll('.followup-item-card').forEach(el => {
@@ -6446,13 +6701,125 @@
 
       currentMatrixData = filteredViewData;
 
-      const loading = document.getElementById('loadingTasksBox');
-      if (loading) loading.classList.add('hidden');
+      // Khôi phục hiển thị khối bảng ma trận (#matrixCard) khi người dùng chọn lọc dữ liệu
+      const matrixCard = document.getElementById('matrixCard');
+      if (matrixCard) matrixCard.classList.remove('hidden');
       const tableContainer = document.getElementById('tableScrollContainer');
       if (tableContainer) tableContainer.classList.remove('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.remove('hidden');
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.remove('hidden');
+
+      const loading = document.getElementById('loadingTasksBox');
+      if (loading) loading.classList.add('hidden');
 
       renderMatrixTable(filteredViewData);
       renderAnalyticsSection(filteredViewData);
+      updateDirectorOverviewButtonUI();
+    }
+
+    /**
+     * BẢNG MA TRẬN TRẠNG THÁI TRỐNG DÀNH CHO BAN GIÁM ĐỐC:
+     * Ẩn hoàn toàn bảng ma trận, không hiển thị bất kỳ thông tin dư thừa nào,
+     * đẩy toàn bộ 3 bảng Đôn đốc, Thi đua và Nhịp độ phát sinh lên sát ngay dưới dòng kỳ báo cáo
+     */
+    function renderMatrixDirectorEmptyState(data) {
+      // 1. ẨN HOÀN TOÀN KHỐI BẢNG MA TRẬN (#matrixCard) ĐỂ KHÔNG CHIẾM DIỆN TÍCH VÀ KHÔNG DƯ THỪA THÔNG TIN
+      const matrixCard = document.getElementById('matrixCard');
+      if (matrixCard) matrixCard.classList.add('hidden');
+
+      // 2. ẨN KHUNG BẢNG MA TRẬN VÀ THANH CHÚ THÍCH
+      const tableContainer = document.getElementById('tableScrollContainer');
+      if (tableContainer) tableContainer.classList.add('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.add('hidden');
+
+      // 3. Ẩn cụm nút điều hướng ngày khi ở trạng thái tổng quan
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.add('hidden');
+
+      // 4. Ẩn box loading
+      const loading = document.getElementById('loadingTasksBox');
+      if (loading) loading.classList.add('hidden');
+
+      // 5. ĐẶT LẠI TIÊU ĐỀ ĐỐI TƯỢNG VỀ "Tổng quan điều hành ban DVKH" (LOẠI BỎ TÊN NHÂN SỰ CŨ VỪA CHỌN)
+      const titleEl = document.getElementById('displayViewingStaffName');
+      if (titleEl) {
+        titleEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-emerald-800 font-black"><i class="fa-solid fa-chart-line text-emerald-600"></i>Tổng quan điều hành ban DVKH</span>`;
+      }
+      const dotEl = document.getElementById('staffTitleDot');
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+      const resetBtn = document.getElementById('btnResetFollowUpFilter');
+      if (resetBtn) resetBtn.classList.add('hidden');
+
+      // 6. Đảm bảo 2 bảng thi đua, đôn đốc và bảng nhịp độ được hiển thị đẩy lên sát ngay dưới dòng kỳ báo cáo
+      const analyticsSection = document.getElementById('analyticsSection');
+      if (analyticsSection) analyticsSection.classList.remove('hidden');
+
+      updateDirectorOverviewButtonUI();
+      updateDateNavButtons();
+    }
+
+    /**
+     * BAN GIÁM ĐỐC MỞ TOÀN BỘ MA TRẬN
+     */
+    function loadDirectorFullMatrix() {
+      isDirectorDashboardInitial = false;
+      currentSelectedDept = "TẤT CẢ";
+      currentSelectedStaff = "TẤT CẢ";
+      updateDashboardDeptPickerUI("TẤT CẢ");
+      populateStaffDropdown("TẤT CẢ");
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      applyClientFilterAndRender();
+      updateDirectorOverviewButtonUI();
+      scrollToElement('mainPeriodFilterContainer');
+    }
+
+    /**
+     * BAN GIÁM ĐỐC QUAY LẠI TRẠNG THÁI TỔNG QUAN (THU GỌN MA TRẬN)
+     */
+    function returnToDirectorOverview() {
+      if (!isBoardOfDirectors(currentUser)) return;
+      isDirectorDashboardInitial = true;
+      currentSelectedDept = "TẤT CẢ";
+      currentSelectedStaff = "TẤT CẢ";
+      updateDashboardDeptPickerUI("TẤT CẢ");
+      populateStaffDropdown("TẤT CẢ");
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = '';
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      const resetBtn = document.getElementById('btnResetFollowUpFilter');
+      if (resetBtn) resetBtn.classList.add('hidden');
+
+      document.querySelectorAll('.followup-item-card').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+      });
+
+      renderMatrixDirectorEmptyState();
+      if (fullPeriodMatrixCache) {
+        currentRhythmSelectedTaskKey = 'ALL';
+        renderAnalyticsSection(fullPeriodMatrixCache);
+      }
+      scrollToElement('mainPeriodFilterContainer');
+      showToast("Đã thu gọn ma trận về tổng quan điều hành");
+    }
+
+    /**
+     * CẬP NHẬT HIỂN THỊ NÚT TỔNG QUAN BAN GIÁM ĐỐC
+     */
+    function updateDirectorOverviewButtonUI() {
+      const btn = document.getElementById('btnDirectorOverview');
+      if (!btn) return;
+      if (isBoardOfDirectors(currentUser) && !isDirectorDashboardInitial) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
     }
 
     function openRenameDeptModal() {
@@ -7088,7 +7455,9 @@
       const analyticsSection = document.getElementById('analyticsSection');
       const tableContainer = document.getElementById('tableScrollContainer');
 
-      if (tableContainer) tableContainer.classList.remove('hidden');
+      if (tableContainer && (!isBoardOfDirectors(currentUser) || !isDirectorDashboardInitial)) {
+        tableContainer.classList.remove('hidden');
+      }
       tbody.innerHTML = '';
       loading.classList.remove('hidden');
       analyticsSection.classList.add('hidden');
@@ -7200,9 +7569,9 @@
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2 sm:py-3 px-1.5 sm:px-2.5 text-left font-bold text-slate-900 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-left font-bold text-slate-900 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
-                  ${formatStaffNameHtml(grp.staffName, grp.department, grp.isPersonalInShared, grp.personalRole)}
+                  ${formatStaffNameHtml(grp.staffName, grp.department, grp.isPersonalInShared, grp.personalRole, totalStaffRows)}
                 </div>
               </td>
             `;
@@ -8620,6 +8989,28 @@
 
       if (!dayCols || dayCols.length === 0) return;
 
+      // NẾU dailyMap CHƯA ĐƯỢC TÍNH HOẶC RỖNG: TỰ ĐỘNG TÍNH THEO DATA STAFFGROUPS HIỆN TẠI
+      if (!dailyMap || Object.keys(dailyMap).length === 0) {
+        dailyMap = {};
+        dayCols.forEach(dc => { dailyMap[dc.label] = 0; });
+        if (data && data.staffGroups) {
+          data.staffGroups.forEach(grp => {
+            (grp.tasks || []).forEach(t => {
+              dayCols.forEach(dc => {
+                const raw = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
+                if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+                  const strVal = String(raw).trim();
+                  if (strVal !== '-' && strVal !== '·' && strVal !== '0') {
+                    dailyMap[dc.label] = (dailyMap[dc.label] || 0) + 1;
+                  }
+                }
+              });
+            });
+          });
+        }
+        cachedDailyActiveTasksMap = dailyMap;
+      }
+
       if (lastDayLabel && dayCols.length > 0) {
         lastDayLabel.innerText = `Ngày ${dayCols[dayCols.length - 1].label}`;
       }
@@ -8649,9 +9040,12 @@
       if (taskSelect) {
         const prevSelected = currentRhythmSelectedTaskKey;
         const isExec = isCurrentUserExecutiveOrManager();
-        const allOptionLabel = (!isExec && currentUser)
+        let allOptionLabel = (!isExec && currentUser)
           ? `📊 [Tổng hợp] ${allTasks.length} đầu việc của bạn trong kỳ`
           : `📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ`;
+        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
+          allOptionLabel = `📊 [Tổng hợp] ${allTasks.length} việc của ${data.queryStaff} (${data.queryDept || ''})`;
+        }
         taskSelect.innerHTML = `<option value="ALL">${allOptionLabel}</option>`;
         
         allTasks.forEach(t => {
@@ -8882,17 +9276,38 @@
       }
 
       if (titleLabel) {
-        const isExec = isCurrentUserExecutiveOrManager();
-        if (!isExec && currentUser) {
+        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
           titleLabel.innerHTML = `
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-            <span class="font-black text-slate-900">Tổng hợp ${allTasks.length} đầu việc của ${escapeHtml(currentUser.fullName)}</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 animate-pulse"></span>
+            <span class="font-black text-slate-900">Nhịp độ phát sinh: <span class="text-amber-800">${escapeHtml(data.queryStaff)}</span> • <span class="text-slate-500 font-normal">${escapeHtml(data.queryDept || '')}</span> (${allTasks.length} đầu việc)</span>
           `;
         } else {
-          titleLabel.innerHTML = `
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-            <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
-          `;
+          const isExec = isCurrentUserExecutiveOrManager();
+          if (!isExec && currentUser) {
+            titleLabel.innerHTML = `
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+              <span class="font-black text-slate-900">Tổng hợp ${allTasks.length} đầu việc của ${escapeHtml(currentUser.fullName)}</span>
+            `;
+          } else {
+            titleLabel.innerHTML = `
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+              <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
+            `;
+          }
+        }
+      }
+
+      // Cập nhật huy hiệu lọc trên thanh tiêu đề bảng Nhịp độ
+      const filterBadge = document.getElementById('rhythmFilterSubjectBadge');
+      const filterText = document.getElementById('rhythmFilterSubjectText');
+      if (filterBadge && filterText) {
+        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
+          filterText.innerHTML = `<i class="fa-solid fa-user text-amber-700"></i> ${escapeHtml(data.queryStaff)} • ${escapeHtml(data.queryDept || '')}`;
+          filterBadge.classList.remove('hidden');
+          filterBadge.classList.add('inline-flex');
+        } else {
+          filterBadge.classList.add('hidden');
+          filterBadge.classList.remove('inline-flex');
         }
       }
 
@@ -9351,6 +9766,8 @@
      */
     function locateStaffOrGroupInMatrix(displayName, deptName, isGroup, evt) {
       if (!displayName) return;
+      isDirectorDashboardInitial = false; // Khi click vào nhân sự từ bảng Đôn đốc/Thi đua, mở ma trận ngay lập tức
+      updateDirectorOverviewButtonUI();
       const isGrp = (isGroup === true || isGroup === 'true') || isSharedGroupDeptClient(deptName) || isSharedGroupDeptClient(displayName);
 
       const allGroups = (fullPeriodMatrixCache && fullPeriodMatrixCache.staffGroups && fullPeriodMatrixCache.staffGroups.length > 0)
@@ -9386,8 +9803,16 @@
       } else {
         // 2. Nhân sự cá nhân: Lọc đúng nhân sự này
         matchedGroups = allGroups.filter(grp => {
+          // Việc cá nhân trong nhóm gộp: kiểm tra khớp tên trực tiếp
+          if (grp.isPersonalInShared) {
+            return isStaffMatchedInCell(displayName, grp.staffName);
+          }
+
           const grpIsShared = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
-          if (grpIsShared) return false;
+          if (grpIsShared) {
+            // Nếu người này là người phụ trách/đại diện trong nhóm gộp
+            return isStaffMatchedInCell(displayName, grp.staffName);
+          }
 
           const staffMatch = isStaffMatchedInCell(displayName, grp.staffName) ||
             (removeAccents(grp.staffName || '').toLowerCase().includes(removeAccents(displayName || '').toLowerCase())) ||
@@ -9403,8 +9828,9 @@
         // Nếu chưa thấy (ví dụ nhân sự đổi phòng), tìm chỉ theo tên
         if (matchedGroups.length === 0) {
           matchedGroups = allGroups.filter(grp => {
-            const grpIsShared = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
-            if (grpIsShared) return false;
+            if (grp.isPersonalInShared) {
+              return isStaffMatchedInCell(displayName, grp.staffName);
+            }
             return isStaffMatchedInCell(displayName, grp.staffName) ||
               (removeAccents(grp.staffName || '').toLowerCase().includes(removeAccents(displayName || '').toLowerCase()));
           });
@@ -9422,8 +9848,37 @@
       });
       currentMatrixData = filteredViewData;
 
-      // Render lại bảng ma trận với đúng các công việc của người/nhóm được chọn
+      // Khôi phục hiển thị khối bảng ma trận (#matrixCard) khi click từ bảng đôn đốc/thi đua
+      const matrixCard = document.getElementById('matrixCard');
+      if (matrixCard) matrixCard.classList.remove('hidden');
+      const tableContainer = document.getElementById('tableScrollContainer');
+      if (tableContainer) tableContainer.classList.remove('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.remove('hidden');
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.remove('hidden');
+
+      // 1. NHẢY ĐỒNG THỜI BẢNG MA TRẬN VỚI CÁC ĐẦU VIỆC TƯƠNG ỨNG CỦA ĐỐI TƯỢNG ĐƯỢC CHỌN
       renderMatrixTable(filteredViewData);
+
+      // 2. NHẢY ĐỒNG THỜI CẢ BẢNG NHỊP ĐỘ PHÁT SINH CỦA NGƯỜI VÀ BỘ PHẬN ĐƯỢC CHỌN
+      currentRhythmSelectedTaskKey = 'ALL';
+      renderActivityRhythmChart(filteredViewData);
+
+      // 3. ĐỒNG BỘ THANH ĐIỀU HƯỚNG BỘ LỌC (BỘ PHẬN & NHÂN SỰ)
+      if (deptName) {
+        currentSelectedDept = deptName;
+        const deptSelect = document.getElementById('adminDeptSelect');
+        if (deptSelect) deptSelect.value = deptName;
+        updateDashboardDeptPickerUI(deptName);
+        populateStaffDropdown(deptName);
+      }
+      if (displayName) {
+        currentSelectedStaff = displayName;
+        const staffSelect = document.getElementById('adminStaffSelect');
+        if (staffSelect) staffSelect.value = displayName;
+        updateDashboardStaffPickerUI(displayName);
+      }
 
       // Cập nhật giao diện tiêu đề đang xem & hiện nút [Xem lại tất cả]
       const titleEl = document.getElementById('displayViewingStaffName');
@@ -9448,24 +9903,33 @@
         evt.currentTarget.classList.add('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
       }
 
-      // Cuộn mượt lên bảng ma trận công việc
-      scrollToElement('matrixCard');
+      // NHẢY THÔNG TIN HIỂN THỊ TỪ DÒNG KỲ BÁO CÁO TRỞ XUỐNG
+      scrollToElement('mainPeriodFilterContainer');
       const scroller = document.getElementById('tableScrollContainer');
       if (scroller) {
         scroller.scrollTop = 0;
       }
 
-      // Hiệu ứng highlight nhẹ nhàng các dòng công việc vừa render
+      // Hiệu ứng highlight phát sáng nhẹ nhàng các dòng công việc vừa render trên ma trận
       setTimeout(() => {
         const rows = document.querySelectorAll('#sheetTableBody tr');
         rows.forEach(r => {
-          r.classList.add('bg-amber-100/70', 'transition-colors', 'duration-500');
-          setTimeout(() => r.classList.remove('bg-amber-100/70'), 1500);
+          r.classList.add('bg-amber-100/80', 'transition-colors', 'duration-500');
+          setTimeout(() => r.classList.remove('bg-amber-100/80'), 2000);
         });
       }, 300);
 
+      // Đồng thời kích hoạt hiệu ứng nhẹ cho bảng nhịp độ phát sinh
+      const rhythmCard = document.getElementById('activityRhythmCard');
+      if (rhythmCard) {
+        rhythmCard.classList.add('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+        setTimeout(() => {
+          rhythmCard.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+        }, 2000);
+      }
+
       if (matchedGroups.length > 0) {
-        showToast(`Đang hiển thị ${totalTasksCount} việc của: ${displayName}`);
+        showToast(`Đã mở ma trận & nhịp độ ${totalTasksCount} việc của: ${displayName}`);
       } else {
         showToast(`Không tìm thấy đầu việc phân công cho: ${displayName}`, true);
       }
@@ -9485,12 +9949,20 @@
         el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
       });
 
+      currentRhythmSelectedTaskKey = 'ALL';
+
+      // Nếu là Ban Giám Đốc, thu gọn ma trận về đúng trạng thái tổng quan điều hành
+      if (isBoardOfDirectors(currentUser)) {
+        returnToDirectorOverview();
+        return;
+      }
+
       if (fullPeriodMatrixCache) {
         applyClientFilterAndRender();
       } else {
         loadMatrixData(false);
       }
-      showToast("Đã hiển thị lại toàn bộ nội dung công việc");
+      showToast("Đã hiển thị lại nhịp độ & công việc toàn ban");
     }
 
     function filterDashboardFromLeaderboard(deptName) {
@@ -11520,17 +11992,17 @@
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
         html += `
-          <div onclick="selectModalAssignDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+          <div onclick="selectModalAssignDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+              <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                 <i class="${s.icon}"></i>
               </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
               ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
             </div>
           </div>
@@ -12668,17 +13140,17 @@
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
         html += `
-          <div onclick="selectUserFilterDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+          <div onclick="selectUserFilterDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+              <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                 <i class="${s.icon}"></i>
               </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
               ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
             </div>
           </div>
@@ -13467,17 +13939,17 @@
         const s = getDeptStyle(d);
         const isSelected = (d === currentVal);
         html += `
-          <div onclick="selectTransferDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+          <div onclick="selectTransferDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+              <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                 <i class="${s.icon}"></i>
               </div>
-              <div class="min-w-0">
-                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
               ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
             </div>
           </div>
@@ -14212,17 +14684,17 @@
           const s = getDeptStyle(d);
           const isSelected = (d === currentVal);
           html += `
-            <div onclick="selectAddDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="w-6 h-6 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+            <div onclick="selectAddDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+              <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
                   <i class="${s.icon}"></i>
                 </div>
-                <div class="min-w-0">
-                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(d)}</span>
+                <div class="min-w-0 flex-1">
+                  <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              <div class="flex items-center gap-1.5 shrink-0 ml-1">
+                <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
                 ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
               </div>
             </div>
