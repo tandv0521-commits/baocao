@@ -221,9 +221,9 @@
       }
       .col-fixed-name { 
         position: static !important; 
-        width: 125px !important; 
-        min-width: 125px !important; 
-        max-width: 125px !important; 
+        width: 140px !important; 
+        min-width: 140px !important; 
+        max-width: 140px !important; 
         box-shadow: none !important; 
         background-color: #ffffff !important;
       }
@@ -3755,27 +3755,35 @@
         const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, nameStr);
         const initial = escapeHtml(nameStr.charAt(0));
         return `
-          <div class="flex flex-col justify-center h-full py-1.5 px-1 text-left">
-            <div class="flex items-center gap-2.5">
-              <div class="relative shrink-0">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 text-white font-bold text-xs flex items-center justify-center shadow-xs border-2 border-white">
+          <div class="flex flex-col justify-center h-full py-1.5 px-0.5 sm:px-1 text-left w-full">
+            <div class="flex items-start gap-1.5 sm:gap-2">
+              <div class="relative shrink-0 mt-0.5">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center shadow-xs border-2 border-white ring-1 ring-indigo-200/60">
                   ${initial}
                 </div>
-                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-500 border-2 border-white rounded-full"></span>' : ''}
+                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-indigo-500 border-2 border-white rounded-full"></span>' : ''}
               </div>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-xs font-bold text-slate-800 leading-snug break-words">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <span class="text-[11.5px] sm:text-xs font-bold text-slate-900 leading-tight break-words">
                     ${escapeHtml(nameStr)}
                   </span>
-                  ${isCurrent ? '<span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.2 rounded-full">Tôi</span>' : ''}
+                  ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-300 shrink-0">Tôi</span>' : ''}
                 </div>
                 <div class="mt-1">
-                  <span class="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full">
-                    <i class="fa-solid fa-user-tag text-[8px] text-indigo-500"></i>
-                    <span>Việc cá nhân</span>
+                  <span class="inline-flex items-center gap-1 text-[9px] sm:text-[9.5px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md truncate max-w-full">
+                    <i class="fa-solid fa-user-tag text-[8px] text-indigo-500 shrink-0"></i>
+                    <span class="truncate block max-w-[82px] sm:max-w-none">Việc cá nhân</span>
                   </span>
                 </div>
+                ${deptName ? `
+                  <div class="mt-0.5">
+                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 truncate max-w-full" title="${escapeHtml(deptName)}">
+                      <i class="fa-solid fa-warehouse text-[7.5px] text-indigo-400 shrink-0"></i>
+                      <span class="truncate block max-w-[82px] sm:max-w-none">${escapeHtml(deptName)}</span>
+                    </span>
+                  </div>
+                ` : ''}
               </div>
             </div>
           </div>
@@ -3788,33 +3796,39 @@
         const single = members[0] || { name: nameStr, role: '' };
         const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, single.name);
         const initial = escapeHtml(single.name.charAt(0));
+        const displayDept = deptName || 'Chưa phân bộ phận';
+
         return `
-          <div class="flex flex-col justify-center h-full py-1.5 px-1 text-left">
-            <div class="flex items-start gap-2.5">
-              <div class="relative shrink-0">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-700 to-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-xs border-2 border-white">
+          <div class="flex flex-col justify-center h-full py-1.5 px-0.5 sm:px-1 text-left w-full">
+            <div class="flex items-start gap-1.5 sm:gap-2">
+              <!-- Avatar tròn nhỏ gọn, thanh lịch, có viền bóng bẩy -->
+              <div class="relative shrink-0 mt-0.5">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-700 to-teal-600 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center shadow-xs border-2 border-white ring-1 ring-emerald-200/60">
                   ${initial}
                 </div>
-                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>' : ''}
+                ${isCurrent ? '<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>' : ''}
               </div>
+
+              <!-- Thông tin Họ tên, Huy hiệu Tôi, Thẻ Bộ phận -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-xs font-bold text-slate-800 leading-snug break-words">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <span class="text-[11.5px] sm:text-xs font-bold text-slate-900 leading-tight break-words">
                     ${escapeHtml(single.name)}
                   </span>
-                  ${isCurrent ? '<span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded-full">Tôi</span>' : ''}
+                  ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">Tôi</span>' : ''}
                 </div>
 
-                <div class="mt-1 flex items-center gap-1 text-slate-500">
-                  <i class="fa-regular fa-building text-[9px] text-emerald-600/80 shrink-0"></i>
-                  <span class="text-[11px] font-medium leading-snug break-words text-slate-600" title="${escapeHtml(deptName || '')}">
-                    ${escapeHtml(deptName || 'Chưa phân bộ phận')}
-                  </span>
+                <!-- Thẻ Bộ Phận dạng Viên Thuốc (Badge Pill) Sang Trọng -->
+                <div class="mt-1">
+                  <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9.5px] sm:text-[10px] font-medium leading-tight max-w-full shadow-2xs" title="${escapeHtml(displayDept)}">
+                    <i class="fa-regular fa-building text-[8.5px] text-emerald-600 shrink-0"></i>
+                    <span class="truncate block max-w-[85px] sm:max-w-none text-slate-700">${escapeHtml(displayDept)}</span>
+                  </div>
                 </div>
 
                 ${single.role ? `
-                  <div class="mt-1.5">
-                    <span class="inline-flex items-center text-[9px] font-semibold text-teal-800 bg-teal-50 border border-teal-200/80 px-2 py-0.5 rounded-full">
+                  <div class="mt-1">
+                    <span class="inline-flex items-center text-[8.5px] sm:text-[9px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.2 rounded">
                       ${escapeHtml(single.role)}
                     </span>
                   </div>
@@ -3826,39 +3840,39 @@
       }
 
       return `
-        <div class="flex flex-col gap-1.5 w-full text-left py-1.5 px-0.5">
-          <div class="flex items-center justify-between gap-1 pb-1.5 border-b border-slate-100">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <div class="w-6 h-6 rounded-lg bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0 text-xs">
-                <i class="fa-solid fa-warehouse text-[10px]"></i>
+        <div class="flex flex-col gap-1.5 w-full text-left py-1 px-0.5">
+          <div class="flex items-center justify-between gap-1 pb-1 border-b border-slate-100">
+            <div class="flex items-center gap-1 min-w-0">
+              <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-emerald-100/90 text-emerald-800 flex items-center justify-center shrink-0 text-[10px]">
+                <i class="fa-solid fa-warehouse text-[9px]"></i>
               </div>
-              <span class="text-xs font-bold text-emerald-950 truncate">${escapeHtml(deptName || 'Tổ kho')}</span>
+              <span class="text-[11px] sm:text-xs font-bold text-emerald-950 truncate" title="${escapeHtml(deptName || 'Tổ kho')}">${escapeHtml(deptName || 'Tổ kho')}</span>
             </div>
-            <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
-              ${members.length} nhân sự
+            <span class="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded-full shrink-0">
+              ${members.length} NS
             </span>
           </div>
-          <div class="space-y-1 w-full mt-0.5">
+          <div class="space-y-0.5 w-full mt-0.5">
             ${members.map(m => {
               const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, m.name);
               return `
-                <div class="flex items-center justify-between p-1.5 rounded-lg border transition-all ${
+                <div class="flex items-center justify-between p-1 rounded-md border transition-all ${
                   isCurrent 
                     ? 'bg-emerald-50/90 border-emerald-300 font-bold' 
                     : (m.isLead ? 'bg-amber-50/80 border-amber-200' : 'bg-slate-50/80 border-slate-100 hover:border-slate-200')
                 }">
-                  <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
+                  <div class="flex items-center gap-1 min-w-0 flex-1">
+                    <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black shrink-0 ${
                       m.isLead ? 'bg-amber-500 text-white' : (isCurrent ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600')
                     }">
                       ${m.index}
                     </span>
-                    <span class="text-[11px] ${isCurrent ? 'text-emerald-950 font-bold' : (m.isLead ? 'text-amber-950 font-bold' : 'text-slate-700 font-medium')} truncate">
-                      ${escapeHtml(m.name)}${isCurrent ? '<span class="text-[9px] text-emerald-700 font-bold ml-0.5">(Tôi)</span>' : ''}
+                    <span class="text-[10px] sm:text-[11px] ${isCurrent ? 'text-emerald-950 font-bold' : (m.isLead ? 'text-amber-950 font-bold' : 'text-slate-700 font-medium')} truncate">
+                      ${escapeHtml(m.name)}${isCurrent ? '<span class="text-[8.5px] text-emerald-700 font-bold ml-0.5">(Tôi)</span>' : ''}
                     </span>
                   </div>
                   ${m.role ? `
-                    <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1 ${
+                    <span class="text-[8px] font-bold px-1 py-0.2 rounded shrink-0 ml-1 ${
                       m.isLead ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-white text-slate-600 border border-slate-200'
                     }">
                       ${escapeHtml(m.role)}
@@ -7611,7 +7625,7 @@
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2.5 sm:py-3.5 px-2.5 sm:px-3 text-left font-bold text-slate-900 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2 sm:py-3.5 px-1.5 sm:px-3 text-left font-bold text-slate-900 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
                   ${formatStaffNameHtml(grp.staffName, grp.department, grp.isPersonalInShared, grp.personalRole, totalStaffRows)}
                 </div>
