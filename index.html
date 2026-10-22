@@ -2222,31 +2222,68 @@
         </div>
       </div>
 
-      <!-- Đích đến: CHO AI - BỘ PHẬN NÀO -->
+      <!-- Đích đến: CHO AI - BỘ PHẬN NÀO: CUSTOM PICKER ĐỒNG BỘ THẺ ĐĂNG NHẬP -->
       <div class="space-y-3 pt-1">
-        <!-- 1. Bộ phận đích -->
-        <div>
+        <!-- Hidden native selects để giữ tương thích 100% với logic code -->
+        <select id="transferTargetDeptSelect" onchange="onTransferTargetDeptChange(this.value)" class="hidden"></select>
+        <select id="transferTargetStaffSelect" class="hidden"></select>
+
+        <!-- 1. BỘ PHẬN ĐÍCH: CUSTOM PICKER -->
+        <div class="relative" id="transferTargetDeptWrapper">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
             <span>1. Chuyển đến Bộ phận đích <span class="text-rose-500">*</span></span>
           </label>
-          <div class="relative">
-            <select id="transferTargetDeptSelect" onchange="onTransferTargetDeptChange(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs cursor-pointer">
-              <option value="">-- Chọn bộ phận đích --</option>
-            </select>
+          <button type="button" id="transferTargetDeptBtn" onclick="toggleTransferTargetDeptMenu(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-2xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span id="transferTargetDeptIconBox" class="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                <i class="fa-solid fa-layer-group"></i>
+              </span>
+              <span id="transferTargetDeptText" class="truncate font-bold text-slate-700">-- Chọn bộ phận đích --</span>
+            </div>
+            <i id="transferTargetDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
+          </button>
+
+          <!-- Dropdown Menu bộ phận đích -->
+          <div id="transferTargetDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-2 border-b border-slate-100 bg-slate-50/90">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" id="transferTargetDeptSearchInput" oninput="filterTransferTargetDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+              </div>
+            </div>
+            <div id="transferTargetDeptList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
           </div>
         </div>
 
-        <!-- 2. Nhân sự đích -->
-        <div>
+        <!-- 2. NHÂN SỰ ĐÍCH: CUSTOM PICKER -->
+        <div class="relative" id="transferTargetStaffWrapper">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
             <span>2. Chuyển đến Nhân sự / Đối tượng nhận việc <span class="text-rose-500">*</span></span>
           </label>
-          <div class="relative">
-            <select id="transferTargetStaffSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs cursor-pointer">
-              <option value="">-- Chọn nhân sự đích --</option>
-            </select>
+          <button type="button" id="transferTargetStaffBtn" onclick="toggleTransferTargetStaffMenu(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-2xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span id="transferTargetStaffAvatarBox" class="w-7 h-7 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs font-bold shadow-2xs">
+                <i class="fa-solid fa-user"></i>
+              </span>
+              <div class="min-w-0 flex flex-col leading-tight">
+                <span id="transferTargetStaffText" class="truncate font-bold text-slate-700">-- Hãy chọn bộ phận trước --</span>
+                <span id="transferTargetStaffSubText" class="truncate text-[10px] text-slate-400 font-medium hidden"></span>
+              </div>
+            </div>
+            <i id="transferTargetStaffChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
+          </button>
+
+          <!-- Dropdown Menu nhân sự đích -->
+          <div id="transferTargetStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-2 border-b border-slate-100 bg-slate-50/90" id="transferTargetStaffSearchBox">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" id="transferTargetStaffSearchInput" oninput="filterTransferTargetStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+              </div>
+            </div>
+            <div id="transferTargetStaffList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
           </div>
           <p class="text-[10.5px] text-slate-400 mt-1 italic" id="transferTargetHint">Đối với các tổ kho gộp, có thể gán làm việc chung của tổ hoặc việc cá nhân của từng thành viên.</p>
         </div>
@@ -5191,6 +5228,22 @@
       if (adDeptWrap && !adDeptWrap.contains(e.target)) {
         const m = document.getElementById('addDeptMenu');
         const c = document.getElementById('addDeptChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+
+      // Modal Di chuyển / Sao chép công việc (transferTaskModal)
+      const ttDeptWrap = document.getElementById('transferTargetDeptWrapper');
+      if (ttDeptWrap && !ttDeptWrap.contains(e.target)) {
+        const m = document.getElementById('transferTargetDeptMenu');
+        const c = document.getElementById('transferTargetDeptChevron');
+        if (m) m.classList.add('hidden');
+        if (c) c.classList.remove('rotate-180');
+      }
+      const ttStaffWrap = document.getElementById('transferTargetStaffWrapper');
+      if (ttStaffWrap && !ttStaffWrap.contains(e.target)) {
+        const m = document.getElementById('transferTargetStaffMenu');
+        const c = document.getElementById('transferTargetStaffChevron');
         if (m) m.classList.add('hidden');
         if (c) c.classList.remove('rotate-180');
       }
@@ -13009,6 +13062,8 @@
     // ================= XỬ LÝ DI CHUYỂN & SAO CHÉP ĐẦU VIỆC =================
     let pendingTransferTaskRowElem = null;
     let pendingTransferTaskData = null;
+    let transferTargetDeptCache = [];
+    let transferTargetStaffCache = [];
 
     function openTransferTaskModal(btnElem) {
       if (currentPeriodLocked) {
@@ -13079,12 +13134,13 @@
 
       // Nạp danh sách bộ phận đích
       const deptSelect = document.getElementById('transferTargetDeptSelect');
+      let depts = (globalInitData && globalInitData.departments) ? [...globalInitData.departments] : [];
+      depts = depts.filter(d => !normalizeDeptKey(d).includes("giam doc"));
+      depts.sort((a, b) => a.localeCompare(b, 'vi'));
+      transferTargetDeptCache = depts;
+
       if (deptSelect) {
         deptSelect.innerHTML = '<option value="">-- Chọn bộ phận đích --</option>';
-        let depts = (globalInitData && globalInitData.departments) ? [...globalInitData.departments] : [];
-        depts = depts.filter(d => !normalizeDeptKey(d).includes("giam doc"));
-        depts.sort((a, b) => a.localeCompare(b, 'vi'));
-
         depts.forEach(d => {
           const opt = document.createElement('option');
           opt.value = d;
@@ -13092,10 +13148,13 @@
           if (d === currentDept) opt.selected = true;
           deptSelect.appendChild(opt);
         });
-
-        const selectedDept = deptSelect.value || currentDept;
-        onTransferTargetDeptChange(selectedDept);
       }
+
+      const selectedDept = currentDept || depts[0] || "";
+      if (deptSelect) deptSelect.value = selectedDept;
+      updateTransferTargetDeptUI(selectedDept);
+      renderTransferTargetDeptPicker(depts);
+      onTransferTargetDeptChange(selectedDept);
 
       // Mở modal
       const modal = document.getElementById('transferTaskModal');
@@ -13107,6 +13166,15 @@
       pendingTransferTaskData = null;
       const modal = document.getElementById('transferTaskModal');
       if (modal) modal.classList.add('hidden');
+
+      const dm = document.getElementById('transferTargetDeptMenu');
+      if (dm) dm.classList.add('hidden');
+      const sm = document.getElementById('transferTargetStaffMenu');
+      if (sm) sm.classList.add('hidden');
+      const dc = document.getElementById('transferTargetDeptChevron');
+      if (dc) dc.classList.remove('rotate-180');
+      const sc = document.getElementById('transferTargetStaffChevron');
+      if (sc) sc.classList.remove('rotate-180');
     }
 
     function updateTransferActionUI() {
@@ -13126,14 +13194,304 @@
       }
     }
 
+    // ================= CUSTOM PICKER: BỘ PHẬN ĐÍCH =================
+    function toggleTransferTargetDeptMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('transferTargetDeptMenu');
+      const chev = document.getElementById('transferTargetDeptChevron');
+      const staffMenu = document.getElementById('transferTargetStaffMenu');
+      const staffChev = document.getElementById('transferTargetStaffChevron');
+      if (staffMenu) staffMenu.classList.add('hidden');
+      if (staffChev) staffChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('transferTargetDeptSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderTransferTargetDeptPicker(transferTargetDeptCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterTransferTargetDeptList() {
+      const term = (document.getElementById('transferTargetDeptSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = transferTargetDeptCache.filter(d => {
+        const normD = typeof removeAccents === 'function' ? removeAccents(d).toLowerCase() : d.toLowerCase();
+        return normD.includes(normTerm);
+      });
+      renderTransferTargetDeptPicker(filtered);
+    }
+
+    function renderTransferTargetDeptPicker(depts) {
+      const container = document.getElementById('transferTargetDeptList');
+      if (!container) return;
+      const currentVal = document.getElementById('transferTargetDeptSelect')?.value || '';
+
+      if (!depts || depts.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không tìm thấy bộ phận phù hợp</div>';
+        return;
+      }
+
+      let html = '';
+      depts.forEach(d => {
+        const s = getDeptStyle(d);
+        const isSelected = (d === currentVal);
+        html += `
+          <div onclick="selectTransferTargetDept('${escapeHtml(d)}')" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} ${s.itemBorder} mb-1.5">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+              <div class="w-7 h-7 rounded-lg ${s.bg} ${s.color} border ${s.border} flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <i class="${s.icon}"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-1">
+              <span class="text-[9.5px] font-bold px-2.5 py-0.5 rounded-full border ${s.badgeColor}">${s.badge}</span>
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function selectTransferTargetDept(deptName) {
+      const sel = document.getElementById('transferTargetDeptSelect');
+      if (sel) sel.value = deptName;
+      updateTransferTargetDeptUI(deptName);
+      const menu = document.getElementById('transferTargetDeptMenu');
+      const chev = document.getElementById('transferTargetDeptChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+      onTransferTargetDeptChange(deptName);
+    }
+
+    function updateTransferTargetDeptUI(deptName) {
+      const textEl = document.getElementById('transferTargetDeptText');
+      const iconBox = document.getElementById('transferTargetDeptIconBox');
+      if (!deptName) {
+        if (textEl) {
+          textEl.innerText = "-- Chọn bộ phận đích --";
+          textEl.className = "truncate font-semibold text-slate-500";
+        }
+        if (iconBox) {
+          iconBox.className = "w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
+          iconBox.innerHTML = '<i class="fa-solid fa-layer-group"></i>';
+        }
+        return;
+      }
+      const s = getDeptStyle(deptName);
+      if (textEl) {
+        textEl.innerText = deptName;
+        textEl.className = "truncate font-bold text-slate-800";
+      }
+      if (iconBox) {
+        iconBox.className = `w-7 h-7 rounded-xl ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
+        iconBox.innerHTML = `<i class="${s.icon}"></i>`;
+      }
+      renderTransferTargetDeptPicker(transferTargetDeptCache);
+    }
+
+    // ================= CUSTOM PICKER: NHÂN SỰ ĐÍCH =================
+    function toggleTransferTargetStaffMenu(e) {
+      if (e) e.stopPropagation();
+      const currentDept = document.getElementById('transferTargetDeptSelect')?.value;
+      if (!currentDept) {
+        showToast("Vui lòng chọn Bộ phận đích trước!", true);
+        toggleTransferTargetDeptMenu();
+        return;
+      }
+
+      const menu = document.getElementById('transferTargetStaffMenu');
+      const chev = document.getElementById('transferTargetStaffChevron');
+      const deptMenu = document.getElementById('transferTargetDeptMenu');
+      const deptChev = document.getElementById('transferTargetDeptChevron');
+      if (deptMenu) deptMenu.classList.add('hidden');
+      if (deptChev) deptChev.classList.remove('rotate-180');
+
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (chev) chev.classList.add('rotate-180');
+        const sInput = document.getElementById('transferTargetStaffSearchInput');
+        if (sInput) {
+          sInput.value = '';
+          renderTransferTargetStaffPicker(transferTargetStaffCache);
+          setTimeout(() => sInput.focus(), 50);
+        }
+      } else {
+        menu.classList.add('hidden');
+        if (chev) chev.classList.remove('rotate-180');
+      }
+    }
+
+    function filterTransferTargetStaffList() {
+      const term = (document.getElementById('transferTargetStaffSearchInput')?.value || '').toLowerCase();
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      const filtered = transferTargetStaffCache.filter(st => {
+        const normN = typeof removeAccents === 'function' ? removeAccents(st.fullName || '').toLowerCase() : (st.fullName || '').toLowerCase();
+        const normU = (st.username || '').toLowerCase();
+        const normR = typeof removeAccents === 'function' ? removeAccents(st.role || '').toLowerCase() : (st.role || '').toLowerCase();
+        return normN.includes(normTerm) || normU.includes(normTerm) || normR.includes(normTerm);
+      });
+      renderTransferTargetStaffPicker(filtered);
+    }
+
+    function renderTransferTargetStaffPicker(staffList) {
+      const container = document.getElementById('transferTargetStaffList');
+      if (!container) return;
+      const currentVal = document.getElementById('transferTargetStaffSelect')?.value || '';
+
+      if (!staffList || staffList.length === 0) {
+        container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không có nhân sự nào trong bộ phận này</div>';
+        return;
+      }
+
+      let html = '';
+      const borderAccents = ['border-l-emerald-500', 'border-l-blue-500', 'border-l-amber-500', 'border-l-purple-500', 'border-l-teal-500', 'border-l-indigo-500'];
+
+      staffList.forEach((st, idx) => {
+        const itemVal = st.isSharedScope ? '__SHARED_GROUP__' : st.fullName;
+        const isSelected = (itemVal === currentVal);
+
+        if (st.isSharedScope) {
+          html += `
+            <div onclick="selectTransferTargetStaff('__SHARED_GROUP__', null, '${escapeHtml(st.fullName)}', true)" class="group flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-400 bg-emerald-100/90 font-bold shadow-xs' : 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/60'} border-l-4 border-l-emerald-600 mb-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-warehouse"></i>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-black text-emerald-950 truncate">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-emerald-700 font-semibold truncate">${escapeHtml(st.role || 'Công việc chung của cả tổ kho')}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 uppercase tracking-tight">Việc chung</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-700 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const av = getStaffStyle(st.fullName, idx);
+        const bAccent = borderAccents[idx % borderAccents.length];
+
+        html += `
+          <div onclick="selectTransferTargetStaff('${escapeHtml(st.fullName)}', ${st.id}, '${escapeHtml(st.fullName)}', false, '${escapeHtml(st.role || '')}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                ${av.initial}
+              </div>
+              <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
+                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              ${st.role ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-slate-200 bg-slate-50 text-slate-600">${escapeHtml(st.role)}</span>` : ''}
+              ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-600 ml-1"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function selectTransferTargetStaff(val, userId, fullName, isSharedScope = false, role = '') {
+      const sel = document.getElementById('transferTargetStaffSelect');
+      if (sel) {
+        sel.value = val;
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === val) {
+            sel.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      updateTransferTargetStaffUI(val, fullName, isSharedScope, role);
+      const menu = document.getElementById('transferTargetStaffMenu');
+      const chev = document.getElementById('transferTargetStaffChevron');
+      if (menu) menu.classList.add('hidden');
+      if (chev) chev.classList.remove('rotate-180');
+    }
+
+    function updateTransferTargetStaffUI(val, fullName, isSharedScope = false, role = '') {
+      const textEl = document.getElementById('transferTargetStaffText');
+      const subTextEl = document.getElementById('transferTargetStaffSubText');
+      const avBox = document.getElementById('transferTargetStaffAvatarBox');
+
+      if (!val) {
+        if (textEl) {
+          textEl.innerText = "-- Hãy chọn nhân sự --";
+          textEl.className = "truncate font-semibold text-slate-500";
+        }
+        if (subTextEl) subTextEl.classList.add('hidden');
+        if (avBox) {
+          avBox.className = "w-7 h-7 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs font-bold shadow-2xs";
+          avBox.innerHTML = '<i class="fa-solid fa-user"></i>';
+        }
+        return;
+      }
+
+      if (isSharedScope) {
+        if (textEl) {
+          textEl.innerText = fullName || "Công việc chung của tổ kho";
+          textEl.className = "truncate font-black text-emerald-950";
+        }
+        if (subTextEl) {
+          subTextEl.innerText = "Việc chung của cả tổ kho";
+          subTextEl.classList.remove('hidden');
+        }
+        if (avBox) {
+          avBox.className = "w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xs font-bold shadow-2xs";
+          avBox.innerHTML = '<i class="fa-solid fa-warehouse"></i>';
+        }
+      } else {
+        const av = getStaffStyle(fullName);
+        if (textEl) {
+          textEl.innerText = fullName;
+          textEl.className = "truncate font-bold text-slate-800";
+        }
+        if (subTextEl) {
+          if (role) {
+            subTextEl.innerText = role;
+            subTextEl.classList.remove('hidden');
+          } else {
+            subTextEl.classList.add('hidden');
+          }
+        }
+        if (avBox) {
+          avBox.className = `w-7 h-7 rounded-xl bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+          avBox.innerHTML = av.initial;
+        }
+      }
+      renderTransferTargetStaffPicker(transferTargetStaffCache);
+    }
+
     function onTransferTargetDeptChange(targetDeptName) {
       const staffSelect = document.getElementById('transferTargetStaffSelect');
       const hint = document.getElementById('transferTargetHint');
       if (!staffSelect) return;
 
       staffSelect.innerHTML = '';
+      transferTargetStaffCache = [];
+
       if (!targetDeptName) {
         staffSelect.innerHTML = '<option value="">-- Vui lòng chọn bộ phận trước --</option>';
+        updateTransferTargetStaffUI("", "");
         return;
       }
 
@@ -13141,18 +13499,33 @@
       const staffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
 
       if (isShared) {
-        // Nhóm gộp tổ kho: Có lựa chọn việc chung và việc cá nhân
+        // Nhóm gộp: Thêm option việc chung (KHÔNG CÓ EMOJI 📦)
         const optGroup = document.createElement('option');
         optGroup.value = "__SHARED_GROUP__";
-        optGroup.innerText = `📦 [Việc chung] Công việc chung của tổ kho (${targetDeptName})`;
+        optGroup.innerText = `Công việc chung của tổ kho (${targetDeptName})`;
         staffSelect.appendChild(optGroup);
+
+        transferTargetStaffCache.push({
+          fullName: `Công việc chung của tổ kho (${targetDeptName})`,
+          role: 'Toàn bộ thành viên trong tổ',
+          isSharedScope: true
+        });
 
         staffList.forEach(st => {
           const opt = document.createElement('option');
           opt.value = st.fullName;
           opt.dataset.userId = st.id;
-          opt.innerText = `👤 [Việc cá nhân] ${st.fullName} (${st.role || 'Nhân viên'})`;
+          // KHÔNG CÓ EMOJI 👤:
+          opt.innerText = `${st.fullName}${st.role ? ' (' + st.role + ')' : ''}`;
           staffSelect.appendChild(opt);
+
+          transferTargetStaffCache.push({
+            id: st.id,
+            fullName: st.fullName,
+            role: st.role || 'Nhân viên',
+            username: st.username,
+            isSharedScope: false
+          });
         });
 
         if (hint) hint.innerText = "Bộ phận nhóm gộp: Bạn có thể chọn chuyển/sao chép thành việc chung của tổ kho hoặc việc cá nhân của thành viên.";
@@ -13164,11 +13537,31 @@
             const opt = document.createElement('option');
             opt.value = st.fullName;
             opt.dataset.userId = st.id;
-            opt.innerText = `👤 ${st.fullName} (${st.role || 'Nhân viên'})`;
+            // KHÔNG CÓ EMOJI 👤:
+            opt.innerText = `${st.fullName}${st.role ? ' (' + st.role + ')' : ''}`;
             staffSelect.appendChild(opt);
+
+            transferTargetStaffCache.push({
+              id: st.id,
+              fullName: st.fullName,
+              role: st.role || 'Nhân viên',
+              username: st.username,
+              isSharedScope: false
+            });
           });
         }
         if (hint) hint.innerText = "Chọn nhân sự nhận đầu việc trong bộ phận này.";
+      }
+
+      // Mặc định chọn nhân sự đầu tiên nếu có
+      if (transferTargetStaffCache.length > 0) {
+        const first = transferTargetStaffCache[0];
+        const val = first.isSharedScope ? '__SHARED_GROUP__' : first.fullName;
+        staffSelect.value = val;
+        updateTransferTargetStaffUI(val, first.fullName, first.isSharedScope, first.role);
+      } else {
+        staffSelect.value = '';
+        updateTransferTargetStaffUI("", "");
       }
     }
 
