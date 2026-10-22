@@ -2127,7 +2127,7 @@
         <div class="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-slate-100/90 rounded-xl text-[11px] font-bold text-slate-500 uppercase tracking-wider flex-shrink-0">
           <div class="w-24 text-center shrink-0">Vị trí / STT</div>
           <div class="flex-1">Tên nội dung công việc & Hướng dẫn chi tiết</div>
-          <div class="w-10 text-center shrink-0">Xóa</div>
+          <div class="w-16 text-center shrink-0">Thao tác</div>
         </div>
 
         <!-- Khung cuộn danh sách công việc -->
@@ -2147,6 +2147,124 @@
             <span>Lưu phân công</span>
           </button>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL DI CHUYỂN & SAO CHÉP ĐẦU VIỆC (CHUYỂN/NHÂN BẢN CHO BỘ PHẬN/NHÂN SỰ) ================= -->
+  <div id="transferTaskModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scroll">
+      
+      <!-- Header Modal -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center text-lg shrink-0 shadow-md shadow-emerald-500/20">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">Di Chuyển & Sao Chép Đầu Việc</h3>
+            <p class="text-xs text-slate-500 font-medium">Điều chuyển hoặc nhân bản đầu việc sang nhân sự / bộ phận khác</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeTransferTaskModal()" class="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer shrink-0" title="Đóng cửa sổ">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Preview đầu việc đang thao tác -->
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-clipboard-check text-emerald-600"></i>
+          <span>Đầu việc đang chọn:</span>
+        </div>
+        <div id="transferSourceTaskName" class="text-xs sm:text-sm font-black text-slate-800 leading-snug break-words">...</div>
+        <div class="flex items-center gap-2 text-[11px] text-slate-500 font-medium flex-wrap">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold shadow-2xs">
+            <i class="fa-solid fa-location-dot text-emerald-600 text-[10px]"></i>
+            <span id="transferSourceLocation">Đang thuộc:...</span>
+          </span>
+          <span id="transferSourceBadge" class="hidden text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-bold shadow-2xs">Đã có số</span>
+        </div>
+      </div>
+
+      <!-- 2 Chức năng: DI CHUYỂN hoặc SAO CHÉP (Radio Cards lớn, trực quan) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-sliders text-emerald-600 text-xs"></i>
+          <span>Chọn chức năng thực hiện:</span>
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Card 1: Di chuyển -->
+          <label class="relative flex items-start gap-3 p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/20 cursor-pointer transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50 has-[:checked]:shadow-xs">
+            <input type="radio" name="transferActionType" value="move" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" checked onchange="updateTransferActionUI()" />
+            <div class="min-w-0">
+              <span class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-truck-fast text-emerald-600 text-xs"></i>
+                <span>Di chuyển đầu việc</span>
+              </span>
+              <span class="block text-[11px] text-slate-500 mt-0.5 leading-snug">Chuyển sang đích và <strong class="text-rose-600 font-bold">rút khỏi</strong> nhân sự hiện tại.</span>
+            </div>
+          </label>
+
+          <!-- Card 2: Sao chép -->
+          <label class="relative flex items-start gap-3 p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-teal-400 hover:bg-teal-50/20 cursor-pointer transition has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50/50 has-[:checked]:shadow-xs">
+            <input type="radio" name="transferActionType" value="copy" class="mt-0.5 text-teal-600 focus:ring-teal-500 cursor-pointer" onchange="updateTransferActionUI()" />
+            <div class="min-w-0">
+              <span class="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-clone text-teal-600 text-xs"></i>
+                <span>Sao chép đầu việc</span>
+              </span>
+              <span class="block text-[11px] text-slate-500 mt-0.5 leading-snug">Nhân bản thêm ở đích, <strong class="text-emerald-700 font-bold">giữ nguyên</strong> ở nhân sự hiện tại.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Đích đến: CHO AI - BỘ PHẬN NÀO -->
+      <div class="space-y-3 pt-1">
+        <!-- 1. Bộ phận đích -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+            <span>1. Chuyển đến Bộ phận đích <span class="text-rose-500">*</span></span>
+          </label>
+          <div class="relative">
+            <select id="transferTargetDeptSelect" onchange="onTransferTargetDeptChange(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs cursor-pointer">
+              <option value="">-- Chọn bộ phận đích --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. Nhân sự đích -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+            <span>2. Chuyển đến Nhân sự / Đối tượng nhận việc <span class="text-rose-500">*</span></span>
+          </label>
+          <div class="relative">
+            <select id="transferTargetStaffSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-2xs cursor-pointer">
+              <option value="">-- Chọn nhân sự đích --</option>
+            </select>
+          </div>
+          <p class="text-[10.5px] text-slate-400 mt-1 italic" id="transferTargetHint">Đối với các tổ kho gộp, có thể gán làm việc chung của tổ hoặc việc cá nhân của từng thành viên.</p>
+        </div>
+      </div>
+
+      <!-- Cảnh báo lưu ý -->
+      <div id="transferActionNotice" class="text-xs p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-2">
+        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+        <span id="transferActionNoticeText" class="leading-relaxed">Đầu việc sẽ được điều chuyển sang cho nhân sự được chọn. Các kỳ cũ (nếu có dữ liệu) vẫn được bảo lưu 100% nguyên vẹn.</span>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
+        <button type="button" onclick="closeTransferTaskModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy bỏ</button>
+        <button type="button" id="btnConfirmTransferTask" onclick="executeTransferOrCopyTask()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check"></i>
+          <span id="btnConfirmTransferTaskText">Xác nhận Di chuyển</span>
+        </button>
       </div>
 
     </div>
@@ -12860,8 +12978,11 @@
           </p>
         </div>
 
-        <!-- THAO TÁC XÓA -->
-        <div class="pt-1 shrink-0">
+        <!-- THAO TÁC DI CHUYỂN / SAO CHÉP & XÓA -->
+        <div class="flex items-center gap-1 sm:gap-1.5 pt-1 shrink-0">
+          <button type="button" onclick="openTransferTaskModal(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-xl border border-emerald-200/80 hover:border-emerald-300 transition cursor-pointer shadow-2xs group-hover:scale-105" title="Di chuyển hoặc Sao chép đầu việc này sang nhân sự / bộ phận khác">
+            <i class="fa-solid fa-arrow-right-arrow-left text-xs pointer-events-none"></i>
+          </button>
           <button type="button" onclick="deleteAssignTaskRow(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition cursor-pointer" title="Xóa đầu việc này">
             <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
           </button>
@@ -12882,6 +13003,377 @@
         if (warn) warn.classList.remove('hidden');
       } else {
         if (warn) warn.classList.add('hidden');
+      }
+    }
+
+    // ================= XỬ LÝ DI CHUYỂN & SAO CHÉP ĐẦU VIỆC =================
+    let pendingTransferTaskRowElem = null;
+    let pendingTransferTaskData = null;
+
+    function openTransferTaskModal(btnElem) {
+      if (currentPeriodLocked) {
+        showToast("Kỳ báo cáo này đã khóa sổ. Không thể di chuyển hoặc sao chép đầu việc của kỳ này!", true);
+        return;
+      }
+
+      const row = btnElem.closest('.assign-task-row');
+      if (!row) return;
+
+      const nameInput = row.querySelector('.assign-task-name');
+      const guideInput = row.querySelector('.assign-task-guide');
+      const taskName = nameInput ? nameInput.value.trim() : "";
+      const taskGuide = guideInput ? guideInput.value.trim() : "";
+
+      if (!taskName) {
+        showToast("Vui lòng nhập tên công việc trước khi di chuyển hoặc sao chép!", true);
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      const taskIdStr = row.dataset.taskId;
+      const taskId = (taskIdStr && taskIdStr !== "" && taskIdStr !== "null" && taskIdStr !== "undefined") ? parseInt(taskIdStr, 10) : null;
+      const origName = row.dataset.originalTaskName || "";
+      const hasData = row.dataset.hasData === "true";
+
+      const currentDept = document.getElementById('modalAssignDeptSelect')?.value?.trim() || "";
+      const currentStaffSelect = document.getElementById('modalAssignStaffSelect');
+      const currentStaffVal = currentStaffSelect?.value?.trim() || "";
+      const currentSelectedOpt = currentStaffSelect?.selectedOptions[0];
+      const currentUserId = currentSelectedOpt?.dataset?.userId ? parseInt(currentSelectedOpt.dataset.userId, 10) : null;
+
+      pendingTransferTaskRowElem = row;
+      pendingTransferTaskData = {
+        taskId: taskId,
+        taskName: taskName,
+        taskGuide: taskGuide,
+        origName: origName,
+        hasData: hasData,
+        currentDept: currentDept,
+        currentStaffVal: currentStaffVal,
+        currentUserId: currentUserId
+      };
+
+      // Đổ dữ liệu lên UI Preview
+      const previewName = document.getElementById('transferSourceTaskName');
+      if (previewName) previewName.innerText = taskName;
+
+      const previewLoc = document.getElementById('transferSourceLocation');
+      if (previewLoc) {
+        const staffLabel = (currentStaffVal === '__SHARED_GROUP__') ? `Việc chung tổ kho (${currentDept})` : `${currentStaffVal} (${currentDept})`;
+        previewLoc.innerText = `Đang thuộc: ${staffLabel}`;
+      }
+
+      const badge = document.getElementById('transferSourceBadge');
+      if (badge) {
+        if (hasData) {
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      // Reset radio về 'move'
+      const moveRadio = document.querySelector('input[name="transferActionType"][value="move"]');
+      if (moveRadio) moveRadio.checked = true;
+      updateTransferActionUI();
+
+      // Nạp danh sách bộ phận đích
+      const deptSelect = document.getElementById('transferTargetDeptSelect');
+      if (deptSelect) {
+        deptSelect.innerHTML = '<option value="">-- Chọn bộ phận đích --</option>';
+        let depts = (globalInitData && globalInitData.departments) ? [...globalInitData.departments] : [];
+        depts = depts.filter(d => !normalizeDeptKey(d).includes("giam doc"));
+        depts.sort((a, b) => a.localeCompare(b, 'vi'));
+
+        depts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.innerText = d;
+          if (d === currentDept) opt.selected = true;
+          deptSelect.appendChild(opt);
+        });
+
+        const selectedDept = deptSelect.value || currentDept;
+        onTransferTargetDeptChange(selectedDept);
+      }
+
+      // Mở modal
+      const modal = document.getElementById('transferTaskModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeTransferTaskModal() {
+      pendingTransferTaskRowElem = null;
+      pendingTransferTaskData = null;
+      const modal = document.getElementById('transferTaskModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function updateTransferActionUI() {
+      const actionType = document.querySelector('input[name="transferActionType"]:checked')?.value || 'move';
+      const btnText = document.getElementById('btnConfirmTransferTaskText');
+      const noticeText = document.getElementById('transferActionNoticeText');
+      const noticeBox = document.getElementById('transferActionNotice');
+
+      if (actionType === 'move') {
+        if (btnText) btnText.innerText = "Xác nhận Di chuyển";
+        if (noticeText) noticeText.innerHTML = "Đầu việc sẽ được <b>chuyển sang đích</b> và <b>rút khỏi nhân sự hiện tại</b>. Các kỳ cũ (nếu có số liệu) vẫn được bảo lưu 100% nguyên vẹn.";
+        if (noticeBox) noticeBox.className = "text-xs p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-2";
+      } else {
+        if (btnText) btnText.innerText = "Xác nhận Sao chép";
+        if (noticeText) noticeText.innerHTML = "Một bản sao đầu việc mới sẽ được <b>tạo thêm ở đích</b>, nhân sự hiện tại vẫn <b>giữ nguyên</b> đầu việc này.";
+        if (noticeBox) noticeBox.className = "text-xs p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 flex items-start gap-2";
+      }
+    }
+
+    function onTransferTargetDeptChange(targetDeptName) {
+      const staffSelect = document.getElementById('transferTargetStaffSelect');
+      const hint = document.getElementById('transferTargetHint');
+      if (!staffSelect) return;
+
+      staffSelect.innerHTML = '';
+      if (!targetDeptName) {
+        staffSelect.innerHTML = '<option value="">-- Vui lòng chọn bộ phận trước --</option>';
+        return;
+      }
+
+      const isShared = isSharedGroupDeptClient(targetDeptName);
+      const staffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
+
+      if (isShared) {
+        // Nhóm gộp tổ kho: Có lựa chọn việc chung và việc cá nhân
+        const optGroup = document.createElement('option');
+        optGroup.value = "__SHARED_GROUP__";
+        optGroup.innerText = `📦 [Việc chung] Công việc chung của tổ kho (${targetDeptName})`;
+        staffSelect.appendChild(optGroup);
+
+        staffList.forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st.fullName;
+          opt.dataset.userId = st.id;
+          opt.innerText = `👤 [Việc cá nhân] ${st.fullName} (${st.role || 'Nhân viên'})`;
+          staffSelect.appendChild(opt);
+        });
+
+        if (hint) hint.innerText = "Bộ phận nhóm gộp: Bạn có thể chọn chuyển/sao chép thành việc chung của tổ kho hoặc việc cá nhân của thành viên.";
+      } else {
+        if (staffList.length === 0) {
+          staffSelect.innerHTML = '<option value="">-- Bộ phận này chưa có nhân sự --</option>';
+        } else {
+          staffList.forEach(st => {
+            const opt = document.createElement('option');
+            opt.value = st.fullName;
+            opt.dataset.userId = st.id;
+            opt.innerText = `👤 ${st.fullName} (${st.role || 'Nhân viên'})`;
+            staffSelect.appendChild(opt);
+          });
+        }
+        if (hint) hint.innerText = "Chọn nhân sự nhận đầu việc trong bộ phận này.";
+      }
+    }
+
+    async function executeTransferOrCopyTask() {
+      if (currentPeriodLocked) {
+        showToast("Kỳ báo cáo này đã khóa sổ. Không thể thao tác!", true);
+        return;
+      }
+
+      if (!pendingTransferTaskData) {
+        showToast("Không tìm thấy thông tin đầu việc cần xử lý!", true);
+        return;
+      }
+
+      const actionType = document.querySelector('input[name="transferActionType"]:checked')?.value || 'move';
+      const targetDeptName = document.getElementById('transferTargetDeptSelect')?.value?.trim();
+      const targetStaffSelect = document.getElementById('transferTargetStaffSelect');
+      const targetStaffVal = targetStaffSelect?.value?.trim();
+      const targetOpt = targetStaffSelect?.selectedOptions[0];
+
+      if (!targetDeptName) {
+        showToast("Vui lòng chọn bộ phận đích!", true);
+        return;
+      }
+
+      if (!targetStaffVal) {
+        showToast("Vui lòng chọn nhân sự / đối tượng đích nhận việc!", true);
+        return;
+      }
+
+      const isShared = isSharedGroupDeptClient(targetDeptName);
+      const isSharedScope = (targetStaffVal === "__SHARED_GROUP__");
+      const assignScope = isShared ? (isSharedScope ? 'shared' : 'personal') : '';
+
+      // Kiểm tra nếu là "Di chuyển" mà đích lại trùng khớp nguồn:
+      if (actionType === 'move' && targetDeptName === pendingTransferTaskData.currentDept && targetStaffVal === pendingTransferTaskData.currentStaffVal) {
+        showToast("Không thể di chuyển đến chính nhân sự/bộ phận hiện tại!", true);
+        return;
+      }
+
+      const btn = document.getElementById('btnConfirmTransferTask');
+      if (btn) btn.disabled = true;
+
+      const actionLabel = actionType === 'move' ? 'Di chuyển' : 'Sao chép';
+      const targetLabel = isSharedScope ? `việc chung tổ kho (${targetDeptName})` : `${targetStaffVal} (${targetDeptName})`;
+
+      showProgressHud(actionLabel.toUpperCase() + " ĐẦU VIỆC", `Đang ${actionLabel.toLowerCase()} đầu việc sang ${targetLabel}...`, "fa-solid fa-arrow-right-arrow-left animate-spin");
+      autoSimulateProgress(15, 80, "Đang xử lý dữ liệu...", 20);
+
+      try {
+        // 1. Lấy department_id của target
+        const { data: deptRows } = await supabase.from('departments').select('id').eq('name', targetDeptName).limit(1);
+        const targetDeptId = (deptRows && deptRows[0]) ? deptRows[0].id : 1;
+
+        // 2. Lấy assigned_user_id của target
+        let targetUserId = null;
+        if (!isSharedScope) {
+          if (targetOpt?.dataset?.userId) {
+            targetUserId = parseInt(targetOpt.dataset.userId, 10);
+          } else {
+            const { data: uRows } = await supabase.from('users').select('id').eq('full_name', targetStaffVal).limit(1);
+            if (uRows && uRows[0]) targetUserId = uRows[0].id;
+          }
+        } else {
+          // Với việc chung tổ kho: gán user đại diện đầu tiên trong tổ hoặc null
+          const staffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
+          if (staffList.length > 0) targetUserId = staffList[0].id;
+        }
+
+        // 3. Tính toán orderIndex cho task mới ở đích:
+        let nextOrder = 1;
+        const { data: existingTargetTasks } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('department_id', targetDeptId)
+          .eq('assigned_user_id', targetUserId);
+        if (existingTargetTasks && existingTargetTasks.length > 0) {
+          nextOrder = existingTargetTasks.length + 1;
+        }
+
+        const formattedGuide = formatTaskGuideWithOrderAndScope(pendingTransferTaskData.taskGuide, nextOrder, assignScope);
+        const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+
+        if (actionType === 'copy') {
+          // ================== SAO CHÉP (COPY) ==================
+          const { error: insErr } = await supabase
+            .from('tasks')
+            .insert({
+              department_id: targetDeptId,
+              assigned_user_id: targetUserId,
+              task_name: pendingTransferTaskData.taskName,
+              guide: formattedGuide,
+              created_at: new Date().toISOString()
+            });
+
+          if (insErr) throw insErr;
+
+        } else {
+          // ================== DI CHUYỂN (MOVE) ==================
+          const taskId = pendingTransferTaskData.taskId;
+
+          if (taskId) {
+            // Kiểm tra xem công việc này có báo cáo ở các kỳ trước không
+            const { data: priorReps } = await supabase
+              .from('daily_reports')
+              .select('id')
+              .eq('task_id', taskId)
+              .lt('report_date', currentPeriodStartDate)
+              .limit(1);
+
+            const { data: existingTask } = await supabase
+              .from('tasks')
+              .select('created_at, task_name')
+              .eq('id', taskId)
+              .limit(1);
+
+            const hasPriorReports = priorReps && priorReps.length > 0;
+            const isCreatedBefore = existingTask && existingTask[0] && existingTask[0].created_at && (new Date(existingTask[0].created_at) < new Date(currentPeriodStartDate));
+
+            if (hasPriorReports || isCreatedBefore) {
+              // Có dữ liệu kỳ cũ: Bảo toàn kỳ cũ!
+              // 1. Gỡ task cũ khỏi kỳ hiện tại
+              await supabase
+                .from('tasks')
+                .update({ assigned_user_id: null })
+                .eq('id', taskId);
+
+              // 2. Tạo task mới ở đích cho kỳ này
+              const { data: insertedNew, error: inErr } = await supabase
+                .from('tasks')
+                .insert({
+                  department_id: targetDeptId,
+                  assigned_user_id: targetUserId,
+                  task_name: pendingTransferTaskData.taskName,
+                  guide: formattedGuide,
+                  created_at: new Date().toISOString()
+                })
+                .select('id');
+
+              if (inErr) throw inErr;
+
+              // 3. Di chuyển các báo cáo ở kỳ hiện tại sang task mới
+              if (insertedNew && insertedNew[0]) {
+                await supabase
+                  .from('daily_reports')
+                  .update({ task_id: insertedNew[0].id })
+                  .eq('task_id', taskId)
+                  .gte('report_date', currentPeriodStartDate);
+              }
+            } else {
+              // Task mới tạo trong kỳ này: Cập nhật trực tiếp sang đích
+              const { error: upErr } = await supabase
+                .from('tasks')
+                .update({
+                  department_id: targetDeptId,
+                  assigned_user_id: targetUserId,
+                  guide: formattedGuide
+                })
+                .eq('id', taskId);
+
+              if (upErr) throw upErr;
+            }
+          } else {
+            // Task mới gõ trên giao diện (chưa lưu DB): Tạo mới ở đích
+            const { error: inErr } = await supabase
+              .from('tasks')
+              .insert({
+                department_id: targetDeptId,
+                assigned_user_id: targetUserId,
+                task_name: pendingTransferTaskData.taskName,
+                guide: formattedGuide,
+                created_at: new Date().toISOString()
+              });
+
+            if (inErr) throw inErr;
+          }
+
+          // Xóa hàng này khỏi giao diện hiện tại
+          if (pendingTransferTaskRowElem) {
+            pendingTransferTaskRowElem.remove();
+            updateAssignTaskOrderNumbers();
+          }
+        }
+
+        autoSimulateProgress(80, 100, "Hoàn tất!", 15, () => {
+          hideProgressHud(200);
+          showToast(`Đã ${actionLabel.toLowerCase()} đầu việc "${pendingTransferTaskData.taskName}" sang cho ${targetLabel} thành công!`);
+          closeTransferTaskModal();
+          cachedPreloadMatrix = null;
+          fullPeriodMatrixCache = null;
+
+          // Cập nhật lại số lượng badge task
+          const countBadge = document.getElementById('modalAssignTaskCountBadge');
+          const container = document.getElementById('assignTasksListEditor');
+          if (countBadge && container) {
+            const currentCount = container.querySelectorAll('.assign-task-row').length;
+            countBadge.innerText = `${currentCount} công việc`;
+          }
+        });
+
+      } catch (err) {
+        hideProgressHud(100);
+        showToast(`Lỗi khi ${actionLabel.toLowerCase()} đầu việc: ` + err.message, true);
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
