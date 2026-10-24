@@ -3337,13 +3337,13 @@
       if (step && stepText) step.innerText = stepText;
     }
 
-    function autoSimulateProgress(fromPct, toPct, stepText, speedMs = 25, onComplete = null) {
+    function autoSimulateProgress(fromPct, toPct, stepText, speedMs = 15, onComplete = null) {
       clearInterval(progressTimer);
       let curr = fromPct;
       updateProgressHudUI(curr, stepText);
 
       progressTimer = setInterval(() => {
-        curr += (toPct - curr) * 0.15 + 0.5;
+        curr += (toPct - curr) * 0.35 + 1.5;
         if (curr >= toPct) {
           curr = toPct;
           clearInterval(progressTimer);
@@ -3355,7 +3355,17 @@
       }, speedMs);
     }
 
-    function hideProgressHud(delayMs = 300) {
+    function finishProgressHud(successText = "Hoàn tất thành công!", onFinish = null, delayMs = 120) {
+      clearInterval(progressTimer);
+      updateProgressHudUI(100, successText);
+      setTimeout(() => {
+        const hud = document.getElementById('systemProgressHud');
+        if (hud) hud.classList.add('hidden');
+        if (onFinish) onFinish();
+      }, delayMs);
+    }
+
+    function hideProgressHud(delayMs = 150) {
       updateProgressHudUI(100, "Hoàn tất!");
       clearInterval(progressTimer);
       setTimeout(() => {
@@ -3766,14 +3776,21 @@
         .replace(/\n/g, ' ');
     }
 
+    const _accentCache = new Map();
     function removeAccents(str) {
       if (!str) return "";
-      return String(str).replace(/[\u0300-\u036f]/g, "")
+      const s = String(str);
+      const cached = _accentCache.get(s);
+      if (cached !== undefined) return cached;
+      const res = s.replace(/[\u0300-\u036f]/g, "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/đ/g, "d").replace(/Đ/g, "D")
         .toLowerCase()
         .trim();
+      if (_accentCache.size > 2500) _accentCache.clear();
+      _accentCache.set(s, res);
+      return res;
     }
     // ================= PHẦN 2 =================
   /**
@@ -4344,60 +4361,69 @@
     }
 
     /**
-     * NHẬN DIỆN THÔNG MINH KÝ HIỆU HOẶC LÝ DO NGHỈ ĐỂ THU GỌN THÀNH HUY HIỆU GỌN GÀNG
+     * NHẬN DIỆN THÔNG MINH KÝ HIỆU HOẶC LÝ DO NGHỈ ĐỂ THU GỌN THÀNH HUY HIỆU GỌN GÀNG (TỐI ƯU HÓA CACHE O(1))
      */
+    const _smartSymbolCache = new Map();
     function getSmartSymbolInfo(val) {
       if (val === undefined || val === null) return null;
       const s = String(val).trim();
       if (!s || s === '-' || s === '·' || s === '0') return null;
 
+      const cached = _smartSymbolCache.get(s);
+      if (cached !== undefined) return cached;
+
       const cleanNum = s.replace(/,/g, '');
       if (!isNaN(cleanNum) && !isNaN(parseFloat(cleanNum))) {
+        if (_smartSymbolCache.size > 3500) _smartSymbolCache.clear();
+        _smartSymbolCache.set(s, null);
         return null;
       }
 
       const sUpper = s.toUpperCase();
       const sNorm = removeAccents(s).toLowerCase();
 
+      let result = null;
       // 1. Khớp mã quy chuẩn chính xác
-      if (sUpper === 'P') return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: 'P • Nghỉ phép năm / Phép chế độ' };
-      if (sUpper === 'Ô' || sUpper === 'O') return { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: 'Ô • Nghỉ ốm đau / Đi khám bệnh' };
-      if (sUpper === 'CT') return { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: 'CT • Đi công tác / Đào tạo bên ngoài' };
-      if (sUpper === 'VR') return { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: 'VR • Nghỉ việc riêng có phép' };
-      if (sUpper === 'HT') return { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: 'HT • Nghỉ hàng tuần theo quy định' };
-      if (sUpper === 'H') return { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: 'H • Đi học / Tập huấn / Đào tạo nội bộ' };
-      if (sUpper === 'L') return { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: 'L • Nghỉ Lễ / Tết theo luật định' };
-      if (sUpper === 'X') return { ...STANDARDIZED_SYMBOLS['X'], raw: s, tooltip: 'X • Đạt / Hoàn thành công việc' };
-      if (sUpper === 'Đ' || sUpper === 'D') return { ...STANDARDIZED_SYMBOLS['Đ'], raw: s, tooltip: 'Đ • Đang tiến hành / Đạt chuẩn quy định' };
-      if (sUpper === 'C') return { ...STANDARDIZED_SYMBOLS['C'], raw: s, tooltip: 'C • Chưa đạt / Cần xem xét' };
+      if (sUpper === 'P') result = { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: 'P • Nghỉ phép năm / Phép chế độ' };
+      else if (sUpper === 'Ô' || sUpper === 'O') result = { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: 'Ô • Nghỉ ốm đau / Đi khám bệnh' };
+      else if (sUpper === 'CT') result = { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: 'CT • Đi công tác / Đào tạo bên ngoài' };
+      else if (sUpper === 'VR') result = { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: 'VR • Nghỉ việc riêng có phép' };
+      else if (sUpper === 'HT') result = { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: 'HT • Nghỉ hàng tuần theo quy định' };
+      else if (sUpper === 'H') result = { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: 'H • Đi học / Tập huấn / Đào tạo nội bộ' };
+      else if (sUpper === 'L') result = { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: 'L • Nghỉ Lễ / Tết theo luật định' };
+      else if (sUpper === 'X') result = { ...STANDARDIZED_SYMBOLS['X'], raw: s, tooltip: 'X • Đạt / Hoàn thành công việc' };
+      else if (sUpper === 'Đ' || sUpper === 'D') result = { ...STANDARDIZED_SYMBOLS['Đ'], raw: s, tooltip: 'Đ • Đang tiến hành / Đạt chuẩn quy định' };
+      else if (sUpper === 'C') result = { ...STANDARDIZED_SYMBOLS['C'], raw: s, tooltip: 'C • Chưa đạt / Cần xem xét' };
 
       // 2. Nhận diện thông minh chữ tiếng Việt / cụm từ
-      if (sNorm.includes('phep') || /^(nghi\s*phep|xin\s*phep)/.test(sNorm)) {
-        return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ phép: ${s}` };
+      else if (sNorm.includes('phep') || /^(nghi\s*phep|xin\s*phep)/.test(sNorm)) {
+        result = { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ phép: ${s}` };
       }
-      if (sNorm.includes('om') || sNorm.includes('kham') || sNorm.includes('vien') || /^(nghi\s*om|benh|dau)/.test(sNorm)) {
-        return { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: `[Ô] Nghỉ ốm: ${s}` };
+      else if (sNorm.includes('om') || sNorm.includes('kham') || sNorm.includes('vien') || /^(nghi\s*om|benh|dau)/.test(sNorm)) {
+        result = { ...STANDARDIZED_SYMBOLS['Ô'], raw: s, tooltip: `[Ô] Nghỉ ốm: ${s}` };
       }
-      if (sNorm.includes('cong tac') || sNorm.includes('ctac') || /^(di\s*ct|ct\b)/.test(sNorm)) {
-        return { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: `[CT] Đi công tác: ${s}` };
+      else if (sNorm.includes('cong tac') || sNorm.includes('ctac') || /^(di\s*ct|ct\b)/.test(sNorm)) {
+        result = { ...STANDARDIZED_SYMBOLS['CT'], raw: s, tooltip: `[CT] Đi công tác: ${s}` };
       }
-      if (sNorm.includes('viec rieng') || sNorm.includes('rieng') || sNorm.includes('ban gia dinh') || sNorm.includes('gia dinh')) {
-        return { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: `[VR] Việc riêng: ${s}` };
+      else if (sNorm.includes('viec rieng') || sNorm.includes('rieng') || sNorm.includes('ban gia dinh') || sNorm.includes('gia dinh')) {
+        result = { ...STANDARDIZED_SYMBOLS['VR'], raw: s, tooltip: `[VR] Việc riêng: ${s}` };
       }
-      if (sNorm.includes('hang tuan') || sNorm.includes('nghi tuan') || sNorm.includes('nghi ca')) {
-        return { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: `[HT] Nghỉ hàng tuần: ${s}` };
+      else if (sNorm.includes('hang tuan') || sNorm.includes('nghi tuan') || sNorm.includes('nghi ca')) {
+        result = { ...STANDARDIZED_SYMBOLS['HT'], raw: s, tooltip: `[HT] Nghỉ hàng tuần: ${s}` };
       }
-      if (sNorm.includes('tap huan') || sNorm.includes('dao tao') || sNorm.includes('di hoc') || /^(hoc\b|training)/.test(sNorm)) {
-        return { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: `[H] Học tập/Đào tạo: ${s}` };
+      else if (sNorm.includes('tap huan') || sNorm.includes('dao tao') || sNorm.includes('di hoc') || /^(hoc\b|training)/.test(sNorm)) {
+        result = { ...STANDARDIZED_SYMBOLS['H'], raw: s, tooltip: `[H] Học tập/Đào tạo: ${s}` };
       }
-      if (sNorm.includes('tet') || sNorm.includes('nghi le') || /^(le\b|nghi\s*le)/.test(sNorm)) {
-        return { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: `[L] Nghỉ Lễ/Tết: ${s}` };
+      else if (sNorm.includes('tet') || sNorm.includes('nghi le') || /^(le\b|nghi\s*le)/.test(sNorm)) {
+        result = { ...STANDARDIZED_SYMBOLS['L'], raw: s, tooltip: `[L] Nghỉ Lễ/Tết: ${s}` };
       }
-      if (sNorm.startsWith('nghi') || sNorm.includes('nghi')) {
-        return { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ: ${s}` };
+      else if (sNorm.startsWith('nghi') || sNorm.includes('nghi')) {
+        result = { ...STANDARDIZED_SYMBOLS['P'], raw: s, tooltip: `[P] Nghỉ: ${s}` };
       }
 
-      return null;
+      if (_smartSymbolCache.size > 3500) _smartSymbolCache.clear();
+      _smartSymbolCache.set(s, result);
+      return result;
     }
 
     /**
@@ -5797,17 +5823,14 @@
 
     function confirmTogglePeriodLock() {
       showProgressHud("CẬP NHẬT KHÓA SỔ", "Đang cập nhật trạng thái kỳ báo cáo...", "fa-solid fa-shield-halved animate-pulse");
-      autoSimulateProgress(10, 80, "Cập nhật dữ liệu hệ thống...", 30);
-
       const newLockState = !currentPeriodLocked;
-      setTimeout(() => {
-        autoSimulateProgress(80, 100, "Đã cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
-          showToast(`Đã ${newLockState ? 'khóa' : 'mở khóa'} sổ kỳ báo cáo thành công!`);
-          closePeriodLockModal();
-          
-          // LƯU TRẠNG THÁI KHÓA SỔ BỀN VỮNG
-          localStorage.setItem(`ops_period_lock_${currentSelectedYear}_${currentSelectedMonth}`, newLockState ? "true" : "false");
+
+      finishProgressHud("Đã cập nhật thành công!", () => {
+        showToast(`Đã ${newLockState ? 'khóa' : 'mở khóa'} sổ kỳ báo cáo thành công!`);
+        closePeriodLockModal();
+        
+        // LƯU TRẠNG THÁI KHÓA SỔ BỀN VỮNG
+        localStorage.setItem(`ops_period_lock_${currentSelectedYear}_${currentSelectedMonth}`, newLockState ? "true" : "false");
 
           // BẢO LƯU NGUYÊN VẸN SNAPSHOT TOÀN BỘ SỐ LIỆU VÀ ĐẦU VIỆC KHI KHÓA SỔ
           if (newLockState) {
@@ -5946,7 +5969,7 @@
       }
 
       showProgressHud("TẠO BỘ PHẬN MỚI", `Đang khởi tạo bộ phận "${dName}"...`, "fa-solid fa-sitemap animate-pulse");
-      autoSimulateProgress(10, 85, "Lưu vào cơ sở dữ liệu...", 25);
+      autoSimulateProgress(25, 85, "Lưu vào cơ sở dữ liệu...", 15);
 
       try {
         const { error } = await supabase
@@ -5955,14 +5978,13 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Tạo bộ phận thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Tạo bộ phận thành công!", () => {
           showToast(`Đã tạo bộ phận "${dName}" thành công!`);
           nameInput.value = '';
           isSharedChk.checked = false;
           loadDepartmentsDetailed();
           loadInitialData(() => { setupRoleControls(); });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi: " + err.message, true);
@@ -5996,7 +6018,7 @@
       }
 
       showProgressHud("CẬP NHẬT BỘ PHẬN", `Đang đổi tên "${oldName}" sang "${newName}"...`, "fa-solid fa-pen-to-square animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
+      autoSimulateProgress(25, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
         const { error } = await supabase
@@ -6006,8 +6028,7 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Cập nhật thành công!", () => {
           showToast(`Đã đổi tên bộ phận sang "${newName}"!`);
           closeDeptEditModal();
           loadDepartmentsDetailed();
@@ -6015,7 +6036,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi: " + err.message, true);
@@ -6064,7 +6085,7 @@
       if (!deptName) return;
 
       showProgressHud("XÓA BỘ PHẬN", `Đang xóa bộ phận "${deptName}"...`, "fa-solid fa-trash-can animate-pulse");
-      autoSimulateProgress(10, 85, "Xử lý dữ liệu hệ thống...", 25);
+      autoSimulateProgress(25, 85, "Xử lý dữ liệu hệ thống...", 15);
 
       try {
         const { error } = await supabase
@@ -6074,8 +6095,7 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Đã xóa thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Đã xóa thành công!", () => {
           showToast(`Đã xóa bộ phận "${deptName}" thành công!`);
           closeDeptDeleteModal();
           loadDepartmentsDetailed();
@@ -6083,7 +6103,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi: " + err.message, true);
@@ -7276,7 +7296,7 @@
       }
 
       showProgressHud("CẬP NHẬT TÊN BỘ PHẬN", `Đang đổi tên "${oldDept}" thành "${newDept}"...`, "fa-solid fa-pen-to-square animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật cơ sở dữ liệu...", 25);
+      autoSimulateProgress(25, 85, "Cập nhật cơ sở dữ liệu...", 15);
 
       try {
         const { error } = await supabase
@@ -7286,8 +7306,7 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Cập nhật thành công!", () => {
           showToast(`Đã đổi tên bộ phận sang "${newDept}"!`);
           closeRenameDeptModal();
           currentSelectedDept = newDept;
@@ -7296,7 +7315,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi: " + err.message, true);
@@ -7401,25 +7420,37 @@
       if (!groupsList || groupsList.length <= 1) return groupsList;
 
       const cachedMgrDepts = (globalInitData && globalInitData.managerDeptNames) ? globalInitData.managerDeptNames : [];
+      const uList = (globalInitData && globalInitData.allUsers) ? globalInitData.allUsers : ((adminManageUsersCache && adminManageUsersCache.users) ? adminManageUsersCache.users : []);
 
+      // Bảng tra cứu O(1) kiểm tra nhanh manager dept theo dName
+      const _mgrDeptCache = new Map();
       const isManagerDept = (dName, grp) => {
         if (!dName) return false;
         if (grp && (grp.isManagerDept || grp.isManagerStaff)) return true;
+        const cached = _mgrDeptCache.get(dName);
+        if (cached !== undefined) return cached;
+
         const norm = normalizeDeptKey(dName);
         if (norm.includes("giam doc") || norm.includes("quan ly") || norm.includes("lanh dao") || norm.includes("dieu hanh")) {
+          _mgrDeptCache.set(dName, true);
           return true;
         }
-        if (cachedMgrDepts.some(cmd => isDeptEquivalent(cmd, dName))) return true;
-        const uList = (globalInitData && globalInitData.allUsers) ? globalInitData.allUsers : ((adminManageUsersCache && adminManageUsersCache.users) ? adminManageUsersCache.users : []);
+        if (cachedMgrDepts.some(cmd => isDeptEquivalent(cmd, dName))) {
+          _mgrDeptCache.set(dName, true);
+          return true;
+        }
         if (uList && uList.length > 0) {
-          return uList.some(u => {
+          const matched = uList.some(u => {
             const uDept = u.dept || (u.departments ? u.departments.name : "");
             if (isDeptEquivalent(uDept, dName)) {
               return isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
             }
             return false;
           });
+          _mgrDeptCache.set(dName, matched);
+          return matched;
         }
+        _mgrDeptCache.set(dName, false);
         return false;
       };
 
@@ -7442,46 +7473,48 @@
         return 50;
       };
 
-      return [...groupsList].sort((a, b) => {
+      // TIỀN TÍNH TOÁN 1 LẦN DUY NHẤT CHO MỌI PHẦN TỬ (Schwartzian transform) ĐƯA ĐỘ PHỨC TẠP VỀ O(N log N)
+      const decorated = groupsList.map((grp, originalIdx) => {
+        const dRank = getDeptCategoryRank(grp);
+        const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+        const isMgr = !!(grp.isManagerStaff || (grp.userRole && /quan ly|giam doc|pho giam|admin|manager/i.test(removeAccents(grp.userRole))));
+        return {
+          grp,
+          originalIdx,
+          department: grp.department || "",
+          staffName: grp.staffName || "",
+          dRank,
+          isShared,
+          isPersonalInShared: !!grp.isPersonalInShared,
+          isMgr
+        };
+      });
+
+      decorated.sort((a, b) => {
         // 1. SO SÁNH NẾU KHÁC BỘ PHẬN:
         if (!isDeptEquivalent(a.department, b.department)) {
-          const rankA = getDeptCategoryRank(a);
-          const rankB = getDeptCategoryRank(b);
-          if (rankA !== rankB) return rankA - rankB;
-          return (a.department || "").localeCompare(b.department || "", 'vi');
+          if (a.dRank !== b.dRank) return a.dRank - b.dRank;
+          return a.department.localeCompare(b.department, 'vi');
         }
 
         // 2. TRONG CÙNG MỘT BỘ PHẬN:
-        const isShared = (a.isShared !== undefined) ? a.isShared : isSharedGroupDeptClient(a.department);
-
         // 2.1: ĐỐI VỚI NHÓM GỘP / TỔ KHO:
-        // Đưa DÒNG VIỆC CÁ NHÂN (isPersonalInShared: true) LÊN TRÊN CÙNG
-        if (isShared) {
-          const aPersonal = !!a.isPersonalInShared;
-          const bPersonal = !!b.isPersonalInShared;
-          if (aPersonal !== bPersonal) {
-            return aPersonal ? -1 : 1; // Việc cá nhân (-1) đứng trước việc chung (1)
+        if (a.isShared) {
+          if (a.isPersonalInShared !== b.isPersonalInShared) {
+            return a.isPersonalInShared ? -1 : 1; // Việc cá nhân (-1) đứng trước việc chung (1)
           }
-
-          // Nếu cùng là việc cá nhân của các nhân sự trong tổ kho: Sắp xếp theo họ tên A-Z
-          if (aPersonal && bPersonal) {
-            return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
-          }
-
-          // Dòng việc chung ở sau
-          return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
+          return a.staffName.localeCompare(b.staffName, 'vi');
         }
 
         // 2.2: ĐỐI VỚI BỘ PHẬN THƯỜNG / VĂN PHÒNG:
-        // Nhân sự Quản lý lên đầu trong bộ phận đó
-        const aIsMgr = !!(a.isManagerStaff || (a.userRole && /quan ly|giam doc|pho giam|admin|manager/i.test(removeAccents(a.userRole))));
-        const bIsMgr = !!(b.isManagerStaff || (b.userRole && /quan ly|giam doc|pho giam|admin|manager/i.test(removeAccents(b.userRole))));
-        if (aIsMgr !== bIsMgr) {
-          return aIsMgr ? -1 : 1;
+        if (a.isMgr !== b.isMgr) {
+          return a.isMgr ? -1 : 1;
         }
 
-        return (a.staffName || "").localeCompare(b.staffName || "", 'vi');
+        return a.staffName.localeCompare(b.staffName, 'vi');
       });
+
+      return decorated.map(d => d.grp);
     }
 
     // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ THÁNG CŨ & LỌC CÔNG VIỆC THEO THỜI GIAN =================
@@ -8686,19 +8719,18 @@
 
     /**
      * CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO & THI ĐUA KHI CÓ PHÁT SINH SỐ LIỆU MỚI:
-     * Tự động tính toán lại và re-render Bảng Đôn Đốc và Bảng Thi Đua ngay lập tức
+     * Tính toán tiến độ 1 lần duy nhất và tái sử dụng cho toàn bộ các thẻ
      */
     function refreshReportingProgressRealtime() {
       const baseData = currentMatrixData || fullPeriodMatrixCache;
       if (!baseData) return;
       const activeData = getScopedDataForCurrentUser(baseData);
 
-      // 1. Tính toán lại tiến độ và cập nhật Bảng Theo Dõi & Đôn Đốc Tiến Độ
+      // 1. Tính toán tiến độ ĐÚNG 1 LẦN DUY NHẤT và lưu cache
       _cachedFollowUpProgressData = getDailyReportingProgressData(activeData);
-      renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
 
-      // 2. Cập nhật Bảng Thi Đua Bám Sát Tiến Độ & Trung tâm KPI
-      renderAnalyticsSection(activeData);
+      // 2. Cập nhật Bảng Thi Đua, Đôn Đốc & Trung tâm KPI với tiến độ đã tính sẵn (không tính lặp lại)
+      renderAnalyticsSection(activeData, _cachedFollowUpProgressData);
     }
 
     // ================= BẢO MẬT HỆ THỐNG: TỰ ĐỘNG ĐĂNG XUẤT 00:00 & KHI ĐỔI MẬT KHẨU TỪ THIẾT BỊ KHÁC =================
@@ -8882,6 +8914,24 @@
       }
     }
 
+    let _realtimeBoardRefreshTimer = null;
+    function scheduleRealtimeBoardRefresh() {
+      if (_realtimeBoardRefreshTimer) clearTimeout(_realtimeBoardRefreshTimer);
+      _realtimeBoardRefreshTimer = setTimeout(() => {
+        refreshReportingProgressRealtime();
+        _realtimeBoardRefreshTimer = null;
+      }, 70);
+    }
+
+    let _realtimeMatrixRenderTimer = null;
+    function scheduleRealtimeMatrixRender() {
+      if (_realtimeMatrixRenderTimer) clearTimeout(_realtimeMatrixRenderTimer);
+      _realtimeMatrixRenderTimer = setTimeout(() => {
+        applyClientFilterAndRender();
+        _realtimeMatrixRenderTimer = null;
+      }, 90);
+    }
+
     function handleRealtimeDailyReportChange(payload) {
       if (!payload) return;
       const isDelete = (payload.eventType === 'DELETE');
@@ -8904,12 +8954,13 @@
       }
 
       let hasChanged = false;
-      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+      const targetCaches = Array.from(new Set([fullPeriodMatrixCache, currentMatrixData].filter(Boolean)));
+      targetCaches.forEach(targetCache => {
         if (targetCache && targetCache.staffGroups) {
           targetCache.staffGroups.forEach(grp => {
-            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+            const matchedTask = (grp.tasks || []).find(t => t.taskId === taskId);
             if (matchedTask) {
-              if (matchedTask.dailyValues[d] !== val) {
+              if (matchedTask.dailyValues && matchedTask.dailyValues[d] !== val) {
                 matchedTask.dailyValues[d] = val;
                 matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
                 hasChanged = true;
@@ -8920,10 +8971,10 @@
       });
 
       if (hasChanged) {
-        refreshReportingProgressRealtime();
+        scheduleRealtimeBoardRefresh();
         const sym = getSmartSymbolInfo(val);
         if (sym && sym.isLeave) {
-          applyClientFilterAndRender();
+          scheduleRealtimeMatrixRender();
         } else {
           // Cập nhật giá trị hiển thị trên ô ma trận nếu đang mở ô này mà người dùng không đang gõ
           const inp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${d}"]`);
@@ -9239,7 +9290,7 @@
     }
 
     // ================= TRUNG TÂM PHÂN TÍCH ĐẦU VIỆC CHUYÊN SÂU =================
-    function renderAnalyticsSection(data) {
+    function renderAnalyticsSection(data, precalculatedProgressData = null) {
       const section = document.getElementById('analyticsSection');
       if (!data || !data.staffGroups || data.staffGroups.length === 0) {
         section.classList.add('hidden');
@@ -9255,6 +9306,10 @@
         return;
       }
       section.classList.remove('hidden');
+
+      // Tái sử dụng tiến độ đã tính sẵn hoặc tính đúng 1 lần duy nhất cho toàn bộ các thẻ
+      const progressData = precalculatedProgressData || getDailyReportingProgressData(scopedData);
+      _cachedFollowUpProgressData = progressData;
 
       let staffTitle = "";
       if (!isExec && currentUser) {
@@ -9413,13 +9468,13 @@
           : `Chưa có phát sinh`;
       }
 
-      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), scopedData.dayCols.length, scopedData);
+      renderTaskSemanticInsights(domainCounts, totalTasksCount, Object.values(taskRegistry), scopedData.dayCols.length, scopedData, progressData);
       renderActivityRhythmChart(scopedData, dailyActiveTasksMap);
-      renderDeptLeaderboard(deptAggregation, scopedData);
+      renderDeptLeaderboard(deptAggregation, scopedData, progressData);
       updateHeaderTodayStatus(scopedData);
     }
 
-    function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod, rawData) {
+    function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod, rawData, precalculatedProgressData = null) {
       const domainBox = document.getElementById('insightDomainBreakdown');
       if (domainBox) {
         domainBox.innerHTML = '';
@@ -9468,7 +9523,7 @@
 
       if (leaderboardBox) {
         leaderboardBox.innerHTML = '';
-        const progressData = getDailyReportingProgressData(rawData || fullPeriodMatrixCache || currentMatrixData);
+        const progressData = precalculatedProgressData || getDailyReportingProgressData(rawData || fullPeriodMatrixCache || currentMatrixData);
         const { targetDateLabel, completedList } = progressData;
 
         const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
@@ -9627,7 +9682,7 @@
         });
       }
 
-      // Cập nhật các tùy chọn trong dropdown Đầu việc (nếu có select element)
+      // Cập nhật các tùy chọn trong dropdown Đầu việc (Tối ưu hóa tránh render lại DOM khi không đổi danh mục việc)
       if (taskSelect) {
         const prevSelected = currentRhythmSelectedTaskKey;
         const isExec = isCurrentUserExecutiveOrManager();
@@ -9637,23 +9692,33 @@
         if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
           allOptionLabel = `📊 [Tổng hợp] ${allTasks.length} việc của ${data.queryStaff} (${data.queryDept || ''})`;
         }
-        taskSelect.innerHTML = `<option value="ALL">${allOptionLabel}</option>`;
-        
-        allTasks.forEach(t => {
-          let activeDays = 0;
-          dayCols.forEach(dc => {
-            const raw = t.dailyValues[dc.colIndex];
-            if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
-              activeDays++;
-            }
+
+        const taskSignature = `${allTasks.length}_${data && data.queryStaff ? data.queryStaff : ''}_${data && data.queryDept ? data.queryDept : ''}`;
+        if (taskSelect.dataset.signature !== taskSignature) {
+          taskSelect.dataset.signature = taskSignature;
+          const selectFrag = document.createDocumentFragment();
+
+          const allOpt = document.createElement('option');
+          allOpt.value = "ALL";
+          allOpt.innerText = allOptionLabel;
+          if (prevSelected === "ALL") allOpt.selected = true;
+          selectFrag.appendChild(allOpt);
+
+          allTasks.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.key;
+            opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${t.staffName}`;
+            if (t.key === prevSelected) opt.selected = true;
+            selectFrag.appendChild(opt);
           });
-          const totStr = t.monthTotal !== undefined && t.monthTotal !== null && t.monthTotal !== '' && t.monthTotal !== '-' ? (typeof t.monthTotal === 'number' ? formatNumberWithCommas(t.monthTotal) : t.monthTotal) : `${activeDays} ngày`;
-          const opt = document.createElement('option');
-          opt.value = t.key;
-          opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${t.staffName}`;
-          if (t.key === prevSelected) opt.selected = true;
-          taskSelect.appendChild(opt);
-        });
+
+          taskSelect.innerHTML = '';
+          taskSelect.appendChild(selectFrag);
+        } else {
+          if (taskSelect.value !== currentRhythmSelectedTaskKey) {
+            taskSelect.value = currentRhythmSelectedTaskKey;
+          }
+        }
 
         // Kiểm tra tính hợp lệ của lựa chọn hiện tại
         if (prevSelected !== 'ALL' && !allTasks.some(t => t.key === prevSelected)) {
@@ -10200,8 +10265,8 @@
       }
     }
 
-    function renderDeptLeaderboard(deptAggregation, data) {
-      _cachedFollowUpProgressData = getDailyReportingProgressData(data || fullPeriodMatrixCache || currentMatrixData);
+    function renderDeptLeaderboard(deptAggregation, data, precalculatedProgressData = null) {
+      _cachedFollowUpProgressData = precalculatedProgressData || getDailyReportingProgressData(data || fullPeriodMatrixCache || currentMatrixData);
       renderDeptLeaderboardListContent(_cachedFollowUpProgressData);
     }
 
@@ -12406,8 +12471,7 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, isLeaveReport ? "Đã xác nhận báo cáo thành công!" : "Đã lưu thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud(isLeaveReport ? "Đã xác nhận báo cáo thành công!" : "Đã lưu thành công!", () => {
           clearLocalDraft();
           updateSyncStatusUI('synced');
           if (isLeaveReport && leaveSymbolFound) {
@@ -12420,7 +12484,7 @@
           closeDayEntryModal();
           // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
           refreshReportingProgressRealtime();
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         updateSyncStatusUI('draft');
@@ -13795,21 +13859,26 @@
       const targetLabel = isSharedScope ? `việc chung tổ kho (${targetDeptName})` : `${targetStaffVal} (${targetDeptName})`;
 
       showProgressHud(actionLabel.toUpperCase() + " ĐẦU VIỆC", `Đang ${actionLabel.toLowerCase()} đầu việc sang ${targetLabel}...`, "fa-solid fa-arrow-right-arrow-left animate-spin");
-      autoSimulateProgress(15, 80, "Đang xử lý dữ liệu...", 20);
+      autoSimulateProgress(20, 85, "Đang xử lý dữ liệu...", 15);
 
       try {
-        // 1. Lấy department_id của target
-        const { data: deptRows } = await supabase.from('departments').select('id').eq('name', targetDeptName).limit(1);
-        const targetDeptId = (deptRows && deptRows[0]) ? deptRows[0].id : 1;
-
-        // 2. Lấy assigned_user_id của target
         let targetUserId = null;
+        const targetOptUserId = targetOpt?.dataset?.userId ? parseInt(targetOpt.dataset.userId, 10) : null;
+
+        // Truy vấn song song phòng ban đích và nhân sự đích
+        const deptPromise = supabase.from('departments').select('id').eq('name', targetDeptName).limit(1);
+        const userPromise = (!isSharedScope && !targetOptUserId)
+          ? supabase.from('users').select('id').eq('full_name', targetStaffVal).limit(1)
+          : Promise.resolve({ data: null });
+
+        const [deptRes, userRes] = await Promise.all([deptPromise, userPromise]);
+        const targetDeptId = (deptRes.data && deptRes.data[0]) ? deptRes.data[0].id : 1;
+
         if (!isSharedScope) {
-          if (targetOpt?.dataset?.userId) {
-            targetUserId = parseInt(targetOpt.dataset.userId, 10);
-          } else {
-            const { data: uRows } = await supabase.from('users').select('id').eq('full_name', targetStaffVal).limit(1);
-            if (uRows && uRows[0]) targetUserId = uRows[0].id;
+          if (targetOptUserId) {
+            targetUserId = targetOptUserId;
+          } else if (userRes.data && userRes.data[0]) {
+            targetUserId = userRes.data[0].id;
           }
         } else {
           // Với việc chung tổ kho: gán user đại diện đầu tiên trong tổ hoặc null
@@ -13850,19 +13919,23 @@
           const taskId = pendingTransferTaskData.taskId;
 
           if (taskId) {
-            // Kiểm tra xem công việc này có báo cáo ở các kỳ trước không
-            const { data: priorReps } = await supabase
-              .from('daily_reports')
-              .select('id')
-              .eq('task_id', taskId)
-              .lt('report_date', currentPeriodStartDate)
-              .limit(1);
+            // Kiểm tra song song báo cáo kỳ trước và thông tin công việc
+            const [priorRepsRes, existingTaskRes] = await Promise.all([
+              supabase
+                .from('daily_reports')
+                .select('id')
+                .eq('task_id', taskId)
+                .lt('report_date', currentPeriodStartDate)
+                .limit(1),
+              supabase
+                .from('tasks')
+                .select('created_at, task_name')
+                .eq('id', taskId)
+                .limit(1)
+            ]);
 
-            const { data: existingTask } = await supabase
-              .from('tasks')
-              .select('created_at, task_name')
-              .eq('id', taskId)
-              .limit(1);
+            const priorReps = priorRepsRes.data;
+            const existingTask = existingTaskRes.data;
 
             const hasPriorReports = priorReps && priorReps.length > 0;
             const isCreatedBefore = existingTask && existingTask[0] && existingTask[0].created_at && (new Date(existingTask[0].created_at) < new Date(currentPeriodStartDate));
@@ -13932,8 +14005,7 @@
           }
         }
 
-        autoSimulateProgress(80, 100, "Hoàn tất!", 15, () => {
-          hideProgressHud(200);
+        finishProgressHud("Hoàn tất!", () => {
           showToast(`Đã ${actionLabel.toLowerCase()} đầu việc "${pendingTransferTaskData.taskName}" sang cho ${targetLabel} thành công!`);
           closeTransferTaskModal();
           cachedPreloadMatrix = null;
@@ -13946,7 +14018,7 @@
             const currentCount = container.querySelectorAll('.assign-task-row').length;
             countBadge.innerText = `${currentCount} công việc`;
           }
-        });
+        }, 80);
 
       } catch (err) {
         hideProgressHud(100);
@@ -14088,17 +14160,18 @@
 
       const targetLabel = isSharedScope ? `việc chung của tổ kho (${deptName})` : `nhân sự ${staffName}`;
       showProgressHud("LƯU PHÂN CÔNG", `Đang lưu phân công cho ${targetLabel}...`, "fa-solid fa-list-check animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
+      autoSimulateProgress(20, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
         let uId = selectedOpt?.dataset?.userId ? parseInt(selectedOpt.dataset.userId, 10) : null;
 
-        const { data: dept } = await supabase.from('departments').select('id').eq('name', deptName).limit(1);
-        let user = null;
-        if (!isSharedScope) {
-          const { data: userData } = await supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1);
-          user = userData;
-        }
+        // Truy vấn đồng thời thông tin bộ phận và tài khoản nhân sự
+        const deptPromise = supabase.from('departments').select('id').eq('name', deptName).limit(1);
+        const userPromise = !isSharedScope
+          ? supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1)
+          : Promise.resolve({ data: null });
+
+        const [{ data: dept }, { data: user }] = await Promise.all([deptPromise, userPromise]);
 
         // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Ban Giám Đốc
         if (user && user[0] && isDirectorOrAdmin(user[0].role, user[0].username)) {
@@ -14113,53 +14186,59 @@
 
         const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
 
-        for (const item of processedTasks) {
+        // TỐI ƯU HÓA SIÊU TỐC: Lưu đồng thời (parallel) toàn bộ danh sách công việc thay vì chạy tuần tự
+        await Promise.all(processedTasks.map(async (item) => {
           const formattedGuide = formatTaskGuideWithOrderAndScope(item.tGuide, item.orderIndex, assignScope);
 
           if (item.taskId) {
             if (item.isRenamed) {
-              // KIỂM TRA XEM CÔNG VIỆC CŨ CÓ PHÁT SINH SỐ LIỆU Ở KỲ TRƯỚC HOẶC ĐƯỢC TẠO TỪ KỲ TRƯỚC KHÔNG:
-              const { data: priorReps } = await supabase
-                .from('daily_reports')
-                .select('id')
-                .eq('task_id', item.taskId)
-                .lt('report_date', currentPeriodStartDate)
-                .limit(1);
+              // KIỂM TRA ĐỒNG THỜI CẢ BÁO CÁO CŨ VÀ THÔNG TIN TASK CŨ
+              const [priorRepsRes, existingTaskRes] = await Promise.all([
+                supabase
+                  .from('daily_reports')
+                  .select('id')
+                  .eq('task_id', item.taskId)
+                  .lt('report_date', currentPeriodStartDate)
+                  .limit(1),
+                supabase
+                  .from('tasks')
+                  .select('created_at, task_name')
+                  .eq('id', item.taskId)
+                  .limit(1)
+              ]);
 
-              const { data: existingTask } = await supabase
-                .from('tasks')
-                .select('created_at, task_name')
-                .eq('id', item.taskId)
-                .limit(1);
-
+              const priorReps = priorRepsRes.data;
+              const existingTask = existingTaskRes.data;
               const hasPriorReports = priorReps && priorReps.length > 0;
               const isCreatedBefore = existingTask && existingTask[0] && existingTask[0].created_at && (new Date(existingTask[0].created_at) < new Date(currentPeriodStartDate));
 
               if (hasPriorReports || isCreatedBefore) {
                 // BẢO VỆ TUYỆT ĐỐI KỲ CŨ:
-                // 1. Phục hồi tên gốc cho công việc cũ (bảo vệ lịch sử) và gỡ phân công khỏi nhân sự này ở kỳ hiện tại
-                await supabase
-                  .from('tasks')
-                  .update({
-                    task_name: item.origName,
-                    assigned_user_id: null
-                  })
-                  .eq('id', item.taskId);
+                // 1. Phục hồi tên gốc cho công việc cũ và tạo công việc mới song song
+                const [upOldRes, insNewRes] = await Promise.all([
+                  supabase
+                    .from('tasks')
+                    .update({
+                      task_name: item.origName,
+                      assigned_user_id: null
+                    })
+                    .eq('id', item.taskId),
+                  supabase
+                    .from('tasks')
+                    .insert({
+                      department_id: dId,
+                      assigned_user_id: uId,
+                      task_name: item.tName,
+                      guide: formattedGuide,
+                      created_at: new Date().toISOString()
+                    })
+                    .select('id')
+                ]);
 
-                // 2. Tạo công việc mới với tên mới cho kỳ hiện tại
-                const { data: insertedNew, error: inErr } = await supabase
-                  .from('tasks')
-                  .insert({
-                    department_id: dId,
-                    assigned_user_id: uId,
-                    task_name: item.tName,
-                    guide: formattedGuide,
-                    created_at: new Date().toISOString()
-                  })
-                  .select('id');
+                if (upOldRes.error) throw upOldRes.error;
+                if (insNewRes.error) throw insNewRes.error;
 
-                if (inErr) throw inErr;
-
+                const insertedNew = insNewRes.data;
                 // 3. Di chuyển các báo cáo đã nhập ở kỳ hiện tại (nếu có) sang công việc mới
                 if (insertedNew && insertedNew[0]) {
                   await supabase
@@ -14209,16 +14288,15 @@
 
             if (inErr) throw inErr;
           }
-        }
+        }));
 
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Cập nhật thành công!", () => {
           showToast(isSharedScope ? "Đã cập nhật phân công công việc chung của tổ kho thành công!" : (isShared ? `Đã cập nhật phân công việc cá nhân của ${staffName} thành công!` : "Đã cập nhật phân công công việc thành công!"));
           closeAssignModal();
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
           loadMatrixData(true);
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi phân công: " + err.message, true);
@@ -14893,7 +14971,7 @@
       }
 
       showProgressHud("CẬP NHẬT TÀI KHOẢN", `Đang lưu thông tin tài khoản cho ${fullName}...`, "fa-solid fa-user-gear animate-pulse");
-      autoSimulateProgress(10, 85, "Cập nhật dữ liệu hệ thống...", 25);
+      autoSimulateProgress(25, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
         const updatePayload = {
@@ -14914,11 +14992,22 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
+        // Cập nhật tức thì bộ nhớ đệm tại chỗ để giao diện hiển thị ngay lập tức
+        if (adminManageUsersCache && adminManageUsersCache.users) {
+          const u = adminManageUsersCache.users.find(x => x.username === origUsername);
+          if (u) {
+            u.fullName = fullName;
+            u.username = newUsername;
+            u.role = finalRole;
+            u.status = status;
+            if (newPass) u.password_hash = newPass;
+          }
+        }
+
+        finishProgressHud("Cập nhật thành công!", () => {
           showToast(`Đã cập nhật thông tin tài khoản ${fullName} thành công!`);
           closeAccountEditModal();
-          
+
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
 
@@ -14927,7 +15016,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi cập nhật tài khoản: " + err.message, true);
@@ -15075,26 +15164,25 @@
           giamDocDeptId = currentDirector.department_id;
         }
 
-        // 2. Cập nhật nhân sự kế nhiệm trở thành Admin & thuộc Giám Đốc Ban
-        const { error: errSucc } = await supabase
-          .from('users')
-          .update({
-            role: 'Admin',
-            department_id: giamDocDeptId
-          })
-          .eq('username', successor.username);
+        // 2 & 3. Cập nhật đồng thời nhân sự kế nhiệm và Giám đốc cũ
+        const [resSucc, resFormer] = await Promise.all([
+          supabase
+            .from('users')
+            .update({
+              role: 'Admin',
+              department_id: giamDocDeptId
+            })
+            .eq('username', successor.username),
+          supabase
+            .from('users')
+            .update({
+              role: formerRole
+            })
+            .eq('username', directorUsername)
+        ]);
 
-        if (errSucc) throw errSucc;
-
-        // 3. Cập nhật Giám đốc cũ chuyển sang vai trò mới (ví dụ: 'Quản lý' hoặc 'Nhân viên')
-        const { error: errFormer } = await supabase
-          .from('users')
-          .update({
-            role: formerRole
-          })
-          .eq('username', directorUsername);
-
-        if (errFormer) throw errFormer;
+        if (resSucc.error) throw resSucc.error;
+        if (resFormer.error) throw resFormer.error;
 
         // 4. Cập nhật trạng thái session nếu người đang đăng nhập là Giám đốc cũ hoặc người kế nhiệm
         if (currentUser && currentUser.username === directorUsername) {
@@ -15112,8 +15200,7 @@
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
         }
 
-        autoSimulateProgress(80, 100, "Bàn giao quyền thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Bàn giao quyền thành công!", () => {
           showToast(`Đã chuyển giao quyền Giám Đốc Ban & Admin thành công cho ${succName}!`);
           closeTransferAdminModal();
           closeAccountEditModal();
@@ -15126,7 +15213,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
 
       } catch (err) {
         hideProgressHud(100);
@@ -15714,26 +15801,31 @@
       }
 
       showProgressHud(hudTitle, hudDesc, hudIcon);
-      autoSimulateProgress(10, 80, isLock ? "Vô hiệu hóa tài khoản trên hệ thống..." : "Cập nhật dữ liệu hệ thống...", 25);
+      autoSimulateProgress(25, 85, isLock ? "Vô hiệu hóa tài khoản trên hệ thống..." : "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
-        const { data: prevUserData } = await supabase
-          .from('users')
-          .select('id, department_id, role')
-          .eq('username', updateData.username)
-          .limit(1);
+        // Truy vấn song song thông tin người dùng hiện tại và phòng ban đích
+        const [prevUserDataRes, deptDataRes] = await Promise.all([
+          supabase
+            .from('users')
+            .select('id, department_id, role')
+            .eq('username', updateData.username)
+            .limit(1),
+          supabase
+            .from('departments')
+            .select('id, is_shared_group')
+            .eq('name', updateData.dept)
+            .limit(1)
+        ]);
 
+        if (deptDataRes.error) throw deptDataRes.error;
+
+        const prevUserData = prevUserDataRes.data;
         const prevUser = prevUserData && prevUserData[0] ? prevUserData[0] : null;
         const oldDeptId = prevUser ? prevUser.department_id : null;
         const currentUserId = prevUser ? prevUser.id : null;
 
-        const { data: deptData, error: deptErr } = await supabase
-          .from('departments')
-          .select('id, is_shared_group')
-          .eq('name', updateData.dept)
-          .limit(1);
-          
-        if (deptErr) throw deptErr;
+        const deptData = deptDataRes.data;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
 
         const updatePayload = {
@@ -15863,8 +15955,7 @@
         }
 
         // ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
-        autoSimulateProgress(80, 100, "Cập nhật thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Cập nhật thành công!", () => {
           closeTransferModal(); 
 
           let msg = `Đã điều chuyển ${updateData.fullName} sang vai trò "${updateData.role}" thành công!`;
@@ -15885,7 +15976,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi xử lý: " + err.message, true);
@@ -16090,7 +16181,7 @@
       }
 
       showProgressHud("TẠO NHÂN SỰ MỚI", `Đang khởi tạo tài khoản cho ${fullName}...`, "fa-solid fa-user-plus animate-pulse");
-      autoSimulateProgress(10, 85, "Ghi nhận vào cơ sở dữ liệu...", 25);
+      autoSimulateProgress(25, 85, "Ghi nhận vào cơ sở dữ liệu...", 15);
 
       try {
         let dId = null;
@@ -16113,8 +16204,7 @@
 
         if (error) throw error;
 
-        autoSimulateProgress(85, 100, "Tạo thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Tạo thành công!", () => {
           showToast(`Đã khởi tạo tài khoản cho ${fullName} thành công!`);
           closeAddUserModal();
           loadAllUsersManagementData();
@@ -16122,7 +16212,7 @@
             setupRoleControls();
             loadMatrixData(true);
           });
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi thêm nhân sự: " + err.message, true);
@@ -16186,7 +16276,7 @@
       }
 
       showProgressHud("ĐỔI MẬT KHẨU", "Đang cập nhật mật khẩu bảo mật mới...", "fa-solid fa-key animate-pulse");
-      autoSimulateProgress(10, 85, "Mã hóa và lưu vào cơ sở dữ liệu...", 25);
+      autoSimulateProgress(25, 85, "Mã hóa và lưu vào cơ sở dữ liệu...", 15);
 
       try {
         const { error } = await supabase
@@ -16217,11 +16307,10 @@
           } catch (e) {}
         }
 
-        autoSimulateProgress(85, 100, "Đổi mật khẩu thành công!", 15, () => {
-          hideProgressHud(250);
+        finishProgressHud("Đổi mật khẩu thành công!", () => {
           showToast("Đổi mật khẩu bảo mật thành công! Mật khẩu cũ không còn hiệu lực.");
           closeChangePasswordModal();
-        });
+        }, 80);
       } catch (err) {
         hideProgressHud(100);
         showToast("Lỗi: " + err.message, true);
