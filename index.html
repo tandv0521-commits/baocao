@@ -3470,9 +3470,9 @@
       }, true);
     }
 
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-      initAppOnLoad();
-    } else {
+    // Khởi chạy nạp dữ liệu ngay lập tức vì cây DOM đăng nhập nằm trước thẻ <script>
+    initAppOnLoad();
+    if (!hasInitializedApp) {
       document.addEventListener('DOMContentLoaded', initAppOnLoad);
       window.addEventListener('load', initAppOnLoad);
     }
@@ -4720,7 +4720,18 @@
         }
         if (callback) callback();
       } catch (err) {
-        showToast("Lỗi nạp dữ liệu: " + err.message, true);
+        console.error("Lỗi nạp dữ liệu ban đầu:", err);
+        const textEl = document.getElementById('deptPickerText');
+        if (textEl) {
+          textEl.innerText = "⚠️ Lỗi kết nối CSDL (Bấm để thử lại)";
+          textEl.className = "truncate font-semibold text-rose-600 cursor-pointer";
+          textEl.onclick = () => {
+            textEl.innerText = "-- Đang nạp danh sách bộ phận... --";
+            textEl.className = "truncate font-semibold text-slate-500";
+            loadInitialData();
+          };
+        }
+        showToast("Lỗi nạp dữ liệu: " + (err.message || err), true);
       }
     }
 
@@ -5854,8 +5865,7 @@
           updatePeriodLockUI(newLockState);
           fullPeriodMatrixCache = null;
           loadMatrixData(true);
-        });
-      }, 400);
+        }, 80);
     }
 
     async function openDeptManagerModal() {
