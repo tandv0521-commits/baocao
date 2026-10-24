@@ -9532,11 +9532,11 @@
         if (leaderboardSubtitle) {
           let scopeText = "";
           if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
-            scopeText = `Nhân sự: ${currentSelectedStaff} • `;
+            scopeText = `<span onclick="locateStaffOrGroupInMatrix('${escapeJsStr(currentSelectedStaff)}', '${escapeJsStr(currentSelectedDept)}', false, event)" class="cursor-pointer font-bold hover:underline hover:text-emerald-700" title="Bấm để xem công việc của ${escapeHtml(currentSelectedStaff)} trên ma trận">Nhân sự: ${escapeHtml(currentSelectedStaff)}</span> • `;
           } else if (currentSelectedDept && currentSelectedDept !== "TẤT CẢ") {
-            scopeText = `Bộ phận: ${currentSelectedDept} • `;
+            scopeText = `<span onclick="jumpToDepartmentInMatrix('${escapeJsStr(currentSelectedDept)}', event)" class="cursor-pointer font-bold hover:underline hover:text-emerald-700" title="Bấm để xem ma trận toàn bộ phận ${escapeHtml(currentSelectedDept)}">Bộ phận: ${escapeHtml(currentSelectedDept)}</span> • `;
           }
-          leaderboardSubtitle.innerText = isManagerOrAdmin 
+          leaderboardSubtitle.innerHTML = isManagerOrAdmin 
             ? `${scopeText}Đã hoàn thành báo cáo đến ngày ${targetDateLabel}` 
             : `Tiến độ báo cáo đến ngày ${targetDateLabel}`;
         }
@@ -9555,7 +9555,7 @@
           let html = '';
           activeCompletedList.forEach(item => {
             html += `
-              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để nhảy về bảng ma trận của ${escapeHtml(item.displayName)}">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <span class="w-5 h-5 rounded-lg ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-[10px] shrink-0">
                     <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -9565,7 +9565,7 @@
                       <span class="font-bold text-slate-800 text-[11px] truncate group-hover:text-emerald-900 transition">${escapeHtml(item.displayName)}</span>
                       ${item.isGroup ? '<span class="px-1 py-0.1 rounded text-[8px] font-black uppercase bg-teal-100 text-teal-800 shrink-0">Nhóm</span>' : ''}
                     </div>
-                    <span class="text-[9.5px] text-slate-400 block truncate leading-tight">${item.isGroup ? 'Đại diện bộ phận' : escapeHtml(item.subDeptName)}</span>
+                    <span onclick="jumpToDepartmentInMatrix('${escapeJsStr(item.department)}', event)" class="text-[9.5px] text-slate-400 hover:text-emerald-700 hover:underline cursor-pointer block truncate leading-tight" title="Bấm để xem ma trận bộ phận ${escapeHtml(item.department)}">${item.isGroup ? 'Đại diện bộ phận' : escapeHtml(item.subDeptName)}</span>
                   </div>
                 </div>
                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border-amber-200/90' : 'bg-emerald-100 text-emerald-800 border-emerald-200/80'} whitespace-nowrap font-num shrink-0 border">
@@ -10282,11 +10282,11 @@
       if (subTitle) {
         let scopeText = "";
         if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
-          scopeText = `Nhân sự: ${currentSelectedStaff} • `;
+          scopeText = `<span onclick="locateStaffOrGroupInMatrix('${escapeJsStr(currentSelectedStaff)}', '${escapeJsStr(currentSelectedDept)}', false, event)" class="cursor-pointer font-bold hover:underline hover:text-emerald-700" title="Bấm để xem công việc của ${escapeHtml(currentSelectedStaff)} trên ma trận">Nhân sự: ${escapeHtml(currentSelectedStaff)}</span> • `;
         } else if (currentSelectedDept && currentSelectedDept !== "TẤT CẢ") {
-          scopeText = `Bộ phận: ${currentSelectedDept} • `;
+          scopeText = `<span onclick="jumpToDepartmentInMatrix('${escapeJsStr(currentSelectedDept)}', event)" class="cursor-pointer font-bold hover:underline hover:text-emerald-700" title="Bấm để xem ma trận toàn bộ phận ${escapeHtml(currentSelectedDept)}">Bộ phận: ${escapeHtml(currentSelectedDept)}</span> • `;
         }
-        subTitle.innerText = isManagerOrAdmin
+        subTitle.innerHTML = isManagerOrAdmin
           ? `${scopeText}Thống kê số ngày chưa báo cáo tính đến ngày ${targetDateLabel}`
           : `Tiến độ báo cáo tính đến ngày ${targetDateLabel}`;
       }
@@ -10346,7 +10346,7 @@
             : item.unreportedDaysList.slice(-3).map(d => 'ngày ' + d).join(', ') + ` (+${item.unreportedDaysList.length - 3} ngày)`;
 
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để nhảy về bảng ma trận của ${escapeHtml(item.displayName)}">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
@@ -10357,7 +10357,7 @@
                     ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                   </div>
                   <div class="flex items-center gap-1 text-[10.5px] text-slate-500 mt-0.5 truncate">
-                    <span class="truncate">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
+                    <span onclick="jumpToDepartmentInMatrix('${escapeJsStr(item.department)}', event)" class="truncate hover:underline hover:text-emerald-700 cursor-pointer font-semibold" title="Bấm để xem ma trận bộ phận ${escapeHtml(item.department)}">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
                     <span class="text-slate-300">•</span>
                     <span class="${isDanger ? 'text-rose-700 font-bold' : 'text-amber-800 font-medium'} truncate font-num">
                       Thiếu: ${missDaysStr}
@@ -10391,7 +10391,7 @@
         let html = '';
         activeCompletedList.forEach(item => {
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để nhảy về bảng ma trận của ${escapeHtml(item.displayName)}">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -10401,7 +10401,7 @@
                     <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
                     ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                   </div>
-                  <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
+                  <span onclick="jumpToDepartmentInMatrix('${escapeJsStr(item.department)}', event)" class="text-[10px] text-slate-400 hover:text-emerald-700 hover:underline cursor-pointer block truncate mt-0.5" title="Bấm để xem ma trận bộ phận ${escapeHtml(item.department)}">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
                 </div>
               </div>
               <div class="text-right shrink-0">
@@ -10419,10 +10419,78 @@
     }
 
     /**
+     * BẤM VÀO TÊN BỘ PHẬN TỪ BẢNG THEO DÕI / THI ĐUA:
+     * Nhảy lên bảng ma trận và lọc hiển thị toàn bộ công việc của bộ phận được chọn
+     */
+    function jumpToDepartmentInMatrix(deptName, evt) {
+      if (evt) evt.stopPropagation();
+      if (!deptName || deptName === "TẤT CẢ") {
+        resetMatrixFollowUpFilter();
+        return;
+      }
+
+      isDirectorDashboardInitial = false;
+      updateDirectorOverviewButtonUI();
+
+      // 1. Khôi phục hiển thị khối bảng ma trận (#matrixCard)
+      const matrixCard = document.getElementById('matrixCard');
+      if (matrixCard) matrixCard.classList.remove('hidden');
+      const tableContainer = document.getElementById('tableScrollContainer');
+      if (tableContainer) tableContainer.classList.remove('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.remove('hidden');
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.remove('hidden');
+      const loading = document.getElementById('loadingTasksBox');
+      if (loading) loading.classList.add('hidden');
+
+      // 2. Đồng bộ thanh điều hướng bộ lọc: Bộ phận được chọn, Nhân sự = TẤT CẢ
+      currentSelectedDept = deptName;
+      const deptSelect = document.getElementById('adminDeptSelect');
+      if (deptSelect) deptSelect.value = deptName;
+      updateDashboardDeptPickerUI(deptName);
+
+      currentSelectedStaff = "TẤT CẢ";
+      populateStaffDropdown(deptName);
+      const staffSelect = document.getElementById('adminStaffSelect');
+      if (staffSelect) staffSelect.value = "TẤT CẢ";
+      updateDashboardStaffPickerUI("TẤT CẢ");
+
+      // 3. Render bảng ma trận và nhịp độ
+      if (fullPeriodMatrixCache) {
+        applyClientFilterAndRender();
+      } else {
+        loadMatrixData(false);
+      }
+
+      // 4. CUỘN MƯỢT MÀ LÊN ĐỈNH TRANG BẢNG MA TRẬN
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      const scroller = document.getElementById('tableScrollContainer');
+      if (scroller) {
+        scroller.scrollTop = 0;
+      }
+
+      // 5. Hiệu ứng highlight phát sáng nhẹ nhàng các dòng công việc của bộ phận
+      setTimeout(() => {
+        const rows = document.querySelectorAll('#sheetTableBody tr');
+        rows.forEach(r => {
+          r.classList.add('bg-emerald-100/70', 'transition-colors', 'duration-500');
+          setTimeout(() => r.classList.remove('bg-emerald-100/70'), 2200);
+        });
+      }, 350);
+
+      showToast(`Đã chuyển đến toàn bộ công việc bộ phận: ${deptName}`);
+    }
+
+    /**
      * BẤM VÀO NHÂN SỰ / NHÓM GỘP TỪ BẢNG THEO DÕI:
      * Nhảy lên bảng ma trận và lọc hiển thị chính xác các đầu việc của đối tượng đó
      */
     function locateStaffOrGroupInMatrix(displayName, deptName, isGroup, evt) {
+      if (evt) evt.stopPropagation();
       if (!displayName) return;
       isDirectorDashboardInitial = false; // Khi click vào nhân sự từ bảng Đôn đốc/Thi đua, mở ma trận ngay lập tức
       updateDirectorOverviewButtonUI();
@@ -10561,21 +10629,24 @@
         evt.currentTarget.classList.add('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
       }
 
-      // NHẢY THÔNG TIN HIỂN THỊ TỪ DÒNG KỲ BÁO CÁO TRỞ XUỐNG
-      scrollToElement('mainPeriodFilterContainer');
+      // 4. CUỘN MƯỢT MÀ LÊN ĐỈNH TRANG BẢNG MA TRẬN
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
       const scroller = document.getElementById('tableScrollContainer');
       if (scroller) {
         scroller.scrollTop = 0;
       }
 
-      // Hiệu ứng highlight phát sáng nhẹ nhàng các dòng công việc vừa render trên ma trận
+      // 5. Hiệu ứng highlight phát sáng nhẹ nhàng các dòng công việc vừa render trên ma trận
       setTimeout(() => {
         const rows = document.querySelectorAll('#sheetTableBody tr');
         rows.forEach(r => {
           r.classList.add('bg-amber-100/80', 'transition-colors', 'duration-500');
-          setTimeout(() => r.classList.remove('bg-amber-100/80'), 2000);
+          setTimeout(() => r.classList.remove('bg-amber-100/80'), 2200);
         });
-      }, 300);
+      }, 350);
 
       // Đồng thời kích hoạt hiệu ứng nhẹ cho bảng nhịp độ phát sinh
       const rhythmCard = document.getElementById('activityRhythmCard');
