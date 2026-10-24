@@ -508,6 +508,8 @@
     #tableScrollContainer {
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
+      max-height: none !important;
+      overflow-y: visible !important;
     }
 
     /* Tối ưu hiệu ứng ô nhập liệu trực quan */
@@ -1361,7 +1363,7 @@
 
       <!-- ================= 1. BẢNG MA TRẬN NỘI DUNG CÔNG VIỆC ================= -->
       <div id="matrixCard" class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
-        <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll max-h-[540px]">
+        <div id="tableScrollContainer" class="flex-1 overflow-x-auto custom-scroll">
           <table class="sheet-table text-left text-xs whitespace-nowrap min-w-full">
             <thead class="sticky top-0 z-40 border-b border-slate-200">
               <tr id="tableHeaderRow" class="text-slate-700 font-bold uppercase text-[11px] tracking-wider">
@@ -6650,6 +6652,7 @@
       setupRoleControls();
       preloadAdminDataInBackground();
       setupDailyReportsRealtimeListener();
+      setupTasksRealtimeListener();
 
       const isMgrOrAdmin = isAdminOrManager(currentUser.role, currentUser.username);
       const headerSearchBtnText = document.getElementById('headerSearchBtnText');
@@ -6688,6 +6691,7 @@
         document.getElementById('loadingTasksBox').classList.add('hidden');
         applyClientFilterAndRender();
         setupDailyReportsRealtimeListener();
+        setupTasksRealtimeListener();
       } else {
         loadMatrixData(false);
       }
@@ -7893,6 +7897,7 @@
         currentMatrixData = matrix;
         applyClientFilterAndRender();
         setupDailyReportsRealtimeListener();
+        setupTasksRealtimeListener();
       } catch (err) {
         loading.classList.add('hidden');
         showToast("Lỗi đồng bộ dữ liệu: " + err.message, true);
@@ -8860,6 +8865,32 @@
         }
       }
       return true;
+    }
+
+    /**
+     * LẮNG NGHE SỰ KIỆN THÊM / SỬA / XÓA CÔNG VIỆC REALTIME TỪ SUPABASE:
+     * Khi bất kỳ ai thêm, sửa hoặc xóa công việc của ai đó, bảng ma trận tự động cập nhật ngay lập tức không cần F5!
+     */
+    let _tasksRealtimeChannel = null;
+    let _tasksRealtimeDebounceTimer = null;
+
+    function setupTasksRealtimeListener() {
+      if (!supabase || _tasksRealtimeChannel) return;
+      try {
+        _tasksRealtimeChannel = supabase
+          .channel('public:tasks_realtime_board')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
+            if (_tasksRealtimeDebounceTimer) clearTimeout(_tasksRealtimeDebounceTimer);
+            _tasksRealtimeDebounceTimer = setTimeout(() => {
+              cachedPreloadMatrix = null;
+              fullPeriodMatrixCache = null;
+              loadMatrixData(true);
+            }, 300);
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Tasks realtime error:", err);
+      }
     }
 
     /**
@@ -13938,6 +13969,7 @@
           closeTransferTaskModal();
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
+          loadMatrixData(true);
 
           // Cập nhật lại số lượng badge task
           const countBadge = document.getElementById('modalAssignTaskCountBadge');
@@ -14027,7 +14059,20 @@
           updateAssignTaskOrderNumbers();
         }
 
-        showToast("Đã cập nhật danh mục công việc thành công!");
+        // Cập nhật lại số lượng badge task trên modal phân công
+        const countBadge = document.getElementById('modalAssignTaskCountBadge');
+        const container = document.getElementById('assignTasksListEditor');
+        if (countBadge && container) {
+          const currentCount = container.querySelectorAll('.assign-task-row').length;
+          countBadge.innerText = `${currentCount} công việc`;
+        }
+
+        // CẬP NHẬT NGAY LẬP TỨC BẢNG MA TRẬN CÔNG VIỆC KHÔNG CẦN F5
+        cachedPreloadMatrix = null;
+        fullPeriodMatrixCache = null;
+        loadMatrixData(true);
+
+        showToast("Đã xóa công việc và cập nhật bảng ma trận thành công!");
         closeTaskDeleteConfirmModal();
       } catch (err) {
         showToast("Lỗi khi xử lý công việc: " + err.message, true);
@@ -16789,6 +16834,10 @@
       if (_securityHeartbeatInterval) {
         clearInterval(_securityHeartbeatInterval);
         _securityHeartbeatInterval = null;
+      }
+      if (_tasksRealtimeDebounceTimer) {
+        clearTimeout(_tasksRealtimeDebounceTimer);
+        _tasksRealtimeDebounceTimer = null;
       }
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
