@@ -127,6 +127,49 @@
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #059669; }
 
+    /* Thẻ theo dõi tiến độ & thi đua: Bo góc mượt mà, viền nét và chống bị che khuất */
+    .followup-item-card {
+      position: relative;
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .followup-item-card:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Hiệu ứng viền sắc nét, hiển thị 100% đầy đủ không bị che khuất khi chọn thẻ */
+    .followup-item-card.is-active-card {
+      transform: translateY(-1px) scale(1.005) !important;
+      z-index: 10;
+    }
+    .followup-item-card.is-active-card[data-theme="rose"] {
+      border-color: #f43f5e !important;
+      background-color: #fff1f2 !important;
+      box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25) !important;
+      outline: 2px solid #f43f5e !important;
+      outline-offset: -2px !important;
+      border-left-width: 5px !important;
+      border-left-color: #e11d48 !important;
+    }
+    .followup-item-card.is-active-card[data-theme="amber"] {
+      border-color: #f59e0b !important;
+      background-color: #fffbeb !important;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25) !important;
+      outline: 2px solid #f59e0b !important;
+      outline-offset: -2px !important;
+      border-left-width: 5px !important;
+      border-left-color: #d97706 !important;
+    }
+    .followup-item-card.is-active-card[data-theme="emerald"] {
+      border-color: #10b981 !important;
+      background-color: #ecfdf5 !important;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25) !important;
+      outline: 2px solid #10b981 !important;
+      outline-offset: -2px !important;
+      border-left-width: 5px !important;
+      border-left-color: #059669 !important;
+    }
+
     /* Gợi ý placeholder chung: chữ in nghiêng nhỏ mảnh, sắc nét và trang nhã */
     #modalTasksListContainer input::placeholder {
       font-style: italic !important;
@@ -1433,7 +1476,7 @@
               </button>
             </div>
 
-            <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll pr-1">
+            <div id="deptLeaderboardList" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll p-1.5 pr-2.5">
               <!-- Danh sách Cần đôn đốc / Theo dõi sẽ render tự động bằng JS -->
             </div>
           </div>
@@ -1463,7 +1506,7 @@
               <span class="text-[10px] text-emerald-700 font-num font-bold">Cập nhật tức thì</span>
             </div>
 
-            <div id="insightAttentionTasks" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll pr-1">
+            <div id="insightAttentionTasks" class="flex-1 space-y-2 overflow-y-auto max-h-60 custom-scroll p-1.5 pr-2.5">
               <!-- Danh sách vinh danh thi đua sẽ render tự động bằng JS -->
             </div>
           </div>
@@ -7040,9 +7083,7 @@
         if (resetBtn) resetBtn.classList.add('hidden');
         const dotEl = document.getElementById('staffTitleDot');
         if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
-        document.querySelectorAll('.followup-item-card').forEach(el => {
-          el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-        });
+        clearFollowUpCardActiveState();
 
         renderMatrixDirectorEmptyState(fullPeriodMatrixCache);
         renderAnalyticsSection(fullPeriodMatrixCache);
@@ -7089,9 +7130,7 @@
       }
       const dotEl = document.getElementById('staffTitleDot');
       if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
-      document.querySelectorAll('.followup-item-card').forEach(el => {
-        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-      });
+      clearFollowUpCardActiveState();
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
 
@@ -7229,9 +7268,7 @@
       const resetBtn = document.getElementById('btnResetFollowUpFilter');
       if (resetBtn) resetBtn.classList.add('hidden');
 
-      document.querySelectorAll('.followup-item-card').forEach(el => {
-        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-      });
+      clearFollowUpCardActiveState();
 
       renderMatrixDirectorEmptyState();
       if (fullPeriodMatrixCache) {
@@ -9565,26 +9602,43 @@
           let html = '';
           activeCompletedList.forEach(item => {
             html += `
-              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card flex items-center justify-between gap-1.5 p-1.5 rounded-xl bg-white/85 border border-emerald-100/90 hover:bg-emerald-50/80 transition cursor-pointer shadow-2xs group" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span class="w-5 h-5 rounded-lg ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-[10px] shrink-0">
+              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
+                   class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/40 hover:bg-emerald-100/70 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
+                   data-theme="emerald"
+                   data-staff-name="${escapeHtml(item.displayName)}"
+                   title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                     <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
                   </span>
                   <div class="min-w-0">
-                    <div class="flex items-center gap-1">
-                      <span class="font-bold text-slate-800 text-[11px] truncate group-hover:text-emerald-900 transition">${escapeHtml(item.displayName)}</span>
-                      ${item.isGroup ? '<span class="px-1 py-0.1 rounded text-[8px] font-black uppercase bg-teal-100 text-teal-800 shrink-0">Nhóm</span>' : ''}
+                    <div class="flex items-center gap-1.5">
+                      <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
+                      ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                     </div>
-                    <span class="text-[9.5px] text-slate-400 block truncate leading-tight">${item.isGroup ? 'Đại diện bộ phận' : escapeHtml(item.subDeptName)}</span>
+                    <div class="flex items-center gap-1 text-[10.5px] text-slate-500 mt-0.5 truncate">
+                      <span class="truncate">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
+                      <span class="text-slate-300">•</span>
+                      <span class="text-emerald-700 font-bold truncate font-num">
+                        ${item.targetDayLeaveInfo ? `Đã báo nghỉ (${item.targetDayLeaveInfo.code})` : 'Hoàn thành xuất sắc'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border-amber-200/90' : 'bg-emerald-100 text-emerald-800 border-emerald-200/80'} whitespace-nowrap font-num shrink-0 border">
-                  ${item.targetDayLeaveInfo ? `✓ Nghỉ (${item.targetDayLeaveInfo.code})` : `✓ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày`}
-                </span>
+                <div class="text-right shrink-0">
+                  <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
+                    <i class="fa-solid fa-check text-emerald-600 text-[9px]"></i>
+                    <span>${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày</span>
+                  </span>
+                  <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này'}</p>
+                </div>
               </div>
             `;
           });
           leaderboardBox.innerHTML = html;
+          if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+            setFollowUpCardActive(null, currentSelectedStaff);
+          }
         }
       }
     }
@@ -10366,7 +10420,11 @@
             : item.unreportedDaysList.slice(-3).map(d => 'ngày ' + d).join(', ') + ` (+${item.unreportedDaysList.length - 3} ngày)`;
 
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
+                 class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
+                 data-theme="${isDanger ? 'rose' : 'amber'}"
+                 data-staff-name="${escapeHtml(item.displayName)}"
+                 title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
@@ -10396,6 +10454,9 @@
           `;
         });
         container.innerHTML = html;
+        if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+          setFollowUpCardActive(null, currentSelectedStaff);
+        }
       } else {
         // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo đến ngày mục tiêu)
         if (activeCompletedList.length === 0) {
@@ -10411,7 +10472,11 @@
         let html = '';
         activeCompletedList.forEach(item => {
           html += `
-            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)" class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs" title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+            <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
+                 class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
+                 data-theme="emerald"
+                 data-staff-name="${escapeHtml(item.displayName)}"
+                 title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -10435,7 +10500,42 @@
           `;
         });
         container.innerHTML = html;
+        if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+          setFollowUpCardActive(null, currentSelectedStaff);
+        }
       }
+    }
+
+    /**
+     * QUẢN LÝ VIỀN & TRẠNG THÁI ACTIVE THẺ BÁO CÁO (THEO DÕI ĐÔN ĐỐC & THI ĐUA):
+     * Đảm bảo hiển thị 100% đầy đủ viền, không bị che khuất bởi thanh cuộn hay overflow.
+     */
+    function clearFollowUpCardActiveState() {
+      document.querySelectorAll('.followup-item-card').forEach(el => {
+        el.classList.remove('is-active-card', 'ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
+        el.style.boxShadow = '';
+      });
+    }
+
+    function setFollowUpCardActive(targetEl, staffName) {
+      clearFollowUpCardActiveState();
+      const elementsToActivate = [];
+      if (targetEl) {
+        const card = targetEl.closest ? targetEl.closest('.followup-item-card') : targetEl;
+        if (card && !elementsToActivate.includes(card)) {
+          elementsToActivate.push(card);
+        }
+      }
+      if (staffName) {
+        document.querySelectorAll('.followup-item-card').forEach(el => {
+          if (el.getAttribute('data-staff-name') === staffName && !elementsToActivate.includes(el)) {
+            elementsToActivate.push(el);
+          }
+        });
+      }
+      elementsToActivate.forEach(card => {
+        card.classList.add('is-active-card');
+      });
     }
 
     /**
@@ -10573,13 +10673,8 @@
       if (resetBtn) resetBtn.classList.remove('hidden');
       if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping flex-shrink-0";
 
-      // Đánh dấu active item trong danh sách theo dõi
-      document.querySelectorAll('.followup-item-card').forEach(el => {
-        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-      });
-      if (evt && evt.currentTarget) {
-        evt.currentTarget.classList.add('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-      }
+      // Đánh dấu active item trong cả 2 danh sách theo dõi & thi đua
+      setFollowUpCardActive(evt ? (evt.currentTarget || evt.target) : null, displayName);
 
       // NHẢY THÔNG TIN HIỂN THỊ TỪ DÒNG KỲ BÁO CÁO TRỞ XUỐNG
       scrollToElement('mainPeriodFilterContainer');
@@ -10623,9 +10718,7 @@
       const dotEl = document.getElementById('staffTitleDot');
       if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
 
-      document.querySelectorAll('.followup-item-card').forEach(el => {
-        el.classList.remove('ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
-      });
+      clearFollowUpCardActiveState();
 
       currentRhythmSelectedTaskKey = 'ALL';
 
