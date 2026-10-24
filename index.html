@@ -284,10 +284,10 @@
         box-shadow: none !important; 
       }
 
-      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 60 !important; }
-      thead .col-fixed-name { position: static !important; z-index: 30 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 60 !important; }
-      thead .col-fixed-total { position: static !important; z-index: 30 !important; }
+      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 25 !important; }
+      thead .col-fixed-name { position: static !important; z-index: 10 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 32px !important; top: 0 !important; z-index: 25 !important; }
+      thead .col-fixed-total { position: static !important; z-index: 10 !important; }
 
       /* ẨN NÚT ĐIỀN BÁO CÁO Ở HEADER TRÊN DI ĐỘNG (< 768px): VÌ ĐÃ CÓ NÚT BÁO CÁO TẠI BOTTOM NAV */
       #btnOpenDayEntry {
@@ -295,17 +295,17 @@
       }
     }
 
-    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn với z-index cao hơn hẳn các ô ngày */
+    /* KÍCH THƯỚC CỘT TRÊN MÁY TÍNH (>= 768px): Cố định 4 cột tiêu chuẩn */
     @media (min-width: 768px) {
-      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 35 !important; background-color: #ffffff !important; }
-      .col-fixed-name { position: sticky !important; left: 44px; width: 275px; min-width: 275px; max-width: 275px; z-index: 35 !important; background-color: #ffffff !important; }
-      .col-fixed-task { position: sticky !important; left: 319px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 35 !important; background-color: #ffffff !important; }
-      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 35 !important; background-color: #f8fafc !important; }
+      .col-fixed-tt { position: sticky !important; left: 0; width: 44px; min-width: 44px; max-width: 44px; z-index: 15 !important; background-color: #ffffff !important; }
+      .col-fixed-name { position: sticky !important; left: 44px; width: 275px; min-width: 275px; max-width: 275px; z-index: 15 !important; background-color: #ffffff !important; }
+      .col-fixed-task { position: sticky !important; left: 319px; width: 310px; min-width: 310px; max-width: 310px; box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 15 !important; background-color: #ffffff !important; }
+      .col-fixed-total { position: sticky !important; right: 0; width: 125px; min-width: 125px; max-width: 125px; box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.08) !important; z-index: 15 !important; background-color: #f8fafc !important; }
 
-      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 65 !important; }
-      thead .col-fixed-name { position: sticky !important; left: 44px !important; top: 0 !important; z-index: 65 !important; }
-      thead .col-fixed-task { position: sticky !important; left: 319px !important; top: 0 !important; z-index: 65 !important; }
-      thead .col-fixed-total { position: sticky !important; right: 0 !important; top: 0 !important; z-index: 65 !important; }
+      thead .col-fixed-tt { position: sticky !important; left: 0 !important; top: 0 !important; z-index: 25 !important; }
+      thead .col-fixed-name { position: sticky !important; left: 44px !important; top: 0 !important; z-index: 25 !important; }
+      thead .col-fixed-task { position: sticky !important; left: 319px !important; top: 0 !important; z-index: 25 !important; }
+      thead .col-fixed-total { position: sticky !important; right: 0 !important; top: 0 !important; z-index: 25 !important; }
     }
 
     /* ================= CROSSHAIR TRACKER: RỌI SÁNG HÀNG & CỘT MA TRẬN KHI RÊ CHUỘT ================= */
@@ -508,27 +508,14 @@
     #tableScrollContainer {
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
-      max-height: calc(100vh - 275px);
-      max-height: calc(100dvh - 275px);
-      overflow-y: auto !important;
+      max-height: none !important;
+      overflow-y: visible !important;
       overflow-x: auto !important;
     }
-    @media (max-width: 767px) {
-      #tableScrollContainer {
-        max-height: calc(100dvh - 310px);
-      }
-    }
 
-    /* ĐẢM BẢO TIÊU ĐỀ BẢNG MA TRẬN LUÔN CỐ ĐỊNH Ở TRÊN KHI CUỘN ĐỂ THEO DÕI ĐỐI CHIẾU */
-    thead {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 40 !important;
-      background-color: #f8fafc !important;
-    }
-    thead th {
-      position: sticky !important;
-      top: 0 !important;
+    /* ĐẢM BẢO THANH TIÊU ĐỀ BỘ PHẬN / KỲ BÁO CÁO CỐ ĐỊNH Ở TRÊN KHI CUỘN VÀ CHỪA KHOẢNG CÁCH HEADER */
+    #mainPeriodFilterContainer {
+      scroll-margin-top: 80px;
     }
 
     /* Tối ưu hiệu ứng ô nhập liệu trực quan */
@@ -1227,7 +1214,7 @@
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
     <main class="flex-1 p-2 sm:p-5 pb-20 md:pb-6 w-full mx-auto space-y-3.5 flex flex-col">
       <!-- BỘ LỌC ĐA KỲ BÁO CÁO & THANH ĐIỀU HƯỚNG BẢNG (CÓ THÊM Ô TÌM KIẾM NHÂN SỰ) -->
-      <div id="mainPeriodFilterContainer" class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs sticky top-14 sm:top-16 z-30">
+      <div id="mainPeriodFilterContainer" class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-sm sticky top-14 sm:top-16 z-40">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2 bg-emerald-50/70 border border-emerald-200/90 px-3 py-1.5 rounded-xl shadow-2xs hover:border-emerald-300 transition-colors">
@@ -1270,7 +1257,7 @@
               </button>
 
               <!-- Menu xổ xuống chọn bộ phận với tìm kiếm và dải màu gợi ý -->
-              <div id="filterDeptPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div id="filterDeptPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-[100] w-[360px] sm:w-[440px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                 <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
                   <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -1299,7 +1286,7 @@
               </button>
 
               <!-- Menu xổ xuống chọn nhân sự với avatar và dải màu tươi sáng -->
-              <div id="filterStaffPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-50 w-[340px] sm:w-[420px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div id="filterStaffPickerMenu" class="hidden absolute left-0 top-full mt-1.5 z-[100] w-[340px] sm:w-[420px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                 <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                   <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -10668,7 +10655,16 @@
     function scrollToElement(elemId) {
       const elem = document.getElementById(elemId);
       if (elem) {
-        elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // TÍNH TOÁN KHOẢNG CÁCH CHỪA CHO HEADER CỐ ĐỊNH (~64px):
+        const headerEl = document.querySelector('header');
+        const headerHeight = headerEl ? headerEl.offsetHeight : 64;
+        const elemRect = elem.getBoundingClientRect();
+        const absoluteTop = elemRect.top + window.pageYOffset;
+        const targetScrollTop = Math.max(0, absoluteTop - headerHeight - 12);
+        window.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
       }
     }
 
