@@ -131,47 +131,49 @@
     .followup-item-card {
       position: relative;
       box-sizing: border-box;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
     }
     .followup-item-card:hover {
       transform: translateY(-1px);
     }
+    .followup-item-card:focus,
+    .followup-item-card:active,
+    .followup-item-card:focus-visible {
+      outline: none !important;
+    }
 
-    /* Hiệu ứng viền sắc nét, hiển thị 100% đầy đủ không bị che khuất khi chọn thẻ */
+    /* Hiệu ứng viền nội vi (inset) đồng nhất 1 màu sang trọng, không nhấp nháy đen */
     .followup-item-card.is-active-card {
-      transform: translateY(-1px) scale(1.005) !important;
+      transform: translateY(-1px) !important;
       z-index: 10;
+      outline: none !important;
+      border-color: #059669 !important;
+      background-color: #ecfdf5 !important;
+      box-shadow: inset 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.22) !important;
     }
     .followup-item-card.is-active-card[data-theme="rose"] {
       border-color: #f43f5e !important;
       background-color: #fff1f2 !important;
-      box-shadow: 0 4px 16px rgba(244, 63, 94, 0.25) !important;
-      outline: 2px solid #f43f5e !important;
-      outline-offset: -2px !important;
-      border-left-width: 5px !important;
-      border-left-color: #e11d48 !important;
+      box-shadow: inset 0 0 0 1.5px #f43f5e, 0 4px 14px rgba(244, 63, 94, 0.22) !important;
     }
     .followup-item-card.is-active-card[data-theme="amber"] {
       border-color: #f59e0b !important;
       background-color: #fffbeb !important;
-      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25) !important;
-      outline: 2px solid #f59e0b !important;
-      outline-offset: -2px !important;
-      border-left-width: 5px !important;
-      border-left-color: #d97706 !important;
+      box-shadow: inset 0 0 0 1.5px #f59e0b, 0 4px 14px rgba(245, 158, 11, 0.22) !important;
     }
     .followup-item-card.is-active-card[data-theme="emerald"] {
       border-color: #10b981 !important;
       background-color: #ecfdf5 !important;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25) !important;
-      outline: 2px solid #10b981 !important;
-      outline-offset: -2px !important;
-      border-left-width: 5px !important;
-      border-left-color: #059669 !important;
+      box-shadow: inset 0 0 0 1.5px #10b981, 0 4px 14px rgba(16, 185, 129, 0.22) !important;
     }
 
     /* Gợi ý placeholder chung: chữ in nghiêng nhỏ mảnh, sắc nét và trang nhã */
-    #modalTasksListContainer input::placeholder {
+    #modalTasksListContainer input::placeholder,
+    #loginUsernameInput::placeholder,
+    #loginPasswordInput::placeholder {
       font-style: italic !important;
       font-weight: 400 !important;
       font-size: 11px !important;
@@ -914,93 +916,21 @@
             </span>
           </div>
           <h2 class="text-lg sm:text-xl font-black text-white tracking-tight leading-tight drop-shadow-md">ĐĂNG NHẬP HỆ THỐNG</h2>
-          <p class="text-emerald-100/90 text-[11px] sm:text-xs mt-0.5 font-medium drop-shadow-xs">Chọn nhân sự hoặc nhập tài khoản để tiếp tục</p>
         </div>
 
-        <!-- Bộ chuyển đổi chế độ đăng nhập (Segmented Pill Switcher hiện đại kính mờ) -->
-        <div class="p-1 bg-white/15 backdrop-blur-md rounded-2xl border border-white/25 mb-3.5 flex gap-1 shadow-inner">
-          <button id="tabDeptBtn" onclick="switchLoginTab('dept')" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-extrabold text-emerald-950 bg-white shadow-md border border-white/80 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 truncate">
-            <i class="fa-solid fa-sitemap text-xs shrink-0"></i>
-            <span class="truncate">Theo Bộ phận</span>
-          </button>
-          <button id="tabUserBtn" onclick="switchLoginTab('user')" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold text-emerald-100 hover:text-white transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 truncate">
-            <i class="fa-solid fa-user-shield text-xs shrink-0"></i>
-            <span class="truncate">Nhập Username</span>
-          </button>
-        </div>
-
-        <!-- Form Đăng nhập theo bộ phận -->
-        <div id="deptLoginForm" class="space-y-2.5">
-          <!-- Hidden native selects để giữ tương thích 100% với toàn bộ logic code hiện hữu -->
-          <select id="loginDeptSelect" onchange="onDepartmentChange()" class="hidden">
-            <option value="">-- Đang nạp danh sách bộ phận... --</option>
-          </select>
-          <select id="loginStaffSelect" class="hidden">
-            <option value="">-- Hãy chọn bộ phận trước --</option>
-          </select>
-
-          <!-- 1. BỘ PHẬN / NHÓM TÁC NGHIỆP: CUSTOM PICKER VỚI CÁC DẢI GỢI Ý ĐẦY MÀU SẮC TƯƠI MỚI -->
-          <div class="relative" id="deptPickerWrapper">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">1. Bộ phận / Nhóm tác nghiệp</label>
-            <button type="button" id="deptPickerBtn" onclick="toggleDeptPickerMenu(event)" class="w-full bg-white/90 hover:bg-white border border-white/80 hover:border-emerald-300 rounded-2xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-sm flex items-center justify-between gap-2 cursor-pointer text-left">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span id="deptPickerIconBox" class="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
-                  <i class="fa-solid fa-layer-group"></i>
-                </span>
-                <span id="deptPickerText" class="truncate font-semibold text-slate-700">-- Đang nạp danh sách bộ phận... --</span>
-              </div>
-              <i id="deptPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Menu xổ xuống chứa các dải gợi ý chọn màu sắc tươi mới -->
-            <div id="deptPickerMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/25 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div class="p-2 border-b border-slate-100 bg-slate-50/90">
-                <div class="relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                  <input type="text" id="deptSearchInput" oninput="filterDeptPickerList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
-                </div>
-              </div>
-              <div id="deptPickerList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1">
-                <!-- Sẽ được tạo động với các dải gợi ý màu sắc sinh động -->
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. HỌ VÀ TÊN: CUSTOM PICKER VỚI AVATAR VÀ DẢI MÀU SẮC TƯƠI MỚI -->
-          <div class="relative" id="staffPickerWrapper">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">2. Họ và tên</label>
-            <button type="button" id="staffPickerBtn" onclick="toggleStaffPickerMenu(event)" class="w-full bg-white/90 hover:bg-white border border-white/80 hover:border-emerald-300 rounded-2xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-sm flex items-center justify-between gap-2 cursor-pointer text-left">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span id="staffPickerAvatarBox" class="w-7 h-7 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs font-bold shadow-2xs">
-                  <i class="fa-solid fa-user"></i>
-                </span>
-                <span id="staffPickerText" class="truncate font-semibold text-slate-700">-- Hãy chọn bộ phận trước --</span>
-              </div>
-              <i id="staffPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Menu gợi ý nhân sự với avatar và dải màu tươi sáng -->
-            <div id="staffPickerMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/25 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div class="p-2 border-b border-slate-100 bg-slate-50/90" id="staffSearchBox">
-                <div class="relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                  <input type="text" id="staffSearchInput" oninput="filterStaffPickerList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
-                </div>
-              </div>
-              <div id="staffPickerList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1">
-                <!-- Sẽ được tạo động với các dải nhân sự màu sắc sinh động -->
-              </div>
-            </div>
-          </div>
+        <!-- Hidden native selects để giữ tương thích an toàn nếu có script nền tham chiếu -->
+        <div id="deptLoginForm" class="hidden">
+          <select id="loginDeptSelect" class="hidden"></select>
+          <select id="loginStaffSelect" class="hidden"></select>
         </div>
 
         <!-- Form Đăng nhập theo Username -->
-        <div id="userLoginForm" class="space-y-2.5 hidden">
+        <div id="userLoginForm" class="space-y-3">
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Tên đăng nhập (Username)</label>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Tên đăng nhập</label>
             <div class="relative">
               <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-              <input type="text" id="loginUsernameInput" onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập (VD: admin...)" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
+              <input type="text" id="loginUsernameInput" oninput="const b=document.getElementById('loginErrorBox'); if(b) b.classList.add('hidden');" onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập" autofocus autocomplete="username" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
             </div>
           </div>
         </div>
@@ -1010,7 +940,7 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Mật khẩu truy cập</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="password" id="loginPasswordInput" onkeydown="if(event.key==='Enter') handleLogin()" value="" placeholder="Nhập mật khẩu..." class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm" />
+            <input type="password" id="loginPasswordInput" oninput="const b=document.getElementById('loginErrorBox'); if(b) b.classList.add('hidden');" onkeydown="if(event.key==='Enter') handleLogin()" value="" placeholder="Nhập mật khẩu..." autocomplete="current-password" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
               <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
             </button>
@@ -2575,7 +2505,7 @@
         </div>
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
-          <input type="text" id="accEditUsernameInput" placeholder="Ví dụ: a.nv, nguyen.va..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          <input type="text" id="accEditUsernameInput" placeholder="Ví dụ: anv, nguyenva..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
         </div>
 
         <!-- HIỂN THỊ MẬT KHẨU HIỆN TẠI ĐANG SỬ DỤNG (BẤM HIỆN MẬT KHẨU MỚI HIỆN RÕ) -->
@@ -2961,7 +2891,7 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
-            <input type="text" id="addUsernameInput" placeholder="Ví dụ: a.nv, nguyen.va..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            <input type="text" id="addUsernameInput" placeholder="Ví dụ: anv, nguyenva..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
         </div>
 
@@ -3555,29 +3485,15 @@
           const chk = document.getElementById('rememberPasswordChk');
           if (chk) chk.checked = true;
 
-          if (authData.type === 'dept') {
-            switchLoginTab('dept');
-            const deptSel = document.getElementById('loginDeptSelect');
-            if (deptSel) {
-              deptSel.value = authData.dept || '';
-              if (typeof updateDeptPickerUI === 'function') updateDeptPickerUI(deptSel.value);
-              onDepartmentChange();
-              setTimeout(() => {
-                const staffSel = document.getElementById('loginStaffSelect');
-                if (staffSel) {
-                  staffSel.value = authData.username || '';
-                  if (typeof syncStaffPickerFromSelect === 'function') syncStaffPickerFromSelect();
-                }
-              }, 200);
-            }
-          } else {
-            switchLoginTab('user');
-            const uInput = document.getElementById('loginUsernameInput');
-            if (uInput) uInput.value = authData.username || '';
+          const uInput = document.getElementById('loginUsernameInput');
+          if (uInput && authData.username) {
+            uInput.value = authData.username;
           }
 
           const pInput = document.getElementById('loginPasswordInput');
-          if (pInput) pInput.value = authData.password || '';
+          if (pInput && authData.password) {
+            pInput.value = authData.password;
+          }
         }
       } catch (e) {
         console.warn("Lỗi đọc thông tin ghi nhớ:", e);
@@ -4527,23 +4443,8 @@
     function switchLoginTab(tab) {
       const deptForm = document.getElementById('deptLoginForm');
       const userForm = document.getElementById('userLoginForm');
-      const tabDeptBtn = document.getElementById('tabDeptBtn');
-      const tabUserBtn = document.getElementById('tabUserBtn');
-
-      const activePill = "flex-1 py-1.5 px-2 rounded-xl text-xs font-extrabold text-emerald-950 bg-white shadow-md border border-white/80 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 truncate";
-      const inactivePill = "flex-1 py-1.5 px-2 rounded-xl text-xs font-bold text-emerald-100 hover:text-white transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 truncate";
-
-      if (tab === 'dept') {
-        deptForm.classList.remove('hidden');
-        userForm.classList.add('hidden');
-        tabDeptBtn.className = activePill;
-        tabUserBtn.className = inactivePill;
-      } else {
-        deptForm.classList.add('hidden');
-        userForm.classList.remove('hidden');
-        tabUserBtn.className = activePill;
-        tabDeptBtn.className = inactivePill;
-      }
+      if (deptForm) deptForm.classList.add('hidden');
+      if (userForm) userForm.classList.remove('hidden');
 
       const errBox = document.getElementById('loginErrorBox');
       if (errBox) errBox.classList.add('hidden');
@@ -4718,17 +4619,16 @@
           preloadMatrixDataInBackground();
         }
 
+        const todayKey = getSystemDateKey(new Date());
         const cached = localStorage.getItem('ops_portal_session_final_v48');
         if (cached) {
           try {
             const parsed = JSON.parse(cached);
-            const todayKey = getSystemDateKey(new Date());
 
             // 1. KIỂM TRA BẢO MẬT: NẾU PHIÊN ĐĂNG NHẬP THUỘC VỀ NGÀY HÔM TRƯỚC (ĐÃ SANG NGÀY MỚI SAU KHI TẮT TRÌNH DUYỆT)
             if (parsed.sessionDate && parsed.sessionDate !== todayKey) {
               localStorage.removeItem('ops_portal_session_final_v48');
               currentUser = null;
-              showLoginErrorGeneral("Bắt đầu ngày mới", "Phiên làm việc ngày hôm trước đã kết thúc sau khi đóng trình duyệt. Vui lòng đăng nhập lại để bắt đầu ngày làm việc hôm nay!", true);
             } else {
               // 2. Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
               const verified = (users || []).find(u => (u.id === parsed.id || u.username === parsed.username) && (u.status || '').toLowerCase() !== 'locked');
@@ -4760,6 +4660,19 @@
               }
             }
           } catch(e) {}
+        }
+
+        // THÔNG BÁO XIN CHÀO NGÀY MỚI (CHỈ HIỂN THỊ 1 LẦN DUY NHẤT KHI MÁY ĐÓ LẦN ĐẦU MỞ TRÌNH DUYỆT TRONG NGÀY)
+        if (!currentUser) {
+          const lastGreetingDate = localStorage.getItem('ops_portal_daily_greeting_date');
+          if (lastGreetingDate !== todayKey) {
+            localStorage.setItem('ops_portal_daily_greeting_date', todayKey);
+            const daysOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+            const now = new Date();
+            const dayStr = daysOfWeek[now.getDay()];
+            const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+            showLoginErrorGeneral(`Xin chào ngày mới ${dayStr} - ${dateStr}`, "Vui lòng đăng nhập để tiếp tục.", true);
+          }
         }
         if (callback) callback();
       } catch (err) {
@@ -6356,7 +6269,7 @@
       if (isWarning) {
         errBox.className = "mt-2.5 p-3 rounded-2xl border border-amber-300 bg-amber-50/95 text-amber-900 text-xs shadow-lg animate-in fade-in duration-150 transition-all";
         if (errIconBox) errIconBox.className = "w-6 h-6 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs mt-0.5 shadow-2xs";
-        if (errIcon) errIcon.className = "fa-solid fa-triangle-exclamation";
+        if (errIcon) errIcon.className = title.includes("ngày mới") ? "fa-solid fa-sun text-amber-500" : "fa-solid fa-triangle-exclamation";
         if (errTitle) {
           errTitle.className = "font-black text-amber-950 text-xs tracking-tight";
           errTitle.innerText = title;
@@ -6514,31 +6427,32 @@
      * TIẾN TRÌNH TRỰC TIẾP TRÊN NÚT ĐĂNG NHẬP (KHÔNG BẬT POPUP CHE MÀN HÌNH, KHÔNG LÓA MẮT)
      */
     async function handleLogin() {
-      const isDeptTab = !document.getElementById('deptLoginForm').classList.contains('hidden');
-      let username = "";
-      const password = document.getElementById('loginPasswordInput').value.trim();
+      const uInput = document.getElementById('loginUsernameInput');
+      const pInput = document.getElementById('loginPasswordInput');
+      let username = (uInput ? uInput.value : '').trim();
+      const password = (pInput ? pInput.value : '').trim();
       const errBox = document.getElementById('loginErrorBox');
 
       if (errBox) errBox.classList.add('hidden');
 
-      if (isDeptTab) {
-        username = document.getElementById('loginStaffSelect').value;
-        if (!username) {
-          showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng chọn Bộ phận và Họ tên để tiếp tục!");
-          return;
-        }
-      } else {
-        username = document.getElementById('loginUsernameInput').value.trim();
-        if (!username) {
-          showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng nhập Tên đăng nhập (Username)!");
-          return;
-        }
+      if (!username) {
+        showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng nhập Tên đăng nhập!");
+        if (uInput) uInput.focus();
+        return;
+      }
+      if (!password) {
+        showLoginErrorGeneral("Thông tin chưa đầy đủ", "Vui lòng nhập Mật khẩu truy cập!");
+        if (pInput) pInput.focus();
+        return;
       }
 
+      // Tự động nhận diện chuẩn hóa: hỗ trợ cả khi người dùng gõ có dấu chấm (VD: tan.dv -> tandv)
+      const cleanUsername = username.replace(/\./g, '');
+
       // 1. KIỂM TRA CHỐNG TẤN CÔNG VÉT CẠN (BRUTE-FORCE LOCKOUT BẢO MẬT DOANH NGHIỆP)
-      const lockoutRemaining = checkAccountLockout(username);
+      const lockoutRemaining = Math.max(checkAccountLockout(username), checkAccountLockout(cleanUsername));
       if (lockoutRemaining > 0) {
-        startLockoutTimer(username, lockoutRemaining);
+        startLockoutTimer(cleanUsername, lockoutRemaining);
         return;
       }
 
@@ -6552,8 +6466,12 @@
         // Khi người dùng chọn từ dropdown hoặc danh sách đã tải, thông tin user đã có sẵn 100% trong RAM.
         // Xác thực ngay tại chỗ không phụ thuộc vào độ trễ mạng hoặc máy chủ Supabase bận giờ cao điểm!
         if (globalInitData && globalInitData.allUsers && globalInitData.allUsers.length > 0) {
-          const uFound = globalInitData.allUsers.find(u => (u.username || '').toLowerCase() === username.toLowerCase());
+          const uFound = globalInitData.allUsers.find(u => {
+            const uName = (u.username || '').toLowerCase();
+            return uName === username.toLowerCase() || uName === cleanUsername.toLowerCase();
+          });
           if (uFound) {
+            username = uFound.username;
             let deptName = "Chưa phân bổ";
             if (globalInitData.departments) {
               const dObj = globalInitData.departments.find(d => d.id === uFound.department_id);
@@ -6585,11 +6503,11 @@
           const fetchPromise = supabase
             .from('users')
             .select('*, departments(id, name)')
-            .eq('username', username)
+            .or(`username.eq.${username},username.eq.${cleanUsername}`)
             .limit(1);
 
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Máy chủ phản hồi chậm do quá tải mạng. Vui lòng bấm thử lại hoặc chọn đăng nhập [Theo Bộ phận]!")), 4500)
+            setTimeout(() => reject(new Error("Máy chủ phản hồi chậm do quá tải mạng. Vui lòng bấm thử lại!")), 4500)
           );
 
           const { data: users, error } = await Promise.race([fetchPromise, timeoutPromise]);
@@ -6600,6 +6518,7 @@
             return;
           }
           user = users[0];
+          username = user.username;
         }
 
         if (user.status === 'Khóa') {
@@ -6631,8 +6550,7 @@
         const rememberChk = document.getElementById('rememberPasswordChk');
         if (rememberChk && rememberChk.checked) {
           const authData = {
-            type: isDeptTab ? 'dept' : 'user',
-            dept: isDeptTab ? document.getElementById('loginDeptSelect').value : '',
+            type: 'user',
             username: username,
             password: password
           };
@@ -10514,6 +10432,7 @@
       document.querySelectorAll('.followup-item-card').forEach(el => {
         el.classList.remove('is-active-card', 'ring-2', 'ring-amber-500', 'shadow-md', 'border-amber-400');
         el.style.boxShadow = '';
+        el.style.outline = '';
       });
     }
 
@@ -15016,7 +14935,7 @@
     async function submitAccountEdit() {
       const origUsername = document.getElementById('accEditOriginalUsername').value.trim();
       const fullName = document.getElementById('accEditFullNameInput').value.trim();
-      const newUsername = document.getElementById('accEditUsernameInput').value.trim().toLowerCase();
+      const newUsername = document.getElementById('accEditUsernameInput').value.trim().toLowerCase().replace(/\./g, '');
       const newPass = document.getElementById('accEditPasswordInput').value.trim();
       const roleSelVal = document.getElementById('accEditRoleSelect')?.value || 'Nhân viên';
       const status = document.getElementById('accEditStatusSelect').value;
@@ -16240,7 +16159,7 @@
      */
     async function submitCreateUser() {
       const fullName = document.getElementById('addFullNameInput').value.trim();
-      const username = document.getElementById('addUsernameInput').value.trim().toLowerCase();
+      const username = document.getElementById('addUsernameInput').value.trim().toLowerCase().replace(/\./g, '');
       const password = document.getElementById('addPasswordInput').value.trim();
       const dept = document.getElementById('addDeptSelect').value.trim();
       const role = document.getElementById('addRoleSelect').value;
