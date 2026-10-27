@@ -12,6 +12,9 @@
 
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <!-- Google Fonts: Inter, JetBrains Mono, Montserrat, Playfair Display (Serif Nghệ Thuật Sang Trọng & Tối ưu tiếng Việt 100%) -->
+  <!-- Tối ưu kết nối sớm tới Supabase và Google Fonts -->
+  <link rel="preconnect" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -19,9 +22,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <!-- Thư viện Supabase JS Client độc lập -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Thư viện ExcelJS & FileSaver -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- Thư viện ExcelJS & FileSaver (defer để tối ưu tải trang tức thì cho màn hình đăng nhập) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
     html, body {
@@ -3393,6 +3396,12 @@
       if (hasInitializedApp) return;
       hasInitializedApp = true;
 
+      // 1. TỰ ĐỘNG ĐIỀN THÔNG TIN GHI NHỚ TỨC THÌ (0ms) - SẴN SÀNG ĐĂNG NHẬP NGAY KHI MỞ TRANG
+      checkAndFillRememberedPassword();
+
+      // 2. NẠP DỮ LIỆU TỪ BỘ NHỚ ĐỆM CỤC BỘ (FAST-PATH ZERO-LATENCY 0ms)
+      loadCachedInitData();
+
       // Tự động thanh lọc các bản snapshot bị lỗi/phân rã "Chung bộ phận" trong localStorage
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -3414,6 +3423,7 @@
 
       initGlobalLightTooltipSystem();
 
+      // 3. ĐỒNG BỘ NGẦM SONG SONG DỮ LIỆU MỚI NHẤT TỪ MÁY CHỦ SUPABASE (PROMISE.ALL SIÊU TỐC)
       loadInitialData(() => {
         checkAndFillRememberedPassword();
       });
@@ -4467,227 +4477,266 @@
       }
     }
 
-    // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU & TẠO KỲ BÁO CÁO CHUẨN =================
-    // ĐIỀU CHỈNH: ĐÚNG 00:00 NGÀY 05 CỦA THÁNG MỚI MỚI KHÓA SỔ KỲ BÁO CÁO CỦA THÁNG TRƯỚC
-    async function loadInitialData(callback) {
+    // ================= BỘ NHỚ ĐỆM TỨC THÌ (FAST-PATH ZERO-LATENCY CACHE) =================
+    // Cho phép người dùng mở trang là có ngay dữ liệu để đăng nhập tức thì (0ms)
+    function loadCachedInitData() {
       try {
-        const { data: depts, error: dErr } = await supabase
-          .from('departments')
-          .select('*')
-          .order('name')
-          .limit(1000);
-        if (dErr) throw dErr;
-
-        const { data: users, error: uErr } = await supabase
-          .from('users')
-          .select('*')
-          .eq('status', 'Hoạt động')
-          .order('full_name')
-          .limit(10000);
-        if (uErr) throw uErr;
-
-        const validUsers = (users || []).filter(u => {
-          const uName = (u.username || '').toLowerCase();
-          const fName = (u.full_name || '').trim();
-          const role = (u.role || '').toLowerCase();
-          if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
-          if (role.includes('nhom gop')) return false;
-          if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+        const raw = localStorage.getItem('ops_portal_init_cache_v3');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.depts) && Array.isArray(parsed.users) && parsed.users.length > 0) {
+          processInitialDataset(parsed.depts, parsed.users, true);
           return true;
-        });
+        }
+      } catch(e) {
+        console.warn("Lỗi đọc cache dữ liệu khởi tạo:", e);
+      }
+      return false;
+    }
 
-        const deptMap = {};
-        depts.forEach(d => { deptMap[d.name] = []; });
-        validUsers.forEach(u => {
-          const d = depts.find(x => x.id === u.department_id);
-          let dName = d ? d.name : "Chưa phân bộ phận";
+    function processInitialDataset(depts, users, isFromCache = false) {
+      if (!depts || !users) return;
 
-          // NẾU LÀ GIÁM ĐỐC HOẶC PHÓ GIÁM ĐỐC:
-          // Luôn gom vào bộ phận Ban Giám Đốc
-          const isExec = isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
-          if (isExec) {
-            const bgdDept = depts.find(x => normalizeDeptKey(x.name).includes("giam doc") || normalizeDeptKey(x.name).includes("ban giam"));
-            if (bgdDept) dName = bgdDept.name;
-          }
+      const validUsers = (users || []).filter(u => {
+        const uName = (u.username || '').toLowerCase();
+        const fName = (u.full_name || '').trim();
+        const role = (u.role || '').toLowerCase();
+        if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
+        if (role.includes('nhom gop')) return false;
+        if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+        return true;
+      });
 
-          if (!deptMap[dName]) deptMap[dName] = [];
-          deptMap[dName].push({
-            id: u.id,
-            username: u.username,
-            fullName: u.full_name,
-            role: u.role,
-            status: u.status,
-            department_id: u.department_id,
-            password_hash: u.password_hash
-          });
-        });
+      const deptMap = {};
+      depts.forEach(d => { deptMap[d.name] = []; });
+      validUsers.forEach(u => {
+        const d = depts.find(x => x.id === u.department_id);
+        let dName = d ? d.name : "Chưa phân bộ phận";
 
-        // SẮP XẾP NHÂN SỰ TRONG BAN GIÁM ĐỐC: Giám Đốc lên trước, Phó Giám Đốc tiếp theo
-        Object.keys(deptMap).forEach(dk => {
-          if (normalizeDeptKey(dk).includes("giam doc") || normalizeDeptKey(dk).includes("ban giam")) {
-            deptMap[dk].sort((a, b) => {
-              const aIsDir = isDirectorOrAdmin(a.role, a.username);
-              const bIsDir = isDirectorOrAdmin(b.role, b.username);
-              if (aIsDir && !bIsDir) return -1;
-              if (!aIsDir && bIsDir) return 1;
-              return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
-            });
-          }
-        });
-
-        // XÁC ĐỊNH TẬP HỢP BỘ PHẬN CỦA QUẢN LÝ / GIÁM ĐỐC / PHÓ GIÁM ĐỐC
-        const managerDeptNames = new Set();
-        validUsers.forEach(u => {
-          const isExec = isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
-          if (isExec) {
-            const d = depts.find(x => x.id === u.department_id);
-            if (d && d.name) managerDeptNames.add(normalizeDeptKey(d.name));
-          }
-        });
-
-        const deptNames = depts.map(d => d.name);
-
-        const now = new Date();
-        const curM = now.getMonth() + 1;
-        const curY = now.getFullYear();
-        const curDay = now.getDate();
-
-        // Kiểm tra xem hôm nay có phải ngày cuối cùng của tháng hiện tại hay không
-        const lastDayOfCurMonth = new Date(curY, curM, 0).getDate();
-        const isLastDay = (curDay === lastDayOfCurMonth);
-
-        const availablePeriods = [];
-
-        // 1. Chỉ tạo kỳ tiếp theo NẾU HÔM NAY LÀ NGÀY CUỐI CÙNG CỦA THÁNG HIỆN TẠI
-        if (isLastDay) {
-          let nextD = new Date(curY, curM, 1);
-          let nm = nextD.getMonth() + 1;
-          let ny = nextD.getFullYear();
-          availablePeriods.push({
-            month: nm,
-            year: ny,
-            label: `Tháng ${nm < 10 ? '0' + nm : nm} / ${ny} (Kỳ mới)`,
-            isLocked: false
-          });
+        // NẾU LÀ GIÁM ĐỐC HOẶC PHÓ GIÁM ĐỐC:
+        // Luôn gom vào bộ phận Ban Giám Đốc
+        const isExec = isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+        if (isExec) {
+          const bgdDept = depts.find(x => normalizeDeptKey(x.name).includes("giam doc") || normalizeDeptKey(x.name).includes("ban giam"));
+          if (bgdDept) dName = bgdDept.name;
         }
 
-        // 2. Kỳ hiện tại: Đang mở (trừ khi có lệnh khóa sổ thủ công)
+        if (!deptMap[dName]) deptMap[dName] = [];
+        deptMap[dName].push({
+          id: u.id,
+          username: u.username,
+          fullName: u.full_name,
+          role: u.role,
+          status: u.status,
+          department_id: u.department_id,
+          password_hash: u.password_hash
+        });
+      });
+
+      // SẮP XẾP NHÂN SỰ TRONG BAN GIÁM ĐỐC: Giám Đốc lên trước, Phó Giám Đốc tiếp theo
+      Object.keys(deptMap).forEach(dk => {
+        if (normalizeDeptKey(dk).includes("giam doc") || normalizeDeptKey(dk).includes("ban giam")) {
+          deptMap[dk].sort((a, b) => {
+            const aIsDir = isDirectorOrAdmin(a.role, a.username);
+            const bIsDir = isDirectorOrAdmin(b.role, b.username);
+            if (aIsDir && !bIsDir) return -1;
+            if (!aIsDir && bIsDir) return 1;
+            return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
+          });
+        }
+      });
+
+      // XÁC ĐỊNH TẬP HỢP BỘ PHẬN CỦA QUẢN LÝ / GIÁM ĐỐC / PHÓ GIÁM ĐỐC
+      const managerDeptNames = new Set();
+      validUsers.forEach(u => {
+        const isExec = isAdminOrManager(u.role, u.username) || isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+        if (isExec) {
+          const d = depts.find(x => x.id === u.department_id);
+          if (d && d.name) managerDeptNames.add(normalizeDeptKey(d.name));
+        }
+      });
+
+      const deptNames = depts.map(d => d.name);
+
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      const curDay = now.getDate();
+
+      // Kiểm tra xem hôm nay có phải ngày cuối cùng của tháng hiện tại hay không
+      const lastDayOfCurMonth = new Date(curY, curM, 0).getDate();
+      const isLastDay = (curDay === lastDayOfCurMonth);
+
+      const availablePeriods = [];
+
+      // 1. Chỉ tạo kỳ tiếp theo NẾU HÔM NAY LÀ NGÀY CUỐI CÙNG CỦA THÁNG HIỆN TẠI
+      if (isLastDay) {
+        let nextD = new Date(curY, curM, 1);
+        let nm = nextD.getMonth() + 1;
+        let ny = nextD.getFullYear();
         availablePeriods.push({
-          month: curM,
-          year: curY,
-          label: `Tháng ${curM < 10 ? '0' + curM : curM} / ${curY} (Hiện tại)`,
+          month: nm,
+          year: ny,
+          label: `Tháng ${nm < 10 ? '0' + nm : nm} / ${ny} (Kỳ mới)`,
           isLocked: false
         });
+      }
 
-        // 3. Các kỳ quá khứ:
-        // ĐIỀU CHỈNH: THÁNG TRƯỚC LIỀN KỀ (i === 1) CHỈ KHÓA KHI curDay >= 5
-        // NẾU TỪ NGÀY 01 - 04 CỦA THÁNG MỚI THÌ THÁNG TRƯỚC VẪN MỞ ĐỂ HOÀN TẤT SỐ LIỆU
-        for (let i = 1; i <= 11; i++) {
-          let pastD = new Date(curY, curM - 1 - i, 1);
-          let pm = pastD.getMonth() + 1;
-          let py = pastD.getFullYear();
-          
-          let lockedState = true;
-          if (i === 1) {
-            lockedState = (curDay >= 5); // Sang ngày 5 mới khóa tháng cũ!
-          }
+      // 2. Kỳ hiện tại: Đang mở (trừ khi có lệnh khóa sổ thủ công)
+      availablePeriods.push({
+        month: curM,
+        year: curY,
+        label: `Tháng ${curM < 10 ? '0' + curM : curM} / ${curY} (Hiện tại)`,
+        isLocked: false
+      });
 
-          availablePeriods.push({
-            month: pm,
-            year: py,
-            label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}${i === 1 && !lockedState ? ' (Mở đến hết ngày 04)' : ''}`,
-            isLocked: lockedState
-          });
+      // 3. Các kỳ quá khứ:
+      for (let i = 1; i <= 11; i++) {
+        let pastD = new Date(curY, curM - 1 - i, 1);
+        let pm = pastD.getMonth() + 1;
+        let py = pastD.getFullYear();
+        
+        let lockedState = true;
+        if (i === 1) {
+          lockedState = (curDay >= 5); // Sang ngày 5 mới khóa tháng cũ!
         }
 
-        globalInitData = {
-          departments: deptNames,
-          deptMap: deptMap,
-          allUsers: validUsers,
-          managerDeptNames: Array.from(managerDeptNames),
-          currentMonth: currentSelectedMonth || curM,
-          currentYear: currentSelectedYear || curY,
-          availablePeriods: availablePeriods
-        };
+        availablePeriods.push({
+          month: pm,
+          year: py,
+          label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}${i === 1 && !lockedState ? ' (Mở đến hết ngày 04)' : ''}`,
+          isLocked: lockedState
+        });
+      }
 
-        currentSelectedMonth = globalInitData.currentMonth;
-        currentSelectedYear = globalInitData.currentYear;
+      globalInitData = {
+        departments: deptNames,
+        deptMap: deptMap,
+        allUsers: validUsers,
+        managerDeptNames: Array.from(managerDeptNames),
+        currentMonth: currentSelectedMonth || curM,
+        currentYear: currentSelectedYear || curY,
+        availablePeriods: availablePeriods
+      };
 
-        populateDepartmentSelect();
-        populatePeriodDropdown(availablePeriods);
-        if (currentUser) {
-          preloadMatrixDataInBackground();
-        }
+      currentSelectedMonth = globalInitData.currentMonth;
+      currentSelectedYear = globalInitData.currentYear;
 
-        const todayKey = getSystemDateKey(new Date());
-        const cached = localStorage.getItem('ops_portal_session_final_v48');
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
+      populateDepartmentSelect();
+      populatePeriodDropdown(availablePeriods);
+      if (currentUser) {
+        preloadMatrixDataInBackground();
+      }
 
-            // 1. KIỂM TRA BẢO MẬT: NẾU PHIÊN ĐĂNG NHẬP THUỘC VỀ NGÀY HÔM TRƯỚC (ĐÃ SANG NGÀY MỚI SAU KHI TẮT TRÌNH DUYỆT)
-            if (parsed.sessionDate && parsed.sessionDate !== todayKey) {
-              localStorage.removeItem('ops_portal_session_final_v48');
-              currentUser = null;
-            } else {
-              // 2. Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
-              const verified = (users || []).find(u => (u.id === parsed.id || u.username === parsed.username) && (u.status || '').toLowerCase() !== 'locked');
-              if (verified) {
-                // 3. KIỂM TRA MẬT KHẨU CÓ BỊ THAY ĐỔI TỪ THIẾT BỊ KHÁC KHÔNG
-                if (parsed.password_hash && verified.password_hash && parsed.password_hash !== verified.password_hash) {
-                  localStorage.removeItem('ops_portal_session_final_v48');
-                  currentUser = null;
-                  showLoginErrorGeneral("Mật khẩu đã thay đổi", "Mật khẩu tài khoản đã được thay đổi từ một thiết bị khác. Vui lòng đăng nhập lại bằng mật khẩu mới!", true);
-                } else {
-                  const d = depts.find(x => x.id === verified.department_id);
-                  currentUser = Object.freeze({
-                    id: verified.id,
-                    username: verified.username,
-                    fullName: verified.full_name,
-                    department: d ? d.name : "Chưa phân",
-                    department_id: verified.department_id,
-                    role: verified.role,
-                    status: verified.status,
-                    password_hash: verified.password_hash,
-                    sessionDate: todayKey
-                  });
-                  localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
-                  initMainDashboard();
-                }
-              } else {
+      const todayKey = getSystemDateKey(new Date());
+      const cached = localStorage.getItem('ops_portal_session_final_v48');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+
+          // 1. KIỂM TRA BẢO MẬT: NẾU PHIÊN ĐĂNG NHẬP THUỘC VỀ NGÀY HÔM TRƯỚC (ĐÃ SANG NGÀY MỚI SAU KHI TẮT TRÌNH DUYỆT)
+          if (parsed.sessionDate && parsed.sessionDate !== todayKey) {
+            localStorage.removeItem('ops_portal_session_final_v48');
+            currentUser = null;
+          } else {
+            // 2. Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
+            const verified = (users || []).find(u => (u.id === parsed.id || u.username === parsed.username) && (u.status || '').toLowerCase() !== 'locked');
+            if (verified) {
+              // 3. KIỂM TRA MẬT KHẨU CÓ BỊ THAY ĐỔI TỪ THIẾT BỊ KHÁC KHÔNG
+              if (parsed.password_hash && verified.password_hash && parsed.password_hash !== verified.password_hash) {
                 localStorage.removeItem('ops_portal_session_final_v48');
                 currentUser = null;
+                showLoginErrorGeneral("Mật khẩu đã thay đổi", "Mật khẩu tài khoản đã được thay đổi từ một thiết bị khác. Vui lòng đăng nhập lại bằng mật khẩu mới!", true);
+              } else {
+                const d = depts.find(x => x.id === verified.department_id);
+                currentUser = Object.freeze({
+                  id: verified.id,
+                  username: verified.username,
+                  fullName: verified.full_name,
+                  department: d ? d.name : "Chưa phân",
+                  department_id: verified.department_id,
+                  role: verified.role,
+                  status: verified.status,
+                  password_hash: verified.password_hash,
+                  sessionDate: todayKey
+                });
+                localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+                initMainDashboard();
               }
+            } else {
+              localStorage.removeItem('ops_portal_session_final_v48');
+              currentUser = null;
             }
-          } catch(e) {}
-        }
-
-        // THÔNG BÁO XIN CHÀO NGÀY MỚI (CHỈ HIỂN THỊ 1 LẦN DUY NHẤT KHI MÁY ĐÓ LẦN ĐẦU MỞ TRÌNH DUYỆT TRONG NGÀY)
-        if (!currentUser) {
-          const lastGreetingDate = localStorage.getItem('ops_portal_daily_greeting_date');
-          if (lastGreetingDate !== todayKey) {
-            localStorage.setItem('ops_portal_daily_greeting_date', todayKey);
-            const daysOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-            const now = new Date();
-            const dayStr = daysOfWeek[now.getDay()];
-            const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
-            showLoginErrorGeneral(`Xin chào ngày mới ${dayStr} - ${dateStr}`, "Vui lòng đăng nhập để tiếp tục.", true);
           }
+        } catch(e) {}
+      }
+
+      // THÔNG BÁO XIN CHÀO NGÀY MỚI (CHỈ HIỂN THỊ 1 LẦN DUY NHẤT KHI MÁY ĐÓ LẦN ĐẦU MỞ TRÌNH DUYỆT TRONG NGÀY)
+      if (!currentUser) {
+        const lastGreetingDate = localStorage.getItem('ops_portal_daily_greeting_date');
+        if (lastGreetingDate !== todayKey) {
+          localStorage.setItem('ops_portal_daily_greeting_date', todayKey);
+          const daysOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+          const now = new Date();
+          const dayStr = daysOfWeek[now.getDay()];
+          const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+          showLoginErrorGeneral(`Xin chào ngày mới ${dayStr} - ${dateStr}`, "Vui lòng đăng nhập để tiếp tục.", true);
         }
-        if (callback) callback();
+      }
+    }
+
+    // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU & TẠO KỲ BÁO CÁO CHUẨN =================
+    // ĐIỀU CHỈNH: TẢI SONG SONG QUA PROMISE.ALL VÀ LƯU BỘ NHỚ ĐỆM TỨC THÌ
+    async function loadInitialData(callback) {
+      try {
+        const [deptRes, userRes] = await Promise.all([
+          supabase
+            .from('departments')
+            .select('*')
+            .order('name')
+            .limit(1000),
+          supabase
+            .from('users')
+            .select('*')
+            .eq('status', 'Hoạt động')
+            .order('full_name')
+            .limit(10000)
+        ]);
+
+        if (deptRes.error) throw deptRes.error;
+        if (userRes.error) throw userRes.error;
+
+        const depts = deptRes.data || [];
+        const users = userRes.data || [];
+
+        // Lưu vào bộ nhớ đệm để các lần sau mở trang nạp TỨC THÌ trong 0ms
+        try {
+          localStorage.setItem('ops_portal_init_cache_v3', JSON.stringify({
+            depts: depts,
+            users: users,
+            cachedAt: Date.now()
+          }));
+        } catch(e) {}
+
+        processInitialDataset(depts, users, false);
+
+        if (typeof callback === 'function') callback();
       } catch (err) {
         console.error("Lỗi nạp dữ liệu ban đầu:", err);
-        const textEl = document.getElementById('deptPickerText');
-        if (textEl) {
-          textEl.innerText = "⚠️ Lỗi kết nối CSDL (Bấm để thử lại)";
-          textEl.className = "truncate font-semibold text-rose-600 cursor-pointer";
-          textEl.onclick = () => {
-            textEl.innerText = "-- Đang nạp danh sách bộ phận... --";
-            textEl.className = "truncate font-semibold text-slate-500";
-            loadInitialData();
-          };
+        if (!globalInitData || !globalInitData.allUsers || globalInitData.allUsers.length === 0) {
+          const textEl = document.getElementById('deptPickerText');
+          if (textEl) {
+            textEl.innerText = "⚠️ Lỗi kết nối CSDL (Bấm để thử lại)";
+            textEl.className = "truncate font-semibold text-rose-600 cursor-pointer";
+            textEl.onclick = () => {
+              textEl.innerText = "-- Đang nạp danh sách bộ phận... --";
+              textEl.className = "truncate font-semibold text-slate-500";
+              loadInitialData(callback);
+            };
+          }
+          showToast("Lỗi nạp dữ liệu: " + (err.message || err), true);
         }
-        showToast("Lỗi nạp dữ liệu: " + (err.message || err), true);
+        if (typeof callback === 'function') callback();
       }
     }
 
@@ -6457,7 +6506,7 @@
       }
 
       // CHẠY TIẾN TRÌNH ÊM ÁI TRỰC TIẾP TRÊN NÚT
-      autoSimulateLoginButton(15, 65, "Đang xác thực", 15);
+      autoSimulateLoginButton(20, 75, "Đang xác thực...", 4);
 
       try {
         let user = null;
@@ -6559,8 +6608,8 @@
           localStorage.removeItem('ops_portal_remembered_auth_v49');
         }
 
-        // Hoàn tất tiến trình 65% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
-        autoSimulateLoginButton(65, 100, "Xác thực thành công", 8, () => {
+        // Hoàn tất tiến trình 75% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
+        autoSimulateLoginButton(75, 100, "Xác thực thành công", 3, () => {
           const todayKey = getSystemDateKey(new Date());
           currentUser = Object.freeze({
             id: user.id,
@@ -6577,7 +6626,7 @@
           setTimeout(() => {
             initMainDashboard();
             resetLoginButton();
-          }, 120);
+          }, 50);
         });
       } catch (err) {
         resetLoginButton();
