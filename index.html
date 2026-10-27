@@ -3402,6 +3402,9 @@
       // 2. NẠP DỮ LIỆU TỪ BỘ NHỚ ĐỆM CỤC BỘ (FAST-PATH ZERO-LATENCY 0ms)
       loadCachedInitData();
 
+      // 3. TỰ ĐỘNG TẢI TRƯỚC MA TRẬN DỮ LIỆU BÁO CÁO NGAY KHI MỞ TRANG (SẴN SÀNG HIỂN THỊ TỨC THÌ SAU KHI ĐĂNG NHẬP)
+      preloadMatrixDataInBackground();
+
       // Tự động thanh lọc các bản snapshot bị lỗi/phân rã "Chung bộ phận" trong localStorage
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -4741,17 +4744,43 @@
     }
 
     async function preloadMatrixDataInBackground() {
-      if (cachedPreloadMatrix) return;
       const now = new Date();
       const m = currentSelectedMonth || (now.getMonth() + 1);
       const y = currentSelectedYear || now.getFullYear();
 
+      // 1. Phục hồi từ active cache trong localStorage TỨC THÌ (0ms)
+      if (!cachedPreloadMatrix) {
+        try {
+          const localSaved = localStorage.getItem(`ops_matrix_active_cache_${y}_${m}`);
+          if (localSaved) {
+            const parsed = JSON.parse(localSaved);
+            if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+              cachedPreloadMatrix = parsed;
+              fullPeriodMatrixCache = parsed;
+              currentMatrixData = parsed;
+              if (currentUser) {
+                const loadingBox = document.getElementById('loadingTasksBox');
+                if (loadingBox) loadingBox.classList.add('hidden');
+                applyClientFilterAndRender();
+              }
+            }
+          }
+        } catch(e) {}
+      }
+
+      // 2. Chạy ngầm kết nối Supabase để cập nhật bản mới nhất và lưu cache
       try {
         const matrix = await fetchMatrixFromSupabase(m, y);
         if (matrix) {
           cachedPreloadMatrix = matrix;
           fullPeriodMatrixCache = matrix;
+          currentMatrixData = matrix;
+          try {
+            localStorage.setItem(`ops_matrix_active_cache_${y}_${m}`, JSON.stringify(matrix));
+          } catch(e) {}
           if (currentUser) {
+            const loadingBox = document.getElementById('loadingTasksBox');
+            if (loadingBox) loadingBox.classList.add('hidden');
             applyClientFilterAndRender();
           }
         }
@@ -6722,12 +6751,28 @@
         }
       }
 
-      if (cachedPreloadMatrix && (isDir || currentSelectedDept === "TẤT CẢ")) {
+      if (cachedPreloadMatrix) {
         fullPeriodMatrixCache = cachedPreloadMatrix;
         currentMatrixData = cachedPreloadMatrix;
-        document.getElementById('loadingTasksBox').classList.add('hidden');
+        const loadingBox = document.getElementById('loadingTasksBox');
+        if (loadingBox) loadingBox.classList.add('hidden');
         applyClientFilterAndRender();
         setupDailyReportsRealtimeListener();
+
+        // Đồng bộ ngầm để cập nhật số liệu mới nhất trong nền mà không xoay hay giật màn hình
+        setTimeout(() => {
+          fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear).then(fresh => {
+            if (fresh) {
+              fullPeriodMatrixCache = fresh;
+              currentMatrixData = fresh;
+              cachedPreloadMatrix = fresh;
+              try {
+                localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
+              } catch(e) {}
+              applyClientFilterAndRender();
+            }
+          }).catch(() => {});
+        }, 300);
       } else {
         loadMatrixData(false);
       }
@@ -7886,6 +7931,10 @@
         try {
           localStorage.setItem(`ops_matrix_snapshot_${year}_${month}`, JSON.stringify(matrixResult));
         } catch(e) {}
+      } else if (matrixResult.staffGroups.length > 0) {
+        try {
+          localStorage.setItem(`ops_matrix_active_cache_${year}_${month}`, JSON.stringify(matrixResult));
+        } catch(e) {}
       }
 
       return matrixResult;
@@ -7893,6 +7942,8 @@
 
     async function loadMatrixData(forceServerFetch = false) {
       if (!forceServerFetch && fullPeriodMatrixCache && fullPeriodMatrixCache.queryMonth === currentSelectedMonth && fullPeriodMatrixCache.queryYear === currentSelectedYear) {
+        const loadingBox = document.getElementById('loadingTasksBox');
+        if (loadingBox) loadingBox.classList.add('hidden');
         applyClientFilterAndRender();
         return;
       }
@@ -7912,6 +7963,8 @@
               parsed.staffGroups = sortStaffGroupsUniformly(parsed.staffGroups);
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
+              const loadingBox = document.getElementById('loadingTasksBox');
+              if (loadingBox) loadingBox.classList.add('hidden');
               applyClientFilterAndRender();
               return;
             }
@@ -7919,6 +7972,41 @@
             localStorage.removeItem(`ops_matrix_snapshot_${currentSelectedYear}_${currentSelectedMonth}`);
           }
         }
+      }
+
+      // NẾU LÀ KỲ HIỆN TẠI VÀ ĐÃ CÓ BẢN LƯU ACTIVE CACHE:
+      // HIỂN THỊ TỨC THÌ (0ms) CHO NGƯỜI DÙNG, KHÔNG PHẢI CHỜ VÒNG XOAY ĐỒNG BỘ
+      if (!forceServerFetch) {
+        try {
+          const activeSaved = localStorage.getItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`);
+          if (activeSaved) {
+            const parsed = JSON.parse(activeSaved);
+            if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+              parsed.staffGroups = sortStaffGroupsUniformly(parsed.staffGroups);
+              fullPeriodMatrixCache = parsed;
+              currentMatrixData = parsed;
+              cachedPreloadMatrix = parsed;
+              const loadingBox = document.getElementById('loadingTasksBox');
+              if (loadingBox) loadingBox.classList.add('hidden');
+              applyClientFilterAndRender();
+              setupDailyReportsRealtimeListener();
+
+              // Cập nhật ngầm trong nền không gây gián đoạn hay hiện vòng xoay
+              fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear).then(fresh => {
+                if (fresh) {
+                  fullPeriodMatrixCache = fresh;
+                  currentMatrixData = fresh;
+                  cachedPreloadMatrix = fresh;
+                  try {
+                    localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
+                  } catch(e) {}
+                  applyClientFilterAndRender();
+                }
+              }).catch(() => {});
+              return;
+            }
+          }
+        } catch(e) {}
       }
 
       const tbody = document.getElementById('sheetTableBody');
@@ -7938,6 +8026,10 @@
         loading.classList.add('hidden');
         fullPeriodMatrixCache = matrix;
         currentMatrixData = matrix;
+        cachedPreloadMatrix = matrix;
+        try {
+          localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(matrix));
+        } catch(e) {}
         applyClientFilterAndRender();
         setupDailyReportsRealtimeListener();
       } catch (err) {
