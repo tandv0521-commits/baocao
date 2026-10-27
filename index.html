@@ -933,7 +933,7 @@
             <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Tên đăng nhập</label>
             <div class="relative">
               <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-              <input type="text" id="loginUsernameInput" oninput="const b=document.getElementById('loginErrorBox'); if(b) b.classList.add('hidden');" onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập" autofocus autocomplete="username" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
+              <input type="text" id="loginUsernameInput" oninput="hideLoginError()" onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập" autofocus autocomplete="username" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
             </div>
           </div>
         </div>
@@ -943,7 +943,7 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-100 drop-shadow-xs mb-1">Mật khẩu truy cập</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="password" id="loginPasswordInput" oninput="const b=document.getElementById('loginErrorBox'); if(b) b.classList.add('hidden');" onkeydown="if(event.key==='Enter') handleLogin()" value="" placeholder="Nhập mật khẩu..." autocomplete="current-password" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
+            <input type="password" id="loginPasswordInput" oninput="hideLoginError()" onkeydown="if(event.key==='Enter') handleLogin()" value="" placeholder="Nhập mật khẩu..." autocomplete="current-password" class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
               <i id="eyeIcon" class="fa-regular fa-eye text-sm"></i>
             </button>
@@ -4478,6 +4478,11 @@
         pInput.type = 'password';
         icon.className = "fa-regular fa-eye text-sm";
       }
+    }
+
+    function hideLoginError() {
+      const b = document.getElementById('loginErrorBox');
+      if (b) b.classList.add('hidden');
     }
 
     // ================= BỘ NHỚ ĐỆM TỨC THÌ (FAST-PATH ZERO-LATENCY CACHE) =================
