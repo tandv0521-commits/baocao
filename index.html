@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <title>Báo cáo công việc - Ban Dịch Vụ Khách Hàng</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>
+    // Khóa tuyệt đối menu ngữ cảnh ngay từ giai đoạn nạp trang đầu tiên
+    window.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
+    window.oncontextmenu = function() { return false; };
+  </script>
   
   <!-- FAVICON BIỂU TƯỢNG NHỰA TIỀN PHONG - BAN DỊCH VỤ KHÁCH HÀNG -->
   <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
@@ -3167,71 +3173,123 @@
     const SUPABASE_KEY = "sb_publishable_5oH-P1_iwO8MsLiGTZodYg_WuPw-l4f";
     var supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-    // ================= HỆ THỐNG BẢO VỆ AN NINH FRONTEND (SECURITY SHIELD) =================
+    // ================= HỆ THỐNG BẢO VỆ AN NINH FRONTEND TOÀN DIỆN (SECURITY SHIELD) =================
     (function initSecurityShield() {
-      // 1. Chống mở DevTools qua phím tắt (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
-      window.addEventListener('keydown', function (e) {
-        if (e.key === 'F12' || e.keyCode === 123) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
+      // 1. Chặn hoàn toàn chuột phải (Context Menu) trên toàn bộ trang
+      // Áp dụng tuyệt đối cho mọi thành phần: bảng ma trận, ô nhập liệu (INPUT/TEXTAREA), tiêu đề, modal...
+      function suppressContextMenu(e) {
+        if (e) {
+          if (typeof e.preventDefault === 'function') e.preventDefault();
+          if (typeof e.stopPropagation === 'function') e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
         }
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-      }, true);
-
-      // 2. Chống chuột phải (Context Menu) - Cho phép copy/paste trong ô nhập liệu (INPUT, TEXTAREA)
-      window.addEventListener('contextmenu', function (e) {
-        var target = e.target;
-        var isInputField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
-        if (!isInputField) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-      }, true);
-
-      // 3. Debugger Trap (Treo DevTools và tắt Console khi triển khai Online)
-      var isLocalEnv = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' || 
-                       window.location.protocol === 'file:';
-      
-      if (!isLocalEnv) {
-        try {
-          var noop = function () {};
-          console.log = noop;
-          console.debug = noop;
-          console.info = noop;
-          console.warn = noop;
-        } catch (ex) {}
-
-        setInterval(function () {
-          (function () {
-            return false;
-          }['constructor']('debugger')['call']());
-        }, 1000);
-      } else {
-        try {
-          console.log(
-            '%c[HỆ THỐNG AN NINH]%c Đã kích hoạt cơ chế bảo vệ giao diện & chống sửa đổi biến!',
-            'background: #dc2626; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
-            'color: #2563eb; font-weight: bold; padding-left: 6px;'
-          );
-        } catch(ex) {}
+        return false;
       }
+
+      window.addEventListener('contextmenu', suppressContextMenu, true);
+      document.addEventListener('contextmenu', suppressContextMenu, true);
+      if (document.documentElement) {
+        document.documentElement.addEventListener('contextmenu', suppressContextMenu, true);
+      }
+      window.oncontextmenu = suppressContextMenu;
+      document.oncontextmenu = suppressContextMenu;
+
+      // 2. Chặn toàn bộ phím tắt mở DevTools, xem nguồn trang & Edge Visual Search
+      function suppressDevToolsKeys(e) {
+        var key = e.key || '';
+        var keyLower = key.toLowerCase();
+        var code = e.keyCode || e.which;
+        var ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+        // F12
+        if (key === 'F12' || code === 123) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+
+        // Shift + F10 (Phím tắt mở Context Menu của Windows) hoặc phím ContextMenu trên bàn phím
+        if ((e.shiftKey && (key === 'F10' || code === 121)) || key === 'ContextMenu' || code === 93) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+
+        // Alt + Shift + S (Edge Visual Search)
+        if (e.altKey && e.shiftKey && (keyLower === 's' || code === 83)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+
+        // Ctrl + Shift + [I, J, C, K, E, M, S] (DevTools / Inspect)
+        if (ctrlOrMeta && e.shiftKey) {
+          if (['i', 'j', 'c', 'k', 'e', 'm', 's'].indexOf(keyLower) !== -1 || [73, 74, 67, 75, 69, 77, 83].indexOf(code) !== -1) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        }
+
+        // Ctrl + U (Xem mã nguồn - View Source)
+        if (ctrlOrMeta && (keyLower === 'u' || code === 85)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+
+        // Ctrl + S (Lưu file HTML mã nguồn trang)
+        if (ctrlOrMeta && (keyLower === 's' || code === 83)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+
+        // Ctrl + P (In trang / xuất PDF)
+        if (ctrlOrMeta && (keyLower === 'p' || code === 80)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+
+      window.addEventListener('keydown', suppressDevToolsKeys, true);
+      document.addEventListener('keydown', suppressDevToolsKeys, true);
+
+      // 3. Vô hiệu hóa toàn bộ bảng điều khiển Console để không thể soi biến hay log
+      try {
+        var noop = function () {};
+        var consoleMethods = [
+          'log', 'debug', 'info', 'warn', 'error', 'table', 'trace',
+          'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd',
+          'clear', 'count', 'countReset', 'assert', 'profile', 'profileEnd',
+          'time', 'timeLog', 'timeEnd', 'timeStamp'
+        ];
+        for (var i = 0; i < consoleMethods.length; i++) {
+          try {
+            window.console[consoleMethods[i]] = noop;
+          } catch (e) {}
+        }
+      } catch (ex) {}
+
+      // 4. Debugger Trap liên tục (Kích hoạt vô điều kiện trên MỌI môi trường: file:///, localhost, online)
+      // Nếu bất kỳ ai cố tình mở DevTools bằng thanh menu 3 chấm của trình duyệt,
+      // trình duyệt sẽ lập tức rơi vào bẫy debugger vô tận, đóng băng và không thể xem code.
+      (function startDebuggerTrap() {
+        function triggerTrap() {
+          try {
+            (function () {
+              return false;
+            }['constructor']('debugger')['call']());
+          } catch (err) {}
+        }
+        
+        // Gọi định kỳ liên tục mỗi 200ms
+        setInterval(triggerTrap, 200);
+
+        // Kích hoạt ngay lập tức
+        triggerTrap();
+      })();
     })();
 
     let globalInitData = null;
