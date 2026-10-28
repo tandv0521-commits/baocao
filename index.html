@@ -4607,16 +4607,109 @@
     }
 
     // ================= BỘ NHỚ ĐỆM TỨC THÌ (FAST-PATH ZERO-LATENCY CACHE) =================
+    /**
+     * TẠO DANH SÁCH CÁC KỲ BÁO CÁO CÓ DỮ LIỆU THỰC TẾ TRONG HỆ THỐNG (TỐI ĐA 12 KỲ GẦN NHẤT)
+     * - Chỉ hiển thị các dòng kỳ báo cáo có dữ liệu
+     * - Chỉ hiển thị tối đa 12 tháng (12 kỳ) gần nhất
+     * - Luôn đảm bảo kỳ hiện tại có sẵn để cán bộ nhân viên tác nghiệp
+     */
+    function buildAvailablePeriods(existingMonths = []) {
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      const curDay = now.getDate();
+      const curKey = `${curY}-${curM < 10 ? '0' + curM : curM}`;
+
+      const monthSet = new Set(existingMonths || []);
+      // Luôn đảm bảo có kỳ tháng hiện tại để cán bộ nhân viên thực hiện báo cáo hàng ngày
+      monthSet.add(curKey);
+
+      const periodList = [];
+      monthSet.forEach(ymStr => {
+        if (!ymStr || typeof ymStr !== 'string' || !ymStr.includes('-')) return;
+        const [yStr, mStr] = ymStr.split('-');
+        const y = parseInt(yStr, 10);
+        const m = parseInt(mStr, 10);
+        if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+          periodList.push({ year: y, month: m });
+        }
+      });
+
+      // Sắp xếp giảm dần từ kỳ mới nhất đến kỳ cũ hơn
+      periodList.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      });
+
+      // GIỚI HẠN TỐI ĐA 12 THÁNG (12 KỲ) GẦN NHẤT
+      const cappedList = periodList.slice(0, 12);
+
+      return cappedList.map(p => {
+        const isCurrent = (p.year === curY && p.month === curM);
+        const mStr = p.month < 10 ? '0' + p.month : p.month;
+
+        const isPrevMonth = (
+          (p.year === curY && p.month === curM - 1) ||
+          (curM === 1 && p.year === curY - 1 && p.month === 12)
+        );
+
+        let lockedState = false;
+        let labelSuffix = '';
+
+        if (isCurrent) {
+          labelSuffix = ' (Hiện tại)';
+          lockedState = false;
+        } else if (isPrevMonth) {
+          // Tháng trước: Mở đến hết ngày 04, từ ngày 05 tự động khóa
+          lockedState = (curDay >= 5);
+          if (!lockedState) {
+            labelSuffix = ' (Mở đến hết ngày 04)';
+          }
+        } else {
+          // Các kỳ cũ hơn: mặc định khóa sổ
+          lockedState = true;
+        }
+
+        return {
+          month: p.month,
+          year: p.year,
+          label: `Tháng ${mStr} / ${p.year}${labelSuffix}`,
+          isLocked: lockedState
+        };
+      });
+    }
+
+    function registerReportMonthIfNew(reportDateStr) {
+      if (!reportDateStr || typeof reportDateStr !== 'string') return;
+      const ym = reportDateStr.substring(0, 7);
+      if (!globalInitData) return;
+      if (!globalInitData.existingMonths) globalInitData.existingMonths = [];
+      if (!globalInitData.existingMonths.includes(ym)) {
+        globalInitData.existingMonths.push(ym);
+        globalInitData.availablePeriods = buildAvailablePeriods(globalInitData.existingMonths);
+        populatePeriodDropdown(globalInitData.availablePeriods);
+        try {
+          const raw = localStorage.getItem('ops_portal_init_cache_v6');
+          if (raw) {
+            const p = JSON.parse(raw);
+            p.existingMonths = globalInitData.existingMonths;
+            localStorage.setItem('ops_portal_init_cache_v6', JSON.stringify(p));
+          }
+        } catch(e) {}
+      }
+    }
+
     // Cho phép người dùng mở trang là có ngay dữ liệu để đăng nhập tức thì (0ms)
     function loadCachedInitData() {
       try {
         localStorage.removeItem('ops_portal_init_cache_v3');
         localStorage.removeItem('ops_portal_init_cache_v4');
-        const raw = localStorage.getItem('ops_portal_init_cache_v5');
+        localStorage.removeItem('ops_portal_init_cache_v5');
+        const raw = localStorage.getItem('ops_portal_init_cache_v6');
         if (!raw) return false;
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.depts) && Array.isArray(parsed.users) && parsed.users.length > 0) {
-          processInitialDataset(parsed.depts, parsed.users, true);
+          processInitialDataset(parsed.depts, parsed.users, true, parsed.existingMonths || []);
           return true;
         }
       } catch(e) {
@@ -4625,7 +4718,7 @@
       return false;
     }
 
-    function processInitialDataset(depts, users, isFromCache = false) {
+    function processInitialDataset(depts, users, isFromCache = false, existingMonths = []) {
       if (!depts || !users) return;
 
       const validUsers = (users || []).filter(u => {
@@ -4697,53 +4790,9 @@
       const now = new Date();
       const curM = now.getMonth() + 1;
       const curY = now.getFullYear();
-      const curDay = now.getDate();
 
-      // Kiểm tra xem hôm nay có phải ngày cuối cùng của tháng hiện tại hay không
-      const lastDayOfCurMonth = new Date(curY, curM, 0).getDate();
-      const isLastDay = (curDay === lastDayOfCurMonth);
-
-      const availablePeriods = [];
-
-      // 1. Chỉ tạo kỳ tiếp theo NẾU HÔM NAY LÀ NGÀY CUỐI CÙNG CỦA THÁNG HIỆN TẠI
-      if (isLastDay) {
-        let nextD = new Date(curY, curM, 1);
-        let nm = nextD.getMonth() + 1;
-        let ny = nextD.getFullYear();
-        availablePeriods.push({
-          month: nm,
-          year: ny,
-          label: `Tháng ${nm < 10 ? '0' + nm : nm} / ${ny} (Kỳ mới)`,
-          isLocked: false
-        });
-      }
-
-      // 2. Kỳ hiện tại: Đang mở (trừ khi có lệnh khóa sổ thủ công)
-      availablePeriods.push({
-        month: curM,
-        year: curY,
-        label: `Tháng ${curM < 10 ? '0' + curM : curM} / ${curY} (Hiện tại)`,
-        isLocked: false
-      });
-
-      // 3. Các kỳ quá khứ:
-      for (let i = 1; i <= 11; i++) {
-        let pastD = new Date(curY, curM - 1 - i, 1);
-        let pm = pastD.getMonth() + 1;
-        let py = pastD.getFullYear();
-        
-        let lockedState = true;
-        if (i === 1) {
-          lockedState = (curDay >= 5); // Sang ngày 5 mới khóa tháng cũ!
-        }
-
-        availablePeriods.push({
-          month: pm,
-          year: py,
-          label: `Tháng ${pm < 10 ? '0' + pm : pm} / ${py}${i === 1 && !lockedState ? ' (Mở đến hết ngày 04)' : ''}`,
-          isLocked: lockedState
-        });
-      }
+      // XÂY DỰNG DANH SÁCH CÁC KỲ BÁO CÁO CÓ DỮ LIỆU THỰC TẾ (TỐI ĐA 12 KỲ GẦN NHẤT)
+      const availablePeriods = buildAvailablePeriods(existingMonths);
 
       globalInitData = {
         departments: deptNames,
@@ -4752,7 +4801,8 @@
         managerDeptNames: Array.from(managerDeptNames),
         currentMonth: currentSelectedMonth || curM,
         currentYear: currentSelectedYear || curY,
-        availablePeriods: availablePeriods
+        availablePeriods: availablePeriods,
+        existingMonths: existingMonths
       };
 
       currentSelectedMonth = globalInitData.currentMonth;
@@ -4825,7 +4875,7 @@
     // ĐIỀU CHỈNH: TẢI SONG SONG QUA PROMISE.ALL VÀ LƯU BỘ NHỚ ĐỆM TỨC THÌ
     async function loadInitialData(callback) {
       try {
-        const [deptRes, userRes] = await Promise.all([
+        const [deptRes, userRes, repDatesRes] = await Promise.all([
           supabase
             .from('departments')
             .select('*')
@@ -4836,7 +4886,12 @@
             .select('*')
             .eq('status', 'Hoạt động')
             .order('full_name')
-            .limit(10000)
+            .limit(10000),
+          supabase
+            .from('daily_reports')
+            .select('report_date')
+            .order('report_date', { ascending: false })
+            .limit(50000)
         ]);
 
         if (deptRes.error) throw deptRes.error;
@@ -4844,17 +4899,20 @@
 
         const depts = deptRes.data || [];
         const users = userRes.data || [];
+        const repDates = (repDatesRes && repDatesRes.data) ? repDatesRes.data : [];
+        const existingMonths = Array.from(new Set(repDates.map(r => r.report_date ? r.report_date.substring(0, 7) : null).filter(Boolean)));
 
         // Lưu vào bộ nhớ đệm để các lần sau mở trang nạp TỨC THÌ trong 0ms
         try {
-          localStorage.setItem('ops_portal_init_cache_v5', JSON.stringify({
+          localStorage.setItem('ops_portal_init_cache_v6', JSON.stringify({
             depts: depts,
             users: users,
+            existingMonths: existingMonths,
             cachedAt: Date.now()
           }));
         } catch(e) {}
 
-        processInitialDataset(depts, users, false);
+        processInitialDataset(depts, users, false, existingMonths);
 
         if (typeof callback === 'function') callback();
       } catch (err) {
@@ -5787,7 +5845,7 @@
 
     function populatePeriodDropdown(periods) {
       const select = document.getElementById('reportPeriodSelect');
-      if (!select || !periods) return;
+      if (!select || !periods || periods.length === 0) return;
       select.innerHTML = '';
 
       if (!currentSelectedMonth || !currentSelectedYear) {
@@ -5795,6 +5853,8 @@
         currentSelectedMonth = now.getMonth() + 1;
         currentSelectedYear = now.getFullYear();
       }
+
+      let matchedSelection = false;
 
       periods.forEach(p => {
         const opt = document.createElement('option');
@@ -5809,12 +5869,19 @@
         if (p.month === currentSelectedMonth && p.year === currentSelectedYear) {
           opt.selected = true;
           currentPeriodLocked = effectiveLock;
+          matchedSelection = true;
         }
         select.appendChild(opt);
       });
 
-      if (select.selectedIndex === -1 && select.options.length > 0) {
+      if (!matchedSelection && select.options.length > 0) {
         select.selectedIndex = 0;
+        const parts = select.value.split('_');
+        currentSelectedMonth = parseInt(parts[0], 10);
+        currentSelectedYear = parseInt(parts[1], 10);
+        const selOpt = select.options[0];
+        const savedLock = localStorage.getItem(`ops_period_lock_${currentSelectedYear}_${currentSelectedMonth}`);
+        currentPeriodLocked = (savedLock !== null) ? (savedLock === "true") : (selOpt.dataset.locked === "true");
       }
 
       updatePeriodLockUI(currentPeriodLocked);
@@ -5833,22 +5900,9 @@
         return;
       }
 
-      // Tự động sinh danh sách 12 kỳ báo cáo (gồm tháng hiện tại và 11 tháng trước)
-      const periods = [];
-      const now = new Date();
-      const curM = now.getMonth() + 1;
-      const curY = now.getFullYear();
-      for (let i = 0; i < 12; i++) {
-        const d = new Date(curY, curM - 1 - i, 1);
-        const m = d.getMonth() + 1;
-        const y = d.getFullYear();
-        periods.push({
-          month: m,
-          year: y,
-          label: i === 0 ? `Tháng ${m < 10 ? '0' + m : m} / ${y} (Hiện tại)` : `Tháng ${m < 10 ? '0' + m : m} / ${y}`,
-          isLocked: i > 1
-        });
-      }
+      // Tự động sinh danh sách kỳ báo cáo có dữ liệu thực tế (tối đa 12 kỳ gần nhất)
+      const existing = (globalInitData && globalInitData.existingMonths) ? globalInitData.existingMonths : [];
+      const periods = buildAvailablePeriods(existing);
       populatePeriodDropdown(periods);
     }
 
@@ -8970,6 +9024,7 @@
           .upsert([dbRecord], { onConflict: 'task_id,user_id,report_date' });
 
         if (error) throw error;
+        registerReportMonthIfNew(reportDate);
 
         inputElem.dataset.oldValue = valToCache;
         inputElem.value = valToCache;
@@ -12816,6 +12871,7 @@
           .upsert(dbRecords, { onConflict: 'task_id,user_id,report_date' });
 
         if (error) throw error;
+        registerReportMonthIfNew(curDate);
 
         finishProgressHud(isLeaveReport ? "Đã xác nhận báo cáo thành công!" : "Đã lưu thành công!", () => {
           clearLocalDraft();
