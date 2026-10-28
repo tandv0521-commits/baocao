@@ -4610,7 +4610,9 @@
     // Cho phép người dùng mở trang là có ngay dữ liệu để đăng nhập tức thì (0ms)
     function loadCachedInitData() {
       try {
-        const raw = localStorage.getItem('ops_portal_init_cache_v3');
+        localStorage.removeItem('ops_portal_init_cache_v3');
+        localStorage.removeItem('ops_portal_init_cache_v4');
+        const raw = localStorage.getItem('ops_portal_init_cache_v5');
         if (!raw) return false;
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.depts) && Array.isArray(parsed.users) && parsed.users.length > 0) {
@@ -4630,6 +4632,11 @@
         const uName = (u.username || '').toLowerCase();
         const fName = (u.full_name || '').trim();
         const role = (u.role || '').toLowerCase();
+
+        // TÀI KHOẢN ADMIN QUẢN TRỊ TRANG WEB:
+        // Không thuộc danh sách nhân sự tác nghiệp của các phòng ban
+        if (isSystemAdmin(u.role, u.username) || uName === 'admin') return false;
+
         if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
         if (role.includes('nhom gop')) return false;
         if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
@@ -4644,7 +4651,7 @@
 
         // NẾU LÀ GIÁM ĐỐC HOẶC PHÓ GIÁM ĐỐC:
         // Luôn gom vào bộ phận Ban Giám Đốc
-        const isExec = isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username);
+        const isExec = isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username);
         if (isExec) {
           const bgdDept = depts.find(x => normalizeDeptKey(x.name).includes("giam doc") || normalizeDeptKey(x.name).includes("ban giam"));
           if (bgdDept) dName = bgdDept.name;
@@ -4840,7 +4847,7 @@
 
         // Lưu vào bộ nhớ đệm để các lần sau mở trang nạp TỨC THÌ trong 0ms
         try {
-          localStorage.setItem('ops_portal_init_cache_v3', JSON.stringify({
+          localStorage.setItem('ops_portal_init_cache_v5', JSON.stringify({
             depts: depts,
             users: users,
             cachedAt: Date.now()
@@ -4920,29 +4927,52 @@
 
       try {
         if (!adminManageUsersCache) {
-          const { data: users, error: uErr } = await supabase.from('users').select('*, departments(name)').limit(10000);
+          const { data: users, error: uErr } = await supabase.from('users').select('*, departments(id, name)').limit(10000);
           const { data: depts, error: dErr } = await supabase.from('departments').select('name').limit(1000);
           if (!uErr && !dErr) {
             const validUsers = (users || []).filter(u => {
               const uName = (u.username || '').toLowerCase();
               const fName = (u.full_name || '').trim();
               const role = (u.role || '').toLowerCase();
+              if (isSystemAdmin(u.role, u.username) || uName === 'admin') return false;
               if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
               if (role.includes('nhom gop')) return false;
               if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
               return true;
             });
 
-            adminManageUsersCache = {
-              users: validUsers.map(u => ({
+            const mapped = validUsers.map(u => {
+              let deptName = u.departments ? u.departments.name : "";
+              if (!deptName && u.department_id) {
+                const md = (depts || []).find(x => x.id === u.department_id);
+                if (md) deptName = md.name;
+              }
+              if (isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username)) {
+                if (!deptName || deptName === "Chưa phân bổ" || deptName === "Chưa phân") {
+                  deptName = "Ban Giám Đốc";
+                }
+              }
+              return {
                 id: u.id,
                 username: u.username,
                 fullName: u.full_name,
-                dept: u.departments ? u.departments.name : "Chưa phân",
+                dept: deptName || "Chưa phân bổ",
+                department_id: u.department_id,
                 role: u.role,
                 status: u.status,
                 password_hash: u.password_hash
-              })),
+              };
+            });
+
+            mapped.sort((a, b) => {
+              const pA = isOnlyDirector(a.role, a.username) ? 1 : (isDeputyDirector(a.role, a.username) ? 2 : 3);
+              const pB = isOnlyDirector(b.role, b.username) ? 1 : (isDeputyDirector(b.role, b.username) ? 2 : 3);
+              if (pA !== pB) return pA - pB;
+              return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
+            });
+
+            adminManageUsersCache = {
+              users: mapped,
               departments: depts.map(d => d.name)
             };
             populateUserFilterDepts(adminManageUsersCache.departments);
@@ -6322,10 +6352,11 @@
           if (matchedKey) staffList = [...(globalInitData.deptMap[matchedKey] || [])];
         }
 
-        // ĐẶC BIỆT: NẾU LÀ "BAN GIÁM ĐỐC": Luôn đảm bảo gom TẤT CẢ nhân sự là Giám Đốc và Phó Giám Đốc
+        // ĐẶC BIỆT: NẾU LÀ "BAN GIÁM ĐỐC": Luôn đảm bảo gom ĐẦY ĐỦ lãnh đạo ban (Giám Đốc và Phó Giám Đốc)
         if (normalizeDeptKey(dept).includes("giam doc") || normalizeDeptKey(dept).includes("ban giam")) {
           const allUsers = (globalInitData.allUsers || []);
-          const execs = allUsers.filter(u => isDirectorOrAdmin(u.role, u.username) || isDeputyDirector(u.role, u.username));
+          const execs = allUsers.filter(u => isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username));
+          staffList = staffList.filter(u => !isSystemAdmin(u.role, u.username) && u.username !== 'admin');
           execs.forEach(eu => {
             if (!staffList.some(s => s.username === eu.username)) {
               staffList.push({
@@ -6341,8 +6372,8 @@
           });
           // Sắp xếp: Giám Đốc lên trước, Phó Giám Đốc lên sau
           staffList.sort((a, b) => {
-            const aIsDir = isDirectorOrAdmin(a.role, a.username);
-            const bIsDir = isDirectorOrAdmin(b.role, b.username);
+            const aIsDir = isOnlyDirector(a.role, a.username);
+            const bIsDir = isOnlyDirector(b.role, b.username);
             if (aIsDir && !bIsDir) return -1;
             if (!aIsDir && bIsDir) return 1;
             return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
@@ -6350,9 +6381,10 @@
         }
 
         staffList.forEach(st => {
+          if (isSystemAdmin(st.role, st.username) || st.username === 'admin') return;
           const opt = document.createElement('option');
           opt.value = st.username;
-          const roleLabel = isSystemAdmin(st.role, st.username) ? ' (Admin)' : (isOnlyDirector(st.role, st.username) ? ' (Giám Đốc)' : (isDeputyDirector(st.role, st.username) ? ' (Phó Giám Đốc)' : ''));
+          const roleLabel = isOnlyDirector(st.role, st.username) ? ' (Giám Đốc)' : (isDeputyDirector(st.role, st.username) ? ' (Phó Giám Đốc)' : '');
           opt.innerText = `👤 ${st.fullName}${roleLabel}`;
           staffSelect.appendChild(opt);
         });
@@ -7065,24 +7097,68 @@
           dept: dept
         });
 
-        if (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) {
-          globalInitData.deptMap[dept].forEach(st => {
-            if (st.fullName !== currentUser.fullName) {
-              const opt = document.createElement('option');
-              opt.value = st.fullName;
-              const rolePart = (isSharedDept && st.role) ? ` — (${st.role})` : '';
-              opt.innerText = `${st.fullName}${rolePart}`;
-              if (st.fullName === currentSelectedStaff) opt.selected = true;
-              staffSelect.appendChild(opt);
+        let deptStaff = (globalInitData && globalInitData.deptMap) ? globalInitData.deptMap[dept] : null;
+        if ((!deptStaff || deptStaff.length === 0) && globalInitData && globalInitData.deptMap) {
+          const matchedKey = Object.keys(globalInitData.deptMap).find(k => isDeptEquivalent(k, dept));
+          if (matchedKey) deptStaff = globalInitData.deptMap[matchedKey];
+        }
 
-              dashboardStaffListCache.push({
-                value: st.fullName,
-                fullName: st.fullName,
-                username: st.username,
-                role: (isSharedDept && st.role) ? st.role : '',
-                dept: dept
+        // NẾU LÀ "BAN GIÁM ĐỐC": Luôn đảm bảo gom ĐẦY ĐỦ lãnh đạo ban (Giám Đốc và Phó Giám Đốc)
+        if (normalizeDeptKey(dept).includes("giam doc") || normalizeDeptKey(dept).includes("ban giam")) {
+          const allUsers = (globalInitData?.allUsers || []);
+          const execs = allUsers.filter(u => isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username));
+          deptStaff = [...(deptStaff || [])].filter(u => !isSystemAdmin(u.role, u.username) && u.username !== 'admin');
+          execs.forEach(eu => {
+            if (!deptStaff.some(s => s.username === eu.username)) {
+              deptStaff.push({
+                id: eu.id,
+                username: eu.username,
+                fullName: eu.full_name,
+                role: eu.role,
+                status: eu.status,
+                department_id: eu.department_id,
+                password_hash: eu.password_hash
               });
             }
+          });
+          // Sắp xếp: Giám Đốc lên trước, Phó Giám Đốc tiếp theo
+          deptStaff.sort((a, b) => {
+            const aIsDir = isOnlyDirector(a.role, a.username);
+            const bIsDir = isOnlyDirector(b.role, b.username);
+            if (aIsDir && !bIsDir) return -1;
+            if (!aIsDir && bIsDir) return 1;
+            return (a.fullName || "").localeCompare(b.fullName || "", 'vi');
+          });
+        }
+
+        const isSelfInShared = (!isLead && isDeptEquivalent(dept, currentUser?.department));
+        if (deptStaff && deptStaff.length > 0) {
+          deptStaff.forEach(st => {
+            if (isSystemAdmin(st.role, st.username) || st.username === 'admin') return;
+            if (isSelfInShared && st.fullName === currentUser?.fullName) return;
+
+            const opt = document.createElement('option');
+            opt.value = st.fullName;
+            let rolePart = '';
+            if (isOnlyDirector(st.role, st.username)) {
+              rolePart = ' (Giám Đốc)';
+            } else if (isDeputyDirector(st.role, st.username)) {
+              rolePart = ' (Phó Giám Đốc)';
+            } else if (isSharedDept && st.role) {
+              rolePart = ` — (${st.role})`;
+            }
+
+            opt.innerText = `${st.fullName}${rolePart}`;
+            if (st.fullName === currentSelectedStaff) opt.selected = true;
+            staffSelect.appendChild(opt);
+
+            dashboardStaffListCache.push({
+              value: st.fullName,
+              fullName: st.fullName,
+              username: st.username,
+              role: rolePart ? rolePart.replace(/^ — /, '').replace(/[()]/g, '').trim() : '',
+              dept: dept
+            });
           });
         }
       }
@@ -14952,6 +15028,10 @@
           const fName = (u.full_name || '').trim();
           const role = (u.role || '').toLowerCase();
 
+          // LOẠI TRỪ TÀI KHOẢN ADMIN QUẢN TRỊ KỸ THUẬT:
+          // Bảng này chỉ quản lý hồ sơ nhân sự thực tế của ban
+          if (isSystemAdmin(u.role, u.username) || uName === 'admin') return false;
+
           if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
           if (role.includes('nhom gop')) return false;
           if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
@@ -14972,8 +15052,8 @@
           const r = removeAccents(u.role || "").toLowerCase().replace(/[\s\-_]+/g, "");
           const un = removeAccents(u.username || "").toLowerCase().replace(/[\s\-_]+/g, "");
 
-          // 1. Giám đốc ban / Ban Giám đốc / Lãnh đạo / Admin đưa lên đầu
-          if (isDirectorOrAdmin(u.role, u.username)) {
+          // 1. Giám đốc ban đưa lên đầu
+          if (isOnlyDirector(u.role, u.username)) {
             return 1;
           }
           // 2. Phó Giám Đốc
@@ -14988,20 +15068,34 @@
           return 4;
         }
 
-        const mappedUsers = validUsers.map(u => ({
-          id: u.id,
-          username: u.username,
-          fullName: u.full_name,
-          dept: u.departments ? u.departments.name : "Chưa phân bổ",
-          department_id: u.department_id,
-          role: u.role,
-          status: u.status,
-          password_hash: u.password_hash
-        }));
+        const mappedUsers = validUsers.map(u => {
+          let deptName = u.departments ? u.departments.name : "";
+          if (!deptName && u.department_id) {
+            const matchedD = (depts || []).find(x => x.id === u.department_id);
+            if (matchedD) deptName = matchedD.name;
+          }
+          if (isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username)) {
+            if (!deptName || deptName === "Chưa phân bổ" || deptName === "Chưa phân") {
+              deptName = "Ban Giám Đốc";
+            }
+          }
+          if (!deptName) deptName = "Chưa phân bổ";
+
+          return {
+            id: u.id,
+            username: u.username,
+            fullName: u.full_name,
+            dept: deptName,
+            department_id: u.department_id,
+            role: u.role,
+            status: u.status,
+            password_hash: u.password_hash
+          };
+        });
 
         // SẮP XẾP TOÀN DIỆN:
         // Bước 1: Nhân sự Hoạt động lên trước, Tạm khóa & Khóa xuống cuối danh sách
-        // Bước 2: Trong cùng trạng thái: Giám đốc ban -> Quản lý -> Tên bộ phận -> Họ và tên
+        // Bước 2: Trong cùng trạng thái: Giám đốc ban -> Phó Giám Đốc -> Quản lý -> Tên bộ phận -> Họ và tên
         mappedUsers.sort((a, b) => {
           const sA = getStatusPriority(a);
           const sB = getStatusPriority(b);
@@ -15245,13 +15339,25 @@
       const filterDept = document.getElementById('userFilterDeptSelect').value;
       const filterStatus = document.getElementById('userFilterStatusSelect') ? document.getElementById('userFilterStatusSelect').value : "";
 
+      const qNorm = (typeof removeAccents === 'function' ? removeAccents(query) : query).toLowerCase();
+
       const filtered = adminManageUsersCache.users.filter(u => {
-        const matchName = u.fullName.toLowerCase().includes(query) || u.username.toLowerCase().includes(query);
-        const matchDept = filterDept 
-          ? ((filterDept === 'Chưa phân bổ' || filterDept === 'Chưa phân')
-              ? (!u.dept || u.dept === 'Chưa phân' || u.dept === 'Chưa phân bổ')
-              : isDeptEquivalent(u.dept, filterDept))
-          : true;
+        const nameNorm = (typeof removeAccents === 'function' ? removeAccents(u.fullName || '') : (u.fullName || '')).toLowerCase();
+        const userNorm = (typeof removeAccents === 'function' ? removeAccents(u.username || '') : (u.username || '')).toLowerCase();
+        const roleNorm = (typeof removeAccents === 'function' ? removeAccents(u.role || '') : (u.role || '')).toLowerCase();
+        const matchName = !query || nameNorm.includes(qNorm) || userNorm.includes(qNorm) || roleNorm.includes(qNorm);
+
+        let matchDept = true;
+        if (filterDept) {
+          if (filterDept === 'Chưa phân bổ' || filterDept === 'Chưa phân') {
+            matchDept = (!u.dept || u.dept === 'Chưa phân' || u.dept === 'Chưa phân bổ');
+          } else if (normalizeDeptKey(filterDept).includes("giam doc") || normalizeDeptKey(filterDept).includes("ban giam")) {
+            matchDept = isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username) || isDeptEquivalent(u.dept, filterDept);
+          } else {
+            matchDept = isDeptEquivalent(u.dept, filterDept);
+          }
+        }
+
         const matchStatus = filterStatus ? (u.status === filterStatus) : true;
         return matchName && matchDept && matchStatus;
       });
