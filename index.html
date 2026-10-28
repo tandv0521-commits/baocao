@@ -2006,68 +2006,117 @@
         </button>
       </div>
 
-      <!-- BỘ LỌC BỘ PHẬN VÀ NHÂN SỰ PHÂN CÔNG -->
-      <div class="relative z-30 flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
-        <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
-        <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
-
-        <!-- 1. BỘ PHẬN PHÂN CÔNG: CUSTOM PICKER -->
-        <div class="relative" id="modalAssignDeptPickerWrapper">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
-            <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
-            <span>1. Chọn Bộ phận</span>
-          </label>
-          <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <span id="modalAssignDeptIconBox" class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
-                <i class="fa-solid fa-layer-group"></i>
-              </span>
-              <span id="modalAssignDeptText" class="truncate font-bold text-slate-800">Đang tải bộ phận...</span>
+      <!-- KHU VỰC LỰA CHỌN NHÂN SỰ PHÂN CÔNG (GỒM 2 PHƯƠNG THỨC TÁCH BIỆT RÕ RÀNG) -->
+      <div class="space-y-3 flex-shrink-0">
+        <!-- PHƯƠNG THỨC 1: TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN BỘ CÔNG TY) -->
+        <div class="relative z-40 bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-200/90 rounded-2xl p-2.5 sm:p-3 shadow-2xs transition focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500" id="modalAssignQuickSearchWrapper">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-white border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+              <i class="fa-solid fa-user-tag text-xs"></i>
             </div>
-            <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
-          </button>
-
-          <!-- Dropdown menu chọn bộ phận -->
-          <div id="modalAssignDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
-              <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <label for="modalAssignQuickStaffSearch" class="block text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5 cursor-pointer">
+                  <i class="fa-solid fa-magnifying-glass text-[10px] text-emerald-600"></i>
+                  <span>Tìm kiếm nhanh nhân viên theo tên <span class="text-slate-400 font-semibold normal-case">(Gõ tìm để hiện danh sách gợi ý toàn công ty)</span></span>
+                </label>
+              </div>
+              <div class="relative flex items-center">
+                <input type="text" id="modalAssignQuickStaffSearch" oninput="onModalAssignQuickSearchInput(this.value)" onfocus="onModalAssignQuickSearchFocus()" placeholder="Nhập tên nhân viên cần phân công (ví dụ: Đức, Tuấn, Phó Giám Đốc, Lan...)" class="w-full bg-white border border-slate-200/90 focus:border-emerald-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none shadow-2xs pr-8" autocomplete="off">
+                <button type="button" id="modalAssignQuickSearchClearBtn" onclick="clearModalAssignQuickSearch()" class="hidden absolute right-2 w-5 h-5 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center text-[11px] transition cursor-pointer" title="Xóa tìm kiếm">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
             </div>
-            <div id="modalAssignDeptList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+          </div>
+
+          <!-- DROPDOWN DANH SÁCH GỢI Ý NHÂN VIÊN TƯƠNG ỨNG -->
+          <div id="modalAssignQuickSearchDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-300 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-3 py-2 border-b border-slate-100 bg-emerald-50/80 flex items-center justify-between text-[11px] font-bold text-emerald-950">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
+                <span>Danh sách nhân viên gợi ý tương ứng</span>
+              </span>
+              <span id="modalAssignQuickSearchCount" class="text-[10px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">0 kết quả</span>
+            </div>
+            <div id="modalAssignQuickSearchResults" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
+              <!-- Render items dynamically -->
+            </div>
           </div>
         </div>
 
-        <!-- 2. NHÂN SỰ PHÂN CÔNG: CUSTOM PICKER -->
-        <div class="relative" id="modalAssignStaffPickerWrapper">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
-            <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
-            <span>2. Chọn Nhân sự phân công <span class="text-rose-500">*</span></span>
-          </label>
-          <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/30 hover:bg-emerald-50/60 border border-emerald-300 hover:border-emerald-500 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <span id="modalAssignStaffAvatarBox" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs">
-                <i class="fa-solid fa-user text-[11px]"></i>
-              </span>
-              <div class="min-w-0 flex flex-col leading-tight">
-                <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950">Chọn nhân sự...</span>
-                <span id="modalAssignStaffSubText" class="truncate text-[10px] text-emerald-700 font-medium hidden"></span>
-              </div>
-            </div>
-            <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-xs shrink-0 transition-transform duration-200"></i>
-          </button>
+        <!-- DẢI PHÂN CÁCH TRỰC QUAN TÁCH BIỆT RÕ RÀNG -->
+        <div class="flex items-center gap-3">
+          <div class="h-px bg-slate-200 flex-1"></div>
+          <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 bg-white select-none">
+            HOẶC CHỌN THEO BỘ PHẬN - NHÂN SỰ PHÂN CÔNG
+          </span>
+          <div class="h-px bg-slate-200 flex-1"></div>
+        </div>
 
-          <!-- Dropdown menu chọn nhân sự -->
-          <div id="modalAssignStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
-              <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+        <!-- PHƯƠNG THỨC 2: CHỌN THEO BỘ PHẬN & NHÂN SỰ PHÂN CÔNG (2 CỘT TÁCH BIỆT) -->
+        <div class="relative z-30 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
+          <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
+          <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
+
+          <!-- 1. BỘ PHẬN PHÂN CÔNG: CUSTOM PICKER -->
+          <div class="relative" id="modalAssignDeptPickerWrapper">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+              <span>1. Chọn Bộ phận</span>
+            </label>
+            <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span id="modalAssignDeptIconBox" class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                  <i class="fa-solid fa-layer-group"></i>
+                </span>
+                <span id="modalAssignDeptText" class="truncate font-bold text-slate-800">Đang tải bộ phận...</span>
               </div>
+              <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Dropdown menu chọn bộ phận -->
+            <div id="modalAssignDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                </div>
+              </div>
+              <div id="modalAssignDeptList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
             </div>
-            <div id="modalAssignStaffList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+          </div>
+
+          <!-- 2. NHÂN SỰ PHÂN CÔNG: CUSTOM PICKER -->
+          <div class="relative" id="modalAssignStaffPickerWrapper">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+              <span>2. Chọn Nhân sự phân công <span class="text-rose-500">*</span></span>
+            </label>
+            <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/30 hover:bg-emerald-50/60 border border-emerald-300 hover:border-emerald-500 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span id="modalAssignStaffAvatarBox" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs">
+                  <i class="fa-solid fa-user text-[11px]"></i>
+                </span>
+                <div class="min-w-0 flex flex-col leading-tight">
+                  <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950">Chọn nhân sự...</span>
+                  <span id="modalAssignStaffSubText" class="truncate text-[10px] text-emerald-700 font-medium hidden"></span>
+                </div>
+              </div>
+              <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-xs shrink-0 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Dropdown menu chọn nhân sự -->
+            <div id="modalAssignStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                </div>
+              </div>
+              <div id="modalAssignStaffList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -3874,13 +3923,26 @@
              u.includes("phogiamdoc") || u.includes("phogd") || u.startsWith("pgd.");
     }
 
+    function isSystemAdmin(roleStr, usernameStr) {
+      if (!roleStr && !usernameStr) return false;
+      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      return r === "admin" || r.includes("quantri") || u === "admin" || u.includes("quantri");
+    }
+
+    function isOnlyDirector(roleStr, usernameStr) {
+      if (!roleStr && !usernameStr) return false;
+      if (isDeputyDirector(roleStr, usernameStr)) return false;
+      if (isSystemAdmin(roleStr, usernameStr)) return false;
+      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
+      return r.includes("giamdoc") || r.includes("lanhdao") || u.includes("giamdoc") || u.includes("lanhdao");
+    }
+
     function isDirectorOrAdmin(roleStr, usernameStr) {
       if (!roleStr && !usernameStr) return false;
       if (isDeputyDirector(roleStr, usernameStr)) return false;
-      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      return r.includes("giamdoc") || r.includes("lanhdao") || r.includes("admin") || r.includes("quantri") ||
-             u.includes("giamdoc") || u.includes("lanhdao") || u.includes("admin");
+      return isSystemAdmin(roleStr, usernameStr) || isOnlyDirector(roleStr, usernameStr);
     }
 
     /**
@@ -3910,7 +3972,7 @@
     async function validateExecutiveRoleQuota(targetRole, excludeUsername = '') {
       if (!targetRole) return { allowed: true, message: '' };
 
-      const isTargetDirector = isDirectorOrAdmin(targetRole, '');
+      const isTargetDirector = isOnlyDirector(targetRole, '');
       const isTargetDeputy = isDeputyDirector(targetRole, '');
 
       if (!isTargetDirector && !isTargetDeputy) {
@@ -3952,9 +4014,10 @@
         const currentDirectors = allUsers.filter(u => {
           const uName = (u.username || '').trim().toLowerCase();
           if (uName === normExclude) return false;
+          if (isSystemAdmin(u.role, u.username)) return false; // Không tính tài khoản Admin kỹ thuật quản lý trang web
           const st = removeAccents(u.status || '').toLowerCase();
           if (st.includes('khoa') && !st.includes('tam')) return false;
-          return isDirectorOrAdmin(u.role, u.username);
+          return isOnlyDirector(u.role, u.username);
         });
 
         if (currentDirectors.length >= 1) {
@@ -5166,7 +5229,9 @@
         const bStyle = badgeStyles[idx % badgeStyles.length];
         const isSelected = (st.username === currentVal);
         let roleBadge = '';
-        if (isDirectorOrAdmin(st.role, st.username)) {
+        if (isSystemAdmin(st.role, st.username)) {
+          roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-900 text-emerald-400 border border-slate-700 shrink-0">Admin</span>';
+        } else if (isOnlyDirector(st.role, st.username)) {
           roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200 shrink-0">Giám Đốc</span>';
         } else if (isDeputyDirector(st.role, st.username)) {
           roleBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">Phó Giám Đốc</span>';
@@ -5341,6 +5406,11 @@
         const c = document.getElementById('modalAssignStaffChevron');
         if (m) m.classList.add('hidden');
         if (c) c.classList.remove('rotate-180');
+      }
+      const maQuickWrap = document.getElementById('modalAssignQuickSearchWrapper');
+      if (maQuickWrap && !maQuickWrap.contains(e.target)) {
+        const d = document.getElementById('modalAssignQuickSearchDropdown');
+        if (d) d.classList.add('hidden');
       }
 
       // Modal Quản lý nhân sự (userManagerModal)
@@ -5797,8 +5867,7 @@
 
       if (btnDayEntry && currentUser) {
         const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
-        const isDep = isDeputyDirector(currentUser.role, currentUser.username);
-        if (isDir || isDep) {
+        if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
           btnDayEntry.removeAttribute('title');
@@ -5816,8 +5885,7 @@
       const mobileReportBtn = document.getElementById('mobileBottomNavReportBtn');
       if (mobileReportBtn && currentUser) {
         const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
-        const isDep = isDeputyDirector(currentUser.role, currentUser.username);
-        if (isDir || isDep) {
+        if (isDir) {
           mobileReportBtn.classList.add('hidden');
         } else {
           if (isLocked) {
@@ -6284,7 +6352,7 @@
         staffList.forEach(st => {
           const opt = document.createElement('option');
           opt.value = st.username;
-          const roleLabel = isDirectorOrAdmin(st.role, st.username) ? ' (Giám Đốc)' : (isDeputyDirector(st.role, st.username) ? ' (Phó Giám Đốc)' : '');
+          const roleLabel = isSystemAdmin(st.role, st.username) ? ' (Admin)' : (isOnlyDirector(st.role, st.username) ? ' (Giám Đốc)' : (isDeputyDirector(st.role, st.username) ? ' (Phó Giám Đốc)' : ''));
           opt.innerText = `👤 ${st.fullName}${roleLabel}`;
           staffSelect.appendChild(opt);
         });
@@ -6739,19 +6807,26 @@
 
       const roleBadgeEl = document.getElementById('userRoleBadge');
       if (roleBadgeEl) {
-        roleBadgeEl.innerText = currentUser.role;
-        if (isDir) {
+        if (isSystemAdmin(currentUser.role, currentUser.username)) {
+          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-slate-900 text-emerald-400 border border-slate-700 shadow-2xs";
+          roleBadgeEl.innerText = "Quản trị viên";
+        } else if (isOnlyDirector(currentUser.role, currentUser.username)) {
           roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs";
+          roleBadgeEl.innerText = currentUser.role || "Giám Đốc";
         } else if (isDep) {
           roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-2xs";
+          roleBadgeEl.innerText = currentUser.role || "Phó Giám Đốc";
         } else if (isAdminOrManager(currentUser.role, currentUser.username)) {
           roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300";
+          roleBadgeEl.innerText = currentUser.role;
+        } else {
+          roleBadgeEl.innerText = currentUser.role;
         }
       }
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
       if (btnDayEntry) {
-        if (isDir || isDep) {
+        if (isDir) {
           btnDayEntry.classList.add('hidden');
         } else {
           btnDayEntry.classList.remove('hidden');
@@ -6760,7 +6835,7 @@
 
       const mobileReportBtn = document.getElementById('mobileBottomNavReportBtn');
       if (mobileReportBtn) {
-        if (isDir || isDep) mobileReportBtn.classList.add('hidden');
+        if (isDir) mobileReportBtn.classList.add('hidden');
         else mobileReportBtn.classList.remove('hidden');
       }
 
@@ -7768,8 +7843,12 @@
 
         const assignedUser = userMap.get(effectiveUserId) || t.users;
 
-        // 1. TUYỆT ĐỐI KHÔNG CÓ DÒNG CÔNG VIỆC CỦA GIÁM ĐỐC BAN TRÊN MA TRẬN
-        if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username) || normalizeDeptKey(deptName).includes("giam doc")) {
+        // 1. TUYỆT ĐỐI KHÔNG CÓ DÒNG CÔNG VIỆC CỦA GIÁM ĐỐC / ADMIN TRÊN MA TRẬN
+        // (Phó Giám Đốc vẫn có dòng công việc trên ma trận khi được Giám Đốc giao việc)
+        if (isDirectorOrAdmin(assignedUser?.role, assignedUser?.username)) {
+          return;
+        }
+        if (normalizeDeptKey(deptName).includes("giam doc") && !isDeputyDirector(assignedUser?.role, assignedUser?.username)) {
           return;
         }
 
@@ -12743,13 +12822,69 @@
           if (!globalInitData) globalInitData = {};
           globalInitData.departments = dbDepts.map(d => d.name);
           globalInitData.deptMap = freshDeptMap;
+
+          // XÂY DỰNG CACHE TOÀN BỘ NHÂN SỰ TOÀN CÔNG TY PHỤC VỤ TÌM KIẾM NHANH GỢI Ý TỰ ĐỘNG
+          const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+          modalAssignAllStaffCache = validUsers.filter(u => {
+            const r = removeAccents(u.role || "").toLowerCase();
+            const uname = removeAccents(u.username || "").toLowerCase();
+            // 1. Loại trừ tài khoản Admin
+            if (r.includes('admin') || uname.includes('admin') || r.includes('quantri')) return false;
+            // 2. Không phân công cho Giám Đốc tối cao (tự phân công)
+            if (isDirectorOrAdmin(u.role, u.username)) return false;
+            // 3. Phó Giám Đốc: Giám Đốc hoặc Admin CÓ QUYỀN giao việc cho Phó Giám Đốc!
+            if (isDeputyDirector(u.role, u.username)) {
+              return isAssignerDirector;
+            }
+            if (r === 'giam doc' || r.includes('tong giam doc')) return false;
+            return true;
+          }).map(u => {
+            const d = dbDepts.find(x => x.id === u.department_id);
+            const dName = d ? d.name : "Chưa phân bộ phận";
+            return {
+              id: u.id,
+              fullName: u.full_name,
+              username: u.username,
+              role: u.role || "Nhân viên",
+              deptName: dName,
+              department_id: u.department_id,
+              isDeputy: isDeputyDirector(u.role, u.username)
+            };
+          });
+          // Sắp xếp: Phó Giám Đốc lên đầu nếu có, sau đó theo bảng chữ cái tiếng Việt
+          modalAssignAllStaffCache.sort((a, b) => {
+            if (a.isDeputy && !b.isDeputy) return -1;
+            if (!a.isDeputy && b.isDeputy) return 1;
+            return a.fullName.localeCompare(b.fullName, 'vi');
+          });
         }
+
+        // Reset ô tìm kiếm nhanh và dropdown gợi ý khi mở modal
+        const qInput = document.getElementById('modalAssignQuickStaffSearch');
+        if (qInput) qInput.value = '';
+        const qClearBtn = document.getElementById('modalAssignQuickSearchClearBtn');
+        if (qClearBtn) qClearBtn.classList.add('hidden');
+        const qDrop = document.getElementById('modalAssignQuickSearchDropdown');
+        if (qDrop) qDrop.classList.add('hidden');
 
         if (deptSelect) {
           deptSelect.innerHTML = '';
           if (globalInitData && globalInitData.departments) {
-            // Loại trừ bộ phận Giám đốc / Lãnh đạo cấp cao khỏi danh sách phân công
-            let depts = globalInitData.departments.filter(d => !normalizeDeptKey(d).includes("giam doc"));
+            const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+            // Loại trừ bộ phận Giám đốc / Lãnh đạo cấp cao khỏi danh sách phân công,
+            // NGOẠI TRỪ khi người giao việc là Giám Đốc/Admin và trong bộ phận có Phó Giám Đốc!
+            let depts = globalInitData.departments.filter(d => {
+              const dNorm = normalizeDeptKey(d);
+              if (dNorm.includes("giam doc") || dNorm.includes("ban giam")) {
+                if (isAssignerDirector) {
+                  const members = (globalInitData.deptMap && globalInitData.deptMap[d]) ? globalInitData.deptMap[d] : [];
+                  const hasDeputy = members.some(m => isDeputyDirector(m.role, m.username));
+                  return hasDeputy;
+                }
+                return false;
+              }
+              return true;
+            });
             depts.sort((a, b) => a.localeCompare(b, 'vi'));
 
             depts.forEach(dept => {
@@ -12778,6 +12913,8 @@
       if (dm) dm.classList.add('hidden');
       const sm = document.getElementById('modalAssignStaffMenu');
       if (sm) sm.classList.add('hidden');
+      const qd = document.getElementById('modalAssignQuickSearchDropdown');
+      if (qd) qd.classList.add('hidden');
       const dc = document.getElementById('modalAssignDeptChevron');
       if (dc) dc.classList.remove('rotate-180');
       const sc = document.getElementById('modalAssignStaffChevron');
@@ -12787,6 +12924,197 @@
     // ================= CUSTOM PICKERS DÀNH CHO MODAL PHÂN CÔNG CÔNG VIỆC =================
     let modalAssignDeptCache = [];
     let modalAssignStaffCache = [];
+    let modalAssignAllStaffCache = []; // Toàn bộ danh sách nhân sự công ty phục vụ tìm kiếm gợi ý
+
+    // HÀM TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN CÔNG TY)
+    function onModalAssignQuickSearchInput(query) {
+      const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
+      const resultsContainer = document.getElementById('modalAssignQuickSearchResults');
+      const countEl = document.getElementById('modalAssignQuickSearchCount');
+      const clearBtn = document.getElementById('modalAssignQuickSearchClearBtn');
+
+      const term = (query || '').trim().toLowerCase();
+      if (clearBtn) {
+        if (term.length > 0) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      if (!term) {
+        if (dropdown) dropdown.classList.add('hidden');
+        return;
+      }
+
+      const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
+      
+      const matches = modalAssignAllStaffCache.filter(st => {
+        const normN = typeof removeAccents === 'function' ? removeAccents(st.fullName || '').toLowerCase() : (st.fullName || '').toLowerCase();
+        const normU = (st.username || '').toLowerCase();
+        const normR = typeof removeAccents === 'function' ? removeAccents(st.role || '').toLowerCase() : (st.role || '').toLowerCase();
+        const normD = typeof removeAccents === 'function' ? removeAccents(st.deptName || '').toLowerCase() : (st.deptName || '').toLowerCase();
+        return normN.includes(normTerm) || normU.includes(normTerm) || normR.includes(normTerm) || normD.includes(normTerm);
+      });
+
+      if (countEl) countEl.innerText = `${matches.length} kết quả`;
+
+      if (!resultsContainer) return;
+
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="py-4 text-center text-xs text-slate-400">
+            <i class="fa-solid fa-user-slash text-slate-300 text-base mb-1 block"></i>
+            Không tìm thấy nhân viên nào phù hợp với "<b>${escapeHtml(query)}</b>"
+          </div>
+        `;
+      } else {
+        let html = '';
+        matches.forEach((st, idx) => {
+          const av = getStaffStyle(st.fullName, idx);
+          const isDeputy = st.isDeputy;
+          const roleBadge = isDeputy 
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-2xs">Phó Giám Đốc</span>`
+            : (st.role ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(st.role)}</span>` : '');
+
+          html += `
+            <div onclick="selectQuickSearchStaff(${st.id})" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer hover:bg-emerald-50/80 border border-transparent hover:border-emerald-200 mb-1">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-7 h-7 rounded-full bg-gradient-to-br ${isDeputy ? 'from-purple-600 to-indigo-700 text-white' : av.color.bg + ' ' + av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  ${isDeputy ? '<i class="fa-solid fa-crown text-[10px]"></i>' : av.initial}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-950 truncate">${escapeHtml(st.fullName)}</span>
+                    ${roleBadge}
+                  </div>
+                  <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                    <i class="fa-solid fa-layer-group text-[9px] text-slate-400"></i>
+                    <span class="text-slate-500">${escapeHtml(st.deptName)}</span>
+                    <span>•</span>
+                    <span>@${escapeHtml(st.username)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="shrink-0 ml-2">
+                <span class="text-[10.5px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  <span>Chọn</span>
+                  <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </span>
+              </div>
+            </div>
+          `;
+        });
+        resultsContainer.innerHTML = html;
+      }
+
+      if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function onModalAssignQuickSearchFocus() {
+      const qInput = document.getElementById('modalAssignQuickStaffSearch');
+      const val = qInput?.value || '';
+      if (val.trim()) {
+        onModalAssignQuickSearchInput(val);
+      } else {
+        const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
+        const resultsContainer = document.getElementById('modalAssignQuickSearchResults');
+        const countEl = document.getElementById('modalAssignQuickSearchCount');
+        if (modalAssignAllStaffCache && modalAssignAllStaffCache.length > 0 && resultsContainer) {
+          const sample = modalAssignAllStaffCache.slice(0, 15);
+          if (countEl) countEl.innerText = `${modalAssignAllStaffCache.length} nhân sự`;
+          let html = '';
+          sample.forEach((st, idx) => {
+            const av = getStaffStyle(st.fullName, idx);
+            const isDeputy = st.isDeputy;
+            const roleBadge = isDeputy 
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-2xs">Phó Giám Đốc</span>`
+              : (st.role ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(st.role)}</span>` : '');
+
+            html += `
+              <div onclick="selectQuickSearchStaff(${st.id})" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer hover:bg-emerald-50/80 border border-transparent hover:border-emerald-200 mb-1">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-7 h-7 rounded-full bg-gradient-to-br ${isDeputy ? 'from-purple-600 to-indigo-700 text-white' : av.color.bg + ' ' + av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                    ${isDeputy ? '<i class="fa-solid fa-crown text-[10px]"></i>' : av.initial}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-950 truncate">${escapeHtml(st.fullName)}</span>
+                      ${roleBadge}
+                    </div>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                      <i class="fa-solid fa-layer-group text-[9px] text-slate-400"></i>
+                      <span class="text-slate-500">${escapeHtml(st.deptName)}</span>
+                      <span>•</span>
+                      <span>@${escapeHtml(st.username)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="shrink-0 ml-2">
+                  <span class="text-[10.5px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    <span>Chọn</span>
+                    <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                  </span>
+                </div>
+              </div>
+            `;
+          });
+          resultsContainer.innerHTML = html;
+          if (dropdown) dropdown.classList.remove('hidden');
+        }
+      }
+    }
+
+    function clearModalAssignQuickSearch() {
+      const inp = document.getElementById('modalAssignQuickStaffSearch');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      const clearBtn = document.getElementById('modalAssignQuickSearchClearBtn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function selectQuickSearchStaff(staffId) {
+      const st = modalAssignAllStaffCache.find(x => x.id === staffId);
+      if (!st) return;
+
+      // 1. Cập nhật ô tìm kiếm nhanh
+      const inp = document.getElementById('modalAssignQuickStaffSearch');
+      if (inp) inp.value = st.fullName;
+      const clearBtn = document.getElementById('modalAssignQuickSearchClearBtn');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+
+      // 2. Đồng bộ Bộ phận:
+      const deptSelect = document.getElementById('modalAssignDeptSelect');
+      if (deptSelect && st.deptName) {
+        let hasOpt = Array.from(deptSelect.options).some(o => o.value === st.deptName);
+        if (!hasOpt) {
+          const opt = document.createElement('option');
+          opt.value = st.deptName;
+          opt.innerText = st.deptName;
+          deptSelect.appendChild(opt);
+          if (!modalAssignDeptCache.includes(st.deptName)) {
+            modalAssignDeptCache.push(st.deptName);
+            renderModalAssignDeptPicker(modalAssignDeptCache);
+          }
+        }
+        deptSelect.value = st.deptName;
+        updateModalAssignDeptUI(st.deptName);
+        onAssignDeptSelectChange(st.deptName);
+      }
+
+      // 3. Đồng bộ Nhân sự phân công:
+      setTimeout(() => {
+        const staffSelect = document.getElementById('modalAssignStaffSelect');
+        if (staffSelect) {
+          staffSelect.value = st.fullName;
+          updateModalAssignStaffUI(st.fullName);
+          onAssignStaffSelectChange(st.fullName);
+        }
+      }, 50);
+    }
 
     function toggleModalAssignDeptPicker(e) {
       if (e) e.stopPropagation();
@@ -12794,6 +13122,8 @@
       const chev = document.getElementById('modalAssignDeptChevron');
       const staffMenu = document.getElementById('modalAssignStaffMenu');
       const staffChev = document.getElementById('modalAssignStaffChevron');
+      const qd = document.getElementById('modalAssignQuickSearchDropdown');
+      if (qd) qd.classList.add('hidden');
       if (staffMenu) staffMenu.classList.add('hidden');
       if (staffChev) staffChev.classList.remove('rotate-180');
 
@@ -12895,6 +13225,8 @@
       const chev = document.getElementById('modalAssignStaffChevron');
       const deptMenu = document.getElementById('modalAssignDeptMenu');
       const deptChev = document.getElementById('modalAssignDeptChevron');
+      const qd = document.getElementById('modalAssignQuickSearchDropdown');
+      if (qd) qd.classList.add('hidden');
       if (deptMenu) deptMenu.classList.add('hidden');
       if (deptChev) deptChev.classList.remove('rotate-180');
 
@@ -12935,6 +13267,22 @@
       const chev = document.getElementById('modalAssignStaffChevron');
       if (menu) menu.classList.add('hidden');
       if (chev) chev.classList.remove('rotate-180');
+
+      // Đồng bộ sang ô tìm kiếm nhanh
+      const quickInp = document.getElementById('modalAssignQuickStaffSearch');
+      if (quickInp) {
+        if (staffName === '__SHARED_GROUP__') {
+          quickInp.value = "🏢 Công việc chung của tổ kho";
+        } else {
+          quickInp.value = staffName || '';
+        }
+        const clearBtn = document.getElementById('modalAssignQuickSearchClearBtn');
+        if (clearBtn) {
+          if (quickInp.value) clearBtn.classList.remove('hidden');
+          else clearBtn.classList.add('hidden');
+        }
+      }
+
       onAssignStaffSelectChange(staffName);
     }
 
@@ -12970,6 +13318,29 @@
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
                 <span class="text-[9px] font-black px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-300 uppercase tracking-tight">Việc chung</span>
                 ${isSelected ? '<i class="fa-solid fa-check text-xs text-emerald-700 ml-1"></i>' : ''}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // PHÓ GIÁM ĐỐC: ĐỊNH DẠNG HOÀNG GIA ĐẶC BIỆT
+        const isDeputy = st.isDeputy || (typeof isDeputyDirector === 'function' && isDeputyDirector(st.role, st.username));
+        if (isDeputy) {
+          html += `
+            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-purple-400 bg-purple-50/90 font-bold shadow-xs' : 'border-transparent hover:border-purple-200 hover:bg-purple-50/60'} border-l-4 border-l-purple-600 mb-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
+                  <i class="fa-solid fa-crown text-[10px]"></i>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-purple-950">${escapeHtml(st.fullName)}</span>
+                  <span class="block text-[10px] text-purple-600 font-semibold truncate">Phó Giám Đốc</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span class="text-[9.5px] font-black px-2 py-0.5 rounded-full border bg-purple-100 text-purple-800 border-purple-200 uppercase tracking-tight">Phó Giám Đốc</span>
+                ${isSelected ? '<i class="fa-solid fa-check text-xs text-purple-600 ml-1"></i>' : ''}
               </div>
             </div>
           `;
@@ -13050,26 +13421,39 @@
           avatarBox.innerHTML = '<i class="fa-solid fa-user text-[10px]"></i>';
         }
       } else {
-        const av = getStaffStyle(st.fullName);
-        if (textEl) textEl.innerText = st.fullName;
-        if (subText) {
-          if (st.isPersonalScope) {
-            subText.innerText = `${st.role || 'Thành viên'} • Việc cá nhân riêng`;
+        const isDep = st.isDeputy || (typeof isDeputyDirector === 'function' && isDeputyDirector(st.role, st.username));
+        if (isDep) {
+          if (textEl) textEl.innerText = st.fullName;
+          if (subText) {
+            subText.innerText = "Phó Giám Đốc";
             subText.classList.remove('hidden');
-          } else if (st.role) {
-            subText.innerText = st.role;
-            subText.classList.remove('hidden');
-          } else {
-            subText.classList.add('hidden');
           }
-        }
-        if (avatarBox) {
-          if (st.isPersonalScope) {
-            avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
-            avatarBox.innerText = (st.fullName || '').charAt(0);
-          } else {
-            avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
-            avatarBox.innerText = av.initial;
+          if (avatarBox) {
+            avatarBox.className = "w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white flex items-center justify-center shrink-0 text-[10px] font-bold shadow-2xs";
+            avatarBox.innerHTML = '<i class="fa-solid fa-crown text-[10px]"></i>';
+          }
+        } else {
+          const av = getStaffStyle(st.fullName);
+          if (textEl) textEl.innerText = st.fullName;
+          if (subText) {
+            if (st.isPersonalScope) {
+              subText.innerText = `${st.role || 'Thành viên'} • Việc cá nhân riêng`;
+              subText.classList.remove('hidden');
+            } else if (st.role) {
+              subText.innerText = st.role;
+              subText.classList.remove('hidden');
+            } else {
+              subText.classList.add('hidden');
+            }
+          }
+          if (avatarBox) {
+            if (st.isPersonalScope) {
+              avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+              avatarBox.innerText = (st.fullName || '').charAt(0);
+            } else {
+              avatarBox.className = `w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs`;
+              avatarBox.innerText = av.initial;
+            }
           }
         }
       }
@@ -13083,12 +13467,23 @@
 
       const deptUsers = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) ? globalInitData.deptMap[dept] : [];
       
-      // LOẠI TRỪ TUYỆT ĐỐI TÀI KHOẢN ADMIN & BAN GIÁM ĐỐC KHỎI PHÂN CÔNG CÔNG VIỆC
+      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      // LOẠI TRỪ TUYỆT ĐỐI TÀI KHOẢN ADMIN & GIÁM ĐỐC TỐI CAO KHỎI PHÂN CÔNG CÔNG VIỆC
+      // (GIÁM ĐỐC VẪN CÓ QUYỀN GIAO VIỆC CHO PHÓ GIÁM ĐỐC)
       const assignableUsers = deptUsers.filter(st => {
-        if (isDirectorOrAdmin(st.role, st.username)) return false;
         const r = removeAccents(st.role || "").toLowerCase();
         const u = removeAccents(st.username || "").toLowerCase();
-        if (r.includes('admin') || r.includes('giam doc') || u.includes('admin')) return false;
+        if (r.includes('admin') || u.includes('admin') || r.includes('quantri')) return false;
+
+        // Giám Đốc tối cao: Không tự nhận phân công công việc
+        if (isDirectorOrAdmin(st.role, st.username)) return false;
+
+        // Phó Giám Đốc: Giám Đốc hoặc Admin có quyền giao việc cho Phó Giám Đốc!
+        if (isDeputyDirector(st.role, st.username)) {
+          return isAssignerDirector;
+        }
+
+        if (r === 'giam doc' || r.includes('tong giam doc')) return false;
         return true;
       });
 
@@ -13239,8 +13634,9 @@
 
             if (uErr) throw uErr;
             if (user && user[0]) {
-              if (isDirectorOrAdmin(user[0].role, user[0].username)) {
-                container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Ban Giám đốc không tham gia phân công công việc.</p>';
+              const isDeputy = isDeputyDirector(user[0].role, user[0].username);
+              if (isDirectorOrAdmin(user[0].role, user[0].username) && !isDeputy) {
+                container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Giám đốc không tham gia nhận phân công công việc.</p>';
                 return;
               }
               uId = user[0].id;
@@ -13574,9 +13970,16 @@
       updateTransferActionUI();
 
       // Nạp danh sách bộ phận đích
+      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
       const deptSelect = document.getElementById('transferTargetDeptSelect');
       let depts = (globalInitData && globalInitData.departments) ? [...globalInitData.departments] : [];
-      depts = depts.filter(d => !normalizeDeptKey(d).includes("giam doc"));
+      depts = depts.filter(d => {
+        const dNorm = normalizeDeptKey(d);
+        if (dNorm.includes("giam doc") || dNorm.includes("ban giam")) {
+          return isAssignerDirector;
+        }
+        return true;
+      });
       depts.sort((a, b) => a.localeCompare(b, 'vi'));
       transferTargetDeptCache = depts;
 
@@ -13937,7 +14340,16 @@
       }
 
       const isShared = isSharedGroupDeptClient(targetDeptName);
-      const staffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
+      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      const rawStaffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
+      const staffList = rawStaffList.filter(st => {
+        const r = removeAccents(st.role || "").toLowerCase();
+        const u = removeAccents(st.username || "").toLowerCase();
+        if (r.includes('admin') || u.includes('admin')) return false;
+        if (isDirectorOrAdmin(st.role, st.username)) return false;
+        if (isDeputyDirector(st.role, st.username)) return isAssignerDirector;
+        return true;
+      });
 
       if (isShared) {
         // Nhóm gộp: Thêm option việc chung (KHÔNG CÓ EMOJI 📦)
@@ -14364,11 +14776,15 @@
 
         const [{ data: dept }, { data: user }] = await Promise.all([deptPromise, userPromise]);
 
-        // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Ban Giám Đốc
-        if (user && user[0] && isDirectorOrAdmin(user[0].role, user[0].username)) {
-          hideProgressHud(100);
-          showToast("Không phân công công việc cho tài khoản Quản trị viên/Ban Giám đốc!", true);
-          return;
+        // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Giám Đốc tối cao
+        // (Giám Đốc có quyền phân công cho Phó Giám Đốc)
+        if (user && user[0]) {
+          const isDeputy = isDeputyDirector(user[0].role, user[0].username);
+          if (isDirectorOrAdmin(user[0].role, user[0].username) && !isDeputy) {
+            hideProgressHud(100);
+            showToast("Không phân công công việc cho tài khoản Quản trị viên/Giám đốc!", true);
+            return;
+          }
         }
 
         const dId = dept && dept[0] ? dept[0].id : 1;
@@ -14869,11 +15285,14 @@
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-circle-check mr-1"></i>Hoạt động</span>`;
         }
 
-        const isDir = isDirectorOrAdmin(u.role, u.username);
+        const isTargetDir = isOnlyDirector(u.role, u.username);
+        const isTargetSysAdmin = isSystemAdmin(u.role, u.username);
         const isDep = isDeputyDirector(u.role, u.username);
         const isMgr = isAdminOrManager(u.role, u.username);
         let roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-500">${escapeHtml(u.role)}</span>`;
-        if (isDir) {
+        if (isTargetSysAdmin) {
+          roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-900 text-emerald-400 border border-slate-700 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[9px] text-emerald-400"></i>Quản trị hệ thống</span>`;
+        } else if (isTargetDir) {
           roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-crown text-[9px] text-amber-600"></i>Giám đốc ban</span>`;
         } else if (isDep) {
           roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-user-shield text-[9px] text-indigo-600"></i>Phó Giám Đốc</span>`;
@@ -14881,7 +15300,7 @@
           roleBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">${escapeHtml(u.role)}</span>`;
         }
 
-        const isTargetAdmin = isDirectorOrAdmin(u.role, u.username);
+        const isTargetAdmin = isTargetDir || isTargetSysAdmin;
         const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
         const isManagerViewingAdmin = isTargetAdmin && !isCurrAdmin;
 
@@ -14894,16 +15313,25 @@
             </button>
           `;
         } else if (isTargetAdmin && isCurrAdmin) {
-          actionBtns = `
-            <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
-              <i class="fa-solid fa-user-gear text-[11px]"></i>
-              <span>Tài khoản</span>
-            </button>
-            <button onclick="openTransferAdminModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Chuyển quyền Giám Đốc & Admin cho nhân sự khác">
-              <i class="fa-solid fa-crown text-[11px] text-yellow-200"></i>
-              <span>Chuyển quyền</span>
-            </button>
-          `;
+          if (isTargetDir) {
+            actionBtns = `
+              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
+                <i class="fa-solid fa-user-gear text-[11px]"></i>
+                <span>Tài khoản</span>
+              </button>
+              <button onclick="openTransferAdminModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Chuyển quyền Giám Đốc cho nhân sự khác">
+                <i class="fa-solid fa-crown text-[11px] text-yellow-200"></i>
+                <span>Chuyển quyền</span>
+              </button>
+            `;
+          } else {
+            actionBtns = `
+              <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật Admin">
+                <i class="fa-solid fa-user-gear text-[11px]"></i>
+                <span>Tài khoản</span>
+              </button>
+            `;
+          }
         } else {
           actionBtns = `
             <button onclick="openAccountEditModal('${u.username}')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-600 hover:to-teal-700 hover:text-white text-emerald-900 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-300 shadow-2xs active:scale-95 cursor-pointer" title="Cấu hình tài khoản & bảo mật">
@@ -14966,7 +15394,9 @@
       const curEyeInputIcon = document.getElementById('accCurrentEyeInputIcon');
       if (curEyeInputIcon) curEyeInputIcon.className = "fa-regular fa-eye text-xs";
 
-      const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
+      const isTargetSysAdmin = isSystemAdmin(user.role, user.username);
+      const isTargetDir = isOnlyDirector(user.role, user.username);
+      const isTargetAdmin = isTargetSysAdmin || isTargetDir;
       const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
       const isManagerViewingAdmin = isTargetAdmin && !isCurrAdmin;
 
@@ -14986,13 +15416,35 @@
       if (isTargetAdmin) {
         // TÀI KHOẢN GIÁM ĐỐC / ADMIN: BỎ CHỨC NĂNG CHỌN VAI TRÒ
         if (roleWrapper) roleWrapper.classList.add('hidden');
-        if (directorBadge) directorBadge.classList.remove('hidden');
+        if (directorBadge) {
+          directorBadge.classList.remove('hidden');
+          if (isTargetSysAdmin) {
+            directorBadge.innerHTML = `
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">Vai trò hệ thống</label>
+              <div class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-black text-emerald-400 flex items-center gap-1.5 shadow-2xs">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-xs"></i>
+                <span>Quản trị viên hệ thống (Admin)</span>
+              </div>
+            `;
+          } else {
+            directorBadge.innerHTML = `
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-amber-800 mb-1">Vai trò hệ thống</label>
+              <div class="w-full bg-gradient-to-r from-amber-50 to-amber-100/80 border border-amber-300 rounded-xl px-3 py-2 text-xs font-black text-amber-950 flex items-center gap-1.5 shadow-2xs">
+                <i class="fa-solid fa-crown text-amber-600 text-xs"></i>
+                <span>Giám Đốc Ban</span>
+              </div>
+            `;
+          }
+        }
 
         if (isCurrAdmin) {
-          // Giám đốc xem/sửa tài khoản Giám đốc: Có nút chuyển giao quyền Giám Đốc & Admin
+          // Giám đốc hoặc Admin xem/sửa tài khoản:
           if (adminNotice) adminNotice.classList.add('hidden');
           if (submitBtn) submitBtn.classList.remove('hidden');
-          if (transferAdminBox) transferAdminBox.classList.remove('hidden');
+          if (transferAdminBox) {
+            if (isTargetDir) transferAdminBox.classList.remove('hidden');
+            else transferAdminBox.classList.add('hidden');
+          }
           if (fullNameInput) fullNameInput.readOnly = false;
           if (usernameInput) usernameInput.readOnly = false;
           if (passInput) {
@@ -15235,22 +15687,22 @@
       if (targetUsername) {
         currentDirector = adminManageUsersCache.users.find(u => u.username === targetUsername);
       }
-      if (!currentDirector || !isDirectorOrAdmin(currentDirector.role, currentDirector.username)) {
-        currentDirector = adminManageUsersCache.users.find(u => isDirectorOrAdmin(u.role, u.username));
+      if (!currentDirector || !isOnlyDirector(currentDirector.role, currentDirector.username)) {
+        currentDirector = adminManageUsersCache.users.find(u => isOnlyDirector(u.role, u.username));
       }
       if (!currentDirector) {
-        currentDirector = {
-          username: currentUser?.username || 'admin',
+        currentDirector = adminManageUsersCache.users.find(u => isDirectorOrAdmin(u.role, u.username)) || {
+          username: currentUser?.username || 'oanhgd',
           fullName: currentUser?.fullName || 'Giám Đốc Ban',
-          role: currentUser?.role || 'Admin',
-          department_id: currentUser?.department_id || 349
+          role: currentUser?.role || 'Giám Đốc',
+          department_id: currentUser?.department_id || 334
         };
       }
 
       // Điền thông tin Giám đốc bàn giao
       const currentNameInput = document.getElementById('transferAdminCurrentName');
       if (currentNameInput) {
-        currentNameInput.value = `${currentDirector.fullName} (${currentDirector.username}) - Giám Đốc Ban & Admin`;
+        currentNameInput.value = `${currentDirector.fullName} (${currentDirector.username}) - Giám Đốc Ban`;
         currentNameInput.dataset.directorUsername = currentDirector.username;
       }
 
@@ -15331,20 +15783,20 @@
       const succName = successor.fullName;
 
       const confirmText = 
-        `XÁC NHẬN CHUYỂN GIAO QUYỀN GIÁM ĐỐC & ADMIN:\n\n` +
-        `• Nhân sự kế nhiệm trở thành Giám Đốc Ban & Admin: ${succName} (${successor.username})\n` +
+        `XÁC NHẬN CHUYỂN GIAO QUYỀN GIÁM ĐỐC:\n\n` +
+        `• Nhân sự kế nhiệm trở thành Giám Đốc Ban: ${succName} (${successor.username})\n` +
         `• Vai trò mới của ${dirName}: ${formerRole}\n\n` +
-        `Sau khi xác nhận, toàn bộ quyền Giám Đốc Ban & Quản Trị Viên (Admin) sẽ được bàn giao sang cho ${succName}.\n\n` +
+        `Sau khi xác nhận, toàn bộ thẩm quyền Giám Đốc Ban sẽ được bàn giao sang cho ${succName}.\n\n` +
         `Bạn có chắc chắn muốn tiến hành chuyển quyền?`;
 
       if (!confirm(confirmText)) return;
 
-      showProgressHud("CHUYỂN GIAO QUYỀN GIÁM ĐỐC", `Đang bàn giao quyền Giám Đốc & Admin cho ${succName}...`, "fa-solid fa-crown text-amber-500 animate-spin");
+      showProgressHud("CHUYỂN GIAO QUYỀN GIÁM ĐỐC", `Đang bàn giao quyền Giám Đốc cho ${succName}...`, "fa-solid fa-crown text-amber-500 animate-spin");
       autoSimulateProgress(15, 80, "Cập nhật thẩm quyền hệ thống...", 25);
 
       try {
-        // 1. Tìm department_id của Ban Giám Đốc (thường là 349)
-        let giamDocDeptId = 349;
+        // 1. Tìm department_id của Ban Giám Đốc
+        let giamDocDeptId = 334;
         const gdDept = departmentsCache?.find(d => {
           const nameNorm = removeAccents(d.name || "").toLowerCase();
           return nameNorm.includes("giam doc");
@@ -15360,7 +15812,7 @@
           supabase
             .from('users')
             .update({
-              role: 'Admin',
+              role: 'Giám Đốc',
               department_id: giamDocDeptId
             })
             .eq('username', successor.username),
@@ -15385,14 +15837,14 @@
         } else if (currentUser && currentUser.username === successor.username) {
           currentUser = Object.freeze({
             ...currentUser,
-            role: 'Admin',
+            role: 'Giám Đốc',
             department_id: giamDocDeptId
           });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
         }
 
         finishProgressHud("Bàn giao quyền thành công!", () => {
-          showToast(`Đã chuyển giao quyền Giám Đốc Ban & Admin thành công cho ${succName}!`);
+          showToast(`Đã chuyển giao quyền Giám Đốc Ban thành công cho ${succName}!`);
           closeTransferAdminModal();
           closeAccountEditModal();
 
@@ -15685,7 +16137,7 @@
 
       const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
       if (isTargetAdmin) {
-        showToast("Tài khoản Giám Đốc Ban & Admin không dùng chức năng điều chuyển thông thường! Vui lòng dùng chức năng 'Chuyển quyền Giám Đốc & Admin'.", true);
+        showToast("Tài khoản Giám Đốc Ban & Quản trị viên không dùng chức năng điều chuyển thông thường!", true);
         return;
       }
 
@@ -15694,9 +16146,11 @@
       
       const roleSelect = document.getElementById('transferRoleSelect');
       if (roleSelect) {
-        // Loại bỏ triệt để tùy chọn Admin nếu có
+        // Loại bỏ triệt để tùy chọn Admin hoặc Giám Đốc nếu có trong điều chuyển thông thường
         Array.from(roleSelect.options).forEach(o => {
-          if (o.value.toLowerCase().includes("admin") || o.innerText.toLowerCase().includes("admin")) {
+          const val = removeAccents(o.value || "").toLowerCase();
+          const txt = removeAccents(o.innerText || "").toLowerCase();
+          if (val.includes("admin") || txt.includes("admin") || val.includes("quantri") || val === "giam doc" || txt === "giam doc") {
             o.remove();
           }
         });
