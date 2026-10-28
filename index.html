@@ -1273,13 +1273,29 @@
               </div>
             </div>
 
-            <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ -->
-            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
-              <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-              <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly');" class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-24 sm:w-32 transition" />
-              <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
+            <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ (CÓ MENU GỢI Ý TỰ ĐỘNG) -->
+            <div id="adminStaffSearchWrapper" class="relative">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly'); onAdminStaffSearchFocus();" class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-28 sm:w-36 transition" />
+                <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+
+              <!-- MENU GỢI Ý NHÂN SỰ TƯƠNG ỨNG KHI GÕ TỪ KHÓA TÌM KIẾM -->
+              <div id="adminStaffSuggestMenu" class="hidden absolute right-0 top-full mt-1.5 z-50 w-[300px] sm:w-[360px] max-w-[95vw] bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div class="p-2 border-b border-slate-100 bg-emerald-50/70 flex items-center justify-between text-[11px] font-bold text-emerald-900">
+                  <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-check text-emerald-600"></i>
+                    <span>Gợi ý nhân sự</span>
+                  </span>
+                  <span id="adminStaffSuggestCount" class="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-extrabold">0</span>
+                </div>
+                <div id="adminStaffSuggestList" class="max-h-64 overflow-y-auto custom-scroll p-1.5 space-y-1">
+                  <!-- Được tạo động với danh sách nhân sự gợi ý -->
+                </div>
+              </div>
             </div>
 
             <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
@@ -5479,6 +5495,10 @@
         if (m) m.classList.add('hidden');
         if (c) c.classList.remove('rotate-180');
       }
+      const adminSearchWrap = document.getElementById('adminStaffSearchWrapper');
+      if (adminSearchWrap && !adminSearchWrap.contains(e.target)) {
+        hideAdminStaffSuggestMenu();
+      }
 
       // Modal Phân công công việc (assignModal)
       const maDeptWrap = document.getElementById('modalAssignDeptPickerWrapper');
@@ -5565,6 +5585,7 @@
 
     function toggleDashboardDeptPickerMenu(e) {
       if (e) e.stopPropagation();
+      hideAdminStaffSuggestMenu();
       const menu = document.getElementById('filterDeptPickerMenu');
       const chev = document.getElementById('filterDeptPickerChevron');
       const staffMenu = document.getElementById('filterStaffPickerMenu');
@@ -5689,6 +5710,7 @@
     // --- STAFF PICKER ---
     function toggleDashboardStaffPickerMenu(e) {
       if (e) e.stopPropagation();
+      hideAdminStaffSuggestMenu();
       const menu = document.getElementById('filterStaffPickerMenu');
       const chev = document.getElementById('filterStaffPickerChevron');
       const deptMenu = document.getElementById('filterDeptPickerMenu');
@@ -7279,10 +7301,23 @@
     }
 
     /**
-     * BỘ TÌM KIẾM NHÂN SỰ TỨC THÌ DÀNH CHO ADMIN VÀ QUẢN LÝ
+     * BỘ TÌM KIẾM NHÂN SỰ TỨC THÌ & GỢI Ý DANH SÁCH TƯƠNG ỨNG ĐỂ CHỌN
      */
+    function hideAdminStaffSuggestMenu() {
+      const menu = document.getElementById('adminStaffSuggestMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+
+    function onAdminStaffSearchFocus() {
+      const inp = document.getElementById('adminStaffSearchInput');
+      if (inp && inp.value.trim().length > 0) {
+        renderAdminStaffSuggestions(inp.value);
+      }
+    }
+
     function onAdminStaffSearchInput(query) {
-      const q = removeAccents(query || "").trim().toLowerCase();
+      const rawQ = query || "";
+      const q = removeAccents(rawQ).trim().toLowerCase();
       const clearBtn = document.getElementById('btnClearStaffSearch');
       if (clearBtn) {
         if (q) clearBtn.classList.remove('hidden');
@@ -7290,15 +7325,19 @@
       }
 
       if (!q) {
+        hideAdminStaffSuggestMenu();
         const sel = document.getElementById('adminStaffSelect');
         currentSelectedStaff = sel ? sel.value : "TẤT CẢ";
         applyClientFilterAndRender();
         return;
       }
 
-      isDirectorDashboardInitial = false; // Khi tìm kiếm nhân sự, hiện ma trận
-      updateDirectorOverviewButtonUI();
+      // 1. Hiển thị danh sách gợi ý nhân sự tương ứng để người dùng click chọn
+      renderAdminStaffSuggestions(rawQ);
 
+      // 2. Lọc tức thì bảng ma trận theo từ khóa
+      isDirectorDashboardInitial = false;
+      updateDirectorOverviewButtonUI();
       currentSelectedStaff = "SEARCH_" + q;
       applyClientFilterAndRender();
     }
@@ -7308,9 +7347,233 @@
       if (inp) inp.value = '';
       const clearBtn = document.getElementById('btnClearStaffSearch');
       if (clearBtn) clearBtn.classList.add('hidden');
+      hideAdminStaffSuggestMenu();
       const sel = document.getElementById('adminStaffSelect');
       currentSelectedStaff = sel ? sel.value : "TẤT CẢ";
       applyClientFilterAndRender();
+    }
+
+    function getAllStaffCandidatesForSearch() {
+      const candidates = [];
+      const seen = new Set();
+
+      // Nguồn 1: globalInitData.allUsers
+      (globalInitData?.allUsers || []).forEach(u => {
+        if (isSystemAdmin(u.role, u.username) || (u.username || '').toLowerCase() === 'admin') return;
+        const uname = (u.username || '').toLowerCase();
+        if (seen.has(uname)) return;
+        seen.add(uname);
+
+        let dName = u.dept || (u.departments ? u.departments.name : '');
+        if (!dName && u.department_id && globalInitData?.deptMap) {
+          for (const [k, arr] of Object.entries(globalInitData.deptMap)) {
+            if (arr.some(x => x.username === u.username)) {
+              dName = k;
+              break;
+            }
+          }
+        }
+        if (isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username)) {
+          dName = "Ban Giám Đốc";
+        }
+
+        candidates.push({
+          id: u.id,
+          username: u.username,
+          fullName: u.full_name || u.fullName,
+          role: u.role || 'Nhân viên',
+          dept: dName || 'Chưa phân bổ',
+          status: u.status
+        });
+      });
+
+      // Nguồn 2: globalInitData.deptMap
+      if (globalInitData?.deptMap) {
+        Object.entries(globalInitData.deptMap).forEach(([dName, users]) => {
+          (users || []).forEach(u => {
+            if (isSystemAdmin(u.role, u.username) || (u.username || '').toLowerCase() === 'admin') return;
+            const uname = (u.username || '').toLowerCase();
+            if (seen.has(uname)) return;
+            seen.add(uname);
+
+            let effDept = dName;
+            if (isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username)) {
+              effDept = "Ban Giám Đốc";
+            }
+
+            candidates.push({
+              id: u.id,
+              username: u.username,
+              fullName: u.full_name || u.fullName,
+              role: u.role || 'Nhân viên',
+              dept: effDept || 'Chưa phân bổ',
+              status: u.status
+            });
+          });
+        });
+      }
+
+      return candidates;
+    }
+
+    function renderAdminStaffSuggestions(query) {
+      const menu = document.getElementById('adminStaffSuggestMenu');
+      const listEl = document.getElementById('adminStaffSuggestList');
+      const countEl = document.getElementById('adminStaffSuggestCount');
+      if (!menu || !listEl) return;
+
+      const qRaw = (query || "").trim();
+      const qNorm = removeAccents(qRaw).toLowerCase();
+      if (!qNorm) {
+        menu.classList.add('hidden');
+        return;
+      }
+
+      const qTokens = qNorm.split(/\s+/).filter(Boolean);
+      const candidates = getAllStaffCandidatesForSearch();
+
+      const matched = candidates.filter(st => {
+        const nameNorm = removeAccents(st.fullName || '').toLowerCase();
+        const userNorm = removeAccents(st.username || '').toLowerCase();
+        const deptNorm = removeAccents(st.dept || '').toLowerCase();
+        const roleNorm = removeAccents(st.role || '').toLowerCase();
+
+        return qTokens.every(tok =>
+          nameNorm.includes(tok) ||
+          userNorm.includes(tok) ||
+          deptNorm.includes(tok) ||
+          roleNorm.includes(tok)
+        );
+      });
+
+      // Sắp xếp ưu tiên: Khớp tên bắt đầu bằng từ khóa -> Lãnh đạo -> A-Z
+      matched.sort((a, b) => {
+        const aNorm = removeAccents(a.fullName || '').toLowerCase();
+        const bNorm = removeAccents(b.fullName || '').toLowerCase();
+        const aStarts = aNorm.startsWith(qNorm) ? 1 : 0;
+        const bStarts = bNorm.startsWith(qNorm) ? 1 : 0;
+        if (aStarts !== bStarts) return bStarts - aStarts;
+
+        const aIsDir = isOnlyDirector(a.role, a.username) ? 1 : 0;
+        const bIsDir = isOnlyDirector(b.role, b.username) ? 1 : 0;
+        if (aIsDir !== bIsDir) return bIsDir - aIsDir;
+
+        const aIsDep = isDeputyDirector(a.role, a.username) ? 1 : 0;
+        const bIsDep = isDeputyDirector(b.role, b.username) ? 1 : 0;
+        if (aIsDep !== bIsDep) return bIsDep - aIsDep;
+
+        return (a.fullName || '').localeCompare(b.fullName || '', 'vi');
+      });
+
+      if (countEl) countEl.innerText = matched.length;
+
+      if (matched.length === 0) {
+        listEl.innerHTML = `
+          <div class="py-5 px-3 text-center text-xs text-slate-400 space-y-1">
+            <i class="fa-regular fa-face-frown text-base text-slate-300"></i>
+            <div>Không tìm thấy nhân sự phù hợp với "<b>${escapeHtml(qRaw)}</b>"</div>
+          </div>
+        `;
+        menu.classList.remove('hidden');
+        return;
+      }
+
+      const borderAccents = ['border-l-emerald-500', 'border-l-blue-500', 'border-l-purple-500', 'border-l-amber-500', 'border-l-teal-500'];
+
+      function getRoleBadge(roleStr, unameStr) {
+        if (isOnlyDirector(roleStr, unameStr)) {
+          return '<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-black bg-amber-100 text-amber-800 border border-amber-300/80 shrink-0"><i class="fa-solid fa-crown text-[8px] mr-1 text-amber-600"></i>Giám Đốc</span>';
+        }
+        if (isDeputyDirector(roleStr, unameStr)) {
+          return '<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-purple-100 text-purple-800 border border-purple-200 shrink-0">Phó Giám Đốc</span>';
+        }
+        const rClean = (typeof removeAccents === 'function' ? removeAccents(roleStr || '') : (roleStr || '')).toLowerCase();
+        if (rClean.includes('quanly') || rClean.includes('truongphong') || rClean.includes('phophong') || rClean.includes('manager') || rClean.includes('leader')) {
+          return '<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200 shrink-0">Quản lý</span>';
+        }
+        return `<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-medium bg-slate-100 text-slate-600 border border-slate-200 shrink-0">${escapeHtml(roleStr || 'Nhân viên')}</span>`;
+      }
+
+      let html = '';
+      matched.forEach((st, idx) => {
+        const av = getStaffStyle(st.fullName, idx);
+        const bAccent = borderAccents[idx % borderAccents.length];
+        const rBadge = getRoleBadge(st.role, st.username);
+
+        html += `
+          <div onclick="selectStaffFromSearchResult('${escapeHtml(st.username)}', '${escapeHtml(st.fullName)}', '${escapeHtml(st.dept)}')"
+               class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border border-transparent hover:border-emerald-300 hover:bg-emerald-50/70 border-l-4 ${bAccent}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs group-hover:scale-105 transition-transform">
+                ${av.initial}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-bold text-slate-800 group-hover:text-emerald-950 truncate">${escapeHtml(st.fullName)}</span>
+                  ${rBadge}
+                </div>
+                <span class="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
+                  <i class="fa-solid fa-building text-[8.5px] text-slate-400"></i>
+                  <span>${escapeHtml(st.dept)}</span>
+                </span>
+              </div>
+            </div>
+            <div class="shrink-0 ml-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition text-xs shadow-2xs">
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </span>
+            </div>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+      menu.classList.remove('hidden');
+    }
+
+    function selectStaffFromSearchResult(username, fullName, deptName) {
+      const searchInp = document.getElementById('adminStaffSearchInput');
+      if (searchInp) searchInp.value = fullName;
+
+      const clearBtn = document.getElementById('btnClearStaffSearch');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+
+      hideAdminStaffSuggestMenu();
+
+      isDirectorDashboardInitial = false; // Mở ma trận
+      updateDirectorOverviewButtonUI();
+
+      // 1. Đồng bộ chọn Bộ phận
+      if (deptName && deptName !== 'Chưa phân bổ') {
+        currentSelectedDept = deptName;
+        const deptSelect = document.getElementById('adminDeptSelect');
+        if (deptSelect) deptSelect.value = deptName;
+        updateDashboardDeptPickerUI(deptName);
+        populateStaffDropdown(deptName);
+      } else {
+        currentSelectedDept = "TẤT CẢ";
+        const deptSelect = document.getElementById('adminDeptSelect');
+        if (deptSelect) deptSelect.value = "TẤT CẢ";
+        updateDashboardDeptPickerUI("TẤT CẢ");
+        populateStaffDropdown("TẤT CẢ");
+      }
+
+      // 2. Đồng bộ chọn Nhân sự
+      currentSelectedStaff = fullName;
+      const staffSelect = document.getElementById('adminStaffSelect');
+      if (staffSelect) {
+        staffSelect.value = fullName;
+      }
+      updateDashboardStaffPickerUI(fullName, fullName);
+
+      // 3. Áp dụng bộ lọc và hiển thị ma trận
+      if (fullPeriodMatrixCache) {
+        applyClientFilterAndRender();
+      } else {
+        loadMatrixData(false);
+      }
+
+      showToast(`Đang hiển thị công việc của ${fullName} (${deptName})`);
     }
 
     function selectViewAllCompanyStaff() {
