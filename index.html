@@ -1275,10 +1275,10 @@
 
             <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ (CÓ MENU GỢI Ý TỰ ĐỘNG) -->
             <div id="adminStaffSearchWrapper" class="relative">
-              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition">
+              <div onclick="document.getElementById('adminStaffSearchInput').focus()" class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs focus-within:bg-white focus-within:border-emerald-500 transition cursor-text">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-                <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly'); onAdminStaffSearchFocus();" class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-28 sm:w-36 transition" />
-                <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch()" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
+                <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="bg-transparent text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-28 sm:w-36 transition" />
+                <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch(); event.stopPropagation();" class="hidden text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer" title="Xóa tìm kiếm">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -2423,7 +2423,7 @@
         <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[240px]">
           <div class="relative w-full max-w-xs">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly');" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            <input type="text" id="userSearchInput" oninput="filterUserListTable()" placeholder="Tìm họ tên, username..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
           </div>
 
           <!-- Native selects giữ nguyên để tương thích 100% logic hệ thống -->
