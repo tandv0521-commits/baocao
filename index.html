@@ -12,12 +12,12 @@
   </script>
   
   <!-- FAVICON & CẤU HÌNH BIỂU TƯỢNG ỨNG DỤNG DI ĐỘNG (PWA / MOBILE HOME SCREEN) -->
-  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=7">
+  <link rel="manifest" href="manifest.json?v=6">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=7">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=7">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=7">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=7">
 
   <!-- CẤU HÌNH WEB APP TOÀN MÀN HÌNH CHO IOS (IPHONE/IPAD) & ANDROID -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -69,6 +69,7 @@
       letter-spacing: -0.01em;
     }
     .hidden { display: none !important; }
+    #btnClearStaffSearch:not(.hidden) { display: flex !important; }
 
     /* ================= TYPOGRAPHY HIỆN ĐẠI, KHỎE KHOẮN, ĐẲNG CẤP DOANH NGHIỆP ================= */
     @keyframes softShine {
@@ -1249,8 +1250,8 @@
                     <i class="fa-solid fa-layer-group"></i>
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
-                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[150px] sm:max-w-[220px]" title="Tất cả ban DVKH">Tất cả ban DVKH</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Bộ phận:</span>
+                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[140px] sm:max-w-[200px]" title="Tất cả ban DVKH">Tất cả ban DVKH</span>
                   </div>
                 </div>
                 <i id="filterDeptPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
@@ -1278,8 +1279,8 @@
                     🌟
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Họ và tên:</span>
-                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[150px] sm:max-w-[220px]" title="Tất cả nhân viên">Tất cả nhân viên</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Họ và tên:</span>
+                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[140px] sm:max-w-[200px]" title="Tất cả nhân viên">Tất cả nhân viên</span>
                   </div>
                 </div>
                 <i id="filterStaffPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
@@ -1299,12 +1300,19 @@
               </div>
             </div>
 
-            <!-- Ô TÌM KIẾM NHÂN SỰ DÀNH CHO ADMIN VÀ QUẢN LÝ (CÓ MENU GỢI Ý TỰ ĐỘNG) -->
+            <!-- 3. Ô TÌM KIẾM NHÂN SỰ: THIẾT KẾ ĐỒNG BỘ 100% CẤU TRÚC VÀ CHIỀU CAO VỚI 2 Ô BỘ PHẬN & HỌ TÊN -->
             <div id="adminStaffSearchWrapper" class="relative">
-              <div onclick="document.getElementById('adminStaffSearchInput').focus()" class="h-10 flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-400/30 px-2.5 rounded-xl shadow-2xs transition cursor-text">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs shrink-0"></i>
-                <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none w-32 sm:w-40 transition" />
-                <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch(); event.stopPropagation();" class="hidden text-slate-400 hover:text-slate-600 text-xs cursor-pointer ml-auto shrink-0 p-0.5" title="Xóa tìm kiếm">
+              <div onclick="document.getElementById('adminStaffSearchInput').focus()" class="h-10 bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-400/30 rounded-xl px-2.5 text-xs text-slate-800 font-bold transition shadow-2xs flex items-center justify-between gap-2 cursor-text">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <span class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                  </span>
+                  <div class="min-w-0 flex flex-col leading-tight flex-1">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Tìm kiếm:</span>
+                    <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)" onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full min-w-[90px] sm:w-36 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none p-0 m-0 border-0 leading-tight truncate" />
+                  </div>
+                </div>
+                <button type="button" id="btnClearStaffSearch" onclick="clearAdminStaffSearch(); event.stopPropagation();" class="hidden w-5 h-5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-rose-600 text-xs items-center justify-center cursor-pointer shrink-0 transition" title="Xóa tìm kiếm">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -1324,8 +1332,11 @@
               </div>
             </div>
 
-            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="h-10 px-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer">
-              <i class="fa-solid fa-users text-emerald-600 text-xs"></i>
+            <!-- 4. NÚT TOÀN BAN DVKH: ĐỒNG BỘ CHIỀU CAO & BO GÓC -->
+            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="h-10 px-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer shrink-0">
+              <span class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                <i class="fa-solid fa-users"></i>
+              </span>
               <span class="hidden sm:inline">Toàn ban DVKH</span>
             </button>
           </div>
