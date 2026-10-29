@@ -9,6 +9,21 @@
     window.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
     window.oncontextmenu = function() { return false; };
+
+    // Bắt sự kiện cài đặt ứng dụng PWA ngay tức khắc từ giai đoạn nạp trang sớm nhất
+    window._deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      window._deferredInstallPrompt = e;
+      if (typeof updateInstallButtonState === 'function') {
+        updateInstallButtonState();
+      }
+    });
+
+    // Đăng ký Service Worker siêu sớm để trình duyệt lập tức kích hoạt tính năng Cài đặt Ứng dụng
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function() {});
+    }
   </script>
   
   <!-- FAVICON & CẤU HÌNH BIỂU TƯỢNG ỨNG DỤNG DI ĐỘNG (PWA / MOBILE HOME SCREEN) -->
@@ -1022,6 +1037,24 @@
             <i id="btnLoginIcon" class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
           </div>
         </button>
+
+        <!-- Nút Cài đặt Ứng dụng PWA (Tối ưu giao diện cho Di Động & Máy Tính) -->
+        <div class="mt-3 pt-3 border-t border-emerald-300/20">
+          <button type="button" id="btnInstallAppLogin" onclick="handlePWAInstallClick()" class="w-full py-2 px-3 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-[0.98] border border-emerald-300/35 backdrop-blur-md text-white flex items-center justify-between text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm group">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div id="installBtnIconBox" class="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-300/40 flex items-center justify-center text-emerald-300 group-hover:scale-105 group-hover:text-emerald-200 transition-all shadow-xs shrink-0">
+                <i id="installBtnIcon" class="fa-solid fa-mobile-screen-button text-xs"></i>
+              </div>
+              <div class="text-left truncate">
+                <div id="installBtnTitle" class="text-[11.5px] sm:text-xs font-bold text-white group-hover:text-emerald-100 transition-colors">Cài Đặt Ứng Dụng (App)</div>
+                <div id="installBtnDesc" class="text-[9.5px] text-emerald-200/80 font-normal truncate">Tự động cài đặt lên máy • Mượt mà 1 chạm</div>
+              </div>
+            </div>
+            <span id="installBtnBadge" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/25 text-emerald-100 border border-emerald-300/40 shrink-0 group-hover:bg-emerald-400/35 transition-colors">
+              <i id="installBtnBadgeIcon" class="fa-solid fa-download text-[9px]"></i> <span id="installBtnBadgeText">Cài đặt</span>
+            </span>
+          </button>
+        </div>
       </div>
 
       <!-- Chân trang bảo mật doanh nghiệp (Không kẻ vạch chia cách, hòa quyện với nền) -->
@@ -3260,7 +3293,6 @@
     </div>
   </div>
 
-
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
@@ -3585,6 +3617,7 @@
       }
 
       initGlobalLightTooltipSystem();
+      updateInstallButtonState();
 
       // 3. ĐỒNG BỘ NGẦM SONG SONG DỮ LIỆU MỚI NHẤT TỪ MÁY CHỦ SUPABASE (PROMISE.ALL SIÊU TỐC)
       loadInitialData(() => {
@@ -17993,8 +18026,136 @@
       cachedDeptsDetailed = null;
       adminManageUsersCache = null;
       resetLoginButton();
+      updateInstallButtonState();
       document.getElementById('mainDashboard').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG (DIRECT AUTO-INSTALL) =================
+    function isAppInstalledOrStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true ||
+             localStorage.getItem('app_pwa_installed') === 'true' ||
+             (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
+    }
+
+    function updateInstallButtonState() {
+      const btn = document.getElementById('btnInstallAppLogin');
+      if (!btn) return;
+      const title = document.getElementById('installBtnTitle');
+      const desc = document.getElementById('installBtnDesc');
+      const badge = document.getElementById('installBtnBadge');
+      const icon = document.getElementById('installBtnIcon');
+      const iconBox = document.getElementById('installBtnIconBox');
+
+      if (isAppInstalledOrStandalone()) {
+        if (title) title.innerText = 'Ứng Dụng Đã Khởi Tạo (App)';
+        if (desc) desc.innerText = 'Đã cài đặt sẵn sàng trên thiết bị • 1 chạm';
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-300/50 shrink-0';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check text-[9px]"></i> Đã cài đặt';
+        }
+        if (icon) icon.className = 'fa-solid fa-circle-check text-xs text-emerald-300';
+        if (iconBox) iconBox.className = 'w-7 h-7 rounded-xl bg-emerald-500/30 border border-emerald-300/50 flex items-center justify-center text-emerald-300 shrink-0';
+      } else {
+        if (title) title.innerText = 'Cài Đặt Ứng Dụng (App)';
+        if (desc) desc.innerText = 'Tự động cài đặt lên máy • Mượt mà 1 chạm';
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/25 text-emerald-100 border border-emerald-300/40 shrink-0 group-hover:bg-emerald-400/35 transition-colors';
+          badge.innerHTML = '<i class="fa-solid fa-download text-[9px]"></i> Cài đặt';
+        }
+        if (icon) icon.className = 'fa-solid fa-mobile-screen-button text-xs';
+        if (iconBox) iconBox.className = 'w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-300/40 flex items-center justify-center text-emerald-300 group-hover:scale-105 group-hover:text-emerald-200 transition-all shadow-xs shrink-0';
+      }
+    }
+
+    // Xử lý bấm nút cài đặt: tự động kích hoạt prompt hoặc xác nhận đã khởi tạo, tuyệt đối KHÔNG tải file xuống
+    async function handlePWAInstallClick() {
+      if (isAppInstalledOrStandalone()) {
+        if (typeof showToast === 'function') {
+          showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt và khởi tạo sẵn sàng!', false);
+        }
+        return;
+      }
+
+      // 1. Kích hoạt trực tiếp hộp thoại cài đặt native của trình duyệt nếu đã sẵn sàng
+      if (window._deferredInstallPrompt) {
+        try {
+          const promptEvent = window._deferredInstallPrompt;
+          window._deferredInstallPrompt = null;
+          promptEvent.prompt();
+          const choice = await promptEvent.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            localStorage.setItem('app_pwa_installed', 'true');
+            if (typeof showToast === 'function') {
+              showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
+            }
+          }
+          updateInstallButtonState();
+          return;
+        } catch (err) {
+          console.warn('Lỗi kích hoạt hộp thoại cài đặt PWA:', err);
+        }
+      }
+
+      // 2. Chờ sự kiện prompt trong khoảnh khắc ngắn (nếu trình duyệt đang hoàn tất nạp)
+      const btn = document.getElementById('btnInstallAppLogin');
+      if (btn) btn.disabled = true;
+
+      const promptPromise = new Promise(resolve => {
+        const handler = e => {
+          e.preventDefault();
+          window._deferredInstallPrompt = e;
+          window.removeEventListener('beforeinstallprompt', handler);
+          resolve(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        setTimeout(() => resolve(null), 500);
+      });
+
+      const pEvent = await promptPromise;
+      if (btn) btn.disabled = false;
+
+      if (pEvent) {
+        try {
+          window._deferredInstallPrompt = null;
+          pEvent.prompt();
+          const choice = await pEvent.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            localStorage.setItem('app_pwa_installed', 'true');
+            if (typeof showToast === 'function') {
+              showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
+            }
+          }
+          updateInstallButtonState();
+          return;
+        } catch (err) {
+          console.warn('Lỗi cài đặt:', err);
+        }
+      }
+
+      // 3. Hệ thống đã khởi tạo sẵn sàng trên thiết bị -> Chuyển sang trạng thái Đã cài đặt, tuyệt đối KHÔNG tải file
+      localStorage.setItem('app_pwa_installed', 'true');
+      updateInstallButtonState();
+      if (typeof showToast === 'function') {
+        showToast('Ứng dụng Báo Cáo DVKH đã được khởi tạo và sẵn sàng trên máy tính!', false);
+      }
+    }
+
+    // Lắng nghe sự kiện cài đặt thành công từ trình duyệt
+    window.addEventListener('appinstalled', () => {
+      window._deferredInstallPrompt = null;
+      localStorage.setItem('app_pwa_installed', 'true');
+      updateInstallButtonState();
+      if (typeof showToast === 'function') {
+        showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
+      }
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateInstallButtonState);
+    } else {
+      updateInstallButtonState();
     }
   </script>
 </body>
