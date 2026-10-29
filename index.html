@@ -27,12 +27,12 @@
   </script>
   
   <!-- FAVICON & CẤU HÌNH BIỂU TƯỢNG ỨNG DỤNG DI ĐỘNG (PWA / MOBILE HOME SCREEN) -->
-  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=8">
-  <link rel="manifest" href="manifest.json?v=8">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=8">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=8">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=8">
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=8">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 
   <!-- CẤU HÌNH WEB APP TOÀN MÀN HÌNH CHO IOS (IPHONE/IPAD) & ANDROID -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -3289,6 +3289,35 @@
           <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-num font-bold text-slate-600 text-[10px]">ESC</kbd> Đóng</span>
         </div>
         <span id="cmdSearchRoleBadge" class="font-medium text-emerald-700 hidden sm:inline"><i class="fa-solid fa-bolt text-[10px] mr-1"></i>Điều hành tức thì</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PROMPT CHỈ DẪN NHANH DÀNH RIÊNG CHO IPHONE / IPAD (IOS) ================= -->
+  <div id="iosInstallPrompt" class="fixed inset-x-0 bottom-0 z-[100] p-3 sm:p-4 hidden pointer-events-auto select-none" onclick="if(event.target === this) closeIOSInstallPrompt()">
+    <div class="max-w-md mx-auto bg-slate-900/95 backdrop-blur-2xl text-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-emerald-400/40 relative">
+      <div class="flex items-start gap-3">
+        <img src="icon-192.png" onerror="this.onerror=null; this.src='favicon.png';" alt="App" class="w-12 h-12 rounded-2xl border border-white/20 shadow-md shrink-0 object-cover" />
+        <div class="flex-1 min-w-0 pr-6">
+          <div class="flex items-center gap-1.5">
+            <h4 class="font-black text-xs sm:text-sm text-white truncate">Cài Đặt App Báo Cáo DVKH</h4>
+            <span class="text-[9px] bg-emerald-500 text-white font-bold px-1.5 py-0.2 rounded-full uppercase shrink-0">iOS</span>
+          </div>
+          <p class="text-[11px] text-slate-200 mt-1.5 leading-relaxed">
+            Chạm vào biểu tượng <strong class="text-blue-400"><i class="fa-solid fa-arrow-up-from-bracket"></i> Chia sẻ (Share)</strong> ở thanh công cụ Safari dưới cùng, sau đó chọn <strong class="text-emerald-400"><i class="fa-regular fa-square-plus"></i> "Thêm vào MH chính"</strong>.
+          </p>
+        </div>
+        <button type="button" onclick="closeIOSInstallPrompt()" class="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center text-xs cursor-pointer transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- Mũi tên nhấp nháy chỉ thẳng xuống thanh công cụ dưới đáy màn hình của Safari -->
+      <div class="flex justify-center mt-3 pt-2 border-t border-white/10">
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-[10.5px] font-bold animate-bounce">
+          <i class="fa-solid fa-arrow-down"></i>
+          <span>Nút Chia sẻ nằm ở thanh công cụ dưới đáy</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </div>
       </div>
     </div>
   </div>
@@ -18010,6 +18039,10 @@
         if (modal && !modal.classList.contains('hidden')) {
           closeCommandPalette();
         }
+        const iosPrompt = document.getElementById('iosInstallPrompt');
+        if (iosPrompt && !iosPrompt.classList.contains('hidden')) {
+          closeIOSInstallPrompt();
+        }
       }
     });
 
@@ -18031,12 +18064,31 @@
       document.getElementById('loginScreen').classList.remove('hidden');
     }
 
-    // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG (DIRECT AUTO-INSTALL) =================
+    // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG TRÊN ANDROID, IOS & PC =================
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isAndroidDevice() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
     function isAppInstalledOrStandalone() {
       return window.matchMedia('(display-mode: standalone)').matches ||
              window.navigator.standalone === true ||
              localStorage.getItem('app_pwa_installed') === 'true' ||
              (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
+    }
+
+    function openIOSInstallPrompt() {
+      const el = document.getElementById('iosInstallPrompt');
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeIOSInstallPrompt() {
+      const el = document.getElementById('iosInstallPrompt');
+      if (el) el.classList.add('hidden');
     }
 
     function updateInstallButtonState() {
@@ -18069,7 +18121,7 @@
       }
     }
 
-    // Xử lý bấm nút cài đặt: tự động kích hoạt prompt hoặc xác nhận đã khởi tạo, tuyệt đối KHÔNG tải file xuống
+    // Xử lý bấm nút cài đặt tự động trên Android, iOS và Máy tính
     async function handlePWAInstallClick() {
       if (isAppInstalledOrStandalone()) {
         if (typeof showToast === 'function') {
@@ -18078,7 +18130,15 @@
         return;
       }
 
-      // 1. Kích hoạt trực tiếp hộp thoại cài đặt native của trình duyệt nếu đã sẵn sàng
+      // 1. Dành riêng cho iPhone / iPad (iOS):
+      // Do cơ chế bảo mật của Apple iOS, mở chỉ báo trực quan tại thanh công cụ
+      if (isIOSDevice()) {
+        openIOSInstallPrompt();
+        return;
+      }
+
+      // 2. Dành cho Android & Trình duyệt hỗ trợ PWA (Chrome / Samsung Internet / Edge):
+      // Kích hoạt ngay hộp thoại cài đặt native của hệ điều hành
       if (window._deferredInstallPrompt) {
         try {
           const promptEvent = window._deferredInstallPrompt;
@@ -18098,7 +18158,7 @@
         }
       }
 
-      // 2. Chờ sự kiện prompt trong khoảnh khắc ngắn (nếu trình duyệt đang hoàn tất nạp)
+      // Chờ sự kiện prompt trong khoảnh khắc ngắn nếu đang nạp
       const btn = document.getElementById('btnInstallAppLogin');
       if (btn) btn.disabled = true;
 
@@ -18110,7 +18170,7 @@
           resolve(e);
         };
         window.addEventListener('beforeinstallprompt', handler);
-        setTimeout(() => resolve(null), 500);
+        setTimeout(() => resolve(null), 600);
       });
 
       const pEvent = await promptPromise;
@@ -18134,11 +18194,19 @@
         }
       }
 
-      // 3. Hệ thống đã khởi tạo sẵn sàng trên thiết bị -> Chuyển sang trạng thái Đã cài đặt, tuyệt đối KHÔNG tải file
+      // Nếu trên Android mà prompt chưa hiện:
+      if (isAndroidDevice()) {
+        if (typeof showToast === 'function') {
+          showToast('Vui lòng chạm Menu (3 chấm ⋮) ở góc trên và chọn "Cài đặt ứng dụng"!', false);
+        }
+        return;
+      }
+
+      // 3. Môi trường Máy tính / Desktop đã có shortcut sẵn:
       localStorage.setItem('app_pwa_installed', 'true');
       updateInstallButtonState();
       if (typeof showToast === 'function') {
-        showToast('Ứng dụng Báo Cáo DVKH đã được khởi tạo và sẵn sàng trên máy tính!', false);
+        showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt sẵn sàng trên màn hình Desktop của bạn!', false);
       }
     }
 
