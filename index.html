@@ -315,7 +315,22 @@
     .col-fixed-task[data-tooltip]::before,
     .col-fixed-task[data-tooltip]::after,
     .col-fixed-task [data-tooltip]::before,
-    .col-fixed-task [data-tooltip]::after {
+    .col-fixed-task [data-tooltip]::after,
+    /* TẮT HOÀN TOÀN GỢI Ý (TOOLTIP) CHO DANH SÁCH BỘ PHẬN, THẺ TIẾN ĐỘ VÀ NÚT BẤM CÓ CHỮ RÕ RÀNG */
+    .dept-picker-item[data-tooltip]::before,
+    .dept-picker-item[data-tooltip]::after,
+    .dept-picker-item [data-tooltip]::before,
+    .dept-picker-item [data-tooltip]::after,
+    .dashboard-dept-item[data-tooltip]::before,
+    .dashboard-dept-item[data-tooltip]::after,
+    .dashboard-dept-item [data-tooltip]::before,
+    .dashboard-dept-item [data-tooltip]::after,
+    .followup-item-card[data-tooltip]::before,
+    .followup-item-card[data-tooltip]::after,
+    .followup-item-card [data-tooltip]::before,
+    .followup-item-card [data-tooltip]::after,
+    #btnOpenDayEntry:not([data-tooltip*="khóa"])::before,
+    #btnOpenDayEntry:not([data-tooltip*="khóa"])::after {
       display: none !important;
       content: none !important;
       opacity: 0 !important;
@@ -1110,7 +1125,7 @@
       <div class="flex items-center gap-2 flex-wrap ml-auto">
 
         <!-- Nút Điền báo cáo: Hiển thị trên Desktop, tự động ẩn trên điện thoại qua CSS media query -->
-        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" data-tooltip="Điền báo cáo công việc" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
+        <button id="btnOpenDayEntry" onclick="openDayEntryModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Điền báo cáo</span>
         </button>
@@ -1296,7 +1311,7 @@
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Bộ phận:</span>
-                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[140px] sm:max-w-[200px]" title="Tất cả ban DVKH">Tất cả ban DVKH</span>
+                    <span id="filterDeptPickerText" class="truncate font-bold text-slate-800 max-w-[140px] sm:max-w-[200px]">Tất cả ban DVKH</span>
                   </div>
                 </div>
                 <i id="filterDeptPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
@@ -1325,7 +1340,7 @@
                   </span>
                   <div class="min-w-0 flex flex-col leading-tight">
                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Họ và tên:</span>
-                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[140px] sm:max-w-[200px]" title="Tất cả nhân viên">Tất cả nhân viên</span>
+                    <span id="filterStaffPickerText" class="truncate font-bold text-emerald-800 max-w-[140px] sm:max-w-[200px]">Tất cả nhân viên</span>
                   </div>
                 </div>
                 <i id="filterStaffPickerChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
@@ -1378,7 +1393,7 @@
             </div>
 
             <!-- 4. NÚT TOÀN BAN DVKH: ĐỒNG BỘ CHIỀU CAO & BO GÓC -->
-            <button type="button" onclick="selectViewAllCompanyStaff()" data-tooltip="Tất cả ban DVKH" class="h-10 px-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer shrink-0">
+            <button type="button" onclick="selectViewAllCompanyStaff()" class="h-10 px-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer shrink-0">
               <span class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
                 <i class="fa-solid fa-users"></i>
               </span>
@@ -1394,11 +1409,11 @@
             <span class="text-xs sm:text-sm font-bold text-slate-700 truncate">
               <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
             </span>
-            <button type="button" id="btnResetFollowUpFilter" onclick="resetMatrixFollowUpFilter()" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200/90 hover:from-amber-200 hover:to-amber-300 text-amber-950 border border-amber-300/90 text-xs font-black transition shadow-xs cursor-pointer active:scale-95 shrink-0" title="Thu gọn về trang tổng quan">
+            <button type="button" id="btnResetFollowUpFilter" onclick="resetMatrixFollowUpFilter()" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200/90 hover:from-amber-200 hover:to-amber-300 text-amber-950 border border-amber-300/90 text-xs font-black transition shadow-xs cursor-pointer active:scale-95 shrink-0">
               <i class="fa-solid fa-compress text-amber-800 text-[11px]"></i>
               <span>Thu gọn về trang tổng quan</span>
             </button>
-            <button type="button" id="btnReturnToMyDept" onclick="returnToMyManagerDept()" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-950 border border-emerald-300 text-xs font-black transition shadow-xs cursor-pointer active:scale-95 shrink-0" title="Quay lại bảng làm việc của bộ phận tôi">
+            <button type="button" id="btnReturnToMyDept" onclick="returnToMyManagerDept()" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-950 border border-emerald-300 text-xs font-black transition shadow-xs cursor-pointer active:scale-95 shrink-0">
               <i class="fa-solid fa-rotate-left text-emerald-700 text-[11px]"></i>
               <span>Quay lại bảng của tôi</span>
             </button>
@@ -1406,14 +1421,14 @@
 
           <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
             <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
-            <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()" data-tooltip="Chuyển chế độ xem Thu gọn / Tiêu chuẩn" 
+            <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()" 
               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
               <i id="densityToggleIcon" class="fa-solid fa-compress text-emerald-700 text-[11px]"></i>
               <span id="densityToggleText">Thu gọn</span>
             </button>
 
             <!-- Nút Ngày 01 (Đầu tháng) -->
-            <button type="button" onclick="scrollToStartOfMonth()" data-tooltip="Cuộn về ngày 01 đầu tháng" 
+            <button type="button" onclick="scrollToStartOfMonth()" 
               class="px-2 sm:px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
               <i class="fa-solid fa-angles-left text-[10px] text-slate-400"></i>
               <span>Ngày 01</span>
@@ -1422,14 +1437,14 @@
             <!-- CỤM ĐIỀU HƯỚNG HIỆN ĐẠI: HÔM QUA - HÔM NAY -->
             <div class="inline-flex items-center p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/90 shadow-2xs">
               <!-- Nút Hôm qua -->
-              <button type="button" id="btnScrollYesterday" onclick="scrollToYesterday()" data-tooltip="Cuộn đến ngày hôm qua" 
+              <button type="button" id="btnScrollYesterday" onclick="scrollToYesterday()" 
                 class="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-white active:scale-95 transition flex items-center gap-1 cursor-pointer">
                 <i class="fa-solid fa-chevron-left text-[9px] text-current opacity-70"></i>
                 <span id="labelScrollYesterday">Hôm qua</span>
               </button>
 
               <!-- Nút Hôm nay (Nổi bật) -->
-              <button type="button" id="btnScrollToday" onclick="scrollToToday()" data-tooltip="Cuộn đến ngày hôm nay" 
+              <button type="button" id="btnScrollToday" onclick="scrollToToday()" 
                 class="px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs active:scale-95 transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                 <i class="fa-solid fa-calendar-check text-[11px] text-current opacity-90"></i>
                 <span id="labelScrollToday">Hôm nay</span>
@@ -2526,7 +2541,7 @@
                 </span>
                 <div class="min-w-0 flex flex-col leading-tight">
                   <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Bộ phận:</span>
-                  <span id="userFilterDeptText" class="truncate font-bold text-slate-800 max-w-[160px] sm:max-w-[240px]" title="Tất cả bộ phận">Tất cả bộ phận</span>
+                  <span id="userFilterDeptText" class="truncate font-bold text-slate-800 max-w-[160px] sm:max-w-[240px]">Tất cả bộ phận</span>
                 </div>
               </div>
               <i id="userFilterDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
@@ -3682,7 +3697,7 @@
      */
     function initGlobalLightTooltipSystem() {
       document.addEventListener('mouseover', (e) => {
-        // Tuyệt đối không hiển thị gợi ý (tooltip) cho phần Nội dung công việc trên bảng ma trận
+        // 1. Tuyệt đối không hiển thị gợi ý (tooltip) cho phần Nội dung công việc trên bảng ma trận
         if (e.target.closest('.col-fixed-task')) {
           const taskCell = e.target.closest('.col-fixed-task');
           if (taskCell) {
@@ -3696,12 +3711,35 @@
           return;
         }
 
+        // 2. Không hiển thị tooltip cho danh mục bộ phận, thẻ tiến độ và các danh sách chọn lựa đã có thông tin rõ ràng
+        if (e.target.closest('.dept-picker-item, .dashboard-dept-item, .followup-item-card, [id$="PickerList"], [id$="PickerMenu"]')) {
+          const elList = e.target.closest('.dept-picker-item, .dashboard-dept-item, .followup-item-card, [id$="PickerList"], [id$="PickerMenu"]');
+          if (elList) {
+            elList.removeAttribute('title');
+            elList.removeAttribute('data-tooltip');
+            elList.querySelectorAll('[title], [data-tooltip]').forEach(el => {
+              el.removeAttribute('title');
+              el.removeAttribute('data-tooltip');
+            });
+          }
+          return;
+        }
+
         const target = e.target.closest('[title]');
         if (!target) return;
         if (target.closest('.col-fixed-task')) return;
 
         const titleText = target.getAttribute('title');
         if (titleText && titleText.trim()) {
+          // 3. Nếu chữ hiển thị trên phần tử hoặc nút bấm đã rõ ràng và trùng với title, xóa bỏ title và không hiện tooltip
+          const visibleText = (target.textContent || '').replace(/\s+/g, ' ').trim();
+          const normTitle = titleText.replace(/\s+/g, ' ').trim();
+          if (visibleText && (visibleText === normTitle || visibleText.includes(normTitle) || normTitle.includes(visibleText))) {
+            target.removeAttribute('title');
+            target.removeAttribute('data-tooltip');
+            return;
+          }
+
           if (!target.hasAttribute('data-tooltip')) {
             target.setAttribute('data-tooltip', titleText.trim());
             const rect = target.getBoundingClientRect();
@@ -4540,7 +4578,7 @@
                 </div>
                 ${deptName ? `
                   <div class="mt-0.5">
-                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 truncate max-w-full" title="${escapeHtml(deptName)}">
+                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 truncate max-w-full">
                       <i class="fa-solid fa-warehouse text-[7.5px] text-indigo-400 shrink-0"></i>
                       <span class="truncate block max-w-[82px] sm:max-w-none">${escapeHtml(deptName)}</span>
                     </span>
@@ -4582,7 +4620,7 @@
 
                 <!-- Thẻ Bộ Phận dạng Viên Thuốc (Badge Pill) Sang Trọng -->
                 <div class="mt-1">
-                  <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9.5px] sm:text-[10px] font-medium leading-tight max-w-full shadow-2xs" title="${escapeHtml(displayDept)}">
+                  <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9.5px] sm:text-[10px] font-medium leading-tight max-w-full shadow-2xs">
                     <i class="fa-regular fa-building text-[8.5px] text-emerald-600 shrink-0"></i>
                     <span class="truncate block max-w-[85px] sm:max-w-none text-slate-700">${escapeHtml(displayDept)}</span>
                   </div>
@@ -4608,7 +4646,7 @@
               <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-emerald-100/90 text-emerald-800 flex items-center justify-center shrink-0 text-[10px]">
                 <i class="fa-solid fa-warehouse text-[9px]"></i>
               </div>
-              <span class="text-[11px] sm:text-xs font-bold text-emerald-950 truncate" title="${escapeHtml(deptName || 'Tổ kho')}">${escapeHtml(deptName || 'Tổ kho')}</span>
+              <span class="text-[11px] sm:text-xs font-bold text-emerald-950 truncate">${escapeHtml(deptName || 'Tổ kho')}</span>
             </div>
             <span class="text-[8.5px] sm:text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded-full shrink-0">
               ${members.length} NS
@@ -5542,7 +5580,7 @@
                 <i class="${s.icon}"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-1">
@@ -5990,7 +6028,7 @@
                 <i class="${s.icon}"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-1">
@@ -6010,7 +6048,7 @@
       if (!deptName || deptName === "TẤT CẢ") {
         if (textEl) {
           textEl.innerText = "Tất cả ban DVKH";
-          textEl.title = "Tất cả ban DVKH";
+          textEl.removeAttribute('title');
         }
         if (iconBox) {
           iconBox.className = "w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs";
@@ -6020,7 +6058,7 @@
         const s = getDeptStyle(deptName);
         if (textEl) {
           textEl.innerText = deptName;
-          textEl.title = deptName;
+          textEl.removeAttribute('title');
         }
         if (iconBox) {
           iconBox.className = `w-6 h-6 rounded-lg ${s.bg} border ${s.border} ${s.color} flex items-center justify-center shrink-0 text-xs shadow-2xs`;
@@ -6306,7 +6344,7 @@
             btnDayEntry.setAttribute('data-tooltip', 'Kỳ báo cáo này đã khóa sổ');
           } else {
             btnDayEntry.classList.remove('opacity-40', 'cursor-not-allowed');
-            btnDayEntry.setAttribute('data-tooltip', 'Điền báo cáo');
+            btnDayEntry.removeAttribute('data-tooltip');
           }
         }
       }
@@ -10076,20 +10114,20 @@
           const yStr = yesterdayNum >= 1 ? (yesterdayNum < 10 ? '0' + yesterdayNum : yesterdayNum) : '';
           lblYesterday.innerHTML = `Hôm qua ${yStr ? '<span class="hidden md:inline text-[10px] opacity-75 font-num">(' + yStr + ')</span>' : ''}`;
         }
-        btnYesterday.setAttribute('data-tooltip', yesterdayNum >= 1 ? `Cuộn đến ngày hôm qua (Ngày ${yesterdayNum < 10 ? '0' + yesterdayNum : yesterdayNum})` : `Hôm qua thuộc tháng trước`);
+        btnYesterday.removeAttribute('data-tooltip');
 
         if (lblToday) {
           const tStr = (todayNum < 10 ? '0' + todayNum : todayNum);
           lblToday.innerHTML = `Hôm nay <span class="hidden md:inline text-[10px] opacity-90 font-num">(${tStr})</span>`;
         }
-        btnToday.setAttribute('data-tooltip', `Cuộn đến ngày hôm nay (Ngày ${todayNum < 10 ? '0' + todayNum : todayNum})`);
+        btnToday.removeAttribute('data-tooltip');
 
         setActiveDateNavButton('today');
       } else {
         if (lblYesterday) lblYesterday.innerText = `Đầu tháng`;
         if (lblToday) lblToday.innerText = `Về hôm nay`;
-        btnYesterday.setAttribute('data-tooltip', `Cuộn về ngày 01 đầu tháng`);
-        btnToday.setAttribute('data-tooltip', `Chuyển về kỳ báo cáo tháng hiện tại`);
+        btnYesterday.removeAttribute('data-tooltip');
+        btnToday.removeAttribute('data-tooltip');
         setActiveDateNavButton('other');
       }
     }
@@ -10530,7 +10568,7 @@
                    class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/40 hover:bg-emerald-100/70 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
                    data-theme="emerald"
                    data-staff-name="${escapeHtml(item.displayName)}"
-                   title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+                   >
                 <div class="flex items-center gap-2.5 min-w-0">
                   <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                     <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -11353,7 +11391,7 @@
                  class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
                  data-theme="${isDanger ? 'rose' : 'amber'}"
                  data-staff-name="${escapeHtml(item.displayName)}"
-                 title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+                 >
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
@@ -11405,7 +11443,7 @@
                  class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
                  data-theme="emerald"
                  data-staff-name="${escapeHtml(item.displayName)}"
-                 title="Nhấp để hiển thị công việc của ${escapeHtml(item.displayName)} trên bảng ma trận">
+                 >
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -13905,7 +13943,7 @@
                 <i class="${s.icon}"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-1">
@@ -15898,7 +15936,7 @@
                 <i class="${s.icon}"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-1">
@@ -16756,7 +16794,7 @@
                 <i class="${s.icon}"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-1">
@@ -17561,7 +17599,7 @@
                   <i class="${s.icon}"></i>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950" title="${escapeHtml(d)}">${escapeHtml(d)}</span>
+                  <span class="block text-xs font-bold text-slate-800 leading-snug break-words group-hover:text-emerald-950">${escapeHtml(d)}</span>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-1">
