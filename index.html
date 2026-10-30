@@ -4080,6 +4080,90 @@
     }
 
     /**
+     * KIỂM TRA TRẠNG THÁI TÀI KHOẢN KHÓA HOẶC TẠM KHÓA:
+     * Loại trừ triệt để mọi tài khoản bị khóa, tạm khóa hoặc vô hiệu hóa khỏi bảng đôn đốc, thi đua và KPI
+     */
+    function isAccountLockedOrPaused(status) {
+      if (!status) return false;
+      const s = removeAccents(String(status)).toLowerCase().trim();
+      return s.includes('khoa') || s.includes('tam') || s.includes('locked') || s.includes('disabled') || s.includes('inactive');
+    }
+
+    /**
+     * TRA CỨU TRẠNG THÁI NGƯỜI DÙNG TỪ CÁC NGUỒN DỮ LIỆU HỆ THỐNG
+     */
+    function getSystemUserStatus(userId, staffName) {
+      const userPool = (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers)) ? globalInitData.allUsers :
+                       (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : [];
+      if (userId) {
+        const u = userPool.find(x => x.id === userId);
+        if (u && u.status) return u.status;
+      }
+      if (staffName) {
+        const cleanTarget = removeAccents(String(staffName).replace(/\s*[-–].*/, '')).toLowerCase().trim();
+        if (cleanTarget) {
+          const u = userPool.find(x => {
+            const uName = removeAccents(x.full_name || x.fullName || "").toLowerCase().trim();
+            return uName === cleanTarget;
+          });
+          if (u && u.status) return u.status;
+        }
+      }
+      if (globalInitData?.deptMap) {
+        for (const d in globalInitData.deptMap) {
+          const list = globalInitData.deptMap[d] || [];
+          if (userId) {
+            const u = list.find(x => x.id === userId);
+            if (u && u.status) return u.status;
+          }
+          if (staffName) {
+            const cleanTarget = removeAccents(String(staffName).replace(/\s*[-–].*/, '')).toLowerCase().trim();
+            if (cleanTarget) {
+              const u = list.find(x => {
+                const uName = removeAccents(x.full_name || x.fullName || "").toLowerCase().trim();
+                return uName === cleanTarget;
+              });
+              if (u && u.status) return u.status;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * KIỂM TRA NHÓM NHÂN SỰ CÓ THUỘC TÀI KHOẢN BỊ KHÓA / TẠM KHÓA KHÔNG:
+     */
+    function isStaffGroupLockedOrPaused(grp) {
+      if (!grp) return false;
+      if (grp.isLocked === true) return true;
+      if (grp.userStatus && isAccountLockedOrPaused(grp.userStatus)) return true;
+
+      const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+      const isPersonalInShared = !!grp.isPersonalInShared;
+      const isSharedGroup = isGroupDept && !isPersonalInShared;
+
+      if (!isSharedGroup) {
+        const st = getSystemUserStatus(grp.userId, grp.staffName);
+        if (st && isAccountLockedOrPaused(st)) return true;
+      } else {
+        const userPool = (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers)) ? globalInitData.allUsers :
+                         (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : [];
+        if (grp.department && userPool.length > 0) {
+          const deptMembers = userPool.filter(u => {
+            if (isDirectorOrAdmin(u.role, u.username)) return false;
+            if (grp.departmentId && u.department_id && u.department_id === grp.departmentId) return true;
+            return isDeptEquivalent(u.dept || (u.departments ? u.departments.name : ""), grp.department);
+          });
+          if (deptMembers.length > 0 && deptMembers.every(u => isAccountLockedOrPaused(u.status))) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    /**
      * KIỂM TRA HẠN NGẠCH (QUOTA) LÃNH ĐẠO: TỐI ĐA 1 GIÁM ĐỐC VÀ 2 PHÓ GIÁM ĐỐC
      * @param {string} targetRole - Vai trò dự kiến gán
      * @param {string} excludeUsername - Username tài khoản đang chỉnh sửa (nếu có)
@@ -7221,6 +7305,7 @@
           for (let d in globalInitData.deptMap) {
             const isSharedDept = isSharedGroupDeptClient(d);
             globalInitData.deptMap[d].forEach(st => {
+              if (isAccountLockedOrPaused(st.status)) return;
               const opt = document.createElement('option');
               opt.value = st.fullName;
               // Bỏ thông tin vai trò cạnh họ tên đối với nhóm thường, nhóm gộp giữ nguyên vai trò
@@ -7281,7 +7366,7 @@
         // NẾU LÀ "BAN GIÁM ĐỐC": Luôn đảm bảo gom ĐẦY ĐỦ lãnh đạo ban (Giám Đốc và Phó Giám Đốc)
         if (normalizeDeptKey(dept).includes("giam doc") || normalizeDeptKey(dept).includes("ban giam")) {
           const allUsers = (globalInitData?.allUsers || []);
-          const execs = allUsers.filter(u => isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username));
+          const execs = allUsers.filter(u => (isOnlyDirector(u.role, u.username) || isDeputyDirector(u.role, u.username)) && !isAccountLockedOrPaused(u.status));
           deptStaff = [...(deptStaff || [])].filter(u => !isSystemAdmin(u.role, u.username) && u.username !== 'admin');
           execs.forEach(eu => {
             if (!deptStaff.some(s => s.username === eu.username)) {
@@ -7311,6 +7396,7 @@
           deptStaff.forEach(st => {
             if (isSystemAdmin(st.role, st.username) || st.username === 'admin') return;
             if (isSelfInShared && st.fullName === currentUser?.fullName) return;
+            if (isAccountLockedOrPaused(st.status)) return;
 
             const opt = document.createElement('option');
             opt.value = st.fullName;
@@ -8367,8 +8453,7 @@
         // Ở kỳ hiện tại/tương lai: Nếu nhân sự bị Tạm khóa hoặc Khóa thì ẩn đi.
         // Ở kỳ quá khứ: KHÔNG ẩn nhân sự để bảo toàn báo cáo và lịch sử của họ!
         if (!isShared && assignedUser) {
-          const uStatus = removeAccents(assignedUser.status || "").toLowerCase();
-          if (uStatus.includes("tam") || uStatus.includes("khoa")) {
+          if (isAccountLockedOrPaused(assignedUser.status)) {
             if (!isPastPeriod) {
               return;
             }
@@ -8460,6 +8545,9 @@
           if (isPersonalTaskInShared) {
             isPersonalInShared = true;
             const u = userMap.get(effectiveUserId) || assignedUser;
+            if (!isPastPeriod && isAccountLockedOrPaused(u?.status)) {
+              return;
+            }
             let cleanName = (u?.full_name || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
             displayStaffName = cleanName || `Nhân sự #${effectiveUserId}`;
             personalRole = u?.role || "";
@@ -8492,6 +8580,7 @@
         const curUsername = activeUserObj?.username || "";
         const isMgrStaffRow = isAdminOrManager(curUserRole, curUsername) || isDirectorOrAdmin(curUserRole, curUsername) || isDeputyDirector(curUserRole, curUsername);
         const isMgrDeptRow = managerDeptNamesSet.has(normalizeDeptKey(deptName)) || normalizeDeptKey(deptName).includes("giam doc") || normalizeDeptKey(deptName).includes("quan ly");
+        const isUserLockedOrPaused = isAccountLockedOrPaused(activeUserObj?.status) || isAccountLockedOrPaused(assignedUser?.status);
 
         if (!staffGroupsMap[groupKey]) {
           staffGroupsMap[groupKey] = {
@@ -8503,6 +8592,8 @@
             staffName: displayStaffName,
             userId: groupUserId,
             userRole: curUserRole,
+            userStatus: activeUserObj?.status || assignedUser?.status || "",
+            isLocked: isUserLockedOrPaused,
             isManagerStaff: isMgrStaffRow,
             isManagerDept: isMgrDeptRow,
             tasks: []
@@ -8510,6 +8601,7 @@
         } else {
           if (isMgrStaffRow) staffGroupsMap[groupKey].isManagerStaff = true;
           if (isMgrDeptRow) staffGroupsMap[groupKey].isManagerDept = true;
+          if (isUserLockedOrPaused) staffGroupsMap[groupKey].isLocked = true;
         }
 
         const dailyValues = {};
@@ -9999,14 +10091,18 @@
      */
     function getScopedDataForCurrentUser(data) {
       if (!data || !data.staffGroups) return data;
+
+      // LOẠI TRỪ TUYỆT ĐỐI CÁC TÀI KHOẢN BỊ KHÓA HOẶC TẠM KHÓA KHỎI TOÀN BỘ KHU VỰC THEO DÕI, ĐÔN ĐỐC & THI ĐUA
+      const activeGroups = (data.staffGroups || []).filter(grp => !isStaffGroupLockedOrPaused(grp));
+
       if (isCurrentUserExecutiveOrManager()) {
-        return data;
+        return Object.assign({}, data, { staffGroups: activeGroups });
       }
 
       const myName = (currentUser?.fullName || '').trim();
       const myDept = (currentUser?.department || '').trim();
 
-      const scopedGroups = (data.staffGroups || []).filter(grp => {
+      const scopedGroups = activeGroups.filter(grp => {
         // 1. Việc cá nhân trong nhóm gộp: chỉ lấy của chính mình
         if (grp.isPersonalInShared) {
           return isStaffMatchedInCell(myName, grp.staffName);
@@ -10876,6 +10972,11 @@
       const memberGroupMap = new Map();
 
       data.staffGroups.forEach(grp => {
+        // BẢO VỆ TUYỆT ĐỐI: Loại trừ mọi tài khoản bị khóa hoặc tạm khóa
+        if (isStaffGroupLockedOrPaused(grp)) {
+          return;
+        }
+
         const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
         const isPersonalInShared = !!grp.isPersonalInShared;
         let displayName = "";
@@ -18065,6 +18166,11 @@
     }
 
     // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG TRÊN ANDROID, IOS & PC =================
+    // Xóa cờ cache cũ để người dùng có thể trải nghiệm cài đặt mới 100%
+    try {
+      localStorage.removeItem('app_pwa_installed');
+    } catch(e) {}
+
     function isIOSDevice() {
       return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -18077,7 +18183,6 @@
     function isAppInstalledOrStandalone() {
       return window.matchMedia('(display-mode: standalone)').matches ||
              window.navigator.standalone === true ||
-             localStorage.getItem('app_pwa_installed') === 'true' ||
              (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
     }
 
@@ -18101,8 +18206,8 @@
       const iconBox = document.getElementById('installBtnIconBox');
 
       if (isAppInstalledOrStandalone()) {
-        if (title) title.innerText = 'Ứng Dụng Đã Khởi Tạo (App)';
-        if (desc) desc.innerText = 'Đã cài đặt sẵn sàng trên thiết bị • 1 chạm';
+        if (title) title.innerText = 'Đang Chạy Trên Ứng Dụng (App)';
+        if (desc) desc.innerText = 'Chế độ ứng dụng độc lập mượt mà • 1 chạm';
         if (badge) {
           badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-300/50 shrink-0';
           badge.innerHTML = '<i class="fa-solid fa-circle-check text-[9px]"></i> Đã cài đặt';
@@ -18125,20 +18230,29 @@
     async function handlePWAInstallClick() {
       if (isAppInstalledOrStandalone()) {
         if (typeof showToast === 'function') {
-          showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt và khởi tạo sẵn sàng!', false);
+          showToast('Ứng dụng Báo Cáo DVKH đang hoạt động ở chế độ App độc lập!', false);
         }
         return;
       }
 
       // 1. Dành riêng cho iPhone / iPad (iOS):
-      // Do cơ chế bảo mật của Apple iOS, mở chỉ báo trực quan tại thanh công cụ
       if (isIOSDevice()) {
         openIOSInstallPrompt();
         return;
       }
 
-      // 2. Dành cho Android & Trình duyệt hỗ trợ PWA (Chrome / Samsung Internet / Edge):
-      // Kích hoạt ngay hộp thoại cài đặt native của hệ điều hành
+      // 2. Nếu đang mở dạng file:// cục bộ, chuyển ngay sang http://localhost:8000 để trình duyệt kích hoạt PWA
+      if (window.location.protocol === 'file:') {
+        if (typeof showToast === 'function') {
+          showToast('Đang kết nối cổng cài đặt PWA http://localhost:8000...', false);
+        }
+        setTimeout(() => {
+          window.location.href = 'http://localhost:8000';
+        }, 400);
+        return;
+      }
+
+      // 3. Kích hoạt trực tiếp hộp thoại cài đặt native của trình duyệt (Chrome / Edge / Android)
       if (window._deferredInstallPrompt) {
         try {
           const promptEvent = window._deferredInstallPrompt;
@@ -18146,7 +18260,6 @@
           promptEvent.prompt();
           const choice = await promptEvent.userChoice;
           if (choice && choice.outcome === 'accepted') {
-            localStorage.setItem('app_pwa_installed', 'true');
             if (typeof showToast === 'function') {
               showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
             }
@@ -18170,7 +18283,7 @@
           resolve(e);
         };
         window.addEventListener('beforeinstallprompt', handler);
-        setTimeout(() => resolve(null), 600);
+        setTimeout(() => resolve(null), 800);
       });
 
       const pEvent = await promptPromise;
@@ -18182,7 +18295,6 @@
           pEvent.prompt();
           const choice = await pEvent.userChoice;
           if (choice && choice.outcome === 'accepted') {
-            localStorage.setItem('app_pwa_installed', 'true');
             if (typeof showToast === 'function') {
               showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
             }
@@ -18194,7 +18306,7 @@
         }
       }
 
-      // Nếu trên Android mà prompt chưa hiện:
+      // Nếu trên Android mà prompt chưa kích hoạt:
       if (isAndroidDevice()) {
         if (typeof showToast === 'function') {
           showToast('Vui lòng chạm Menu (3 chấm ⋮) ở góc trên và chọn "Cài đặt ứng dụng"!', false);
@@ -18202,18 +18314,15 @@
         return;
       }
 
-      // 3. Môi trường Máy tính / Desktop đã có shortcut sẵn:
-      localStorage.setItem('app_pwa_installed', 'true');
-      updateInstallButtonState();
+      // Nếu trên Máy tính:
       if (typeof showToast === 'function') {
-        showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt sẵn sàng trên màn hình Desktop của bạn!', false);
+        showToast('Nhấn vào biểu tượng Cài đặt (+) trên thanh địa chỉ để cài ứng dụng!', false);
       }
     }
 
     // Lắng nghe sự kiện cài đặt thành công từ trình duyệt
     window.addEventListener('appinstalled', () => {
       window._deferredInstallPrompt = null;
-      localStorage.setItem('app_pwa_installed', 'true');
       updateInstallButtonState();
       if (typeof showToast === 'function') {
         showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
