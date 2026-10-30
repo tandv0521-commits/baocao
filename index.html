@@ -2860,7 +2860,7 @@
             </button>
 
             <!-- Dropdown menu chọn bộ phận điều chuyển -->
-            <div id="transferDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div id="transferDeptMenu" class="hidden mt-2 bg-white rounded-2xl border border-emerald-200 shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
               <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                 <div class="relative">
                   <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -2881,6 +2881,15 @@
               <span class="text-[10px] text-amber-700 italic lowercase">(có thể chỉnh sửa tên chữ)</span>
             </label>
             
+            <!-- Thông báo quy chuẩn điều chuyển vào nhóm kho -->
+            <div class="p-2.5 bg-white border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-2 shadow-2xs">
+              <i class="fa-solid fa-circle-info text-amber-600 text-sm shrink-0 mt-0.5"></i>
+              <div class="leading-relaxed">
+                <p class="font-bold text-amber-950">Quy trình công việc khi chuyển vào Nhóm Kho:</p>
+                <p class="text-[11px] text-amber-900/90 mt-0.5">Toàn bộ đầu việc cá nhân của nhân sự ở bộ phận cũ sẽ được <b>xóa / làm sạch</b> (không mang việc cũ vào kho). Nhân sự sẽ tự động tham gia vào <b>danh mục công việc chung của tổ kho</b>.</p>
+              </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-2.5">
               <!-- Vai trò 1 (Đại diện) -->
               <div class="p-2.5 bg-white border border-amber-200 rounded-xl space-y-1.5 shadow-2xs">
@@ -2936,7 +2945,7 @@
                 </button>
 
                 <!-- Dropdown menu chọn nguồn sao chép công việc -->
-                <div id="transferCopyStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5">
+                <div id="transferCopyStaffMenu" class="hidden mt-2 bg-white rounded-2xl border border-emerald-200 shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5">
                   <div id="transferCopyStaffList" class="max-h-52 overflow-y-auto custom-scroll space-y-1"></div>
                 </div>
               </div>
@@ -3085,7 +3094,7 @@
             </div>
             <i id="addDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
           </button>
-          <div id="addDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div id="addDeptMenu" class="hidden mt-2 bg-white rounded-2xl border border-emerald-200 shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div class="p-2 border-b border-slate-100 bg-slate-50/90">
               <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -16695,7 +16704,9 @@
         if (sInput) {
           sInput.value = '';
           renderTransferDeptList(transferDeptCache);
-          setTimeout(() => sInput.focus(), 50);
+          setTimeout(() => {
+            if (typeof sInput.focus === 'function') sInput.focus({ preventScroll: true });
+          }, 50);
         }
       } else {
         menu.classList.add('hidden');
@@ -17025,6 +17036,7 @@
       if (isShared) {
         if (roleContainer) roleContainer.classList.remove('hidden');
         if (normalContainer) normalContainer.classList.add('hidden');
+        if (copySelect) copySelect.value = "warehouse_shared";
         
         const isWarehouse = removeAccents(selectedDept).includes("kho");
         const customLeadInput = document.getElementById('customRoleLeadTitleInput');
@@ -17150,7 +17162,7 @@
         status: status,
         newPassword: newPassword,
         isWarehouse: isShared,
-        copyFromUserId: copyFromUserId
+        copyFromUserId: isShared ? "warehouse_shared" : copyFromUserId
       };
 
       if (status === "Khóa") {
@@ -17250,7 +17262,54 @@
         if (oldDeptId && dId && oldDeptId !== dId && currentUserId && !isLock) {
           const actionChoice = updateData.copyFromUserId;
 
-          if (actionChoice && actionChoice !== "keep_old" && actionChoice !== "fresh_empty") {
+          if (updateData.isWarehouse) {
+            // =========================================================================
+            // QUY TRÌNH CHUYỂN VÀO NHÓM KHO (NHÓM GỘP):
+            // - Xóa/làm sạch toàn bộ đầu việc hiện tại của nhân sự ở bộ phận cũ (KHÔNG mang việc cũ vào kho).
+            // - Nhân sự sẽ tự động tham gia vào danh mục công việc chung của tổ kho.
+            // =========================================================================
+            const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+
+            // Lấy toàn bộ đầu việc của người đó tại bộ phận cũ (không thuộc kho đích)
+            const { data: oldTasks } = await supabase
+              .from('tasks')
+              .select('id')
+              .eq('assigned_user_id', currentUserId)
+              .neq('department_id', dId);
+
+            if (oldTasks && oldTasks.length > 0) {
+              const oldIds = oldTasks.map(t => t.id);
+
+              // 1. Xóa các báo cáo trong kỳ hiện tại của các đầu việc cũ này
+              await supabase
+                .from('daily_reports')
+                .delete()
+                .in('task_id', oldIds)
+                .gte('report_date', currentPeriodStartDate);
+
+              // 2. Kiểm tra xem đầu việc nào có số liệu ở các kỳ cũ trước đó để bảo tồn lịch sử đối soát
+              const { data: priorReps } = await supabase
+                .from('daily_reports')
+                .select('task_id')
+                .in('task_id', oldIds)
+                .lt('report_date', currentPeriodStartDate);
+
+              const reportedPriorIds = new Set((priorReps || []).map(r => r.task_id));
+              const deletableIds = oldIds.filter(id => !reportedPriorIds.has(id));
+              const archiveIds = oldIds.filter(id => reportedPriorIds.has(id));
+
+              // Không có lịch sử ở kỳ cũ: Xóa an toàn khỏi cơ sở dữ liệu
+              if (deletableIds.length > 0) {
+                await supabase.from('tasks').delete().in('id', deletableIds);
+              }
+
+              // Có lịch sử ở kỳ cũ: Giữ lại để bảo toàn kỳ cũ, gỡ gán khỏi nhân sự để kỳ hiện tại sạch 100%
+              if (archiveIds.length > 0) {
+                await supabase.from('tasks').update({ assigned_user_id: null }).in('id', archiveIds);
+              }
+            }
+
+          } else if (actionChoice && actionChoice !== "keep_old" && actionChoice !== "fresh_empty") {
             // Trường hợp 1: Chọn sao chép đầu việc từ đồng nghiệp ở bộ phận mới
             const { data: sourceTasks, error: sErr } = await supabase
               .from('tasks')
@@ -17314,7 +17373,7 @@
               }
             }
           } else {
-            // Trường hợp 3: Giữ đầu việc ở bộ phận cũ (Chuyển danh mục công việc cũ sang bộ phận mới)
+            // Trường hợp 3: Giữ đầu việc ở bộ phận cũ (Chỉ áp dụng giữa các bộ phận thông thường)
             await supabase
               .from('tasks')
               .update({ department_id: dId })
@@ -17411,6 +17470,10 @@
       addDeptCache = depts;
       renderAddDeptList(depts);
       updateAddDeptUI('');
+      const m = document.getElementById('addDeptMenu');
+      if (m) m.classList.add('hidden');
+      const c = document.getElementById('addDeptChevron');
+      if (c) c.classList.remove('rotate-180');
     }
 
     function closeAddUserModal() {
@@ -17435,7 +17498,9 @@
         if (sInput) {
           sInput.value = '';
           renderAddDeptList(addDeptCache);
-          setTimeout(() => sInput.focus(), 50);
+          setTimeout(() => {
+            if (typeof sInput.focus === 'function') sInput.focus({ preventScroll: true });
+          }, 50);
         }
       } else {
         menu.classList.add('hidden');
