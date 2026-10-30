@@ -8664,19 +8664,8 @@
           }
 
           // PHÂN BIỆT CÔNG VIỆC CÁ NHÂN RIÊNG VS CÔNG VIỆC CHUNG CỦA TỔ KHO:
-          let isPersonalTaskInShared = false;
-          if (taskScope === 'personal') {
-            isPersonalTaskInShared = true;
-          } else if (taskScope === 'shared') {
-            isPersonalTaskInShared = false;
-          } else {
-            // Task cũ chưa có thẻ scope: nếu gán cho thành viên khác với leadUid -> là việc cá nhân
-            if (effectiveUserId && cachedGroup.groupUserId && effectiveUserId !== cachedGroup.groupUserId) {
-              isPersonalTaskInShared = true;
-            } else {
-              isPersonalTaskInShared = false;
-            }
-          }
+          // Một task thuộc tổ kho CHỈ là việc cá nhân riêng khi có gắn thẻ <!--scope:personal-->
+          const isPersonalTaskInShared = (taskScope === 'personal');
 
           if (isPersonalTaskInShared) {
             isPersonalInShared = true;
@@ -13817,7 +13806,7 @@
       const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
       if (dropdown) dropdown.classList.add('hidden');
 
-      // 2. Đồng bộ Bộ phận:
+      // 2. Đồng bộ Bộ phận & Nhân sự đồng thời (không dùng setTimeout để loại bỏ race condition):
       const deptSelect = document.getElementById('modalAssignDeptSelect');
       if (deptSelect && st.deptName) {
         let hasOpt = Array.from(deptSelect.options).some(o => o.value === st.deptName);
@@ -13833,18 +13822,8 @@
         }
         deptSelect.value = st.deptName;
         updateModalAssignDeptUI(st.deptName);
-        onAssignDeptSelectChange(st.deptName);
+        onAssignDeptSelectChange(st.deptName, st.fullName);
       }
-
-      // 3. Đồng bộ Nhân sự phân công:
-      setTimeout(() => {
-        const staffSelect = document.getElementById('modalAssignStaffSelect');
-        if (staffSelect) {
-          staffSelect.value = st.fullName;
-          updateModalAssignStaffUI(st.fullName);
-          onAssignStaffSelectChange(st.fullName);
-        }
-      }, 50);
     }
 
     function toggleModalAssignDeptPicker(e) {
@@ -14191,7 +14170,7 @@
       renderModalAssignStaffPicker(modalAssignStaffCache);
     }
 
-    function onAssignDeptSelectChange(dept) {
+    function onAssignDeptSelectChange(dept, targetStaffName = "") {
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       if (!staffSelect) return;
       staffSelect.innerHTML = '';
@@ -14219,6 +14198,7 @@
       });
 
       const isShared = isSharedGroupDeptClient(dept);
+      let selectedStaffVal = "";
 
       if (isShared && assignableUsers.length > 0) {
         // TỔ KHO / NHÓM GỘP: HỖ TRỢ PHÂN CÔNG VIỆC CHUNG VÀ VIỆC CÁ NHÂN RIÊNG CỦA TỪNG THÀNH VIÊN
@@ -14247,6 +14227,7 @@
         const optShared = document.createElement('option');
         optShared.value = "__SHARED_GROUP__";
         optShared.dataset.userId = leadUserId;
+        optShared.dataset.leadUserId = leadUserId;
         optShared.dataset.scope = "shared";
         optShared.innerText = `🏢 Công việc chung của tổ kho (Kho chính phụ trách)`;
         staffSelect.appendChild(optShared);
@@ -14264,6 +14245,14 @@
           staffSelect.appendChild(opt);
         });
 
+        // Xác định đối tượng cần chọn:
+        if (targetStaffName && targetStaffName !== "__SHARED_GROUP__") {
+          const matched = personalItems.find(p => p.fullName === targetStaffName);
+          selectedStaffVal = matched ? matched.fullName : "__SHARED_GROUP__";
+        } else {
+          selectedStaffVal = "__SHARED_GROUP__";
+        }
+
       } else if (assignableUsers.length > 0) {
         // BỘ PHẬN THƯỜNG:
         modalAssignStaffCache = assignableUsers;
@@ -14274,25 +14263,34 @@
           opt.dataset.role = st.role || "";
           opt.dataset.scope = "";
           opt.innerText = st.fullName;
-          if (currentSelectedStaff !== "TẤT CẢ" && st.fullName === currentSelectedStaff) {
-            opt.selected = true;
-          }
           staffSelect.appendChild(opt);
         });
+
+        if (targetStaffName && assignableUsers.some(u => u.fullName === targetStaffName)) {
+          selectedStaffVal = targetStaffName;
+        } else if (currentSelectedStaff !== "TẤT CẢ" && assignableUsers.some(u => u.fullName === currentSelectedStaff)) {
+          selectedStaffVal = currentSelectedStaff;
+        } else {
+          selectedStaffVal = assignableUsers[0].fullName;
+        }
       } else {
         modalAssignStaffCache = [];
         const opt = document.createElement('option');
         opt.value = "";
         opt.innerText = "-- Chưa có nhân sự phân công trong bộ phận này --";
         staffSelect.appendChild(opt);
+        selectedStaffVal = "";
       }
 
+      staffSelect.value = selectedStaffVal;
       renderModalAssignStaffPicker(modalAssignStaffCache);
-      updateModalAssignStaffUI(staffSelect.value);
-      onAssignStaffSelectChange(staffSelect.value);
+      updateModalAssignStaffUI(selectedStaffVal);
+      onAssignStaffSelectChange(selectedStaffVal);
     }
 
+    let assignStaffLoadRequestId = 0;
     async function onAssignStaffSelectChange(staffName) {
+      const currentReqId = ++assignStaffLoadRequestId;
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
 
@@ -14336,6 +14334,7 @@
         if (isSharedScope) {
           // LẤY CÔNG VIỆC CHUNG CỦA TỔ KHO:
           const { data: deptInfo } = await supabase.from('departments').select('id').eq('name', deptVal).limit(1);
+          if (currentReqId !== assignStaffLoadRequestId) return;
           const dId = deptInfo && deptInfo[0] ? deptInfo[0].id : null;
 
           let query = supabase.from('tasks').select('*').limit(5000);
@@ -14345,15 +14344,11 @@
             query = query.eq('assigned_user_id', uId);
           }
           const { data: deptTasks, error: tErr } = await query;
+          if (currentReqId !== assignStaffLoadRequestId) return;
           if (tErr) throw tErr;
 
-          tasks = (deptTasks || []).filter(t => {
-            const scope = parseTaskScope(t.guide);
-            if (scope === 'shared') return true;
-            if (scope === 'personal') return false;
-            // Task cũ chưa có tag scope: nếu gán cho leadUid -> việc chung
-            return !uId || t.assigned_user_id === uId;
-          });
+          // VIỆC CHUNG CỦA TỔ KHO: Toàn bộ công việc thuộc kho, ngoại trừ các task cá nhân riêng biệt
+          tasks = (deptTasks || []).filter(t => parseTaskScope(t.guide) !== 'personal');
         } else {
           // LẤY CÔNG VIỆC CÁ NHÂN (HOẶC BỘ PHẬN THƯỜNG):
           if (!uId) {
@@ -14363,6 +14358,7 @@
               .eq('full_name', staffName)
               .limit(1);
 
+            if (currentReqId !== assignStaffLoadRequestId) return;
             if (uErr) throw uErr;
             if (user && user[0]) {
               const isDeputy = isDeputyDirector(user[0].role, user[0].username);
@@ -14375,6 +14371,7 @@
           }
 
           if (!uId) {
+            if (currentReqId !== assignStaffLoadRequestId) return;
             container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Chưa tìm thấy hồ sơ nhân sự này.</p>';
             return;
           }
@@ -14384,22 +14381,13 @@
             .select('*')
             .eq('assigned_user_id', uId);
 
+          if (currentReqId !== assignStaffLoadRequestId) return;
           if (tErr) throw tErr;
 
           if (isShared) {
-            // Trong tổ kho / nhóm gộp: Lọc CHÍNH XÁC các task là việc cá nhân của thành viên
-            const leadUserId = selectedOpt?.dataset?.leadUserId ? parseInt(selectedOpt.dataset.leadUserId, 10) : null;
-            tasks = (userTasks || []).filter(t => {
-              const scope = parseTaskScope(t.guide);
-              if (scope === 'personal') return true;
-              if (scope === 'shared') return false;
-              // Nếu task chưa có tag scope:
-              // - Nếu uId là leadUserId (Kho chính): Các task này là VIỆC CHUNG CỦA TỔ KHO -> TUYỆT ĐỐI KHÔNG NẠP VÀO VIỆC CÁ NHÂN!
-              // - Việc chung chỉ được quản lý khi người dùng chọn "__SHARED_GROUP__".
-              if (leadUserId && uId === leadUserId) return false;
-              // Nếu uId khác leadUserId mà được tạo từ trước -> việc cá nhân
-              return true;
-            });
+            // Trong tổ kho / nhóm gộp: Lọc CHÍNH XÁC các task là việc cá nhân của thành viên (có gắn thẻ <!--scope:personal-->)
+            // TUYỆT ĐỐI KHÔNG nạp việc chung của tổ kho vào việc cá nhân riêng!
+            tasks = (userTasks || []).filter(t => parseTaskScope(t.guide) === 'personal');
           } else {
             tasks = userTasks || [];
           }
@@ -14413,8 +14401,11 @@
             .select('task_id')
             .in('task_id', taskIds)
             .limit(2000);
+          if (currentReqId !== assignStaffLoadRequestId) return;
           taskDataIds = new Set((repData || []).map(r => r.task_id));
         }
+
+        if (currentReqId !== assignStaffLoadRequestId) return;
 
         // Sắp xếp các đầu việc theo thứ tự tùy chỉnh đã lưu (thẻ ord trong guide) hoặc theo ID
         const sortedTasks = (tasks || []).slice().sort((a, b) => {
@@ -14431,6 +14422,7 @@
           hasData: taskDataIds.has(t.id)
         })));
       } catch (err) {
+        if (currentReqId !== assignStaffLoadRequestId) return;
         container.innerHTML = `<p class="empty-assign-msg text-xs text-rose-500 py-3 text-center">Lỗi tải dữ liệu: ${err.message}</p>`;
       }
     }
