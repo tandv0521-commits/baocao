@@ -3711,6 +3711,96 @@
       if (modal) modal.classList.add('hidden');
     }
 
+    // ================= NHẬN DIỆN THIẾT BỊ DI ĐỘNG (IOS, ANDROID, TABLET) & DUY TRÌ PHIÊN =================
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isAndroidDevice() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    function isAppInstalledOrStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true ||
+             (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
+    }
+
+    /**
+     * KIỂM TRA THIẾT BỊ DI ĐỘNG HOẶC MÁY TÍNH BẢNG (HỆ ĐIỀU HÀNH IOS HOẶC ANDROID):
+     * Phân biệt rõ rệt với trình duyệt web trên máy tính PC để áp dụng cơ chế tự động vào thẳng
+     */
+    function isMobileOrTabletClient() {
+      if (isIOSDevice() || isAndroidDevice()) return true;
+      const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+      if (/android|iphone|ipad|ipod|mobile|tablet|silk|kindle|blackberry|bb10|rim|windows phone|opera mini/i.test(ua)) return true;
+      if (isAppInstalledOrStandalone()) return true;
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+      const isMobileScreen = (window.innerWidth <= 1024) || (window.screen && (window.screen.width <= 1024 || window.screen.height <= 1024));
+      return isTouch && isMobileScreen;
+    }
+
+    /**
+     * KIỂM TRA THIẾT BỊ ĐÃ ĐƯỢC LƯU THÔNG TIN ĐĂNG NHẬP (GHI NHỚ MẬT KHẨU):
+     */
+    function hasSavedAuthOnDevice() {
+      try {
+        const raw = localStorage.getItem('ops_portal_remembered_auth_v49');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return !!(parsed && parsed.username && parsed.password);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    /**
+     * TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO THIẾT BỊ DI ĐỘNG & MÁY TÍNH BẢNG (IOS, ANDROID):
+     * Khi người dùng đã chọn lưu mật khẩu, ứng dụng tự động xác thực và vào thẳng giao diện làm việc
+     * mà không phải đăng nhập lại mỗi ngày như trên máy tính PC.
+     */
+    async function tryAutoLoginForMobileDevice(depts, users, todayKey) {
+      if (currentUser) return;
+      if (sessionStorage.getItem('ops_portal_manual_logout') === 'true') return;
+      if (!isMobileOrTabletClient() || !hasSavedAuthOnDevice()) return;
+
+      try {
+        const raw = localStorage.getItem('ops_portal_remembered_auth_v49');
+        if (!raw) return;
+        const authData = JSON.parse(raw);
+        if (!authData || !authData.username || !authData.password) return;
+
+        const uFound = (users || []).find(u => u.username && u.username.toLowerCase() === authData.username.toLowerCase().trim());
+        if (!uFound || uFound.status === 'Khóa') return;
+
+        const isValid = await verifyEnterprisePassword(authData.password, uFound.password_hash);
+        if (isValid) {
+          const d = (depts || []).find(x => x.id === uFound.department_id);
+          const deptName = d ? d.name : (uFound.departments ? uFound.departments.name : "Chưa phân");
+
+          currentUser = Object.freeze({
+            id: uFound.id,
+            username: uFound.username,
+            fullName: uFound.full_name || uFound.fullName,
+            department: deptName,
+            department_id: uFound.department_id,
+            role: uFound.role,
+            status: uFound.status,
+            password_hash: uFound.password_hash,
+            sessionDate: todayKey || getSystemDateKey(new Date()),
+            isRemembered: true,
+            isMobileTablet: true
+          });
+
+          localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+          initMainDashboard();
+        }
+      } catch (err) {
+        console.warn("Lỗi tự động đăng nhập thiết bị di động:", err);
+      }
+    }
+
     // ================= XỬ LÝ GHI NHỚ MẬT KHẨU TỰ ĐỘNG =================
     function checkAndFillRememberedPassword() {
       try {
@@ -5014,18 +5104,25 @@
       }
 
       const todayKey = getSystemDateKey(new Date());
+      const isMobileTablet = isMobileOrTabletClient();
+      const hasSavedAuth = hasSavedAuthOnDevice();
       const cached = localStorage.getItem('ops_portal_session_final_v48');
+
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
+          const isUserRemembered = !!(parsed.isRemembered || hasSavedAuth);
+          const isPastDay = !!(parsed.sessionDate && parsed.sessionDate !== todayKey);
 
-          // 1. KIỂM TRA BẢO MẬT: NẾU PHIÊN ĐĂNG NHẬP THUỘC VỀ NGÀY HÔM TRƯỚC (ĐÃ SANG NGÀY MỚI SAU KHI TẮT TRÌNH DUYỆT)
-          if (parsed.sessionDate && parsed.sessionDate !== todayKey) {
+          // 1. KIỂM TRA BẢO MẬT & CHÍNH SÁCH ĐĂNG NHẬP THEO THIẾT BỊ:
+          // - Trên web máy tính PC: Sang ngày mới (sau khi tắt trình duyệt) tự động đăng xuất để yêu cầu đăng nhập lại
+          // - Trên điện thoại, máy tính bảng (iOS, Android) có lưu mật khẩu: DUY TRÌ PHIÊN VÀ VÀO THẲNG KHÔNG PHẢI ĐĂNG NHẬP LẠI
+          if (isPastDay && (!isMobileTablet || !isUserRemembered)) {
             localStorage.removeItem('ops_portal_session_final_v48');
             currentUser = null;
           } else {
             // 2. Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
-            const verified = (users || []).find(u => (u.id === parsed.id || u.username === parsed.username) && (u.status || '').toLowerCase() !== 'locked');
+            const verified = (users || []).find(u => (u.id === parsed.id || (u.username && u.username.toLowerCase() === (parsed.username || '').toLowerCase())) && (u.status || '').toLowerCase() !== 'locked');
             if (verified) {
               // 3. KIỂM TRA MẬT KHẨU CÓ BỊ THAY ĐỔI TỪ THIẾT BỊ KHÁC KHÔNG
               if (parsed.password_hash && verified.password_hash && parsed.password_hash !== verified.password_hash) {
@@ -5043,7 +5140,9 @@
                   role: verified.role,
                   status: verified.status,
                   password_hash: verified.password_hash,
-                  sessionDate: todayKey
+                  sessionDate: todayKey,
+                  isRemembered: isUserRemembered,
+                  isMobileTablet: isMobileTablet
                 });
                 localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
                 initMainDashboard();
@@ -5054,6 +5153,11 @@
             }
           }
         } catch(e) {}
+      }
+
+      // 4. NẾU CHƯA CÓ PHIÊN (HOẶC VỪA TẮT MỞ LẠI PWA/TRÌNH DUYỆT): TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO DI ĐỘNG/TABLET CÓ LƯU MẬT KHẨU
+      if (!currentUser && isMobileTablet && hasSavedAuth) {
+        tryAutoLoginForMobileDevice(depts, users, todayKey);
       }
 
       // THÔNG BÁO XIN CHÀO NGÀY MỚI (CHỈ HIỂN THỊ 1 LẦN DUY NHẤT KHI MÁY ĐÓ LẦN ĐẦU MỞ TRÌNH DUYỆT TRONG NGÀY)
@@ -7047,8 +7151,10 @@
         }
         clearFailedLoginAttempts(username);
 
+        sessionStorage.removeItem('ops_portal_manual_logout');
         const rememberChk = document.getElementById('rememberPasswordChk');
-        if (rememberChk && rememberChk.checked) {
+        const isRememberChecked = !!(rememberChk && rememberChk.checked);
+        if (isRememberChecked) {
           const authData = {
             type: 'user',
             username: username,
@@ -7062,6 +7168,7 @@
         // Hoàn tất tiến trình 75% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
         autoSimulateLoginButton(75, 100, "Xác thực thành công", 3, () => {
           const todayKey = getSystemDateKey(new Date());
+          const isMobileTablet = isMobileOrTabletClient();
           currentUser = Object.freeze({
             id: user.id,
             username: user.username,
@@ -7071,7 +7178,9 @@
             role: user.role,
             status: user.status,
             password_hash: user.password_hash,
-            sessionDate: todayKey
+            sessionDate: todayKey,
+            isRemembered: isRememberChecked,
+            isMobileTablet: isMobileTablet
           });
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
           setTimeout(() => {
@@ -18153,6 +18262,7 @@
         clearInterval(_securityHeartbeatInterval);
         _securityHeartbeatInterval = null;
       }
+      sessionStorage.setItem('ops_portal_manual_logout', 'true');
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
       fullPeriodMatrixCache = null;
@@ -18170,21 +18280,6 @@
     try {
       localStorage.removeItem('app_pwa_installed');
     } catch(e) {}
-
-    function isIOSDevice() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-
-    function isAndroidDevice() {
-      return /Android/i.test(navigator.userAgent);
-    }
-
-    function isAppInstalledOrStandalone() {
-      return window.matchMedia('(display-mode: standalone)').matches ||
-             window.navigator.standalone === true ||
-             (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
-    }
 
     function openIOSInstallPrompt() {
       const el = document.getElementById('iosInstallPrompt');
