@@ -311,6 +311,18 @@
       }
     }
 
+    /* TẮT HOÀN TOÀN GỢI Ý (TOOLTIP) CHO CỘT NỘI DUNG CÔNG VIỆC TRÊN BẢNG MA TRẬN */
+    .col-fixed-task[data-tooltip]::before,
+    .col-fixed-task[data-tooltip]::after,
+    .col-fixed-task [data-tooltip]::before,
+    .col-fixed-task [data-tooltip]::after {
+      display: none !important;
+      content: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
     /* TẮT TRIỆT ĐỂ POPUP VÀ BIỂU TƯỢNG GỢI Ý ĐEN (SAVED INFO / AUTOFILL) CỦA EDGE & CHROME */
     input::-webkit-contacts-auto-fill-button,
     input::-webkit-credentials-auto-fill-button {
@@ -3661,8 +3673,23 @@
      */
     function initGlobalLightTooltipSystem() {
       document.addEventListener('mouseover', (e) => {
+        // Tuyệt đối không hiển thị gợi ý (tooltip) cho phần Nội dung công việc trên bảng ma trận
+        if (e.target.closest('.col-fixed-task')) {
+          const taskCell = e.target.closest('.col-fixed-task');
+          if (taskCell) {
+            taskCell.removeAttribute('title');
+            taskCell.removeAttribute('data-tooltip');
+            taskCell.querySelectorAll('[title], [data-tooltip]').forEach(el => {
+              el.removeAttribute('title');
+              el.removeAttribute('data-tooltip');
+            });
+          }
+          return;
+        }
+
         const target = e.target.closest('[title]');
         if (!target) return;
+        if (target.closest('.col-fixed-task')) return;
 
         const titleText = target.getAttribute('title');
         if (titleText && titleText.trim()) {
@@ -9185,7 +9212,7 @@
             ${ttCellHtml}
             ${nameCellHtml}
             <td class="col-fixed-task py-2.5 px-2 sm:px-3 font-semibold text-slate-900">
-              <div class="w-full whitespace-normal break-words text-xs leading-relaxed flex items-start gap-1.5" title="${escapeHtml(t.taskName)}">
+              <div class="w-full whitespace-normal break-words text-xs leading-relaxed flex items-start gap-1.5">
                 ${taskBadgeHtml}
                 <div class="min-w-0 flex-1">
                   <span class="font-bold text-slate-800">${escapeHtml(t.taskName)}</span>
