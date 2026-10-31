@@ -3380,8 +3380,8 @@
   </div>
 
   <!-- ================= MODAL KIỂM TRA LỊCH SỬ ĐĂNG NHẬP & MÃ MÁY / THIẾT BỊ ================= -->
-  <div id="loginHistoryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-6xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+  <div id="loginHistoryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-1.5 sm:p-3 md:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-[98vw] 2xl:max-w-[1580px] xl:max-w-[1440px] lg:max-w-[1340px] w-full max-h-[95vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
       
       <!-- 1. Header Modal -->
       <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
@@ -3541,13 +3541,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="sticky top-0 z-20 bg-slate-50 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 shadow-xs">
             <tr>
-              <th class="py-2.5 px-3 text-center bg-slate-50 w-12">STT</th>
-              <th class="py-2.5 px-3 bg-slate-50">Ngày & Giờ</th>
-              <th class="py-2.5 px-3 bg-slate-50">Tài khoản đăng nhập</th>
-              <th class="py-2.5 px-3 bg-slate-50">Mã máy (Device ID)</th>
-              <th class="py-2.5 px-3 bg-slate-50">Thiết bị & Trình duyệt</th>
-              <th class="py-2.5 px-3 bg-slate-50">Địa chỉ IP</th>
-              <th class="py-2.5 px-3 text-center bg-slate-50">Trạng thái</th>
+              <th class="py-2.5 px-3 text-center bg-slate-50 w-12 shrink-0">STT</th>
+              <th class="py-2.5 px-3 bg-slate-50 w-32 shrink-0">Ngày & Giờ</th>
+              <th class="py-2.5 px-3 bg-slate-50 min-w-[200px]">Tài khoản đăng nhập</th>
+              <th class="py-2.5 px-3 bg-slate-50 w-44 shrink-0">Mã máy (Device ID)</th>
+              <th class="py-2.5 px-3 bg-slate-50 min-w-[210px]">Thiết bị & Trình duyệt</th>
+              <th class="py-2.5 px-3 bg-slate-50 w-36 shrink-0">Địa chỉ IP</th>
+              <th class="py-2.5 px-3 text-center bg-slate-50 w-48 shrink-0">Trạng thái</th>
             </tr>
           </thead>
           <tbody id="loginHistoryTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
@@ -19522,8 +19522,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <td class="py-3 px-3">
               ${renderLoginIpBadge(item.ip_address, item.ip_location)}
             </td>
-            <td class="py-3 px-3 text-center">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusClass}">
+            <td class="py-3 px-3 text-center whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-bold border ${statusClass} shadow-2xs whitespace-nowrap">
                 <i class="fa-solid fa-circle-check text-[9px]"></i>
                 <span>${escapeHtml(item.status || 'Thành công')}</span>
               </span>
