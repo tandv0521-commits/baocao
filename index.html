@@ -4020,12 +4020,21 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
      * Phân biệt rõ rệt với trình duyệt web trên máy tính PC để áp dụng cơ chế tự động vào thẳng
      */
     function isMobileOrTabletClient() {
-      if (isIOSDevice() || isAndroidDevice()) return true;
       const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+      // 1. Phân định dứt khoát: Nếu là Windows PC, Desktop Mac, Linux Desktop -> 100% KHÔNG PHẢI thiết bị di động
+      // (Kể cả khi người dùng mở ở chế độ App PWA cài đặt trên máy tính)
+      const isWindows = /windows nt|windows/i.test(ua);
+      const isMacDesktop = /macintosh|mac os x/i.test(ua) && !(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isLinuxPC = /linux/i.test(ua) && !/android/i.test(ua);
+      if (isWindows || isMacDesktop || isLinuxPC) {
+        return false;
+      }
+
+      // 2. Thiết bị di động thật (iOS, Android, Tablet)
+      if (isIOSDevice() || isAndroidDevice()) return true;
       if (/android|iphone|ipad|ipod|mobile|tablet|silk|kindle|blackberry|bb10|rim|windows phone|opera mini/i.test(ua)) return true;
-      if (isAppInstalledOrStandalone()) return true;
       const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
-      const isMobileScreen = (window.innerWidth <= 1024) || (window.screen && (window.screen.width <= 1024 || window.screen.height <= 1024));
+      const isMobileScreen = (window.innerWidth <= 850 && window.innerHeight <= 1024) || (window.screen && window.screen.width <= 850);
       return isTouch && isMobileScreen;
     }
 
@@ -5441,7 +5450,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                 if (!sessionLoggedToken) {
                   sessionStorage.setItem('ops_session_device_logged', 'true');
                   try {
-                    recordAccountLoginLog(verified, isMobileTablet ? 'Duy trì phiên (Di động)' : 'Duy trì phiên (PC)');
+                    const isApp = isAppInstalledOrStandalone();
+                    let sessionStatus = isMobileTablet 
+                      ? 'Duy trì phiên (Di động)' 
+                      : (isApp ? 'Duy trì phiên (App PC)' : 'Duy trì phiên (PC)');
+                    recordAccountLoginLog(verified, sessionStatus);
                   } catch (e) {
                     console.warn("Lỗi ghi nhật ký duy trì phiên:", e);
                   }
@@ -18678,12 +18691,27 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const KEY = 'ops_device_machine_id_v1';
       try {
         let devId = localStorage.getItem(KEY);
+        const isMobile = isMobileOrTabletClient();
+        const expectedPrefix = isIOSDevice() ? 'IOS' : (isAndroidDevice() ? 'AND' : (isMobile ? 'MB' : 'PC'));
+
         if (devId && devId.trim()) {
-          return devId.trim();
+          devId = devId.trim();
+          // Tự động chữa lành (auto-heal) tiền tố nếu trước đó bị nhận diện nhầm
+          // Ví dụ: PC cài App bị gán nhầm MB- -> tự động chuyển thành PC-
+          if (!isMobile && devId.startsWith('MB-')) {
+            devId = 'PC-' + devId.slice(3);
+            localStorage.setItem(KEY, devId);
+          } else if (isIOSDevice() && !devId.startsWith('IOS-')) {
+            devId = 'IOS-' + devId.replace(/^[A-Z]+-/, '');
+            localStorage.setItem(KEY, devId);
+          } else if (isAndroidDevice() && !devId.startsWith('AND-')) {
+            devId = 'AND-' + devId.replace(/^[A-Z]+-/, '');
+            localStorage.setItem(KEY, devId);
+          }
+          return devId;
         }
 
-        const isMobile = isMobileOrTabletClient();
-        const prefix = isIOSDevice() ? 'IOS' : (isAndroidDevice() ? 'AND' : (isMobile ? 'MB' : 'PC'));
+        const prefix = expectedPrefix;
         
         // Tạo dấu vân tay phần cứng kết hợp màn hình, múi giờ, số lõi CPU và số ngẫu nhiên
         const screenInfo = `${window.screen ? window.screen.width : 0}x${window.screen ? window.screen.height : 0}`;
@@ -18703,64 +18731,74 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         localStorage.setItem(KEY, devId);
         return devId;
       } catch (e) {
-        return 'PC-' + Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase();
+        return (isMobileOrTabletClient() ? 'MB-' : 'PC-') + Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase();
       }
     }
 
     /**
      * NHẬN DIỆN THIẾT BỊ, HỆ ĐIỀU HÀNH & TRÌNH DUYỆT (USER AGENT PARSER CHUẨN XÁC)
-     * Nhận diện chuẩn xác 100% thiết bị PC, điện thoại iPhone, máy tính bảng iPad, điện thoại Android, tablet
+     * Nhận diện chuẩn xác 100% thiết bị PC (kể cả Desktop PWA App) và thiết bị Apple iOS, Android
      */
     function detectClientDeviceInfo() {
       const ua = navigator.userAgent || '';
+      const isAppMode = isAppInstalledOrStandalone();
       let os = 'Khác';
       let osIcon = 'fa-solid fa-desktop text-slate-500';
       let deviceType = 'Máy tính PC';
       let deviceIcon = 'fa-solid fa-laptop text-slate-700';
 
-      // 1. Nhận diện Hệ điều hành
+      // 1. Nhận diện Hệ điều hành & Thiết bị
       if (/Windows NT 10.0/i.test(ua)) {
         os = 'Windows 10/11';
         osIcon = 'fa-brands fa-windows text-sky-500';
+        deviceType = isAppMode ? 'Máy tính PC (Ứng dụng App)' : 'Máy tính PC';
+        deviceIcon = isAppMode ? 'fa-solid fa-window-maximize text-sky-600' : 'fa-solid fa-laptop text-slate-700';
       } else if (/Windows NT 6.3/i.test(ua)) {
         os = 'Windows 8.1';
         osIcon = 'fa-brands fa-windows text-sky-500';
+        deviceType = isAppMode ? 'Máy tính PC (Ứng dụng App)' : 'Máy tính PC';
       } else if (/Windows NT 6.1/i.test(ua)) {
         os = 'Windows 7';
         osIcon = 'fa-brands fa-windows text-sky-500';
+        deviceType = isAppMode ? 'Máy tính PC (Ứng dụng App)' : 'Máy tính PC';
       } else if (/Windows/i.test(ua)) {
         os = 'Windows';
         osIcon = 'fa-brands fa-windows text-sky-500';
+        deviceType = isAppMode ? 'Máy tính PC (Ứng dụng App)' : 'Máy tính PC';
       } else if (/iPhone/i.test(ua)) {
-        const v = ua.match(/OS (\d+[\._\d]*)/i);
-        os = `iOS ${v ? v[1].replace(/_/g, '.') : ''}`.trim();
+        // Nhận diện chuẩn iOS (tránh hiển thị con số bị đóng băng User Agent Reduction như 18.7 do Apple bảo mật)
+        os = 'Apple iOS';
         osIcon = 'fa-brands fa-apple text-slate-800';
-        deviceType = 'Điện thoại iPhone';
+        deviceType = isAppMode ? 'Điện thoại iPhone (Ứng dụng App)' : 'Điện thoại iPhone';
         deviceIcon = 'fa-solid fa-mobile-screen-button text-slate-700';
       } else if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-        os = 'iPadOS';
+        os = 'Apple iPadOS';
         osIcon = 'fa-brands fa-apple text-slate-800';
-        deviceType = 'Máy tính bảng iPad';
+        deviceType = isAppMode ? 'Máy tính bảng iPad (Ứng dụng App)' : 'Máy tính bảng iPad';
         deviceIcon = 'fa-solid fa-tablet-screen-button text-slate-700';
       } else if (/Android/i.test(ua)) {
         const v = ua.match(/Android\s+([\d\.]+)/i);
-        os = `Android ${v ? v[1] : ''}`.trim();
+        os = `Android ${v ? v[1].split('.')[0] : ''}`.trim();
         osIcon = 'fa-brands fa-android text-emerald-500';
-        deviceType = /Mobile/i.test(ua) ? 'Điện thoại Android' : 'Máy tính bảng Android';
-        deviceIcon = /Mobile/i.test(ua) ? 'fa-solid fa-mobile-screen-button text-emerald-600' : 'fa-solid fa-tablet-screen-button text-emerald-600';
+        const isMob = /Mobile/i.test(ua);
+        deviceType = isMob 
+          ? (isAppMode ? 'Điện thoại Android (Ứng dụng App)' : 'Điện thoại Android') 
+          : (isAppMode ? 'Máy tính bảng Android (Ứng dụng App)' : 'Máy tính bảng Android');
+        deviceIcon = isMob ? 'fa-solid fa-mobile-screen-button text-emerald-600' : 'fa-solid fa-tablet-screen-button text-emerald-600';
       } else if (/Macintosh|Mac OS X/i.test(ua)) {
         os = 'macOS';
         osIcon = 'fa-brands fa-apple text-slate-800';
-        deviceType = 'Mac / MacBook';
+        deviceType = isAppMode ? 'Mac (Ứng dụng App)' : 'Mac / MacBook';
         deviceIcon = 'fa-solid fa-laptop text-slate-700';
       } else if (/Linux/i.test(ua)) {
         os = 'Linux';
         osIcon = 'fa-brands fa-linux text-amber-600';
       }
 
-      // 2. Nhận diện Trình duyệt (bao gồm cả trình duyệt ứng dụng di động)
-      let browser = 'Trình duyệt Web';
-      let browserIcon = 'fa-solid fa-globe text-slate-500';
+      // 2. Nhận diện Trình duyệt
+      let browser = isAppMode ? 'Ứng dụng Standalone (PWA)' : 'Trình duyệt Web';
+      let browserIcon = isAppMode ? 'fa-solid fa-window-maximize text-sky-600' : 'fa-solid fa-globe text-slate-500';
+
       if (/SamsungBrowser\/([\d\.]+)/i.test(ua)) {
         const v = ua.match(/SamsungBrowser\/([\d\.]+)/i);
         browser = `Samsung Internet ${v ? v[1].split('.')[0] : ''}`.trim();
@@ -18777,21 +18815,31 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         browserIcon = 'fa-solid fa-globe text-emerald-600';
       } else if (/Edg\/|Edge\/|EdgiOS\//i.test(ua)) {
         const v = ua.match(/(?:Edg|Edge|EdgiOS)\/([\d\.]+)/i);
-        browser = `Microsoft Edge ${v ? v[1].split('.')[0] : ''}`.trim();
+        const name = isAppMode ? 'Microsoft Edge (App PWA)' : 'Microsoft Edge';
+        browser = `${name} ${v ? v[1].split('.')[0] : ''}`.trim();
         browserIcon = 'fa-brands fa-edge text-sky-600';
       } else if (/CriOS\/([\d\.]+)/i.test(ua)) {
-        const v = ua.match(/CriOS\/([\d\.]+)/i);
-        browser = `Chrome Mobile ${v ? v[1].split('.')[0] : ''}`.trim();
+        browser = 'Chrome Mobile';
         browserIcon = 'fa-brands fa-chrome text-amber-500';
       } else if (/Chrome\/([\d\.]+)/i.test(ua)) {
         const v = ua.match(/Chrome\/([\d\.]+)/i);
         const isMob = /Mobile|Android/i.test(ua);
-        browser = `${isMob ? 'Chrome Mobile' : 'Google Chrome'} ${v ? v[1].split('.')[0] : ''}`.trim();
+        if (isMob) {
+          browser = `Chrome Mobile ${v ? v[1].split('.')[0] : ''}`.trim();
+        } else {
+          browser = isAppMode 
+            ? `Google Chrome (App PWA) ${v ? v[1].split('.')[0] : ''}`.trim() 
+            : `Google Chrome ${v ? v[1].split('.')[0] : ''}`.trim();
+        }
         browserIcon = 'fa-brands fa-chrome text-amber-500';
       } else if (/Safari/i.test(ua) && !/Chrome|CriOS|Android/i.test(ua)) {
-        const v = ua.match(/Version\/([\d\.]+)/i);
-        const isMob = /iPhone|iPad|iPod/i.test(ua);
-        browser = `${isMob ? 'Safari Mobile' : 'Safari'} ${v ? v[1].split('.')[0] : ''}`.trim();
+        const isMob = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isMob) {
+          browser = 'Safari Mobile';
+        } else {
+          const v = ua.match(/Version\/([\d\.]+)/i);
+          browser = `Safari ${v ? v[1].split('.')[0] : ''}`.trim();
+        }
         browserIcon = 'fa-brands fa-safari text-sky-500';
       } else if (/Firefox|FxiOS/i.test(ua)) {
         const v = ua.match(/(?:Firefox|FxiOS)\/([\d\.]+)/i);
@@ -18799,12 +18847,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         browserIcon = 'fa-brands fa-firefox text-orange-500';
       }
 
-      // Safeguard dự phòng: Nếu là thiết bị di động/tablet mà chưa gán đúng loại máy
+      // Safeguard: Chỉ gán thiết bị di động nếu THẬT SỰ là thiết bị di động (không áp dụng cho Windows/Mac/Linux)
       if (deviceType === 'Máy tính PC' && isMobileOrTabletClient()) {
         if (isIOSDevice()) {
           deviceType = 'Điện thoại iPhone';
           deviceIcon = 'fa-solid fa-mobile-screen-button text-slate-700';
-          if (os === 'Khác') os = 'iOS';
+          if (os === 'Khác') os = 'Apple iOS';
         } else if (isAndroidDevice()) {
           deviceType = 'Điện thoại Android';
           deviceIcon = 'fa-solid fa-mobile-screen-button text-emerald-600';
@@ -18906,6 +18954,33 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(list));
         }
       } catch(e) {}
+    }
+
+    /**
+     * CHUẨN HÓA DỮ LIỆU BẢN GHI LỊCH SỬ ĐĂNG NHẬP (TRÁNH LỖI HIỂN THỊ SAI)
+     */
+    function normalizeLoginHistoryRecord(item) {
+      if (!item) return item;
+      // 1. Chuẩn hóa bản ghi máy tính PC (tránh bị hiển thị nhầm là thiết bị di động do PWA App)
+      if (item.os && /Windows|macOS|Linux/i.test(item.os) && !item.os.includes('iOS') && !item.os.includes('Android')) {
+        if (item.device_type === 'Thiết bị di động' || !item.device_type) {
+          item.device_type = (item.status && item.status.includes('App')) ? 'Máy tính PC (Ứng dụng App)' : 'Máy tính PC';
+        }
+        if (item.device_id && item.device_id.startsWith('MB-')) {
+          item.device_id = 'PC-' + item.device_id.slice(3);
+        }
+        if (item.status === 'Duy trì phiên (Di động)') {
+          item.status = 'Duy trì phiên (App PC)';
+        }
+      }
+      // 2. Chuẩn hóa iOS (tránh hiển thị số phiên bản đóng băng 18.7 do chính sách riêng tư của Apple)
+      if (item.os && (item.os.includes('18.7') || item.os.includes('18_7') || item.os.includes('18.6') || item.os === 'iOS')) {
+        item.os = 'Apple iOS';
+      }
+      if (item.browser && (item.browser.includes('Safari Mobile 26') || item.browser.includes('Version/26'))) {
+        item.browser = 'Safari Mobile';
+      }
+      return item;
     }
 
     /**
@@ -19024,7 +19099,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     function handleRealtimeLoginHistoryInsert(payload) {
       if (!payload || !payload.new) return;
-      const newLog = payload.new;
+      const newLog = normalizeLoginHistoryRecord(payload.new);
 
       // Kiểm tra trùng lặp trong cache
       const exists = allLoginHistoryCache.some(x => (x.id && x.id === newLog.id) || (x.logged_at === newLog.logged_at && x.username === newLog.username));
@@ -19051,12 +19126,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     function handleRealtimeLoginHistoryUpdate(payload) {
       if (!payload || !payload.new) return;
-      const updated = payload.new;
+      const updated = normalizeLoginHistoryRecord(payload.new);
       const item = allLoginHistoryCache.find(x => x.id === updated.id || (x.logged_at === updated.logged_at && x.username === updated.username));
       if (item) {
         item.ip_address = updated.ip_address;
         item.ip_location = updated.ip_location;
         item.status = updated.status;
+        item.device_type = updated.device_type;
+        item.device_id = updated.device_id;
+        item.browser = updated.browser;
+        item.os = updated.os;
         const modal = document.getElementById('loginHistoryModal');
         if (modal && !modal.classList.contains('hidden')) {
           filterLoginHistoryTable();
@@ -19105,7 +19184,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
           let hasNew = false;
-          data.forEach(row => {
+          data.forEach(rawRow => {
+            const row = normalizeLoginHistoryRecord(rawRow);
             const exists = allLoginHistoryCache.some(x => (x.id && x.id === row.id) || (x.logged_at === row.logged_at && x.username === row.username));
             if (!exists) {
               row._isLiveNew = true;
@@ -19273,7 +19353,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         combined = [curEntry];
       }
 
-      allLoginHistoryCache = combined;
+      // Chuẩn hóa toàn bộ dữ liệu trước khi lưu vào cache hiển thị
+      allLoginHistoryCache = combined.map(normalizeLoginHistoryRecord);
       if (loadingEl) loadingEl.classList.add('hidden');
 
       // Điền danh sách bộ phận vào bộ lọc
