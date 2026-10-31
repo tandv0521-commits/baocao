@@ -1231,6 +1231,19 @@
                 </div>
                 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-emerald-600 transition"></i>
               </button>
+
+              <button type="button" id="btnAdminLoginHistory" onclick="closeHeaderActionsMenu(); openLoginHistoryModal();" class="hidden w-full flex items-center justify-between p-2 rounded-xl hover:bg-sky-50/70 transition text-left cursor-pointer group border border-transparent hover:border-sky-200">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-sky-800">Lịch sử đăng nhập</span>
+                    <span class="text-[10px] text-slate-400 block truncate">Mã máy, IP, thiết bị & thời gian truy cập</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-sky-600 transition"></i>
+              </button>
             </div>
 
             <!-- Nhóm 3: Tài khoản & Hệ thống -->
@@ -2605,10 +2618,16 @@
           </div>
         </div>
 
-        <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
-          <i class="fa-solid fa-user-plus text-xs"></i>
-          <span>Thêm nhân sự</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="openLoginHistoryModal()" class="px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95">
+            <i class="fa-solid fa-clock-rotate-left text-sky-600 text-xs"></i>
+            <span>Lịch sử đăng nhập</span>
+          </button>
+          <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span>Thêm nhân sự</span>
+          </button>
+        </div>
       </div>
 
       <div class="flex-1 overflow-x-auto overflow-y-auto custom-scroll px-4 pb-4 pt-0">
@@ -3358,6 +3377,189 @@
     </div>
   </div>
 
+  <!-- ================= MODAL KIỂM TRA LỊCH SỬ ĐĂNG NHẬP & MÃ MÁY / THIẾT BỊ ================= -->
+  <div id="loginHistoryModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-6xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+      
+      <!-- 1. Header Modal -->
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center font-bold text-base shadow-2xs shrink-0">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-slate-800 font-black text-base sm:text-lg leading-tight truncate">Nhật Ký & Lịch Sử Đăng Nhập Các Tài Khoản</h3>
+            <p class="text-xs text-slate-500 font-medium truncate">Theo dõi ngày giờ, mã máy, thiết bị (hệ điều hành, trình duyệt) và địa chỉ IP truy cập</p>
+          </div>
+        </div>
+        <button onclick="closeLoginHistoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer shrink-0">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 2. Thẻ chỉ số tổng quan (Quick Metrics) -->
+      <div class="px-5 py-3 border-b border-slate-100 bg-gradient-to-r from-sky-50/50 via-slate-50/50 to-emerald-50/40 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 shrink-0">
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xs shrink-0">
+            <i class="fa-solid fa-list-ol"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lượt đăng nhập</p>
+            <p id="statTotalLogins" class="text-sm sm:text-base font-black text-slate-800 font-num">0</p>
+          </div>
+        </div>
+
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+            <i class="fa-solid fa-users"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tài khoản</p>
+            <p id="statUniqueUsers" class="text-sm sm:text-base font-black text-emerald-700 font-num">0</p>
+          </div>
+        </div>
+
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs shrink-0">
+            <i class="fa-solid fa-laptop"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mã máy ghi nhận</p>
+            <p id="statUniqueDevices" class="text-sm sm:text-base font-black text-indigo-700 font-num">0</p>
+          </div>
+        </div>
+
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xs shrink-0">
+            <i class="fa-solid fa-network-wired"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Địa chỉ IP</p>
+            <p id="statUniqueIps" class="text-sm sm:text-base font-black text-teal-700 font-num">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Hộp hướng dẫn cấu hình Supabase Cloud (chỉ hiện khi chưa có bảng login_history trên Supabase) -->
+      <div id="loginHistorySupabaseNotice" class="hidden px-5 py-3 bg-amber-50/90 border-b border-amber-200 text-amber-950 text-xs shrink-0 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm shrink-0"></i>
+          <span class="leading-snug">
+            <b>Đồng bộ đám mây Supabase:</b> Hiện tại nhật ký đang được lưu tạm trên bộ nhớ máy tính này. Để lưu vĩnh viễn và xem được lịch sử của <b>tất cả thiết bị toàn công ty</b>, vui lòng tạo bảng <code class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold">login_history</code> trên Supabase SQL Editor.
+          </span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="copySupabaseLoginHistorySql()" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 text-xs">
+            <i class="fa-regular fa-copy"></i>
+            <span>Sao chép mã SQL (1-click)</span>
+          </button>
+          <button type="button" onclick="toggleSupabaseSqlPreview()" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold transition text-xs cursor-pointer">
+            Xem SQL
+          </button>
+        </div>
+        <!-- Khung xem trước mã SQL (mặc định ẩn) -->
+        <div id="supabaseSqlPreviewBox" class="hidden w-full mt-2 p-3 bg-slate-900 text-emerald-400 font-mono text-[11px] rounded-xl overflow-x-auto select-all leading-relaxed custom-scroll border border-slate-700">
+CREATE TABLE IF NOT EXISTS public.login_history (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    logged_at TIMESTAMPTZ DEFAULT NOW(),
+    username TEXT NOT NULL,
+    full_name TEXT,
+    department TEXT,
+    role TEXT,
+    device_id TEXT,
+    device_type TEXT,
+    browser TEXT,
+    os TEXT,
+    user_agent TEXT,
+    ip_address TEXT,
+    ip_location TEXT,
+    status TEXT DEFAULT 'Thành công'
+);
+ALTER TABLE public.login_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (true) WITH CHECK (true);</div>
+      </div>
+
+      <!-- 4. Thanh tìm kiếm, Bộ lọc & Tác vụ -->
+      <div class="p-3 sm:p-4 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[260px]">
+          <!-- Ô tìm kiếm thông minh -->
+          <div class="relative w-full max-w-xs">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="loginHistorySearchInput" oninput="filterLoginHistoryTable()" placeholder="Tìm tài khoản, họ tên, mã máy, IP..." autocomplete="off" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+          </div>
+
+          <!-- Lọc theo Bộ phận -->
+          <select id="loginHistoryDeptFilter" onchange="filterLoginHistoryTable()" class="bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-sky-400/30 focus:border-sky-500 focus:outline-none transition shadow-2xs cursor-pointer">
+            <option value="">🏢 Tất cả bộ phận</option>
+          </select>
+
+          <!-- Lọc theo Loại thiết bị -->
+          <select id="loginHistoryDeviceFilter" onchange="filterLoginHistoryTable()" class="bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-sky-400/30 focus:border-sky-500 focus:outline-none transition shadow-2xs cursor-pointer">
+            <option value="">📱 Tất cả thiết bị</option>
+            <option value="PC">🖥️ Máy tính PC / Laptop</option>
+            <option value="Mobile">📱 Điện thoại di động</option>
+            <option value="Tablet">📟 Máy tính bảng</option>
+          </select>
+
+          <!-- Lọc theo Thời gian -->
+          <select id="loginHistoryDateFilter" onchange="filterLoginHistoryTable()" class="bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-sky-400/30 focus:border-sky-500 focus:outline-none transition shadow-2xs cursor-pointer">
+            <option value="all">🕒 Toàn bộ thời gian</option>
+            <option value="today">Hôm nay</option>
+            <option value="7days">7 ngày qua</option>
+            <option value="30days">30 ngày qua</option>
+          </select>
+        </div>
+
+        <!-- Nhóm nút tác vụ -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="loadLoginHistoryData(true)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95" title="Tải lại dữ liệu mới nhất">
+            <i class="fa-solid fa-arrows-rotate text-slate-500 text-xs"></i>
+            <span class="hidden sm:inline">Làm mới</span>
+          </button>
+
+          <button type="button" onclick="exportLoginHistoryToExcel()" class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Xuất toàn bộ danh sách đăng nhập sang file Excel">
+            <i class="fa-solid fa-file-excel text-xs"></i>
+            <span>Xuất Excel</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Bảng hiển thị danh sách nhật ký đăng nhập -->
+      <div class="flex-1 overflow-x-auto overflow-y-auto custom-scroll px-4 pb-4 pt-1">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+          <thead class="sticky top-0 z-20 bg-slate-50 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 shadow-xs">
+            <tr>
+              <th class="py-2.5 px-3 text-center bg-slate-50 w-12">STT</th>
+              <th class="py-2.5 px-3 bg-slate-50">Ngày & Giờ</th>
+              <th class="py-2.5 px-3 bg-slate-50">Tài khoản đăng nhập</th>
+              <th class="py-2.5 px-3 bg-slate-50">Mã máy (Device ID)</th>
+              <th class="py-2.5 px-3 bg-slate-50">Thiết bị & Trình duyệt</th>
+              <th class="py-2.5 px-3 bg-slate-50">Địa chỉ IP</th>
+              <th class="py-2.5 px-3 text-center bg-slate-50">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="loginHistoryTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+        </table>
+
+        <!-- Loading spinner -->
+        <div id="loadingLoginHistoryBox" class="py-16 text-center">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-sky-600 mb-2"></i>
+          <p class="text-xs text-slate-400">Đang đồng bộ nhật ký đăng nhập...</p>
+        </div>
+
+        <!-- Trạng thái trống -->
+        <div id="emptyLoginHistoryBox" class="hidden py-16 text-center">
+          <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2 text-lg">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-600">Không tìm thấy bản ghi đăng nhập nào</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc khác</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed top-4 right-4 z-[70] transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
     <div id="toastBox" class="bg-white border border-slate-200 text-slate-800 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm backdrop-blur-md">
@@ -3868,6 +4070,9 @@
           });
 
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+          try {
+            recordAccountLoginLog(uFound, 'Tự động (Lưu MK)');
+          } catch(e) {}
           initMainDashboard();
         }
       } catch (err) {
@@ -7239,6 +7444,13 @@
           localStorage.removeItem('ops_portal_remembered_auth_v49');
         }
 
+        // Ghi lại nhật ký đăng nhập chi tiết (mã máy, IP, trình duyệt, HĐH)
+        try {
+          recordAccountLoginLog(user, 'Thành công');
+        } catch(e) {
+          console.warn('Lỗi ghi nhật ký đăng nhập:', e);
+        }
+
         // Hoàn tất tiến trình 75% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
         autoSimulateLoginButton(75, 100, "Xác thực thành công", 3, () => {
           const todayKey = getSystemDateKey(new Date());
@@ -7396,6 +7608,7 @@
       const btnAssign = document.getElementById('btnAdminAssign');
       const btnUserManager = document.getElementById('btnAdminUserManager');
       const btnDeptManager = document.getElementById('btnAdminDeptManager');
+      const btnLoginHistory = document.getElementById('btnAdminLoginHistory');
       const adminSection = document.getElementById('adminMenuSection');
 
       if (isAdminOrManager(currentUser.role, currentUser.username)) {
@@ -7403,6 +7616,7 @@
         btnAssign.classList.remove('hidden');
         if (btnUserManager) btnUserManager.classList.remove('hidden');
         if (btnDeptManager) btnDeptManager.classList.remove('hidden');
+        if (btnLoginHistory) btnLoginHistory.classList.remove('hidden');
         if (adminSection) adminSection.classList.remove('hidden');
 
         deptSelect.innerHTML = '';
@@ -7450,6 +7664,7 @@
         btnAssign.classList.add('hidden');
         if (btnUserManager) btnUserManager.classList.add('hidden');
         if (btnDeptManager) btnDeptManager.classList.add('hidden');
+        if (btnLoginHistory) btnLoginHistory.classList.add('hidden');
         if (adminSection) adminSection.classList.add('hidden');
       }
 
@@ -18054,6 +18269,15 @@
             },
             {
               type: 'action',
+              title: 'Lịch sử đăng nhập & Kiểm tra thiết bị truy cập',
+              subtitle: 'Theo dõi mã máy, IP, trình duyệt & ngày giờ đăng nhập',
+              icon: 'fa-solid fa-clock-rotate-left text-sky-700 bg-sky-50',
+              badge: 'Bảo mật',
+              handler: () => { closeCommandPalette(); openLoginHistoryModal(); },
+              tags: 'lich su dang nhap nhat ky login history ip ma may thiet bi security audit'
+            },
+            {
+              type: 'action',
               title: 'Phân công & Giao việc (Đầu việc)',
               subtitle: 'Thêm mới hoặc phân công danh mục công việc',
               icon: 'fa-solid fa-list-check text-teal-700 bg-teal-50',
@@ -18411,6 +18635,903 @@
     function closeIOSInstallPrompt() {
       const el = document.getElementById('iosInstallPrompt');
       if (el) el.classList.add('hidden');
+    }
+
+    // ================= HỆ THỐNG THEO DÕI & KIỂM TRA LỊCH SỬ ĐĂNG NHẬP (MÃ MÁY, IP, THIẾT BỊ) =================
+    const LOGIN_HISTORY_CACHE_KEY = 'ops_login_history_cache_v1';
+    let allLoginHistoryCache = [];
+    let isSupabaseLoginHistoryAvailable = true;
+    let cachedClientIpData = null;
+
+    /**
+     * TẠO HOẶC LẤY MÃ MÁY DUY NHẤT (MACHINE ID / DEVICE FINGERPRINT):
+     * Lưu trữ vĩnh viễn trên máy tính/thiết bị này để nhận diện thiết bị duy nhất trong toàn hệ thống.
+     */
+    function getOrCreateDeviceMachineId() {
+      const KEY = 'ops_device_machine_id_v1';
+      try {
+        let devId = localStorage.getItem(KEY);
+        if (devId && devId.trim()) {
+          return devId.trim();
+        }
+
+        const isMobile = isMobileOrTabletClient();
+        const prefix = isIOSDevice() ? 'IOS' : (isAndroidDevice() ? 'AND' : (isMobile ? 'MB' : 'PC'));
+        
+        // Tạo dấu vân tay phần cứng kết hợp màn hình, múi giờ, số lõi CPU và số ngẫu nhiên
+        const screenInfo = `${window.screen ? window.screen.width : 0}x${window.screen ? window.screen.height : 0}`;
+        const cores = navigator.hardwareConcurrency || 4;
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Bangkok';
+        const seed = `${screenInfo}-${cores}-${tz}-${Date.now()}-${Math.random()}`;
+        
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+          hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+          hash |= 0;
+        }
+        const hex1 = Math.abs(hash).toString(16).toUpperCase().padStart(4, '0').slice(-4);
+        const hex2 = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        
+        devId = `${prefix}-${hex1}-${hex2}`;
+        localStorage.setItem(KEY, devId);
+        return devId;
+      } catch (e) {
+        return 'PC-' + Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase();
+      }
+    }
+
+    /**
+     * NHẬN DIỆN THIẾT BỊ, HỆ ĐIỀU HÀNH & TRÌNH DUYỆT (USER AGENT PARSER CHUẨN XÁC)
+     */
+    function detectClientDeviceInfo() {
+      const ua = navigator.userAgent || '';
+      let os = 'Khác';
+      let osIcon = 'fa-solid fa-desktop text-slate-500';
+      let deviceType = 'Máy tính PC';
+      let deviceIcon = 'fa-solid fa-laptop text-slate-700';
+
+      // 1. Nhận diện Hệ điều hành
+      if (/Windows NT 10.0/i.test(ua)) {
+        os = 'Windows 10/11';
+        osIcon = 'fa-brands fa-windows text-sky-500';
+      } else if (/Windows NT 6.3/i.test(ua)) {
+        os = 'Windows 8.1';
+        osIcon = 'fa-brands fa-windows text-sky-500';
+      } else if (/Windows NT 6.1/i.test(ua)) {
+        os = 'Windows 7';
+        osIcon = 'fa-brands fa-windows text-sky-500';
+      } else if (/Windows/i.test(ua)) {
+        os = 'Windows';
+        osIcon = 'fa-brands fa-windows text-sky-500';
+      } else if (/iPhone/i.test(ua)) {
+        const v = ua.match(/OS (\d+[\._\d]*)/i);
+        os = `iOS ${v ? v[1].replace(/_/g, '.') : ''}`.trim();
+        osIcon = 'fa-brands fa-apple text-slate-800';
+        deviceType = 'Điện thoại iPhone';
+        deviceIcon = 'fa-solid fa-mobile-screen-button text-slate-700';
+      } else if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        os = 'iPadOS';
+        osIcon = 'fa-brands fa-apple text-slate-800';
+        deviceType = 'Máy tính bảng iPad';
+        deviceIcon = 'fa-solid fa-tablet-screen-button text-slate-700';
+      } else if (/Android/i.test(ua)) {
+        const v = ua.match(/Android\s+([\d\.]+)/i);
+        os = `Android ${v ? v[1] : ''}`.trim();
+        osIcon = 'fa-brands fa-android text-emerald-500';
+        deviceType = /Mobile/i.test(ua) ? 'Điện thoại Android' : 'Máy tính bảng Android';
+        deviceIcon = /Mobile/i.test(ua) ? 'fa-solid fa-mobile-screen-button text-emerald-600' : 'fa-solid fa-tablet-screen-button text-emerald-600';
+      } else if (/Macintosh|Mac OS X/i.test(ua)) {
+        os = 'macOS';
+        osIcon = 'fa-brands fa-apple text-slate-800';
+        deviceType = 'Mac / MacBook';
+        deviceIcon = 'fa-solid fa-laptop text-slate-700';
+      } else if (/Linux/i.test(ua)) {
+        os = 'Linux';
+        osIcon = 'fa-brands fa-linux text-amber-600';
+      }
+
+      // 2. Nhận diện Trình duyệt
+      let browser = 'Trình duyệt Web';
+      let browserIcon = 'fa-solid fa-globe text-slate-500';
+      if (/CocCoc/i.test(ua)) {
+        const v = ua.match(/CocCoc\/([\d\.]+)/i);
+        browser = `Cốc Cốc ${v ? v[1].split('.')[0] : ''}`.trim();
+        browserIcon = 'fa-solid fa-globe text-emerald-600';
+      } else if (/Edg\/|Edge\//i.test(ua)) {
+        const v = ua.match(/Edg\/([\d\.]+)/i);
+        browser = `Microsoft Edge ${v ? v[1].split('.')[0] : ''}`.trim();
+        browserIcon = 'fa-brands fa-edge text-sky-600';
+      } else if (/Chrome\/|CriOS\//i.test(ua)) {
+        const v = ua.match(/(?:Chrome|CriOS)\/([\d\.]+)/i);
+        browser = `Google Chrome ${v ? v[1].split('.')[0] : ''}`.trim();
+        browserIcon = 'fa-brands fa-chrome text-amber-500';
+      } else if (/Safari/i.test(ua) && !/Chrome|CriOS|Android/i.test(ua)) {
+        const v = ua.match(/Version\/([\d\.]+)/i);
+        browser = `Safari ${v ? v[1].split('.')[0] : ''}`.trim();
+        browserIcon = 'fa-brands fa-safari text-sky-500';
+      } else if (/Firefox|FxiOS/i.test(ua)) {
+        const v = ua.match(/(?:Firefox|FxiOS)\/([\d\.]+)/i);
+        browser = `Mozilla Firefox ${v ? v[1].split('.')[0] : ''}`.trim();
+        browserIcon = 'fa-brands fa-firefox text-orange-500';
+      }
+
+      return { os, osIcon, browser, browserIcon, deviceType, deviceIcon, userAgent: ua };
+    }
+
+    /**
+     * TRUY VẤN ĐỊA CHỈ IP CÔNG CỘNG (CÓ TIMEOUT & DỰ PHÒNG ĐA KÊNH KHÔNG NGHẼN MẠNG)
+     */
+    async function fetchClientPublicIp(timeoutMs = 2500) {
+      if (cachedClientIpData && cachedClientIpData.ip) {
+        return cachedClientIpData;
+      }
+      
+      // Kênh 1: ipify.org (siêu tốc, độ tin cậy 99.9%)
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const resp = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+        clearTimeout(timer);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.ip) {
+            cachedClientIpData = { ip: data.ip, location: 'Việt Nam' };
+            return cachedClientIpData;
+          }
+        }
+      } catch (e) {}
+
+      // Kênh 2: ipapi.co (bổ sung vị trí địa lý Tỉnh/Thành phố)
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const resp = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        clearTimeout(timer);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.ip) {
+            const loc = [data.city, data.country_name || 'VN'].filter(Boolean).join(', ');
+            cachedClientIpData = { ip: data.ip, location: loc || 'Việt Nam' };
+            return cachedClientIpData;
+          }
+        }
+      } catch (e) {}
+
+      // Kênh 3: api64.ipify.org
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const resp = await fetch('https://api64.ipify.org?format=json', { signal: controller.signal });
+        clearTimeout(timer);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.ip) {
+            cachedClientIpData = { ip: data.ip, location: 'Việt Nam' };
+            return cachedClientIpData;
+          }
+        }
+      } catch (e) {}
+
+      return { ip: 'Mạng nội bộ / Đang cập nhật', location: 'Cục bộ' };
+    }
+
+    /**
+     * QUẢN LÝ BỘ NHỚ ĐỆM LOCALSTORAGE CHO NHẬT KÝ ĐĂNG NHẬP
+     */
+    function getLoginLogsFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(LOGIN_HISTORY_CACHE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function saveLoginLogToLocalStorage(entry) {
+      try {
+        const list = getLoginLogsFromLocalStorage();
+        list.unshift(entry);
+        if (list.length > 500) list.length = 500;
+        localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(list));
+      } catch(e) {}
+    }
+
+    function updateLoginLogIpInLocalStorage(entry) {
+      try {
+        const list = getLoginLogsFromLocalStorage();
+        const item = list.find(x => x.logged_at === entry.logged_at && x.username === entry.username);
+        if (item) {
+          item.ip_address = entry.ip_address;
+          item.ip_location = entry.ip_location;
+          localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(list));
+        }
+      } catch(e) {}
+    }
+
+    /**
+     * GHI NHẬN LỊCH SỬ ĐĂNG NHẬP CHI TIẾT (ĐỒNG BỘ 2 LỚP: LOCAL STORAGE & MÁY CHỦ SUPABASE)
+     */
+    async function recordAccountLoginLog(user, loginType = 'Thành công') {
+      if (!user || !user.username) return;
+      const devId = getOrCreateDeviceMachineId();
+      const devInfo = detectClientDeviceInfo();
+      const loggedAt = new Date().toISOString();
+
+      let deptName = user.department || (user.departments ? user.departments.name : "Ban DVKH");
+      if ((!deptName || deptName === 'Chưa phân bổ') && globalInitData && globalInitData.departments && user.department_id) {
+        const dObj = globalInitData.departments.find(d => d.id === user.department_id);
+        if (dObj) deptName = dObj.name;
+      }
+
+      const logEntry = {
+        logged_at: loggedAt,
+        username: user.username,
+        full_name: user.full_name || user.fullName || user.username,
+        department: deptName || "Ban DVKH",
+        role: user.role || "Nhân viên",
+        device_id: devId,
+        device_type: devInfo.deviceType,
+        browser: devInfo.browser,
+        os: devInfo.os,
+        user_agent: devInfo.userAgent,
+        ip_address: cachedClientIpData ? cachedClientIpData.ip : 'Đang lấy IP...',
+        ip_location: cachedClientIpData ? cachedClientIpData.location : 'Việt Nam',
+        status: loginType
+      };
+
+      // 1. Lưu ngay vào bộ nhớ cục bộ (Zero-latency)
+      saveLoginLogToLocalStorage(logEntry);
+
+      // 2. Lấy IP công cộng bất đồng bộ (không chặn tiến trình chuyển trang)
+      fetchClientPublicIp(3000).then(ipData => {
+        logEntry.ip_address = ipData.ip || 'Mạng nội bộ';
+        logEntry.ip_location = ipData.location || 'Việt Nam';
+        updateLoginLogIpInLocalStorage(logEntry);
+
+        // 3. Đẩy lên Supabase bảng login_history nếu có kết nối
+        if (supabase) {
+          supabase.from('login_history').insert([{
+            logged_at: logEntry.logged_at,
+            username: logEntry.username,
+            full_name: logEntry.full_name,
+            department: logEntry.department,
+            role: logEntry.role,
+            device_id: logEntry.device_id,
+            device_type: logEntry.device_type,
+            browser: logEntry.browser,
+            os: logEntry.os,
+            user_agent: logEntry.user_agent,
+            ip_address: logEntry.ip_address,
+            ip_location: logEntry.ip_location,
+            status: logEntry.status
+          }]).then(({ error }) => {
+            if (error) {
+              if (error.code === 'PGRST205' || (error.message && error.message.includes('login_history'))) {
+                isSupabaseLoginHistoryAvailable = false;
+              }
+            } else {
+              isSupabaseLoginHistoryAvailable = true;
+            }
+          }).catch(() => {});
+        }
+      });
+    }
+
+    // ================= MODAL & GIAO DIỆN KIỂM TRA LỊCH SỬ ĐĂNG NHẬP =================
+
+    function openLoginHistoryModal() {
+      if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
+        showToast("Chức năng chỉ dành cho Ban Quản trị & Điều hành!", true);
+        return;
+      }
+      const modal = document.getElementById('loginHistoryModal');
+      if (modal) modal.classList.remove('hidden');
+      loadLoginHistoryData();
+    }
+
+    function closeLoginHistoryModal() {
+      const modal = document.getElementById('loginHistoryModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    /**
+     * TẢI VÀ ĐỒNG BỘ DỮ LIỆU NHẬT KÝ ĐĂNG NHẬP TỪ SUPABASE / LOCALSTORAGE
+     */
+    async function loadLoginHistoryData(forceRefresh = false) {
+      const loadingEl = document.getElementById('loadingLoginHistoryBox');
+      const emptyEl = document.getElementById('emptyLoginHistoryBox');
+      const noticeEl = document.getElementById('loginHistorySupabaseNotice');
+      const tbody = document.getElementById('loginHistoryTableBody');
+
+      if (loadingEl) loadingEl.classList.remove('hidden');
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (tbody) tbody.innerHTML = '';
+
+      let remoteLogs = [];
+      let isTableMissing = false;
+
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('login_history')
+            .select('*')
+            .order('logged_at', { ascending: false })
+            .limit(500);
+
+          if (error) {
+            if (error.code === 'PGRST205' || (error.message && error.message.includes('login_history'))) {
+              isTableMissing = true;
+              isSupabaseLoginHistoryAvailable = false;
+            } else {
+              console.warn("Lỗi tải lịch sử từ Supabase:", error.message);
+            }
+          } else if (data) {
+            remoteLogs = data;
+            isSupabaseLoginHistoryAvailable = true;
+          }
+        } catch (err) {
+          console.warn("Exception tải lịch sử đăng nhập:", err);
+        }
+      }
+
+      // Hiện/Ẩn banner hướng dẫn tạo bảng Supabase
+      if (noticeEl) {
+        if (isTableMissing || !isSupabaseLoginHistoryAvailable) {
+          noticeEl.classList.remove('hidden');
+        } else {
+          noticeEl.classList.add('hidden');
+        }
+      }
+
+      const localLogs = getLoginLogsFromLocalStorage();
+
+      // Kết hợp dữ liệu remote và local
+      let combined = [];
+      if (remoteLogs.length > 0) {
+        const remoteKeys = new Set(remoteLogs.map(r => `${r.username}_${r.logged_at}`));
+        const unsynced = localLogs.filter(l => !remoteKeys.has(`${l.username}_${l.logged_at}`));
+        if (unsynced.length > 0 && supabase && isSupabaseLoginHistoryAvailable) {
+          supabase.from('login_history').insert(unsynced.map(u => ({
+            logged_at: u.logged_at,
+            username: u.username,
+            full_name: u.full_name,
+            department: u.department,
+            role: u.role,
+            device_id: u.device_id,
+            device_type: u.device_type,
+            browser: u.browser,
+            os: u.os,
+            user_agent: u.user_agent,
+            ip_address: u.ip_address,
+            ip_location: u.ip_location,
+            status: u.status
+          }))).then(() => {}).catch(() => {});
+        }
+        combined = remoteLogs;
+      } else {
+        combined = localLogs;
+      }
+
+      // Nếu hoàn toàn chưa có bản ghi nào, tự động thêm phiên hiện tại của Admin để giao diện không bị rỗng
+      if (combined.length === 0 && currentUser) {
+        const curDevId = getOrCreateDeviceMachineId();
+        const curDevInfo = detectClientDeviceInfo();
+        const nowIso = new Date().toISOString();
+        const curEntry = {
+          logged_at: nowIso,
+          username: currentUser.username,
+          full_name: currentUser.fullName || currentUser.username,
+          department: currentUser.department || 'Ban DVKH',
+          role: currentUser.role || 'Quản trị viên',
+          device_id: curDevId,
+          device_type: curDevInfo.deviceType,
+          browser: curDevInfo.browser,
+          os: curDevInfo.os,
+          user_agent: curDevInfo.userAgent,
+          ip_address: cachedClientIpData ? cachedClientIpData.ip : 'Mạng nội bộ / Đang kiểm tra',
+          ip_location: cachedClientIpData ? cachedClientIpData.location : 'Việt Nam',
+          status: 'Phiên hiện tại'
+        };
+        saveLoginLogToLocalStorage(curEntry);
+        combined = [curEntry];
+      }
+
+      allLoginHistoryCache = combined;
+      if (loadingEl) loadingEl.classList.add('hidden');
+
+      // Điền danh sách bộ phận vào bộ lọc
+      populateLoginHistoryDeptFilter();
+
+      // Hiển thị dữ liệu lên bảng
+      filterLoginHistoryTable();
+
+      if (forceRefresh) {
+        showToast("Đã làm mới dữ liệu lịch sử đăng nhập!");
+      }
+    }
+
+    /**
+     * NẠP CÁC LỰA CHỌN BỘ PHẬN VÀO SELECT BỘ LỌC
+     */
+    function populateLoginHistoryDeptFilter() {
+      const select = document.getElementById('loginHistoryDeptFilter');
+      if (!select) return;
+
+      const currentVal = select.value;
+      const deptSet = new Set();
+
+      if (globalInitData && globalInitData.departments) {
+        globalInitData.departments.forEach(d => deptSet.add(d.name || d));
+      }
+      allLoginHistoryCache.forEach(item => {
+        if (item.department && item.department !== 'Chưa phân bổ') {
+          deptSet.add(item.department);
+        }
+      });
+
+      const depts = Array.from(deptSet).sort((a, b) => a.localeCompare(b, 'vi'));
+      select.innerHTML = '<option value="">🏢 Tất cả bộ phận</option>';
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.innerText = d;
+        if (d === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    /**
+     * TÌM KIẾM & BỘ LỌC ĐA TIÊU CHÍ CHO BẢNG LỊCH SỬ ĐĂNG NHẬP
+     */
+    function filterLoginHistoryTable() {
+      const kw = (document.getElementById('loginHistorySearchInput')?.value || '').trim().toLowerCase();
+      const kwNorm = removeAccents(kw);
+      const deptFilter = document.getElementById('loginHistoryDeptFilter')?.value || '';
+      const deviceFilter = document.getElementById('loginHistoryDeviceFilter')?.value || '';
+      const dateFilter = document.getElementById('loginHistoryDateFilter')?.value || 'all';
+
+      const now = new Date();
+      const todayStr = getSystemDateKey(now);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+
+      const filtered = allLoginHistoryCache.filter(item => {
+        // 1. Lọc theo từ khóa (tài khoản, họ tên, mã máy, IP, trình duyệt, HĐH)
+        if (kw) {
+          const u = (item.username || '').toLowerCase();
+          const fn = removeAccents(item.full_name || '').toLowerCase();
+          const dev = (item.device_id || '').toLowerCase();
+          const ip = (item.ip_address || '').toLowerCase();
+          const br = (item.browser || '').toLowerCase();
+          const os = (item.os || '').toLowerCase();
+          const matchKw = u.includes(kw) || fn.includes(kwNorm) || dev.includes(kw) || ip.includes(kw) || br.includes(kw) || os.includes(kw);
+          if (!matchKw) return false;
+        }
+
+        // 2. Lọc theo Bộ phận
+        if (deptFilter && item.department !== deptFilter) {
+          return false;
+        }
+
+        // 3. Lọc theo Loại thiết bị
+        if (deviceFilter) {
+          const dt = (item.device_type || '').toLowerCase();
+          if (deviceFilter === 'PC' && !dt.includes('pc') && !dt.includes('mac') && !dt.includes('máy tính')) return false;
+          if (deviceFilter === 'Mobile' && !dt.includes('điện thoại') && !dt.includes('phone') && !dt.includes('mobile')) return false;
+          if (deviceFilter === 'Tablet' && !dt.includes('bảng') && !dt.includes('tablet') && !dt.includes('ipad')) return false;
+        }
+
+        // 4. Lọc theo Ngày tháng
+        if (dateFilter !== 'all' && item.logged_at) {
+          const d = new Date(item.logged_at);
+          if (dateFilter === 'today') {
+            if (getSystemDateKey(d) !== todayStr) return false;
+          } else if (dateFilter === '7days') {
+            if (d < sevenDaysAgo) return false;
+          } else if (dateFilter === '30days') {
+            if (d < thirtyDaysAgo) return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Cập nhật thẻ chỉ số thống kê
+      const total = filtered.length;
+      const uniqueUsers = new Set(filtered.map(x => (x.username || '').toLowerCase())).size;
+      const uniqueDevices = new Set(filtered.map(x => x.device_id || '')).size;
+      const uniqueIps = new Set(filtered.map(x => x.ip_address || '').filter(ip => ip && !ip.includes('Đang'))).size;
+
+      const statTotal = document.getElementById('statTotalLogins');
+      const statUsers = document.getElementById('statUniqueUsers');
+      const statDevices = document.getElementById('statUniqueDevices');
+      const statIps = document.getElementById('statUniqueIps');
+
+      if (statTotal) statTotal.innerText = total;
+      if (statUsers) statUsers.innerText = uniqueUsers;
+      if (statDevices) statDevices.innerText = uniqueDevices;
+      if (statIps) statIps.innerText = uniqueIps;
+
+      renderLoginHistoryTable(filtered);
+    }
+
+    /**
+     * HIỂN THỊ DỮ LIỆU LÊN BẢNG (RENDER TABLE)
+     */
+    function renderLoginHistoryTable(list) {
+      const tbody = document.getElementById('loginHistoryTableBody');
+      const emptyEl = document.getElementById('emptyLoginHistoryBox');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      let html = '';
+      list.forEach((item, idx) => {
+        const dt = formatLoginDateTime(item.logged_at);
+        const statusClass = item.status === 'Thành công'
+          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+          : (item.status.includes('Tự động') ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : 'bg-sky-50 text-sky-800 border-sky-200');
+
+        html += `
+          <tr class="hover:bg-slate-50/90 transition-colors border-b border-slate-100">
+            <td class="py-3 px-3 text-center text-slate-400 font-num text-[11px] font-bold">${idx + 1}</td>
+            <td class="py-3 px-3">
+              <div class="flex flex-col gap-0.5 min-w-[130px]">
+                <span class="font-num text-xs font-black text-slate-800">${dt.timeStr}</span>
+                <span class="font-num text-[10.5px] text-slate-400 font-semibold">${dt.dateStr}</span>
+                <div class="mt-0.5">${dt.relBadge}</div>
+              </div>
+            </td>
+            <td class="py-3 px-3">
+              ${renderLoginAccountCol(item)}
+            </td>
+            <td class="py-3 px-3">
+              ${renderLoginMachineBadge(item.device_id, item.device_type)}
+            </td>
+            <td class="py-3 px-3">
+              ${renderLoginDeviceBrowserInfo(item.os, item.browser, item.device_type)}
+            </td>
+            <td class="py-3 px-3">
+              ${renderLoginIpBadge(item.ip_address, item.ip_location)}
+            </td>
+            <td class="py-3 px-3 text-center">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusClass}">
+                <i class="fa-solid fa-circle-check text-[9px]"></i>
+                <span>${escapeHtml(item.status || 'Thành công')}</span>
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    /**
+     * ĐỊNH DẠNG NGÀY GIỜ TIẾNG VIỆT
+     */
+    function formatLoginDateTime(isoStr) {
+      if (!isoStr) return { fullStr: '---', timeStr: '---', dateStr: '---', relBadge: '' };
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return { fullStr: isoStr, timeStr: isoStr, dateStr: '', relBadge: '' };
+
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+
+      const now = new Date();
+      const diffSec = Math.floor((now - d) / 1000);
+      let relBadge = '';
+      if (diffSec < 60) {
+        relBadge = '<span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">Vừa xong</span>';
+      } else if (diffSec < 3600) {
+        const mins = Math.floor(diffSec / 60);
+        relBadge = `<span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-sky-100 text-sky-800 border border-sky-300">${mins} phút trước</span>`;
+      } else if (diffSec < 86400 && now.getDate() === d.getDate()) {
+        relBadge = '<span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Hôm nay</span>';
+      } else if (diffSec < 172800) {
+        relBadge = '<span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-slate-100 text-slate-700 border border-slate-300">Hôm qua</span>';
+      }
+
+      return {
+        fullStr: `${hours}:${minutes}:${seconds} • ${day}/${month}/${year}`,
+        timeStr: `${hours}:${minutes}:${seconds}`,
+        dateStr: `${day}/${month}/${year}`,
+        relBadge: relBadge
+      };
+    }
+
+    /**
+     * VẼ CỘT TÀI KHOẢN (AVATAR, HỌ TÊN, USERNAME, BỘ PHẬN, VAI TRÒ)
+     */
+    function renderLoginAccountCol(u) {
+      const initial = (u.full_name || u.username || 'U').charAt(0).toUpperCase();
+      return `
+        <div class="flex items-center gap-2.5 min-w-[200px]">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-teal-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs border border-white">
+            ${escapeHtml(initial)}
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-bold text-slate-900 leading-tight">${escapeHtml(u.full_name || u.username)}</span>
+              <span class="text-[9.5px] font-mono text-slate-400 font-semibold">(@${escapeHtml(u.username)})</span>
+            </div>
+            <div class="flex items-center gap-1 mt-0.5 flex-wrap">
+              <span class="inline-flex items-center gap-1 text-[9.5px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded-md">
+                <i class="fa-regular fa-building text-[8px] text-slate-400"></i>
+                ${escapeHtml(u.department || 'Ban DVKH')}
+              </span>
+              ${u.role ? `
+                <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-md">
+                  ${escapeHtml(u.role)}
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * VẼ BADGE MÃ MÁY (DEVICE ID) KÈM NÚT COPY 1 CHẠM
+     */
+    function renderLoginMachineBadge(deviceId, deviceType) {
+      if (!deviceId) return '<span class="text-slate-400">---</span>';
+      let icon = 'fa-solid fa-laptop';
+      if (/iphone|phone|mobile/i.test(deviceType || '')) icon = 'fa-solid fa-mobile-screen-button';
+      else if (/ipad|tablet/i.test(deviceType || '')) icon = 'fa-solid fa-tablet-screen-button';
+      else if (/pc|computer|mac/i.test(deviceType || '')) icon = 'fa-solid fa-desktop';
+
+      return `
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-sky-50 border border-slate-200 hover:border-sky-300 text-slate-800 hover:text-sky-950 font-mono text-[11px] font-bold shadow-2xs group cursor-pointer transition active:scale-95" onclick="copyTextToClipboard('${escapeJsStr(deviceId)}', 'Đã sao chép Mã máy: ${escapeJsStr(deviceId)}')" title="Nhấp để sao chép mã máy này">
+          <i class="${icon} text-slate-500 group-hover:text-sky-600 text-[10px]"></i>
+          <span>${escapeHtml(deviceId)}</span>
+          <i class="fa-regular fa-copy text-[9.5px] text-slate-400 group-hover:text-sky-600 ml-0.5"></i>
+        </div>
+      `;
+    }
+
+    /**
+     * VẼ THÔNG TIN THIẾT BỊ & TRÌNH DUYỆT
+     */
+    function renderLoginDeviceBrowserInfo(os, browser, deviceType) {
+      let bIcon = 'fa-solid fa-globe text-slate-500';
+      if (/edge/i.test(browser || '')) bIcon = 'fa-brands fa-edge text-sky-600';
+      else if (/chrome/i.test(browser || '')) bIcon = 'fa-brands fa-chrome text-amber-500';
+      else if (/safari/i.test(browser || '')) bIcon = 'fa-brands fa-safari text-sky-500';
+      else if (/firefox/i.test(browser || '')) bIcon = 'fa-brands fa-firefox text-orange-500';
+      else if (/coccoc|cốc cốc/i.test(browser || '')) bIcon = 'fa-solid fa-globe text-emerald-600';
+
+      let osIcon = 'fa-solid fa-desktop text-slate-500';
+      if (/windows/i.test(os || '')) osIcon = 'fa-brands fa-windows text-sky-500';
+      else if (/ios|iphone|ipad|apple/i.test(os || '')) osIcon = 'fa-brands fa-apple text-slate-800';
+      else if (/android/i.test(os || '')) osIcon = 'fa-brands fa-android text-emerald-500';
+      else if (/mac/i.test(os || '')) osIcon = 'fa-brands fa-apple text-slate-800';
+      else if (/linux/i.test(os || '')) osIcon = 'fa-brands fa-linux text-amber-600';
+
+      return `
+        <div class="flex flex-col gap-0.5 min-w-[150px]">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+            <i class="${bIcon}"></i>
+            <span>${escapeHtml(browser || 'Trình duyệt Web')}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
+            <i class="${osIcon} text-[10px]"></i>
+            <span>${escapeHtml(os || 'Hệ điều hành')}</span>
+            <span class="text-slate-300">•</span>
+            <span class="text-[10px] text-slate-400">${escapeHtml(deviceType || 'Máy tính')}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * VẼ ĐỊA CHỈ IP KÈM VỊ TRÍ
+     */
+    function renderLoginIpBadge(ipAddress, ipLocation) {
+      if (!ipAddress) return '<span class="text-slate-400">---</span>';
+      const isLocal = ipAddress.includes('192.168.') || ipAddress.includes('127.0.0.1') || ipAddress.includes('Mạng nội bộ') || ipAddress.includes('Cục bộ');
+      const badgeBg = isLocal ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-sky-50 text-sky-900 border-sky-200';
+      const icon = isLocal ? 'fa-solid fa-house-laptop' : 'fa-solid fa-network-wired';
+
+      return `
+        <div class="flex flex-col items-start gap-0.5 min-w-[120px]">
+          <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-mono font-bold ${badgeBg} cursor-pointer hover:opacity-80 transition active:scale-95 shadow-2xs" onclick="copyTextToClipboard('${escapeJsStr(ipAddress)}', 'Đã sao chép IP: ${escapeJsStr(ipAddress)}')" title="Nhấp để sao chép IP">
+            <i class="${icon} text-[10px] text-sky-600"></i>
+            <span>${escapeHtml(ipAddress)}</span>
+          </div>
+          ${ipLocation && ipLocation !== 'Việt Nam' && ipLocation !== 'Cục bộ' ? `
+            <span class="text-[9.5px] text-slate-400 font-medium pl-1 flex items-center gap-1">
+              <i class="fa-solid fa-location-dot text-[8.5px] text-rose-400"></i>
+              ${escapeHtml(ipLocation)}
+            </span>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    /**
+     * SAO CHÉP VĂN BẢN VÀO BỘ NHỚ TẠM (CLIPBOARD HELPER)
+     */
+    function copyTextToClipboard(text, successMsg = 'Đã sao chép vào bộ nhớ tạm!') {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(successMsg);
+        }).catch(() => {
+          fallbackCopyText(text, successMsg);
+        });
+      } else {
+        fallbackCopyText(text, successMsg);
+      }
+    }
+
+    function fallbackCopyText(text, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMsg);
+      } catch(e) {
+        showToast('Không thể tự động sao chép', true);
+      }
+      document.body.removeChild(ta);
+    }
+
+    /**
+     * SAO CHÉP MÃ LỆNH SQL TẠO BẢNG LOGIN_HISTORY CHO SUPABASE
+     */
+    function copySupabaseLoginHistorySql() {
+      const sql = `CREATE TABLE IF NOT EXISTS public.login_history (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    logged_at TIMESTAMPTZ DEFAULT NOW(),
+    username TEXT NOT NULL,
+    full_name TEXT,
+    department TEXT,
+    role TEXT,
+    device_id TEXT,
+    device_type TEXT,
+    browser TEXT,
+    os TEXT,
+    user_agent TEXT,
+    ip_address TEXT,
+    ip_location TEXT,
+    status TEXT DEFAULT 'Thành công'
+);
+ALTER TABLE public.login_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (true) WITH CHECK (true);`;
+
+      copyTextToClipboard(sql, 'Đã sao chép mã SQL tạo bảng Supabase! Dán vào Supabase SQL Editor và nhấn RUN.');
+    }
+
+    function toggleSupabaseSqlPreview() {
+      const box = document.getElementById('supabaseSqlPreviewBox');
+      if (box) box.classList.toggle('hidden');
+    }
+
+    /**
+     * XUẤT TOÀN BỘ LỊCH SỬ ĐĂNG NHẬP RA FILE EXCEL (.XLSX) CHUẨN CÔNG TY
+     */
+    async function exportLoginHistoryToExcel() {
+      if (!allLoginHistoryCache || allLoginHistoryCache.length === 0) {
+        showToast("Không có bản ghi nhật ký đăng nhập nào để xuất!", true);
+        return;
+      }
+      if (typeof ExcelJS === 'undefined') {
+        showToast("Thư viện Excel đang được tải, vui lòng thử lại sau vài giây!", true);
+        return;
+      }
+
+      try {
+        showToast("Đang tạo file Excel nhật ký đăng nhập...");
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = "Nhựa Tiền Phong - Ban DVKH";
+        workbook.created = new Date();
+
+        const ws = workbook.addWorksheet("Lịch sử đăng nhập", {
+          views: [{ showGridLines: true }]
+        });
+
+        // Tiêu đề đầu trang
+        ws.mergeCells('A1:M1');
+        const titleCell = ws.getCell('A1');
+        titleCell.value = "NHẬT KÝ & LỊCH SỬ ĐĂNG NHẬP HỆ THỐNG - CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG";
+        titleCell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } }; // Sky-600
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+        ws.getRow(1).height = 36;
+
+        // Dòng header bảng
+        const headers = [
+          "STT", "Thời gian đăng nhập", "Tên đăng nhập", "Họ và tên nhân sự",
+          "Bộ phận công tác", "Vai trò", "Mã máy (Device ID)", "Loại thiết bị",
+          "Trình duyệt", "Hệ điều hành", "Địa chỉ IP", "Vị trí IP", "Trạng thái"
+        ];
+        const headerRow = ws.addRow(headers);
+        headerRow.height = 26;
+        headerRow.eachCell((cell) => {
+          cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            bottom: { style: 'medium', color: { argb: 'FF94A3B8' } },
+            left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+          };
+        });
+
+        // Điền từng dòng dữ liệu
+        allLoginHistoryCache.forEach((item, idx) => {
+          const dt = formatLoginDateTime(item.logged_at);
+          const row = ws.addRow([
+            idx + 1,
+            dt.fullStr,
+            item.username || '',
+            item.full_name || '',
+            item.department || '',
+            item.role || '',
+            item.device_id || '',
+            item.device_type || '',
+            item.browser || '',
+            item.os || '',
+            item.ip_address || '',
+            item.ip_location || '',
+            item.status || 'Thành công'
+          ]);
+          row.height = 22;
+          row.eachCell((cell, colNum) => {
+            cell.font = { name: 'Arial', size: 9 };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+            };
+            if (colNum === 1 || colNum === 7 || colNum === 11 || colNum === 13) {
+              cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            } else {
+              cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 0.5 };
+            }
+          });
+        });
+
+        // Tự động căn chỉnh độ rộng cột
+        ws.columns = [
+          { width: 6 },
+          { width: 22 },
+          { width: 16 },
+          { width: 24 },
+          { width: 22 },
+          { width: 14 },
+          { width: 18 },
+          { width: 18 },
+          { width: 20 },
+          { width: 16 },
+          { width: 18 },
+          { width: 16 },
+          { width: 14 }
+        ];
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const dStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const fileName = `Nhat_Ky_Dang_Nhap_Nhan_Su_${dStr}.xlsx`;
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, fileName);
+        showToast("Đã tải file Excel lịch sử đăng nhập thành công!");
+      } catch (err) {
+        showToast("Lỗi xuất Excel: " + err.message, true);
+      }
     }
 
     function updateInstallButtonState() {
