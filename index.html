@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v16') {
+          if (key !== 'baocao-dvkh-pwa-v17') {
             caches.delete(key);
           }
         });
@@ -5072,9 +5072,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         const isCurrent = currentUser && isStaffMatchedInCell(currentUser.fullName, nameStr);
         const initial = escapeHtml(nameStr.charAt(0));
         return `
-          <div class="flex flex-col justify-center h-full py-1.5 px-0.5 sm:px-1 text-left w-full">
-            <div class="flex items-start gap-1.5 sm:gap-2">
-              <div class="relative shrink-0 mt-0.5">
+          <div class="flex flex-col justify-center h-full py-1 px-0.5 sm:px-1 text-left w-full">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <div class="relative shrink-0">
                 <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-600 text-white font-bold text-[11px] sm:text-xs flex items-center justify-center shadow-xs border-2 border-white ring-1 ring-indigo-200/60">
                   ${initial}
                 </div>
@@ -5087,20 +5087,19 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                   </span>
                   ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-300 shrink-0">Tôi</span>' : ''}
                 </div>
-                <div class="mt-1">
-                  <span class="inline-flex items-center gap-1 text-[9px] sm:text-[9.5px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md truncate max-w-full">
-                    <i class="fa-solid fa-user-tag text-[8px] text-indigo-500 shrink-0"></i>
-                    <span class="truncate block max-w-[82px] sm:max-w-none">Việc cá nhân</span>
+                <!-- VIỆC CÁ NHÂN & BỘ PHẬN KHO TRÊN CÙNG 1 DÒNG GỌN GÀNG, TRÁNH DÀN TRẢI -->
+                <div class="flex items-center gap-1.5 mt-0.5 min-w-0 flex-nowrap">
+                  <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs">
+                    <i class="fa-solid fa-user-tag text-[7.5px] text-indigo-500 shrink-0"></i>
+                    <span class="whitespace-nowrap">Việc cá nhân</span>
                   </span>
-                </div>
-                ${deptName ? `
-                  <div class="mt-0.5">
-                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 truncate max-w-full">
+                  ${deptName ? `
+                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 font-medium truncate min-w-0" title="${escapeHtml(deptName)}">
                       <i class="fa-solid fa-warehouse text-[7.5px] text-indigo-400 shrink-0"></i>
-                      <span class="truncate block max-w-[82px] sm:max-w-none">${escapeHtml(deptName)}</span>
+                      <span class="truncate">${escapeHtml(deptName)}</span>
                     </span>
-                  </div>
-                ` : ''}
+                  ` : ''}
+                </div>
               </div>
             </div>
           </div>
@@ -5135,21 +5134,18 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                   ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">Tôi</span>' : ''}
                 </div>
 
-                <!-- Thẻ Bộ Phận dạng Viên Thuốc (Badge Pill) Sang Trọng -->
-                <div class="mt-1">
-                  <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9.5px] sm:text-[10px] font-medium leading-tight max-w-full shadow-2xs">
-                    <i class="fa-regular fa-building text-[8.5px] text-emerald-600 shrink-0"></i>
-                    <span class="truncate block max-w-[85px] sm:max-w-none text-slate-700">${escapeHtml(displayDept)}</span>
+                <!-- Thẻ Bộ Phận & Vai trò trên cùng 1 dòng gọn gàng -->
+                <div class="flex items-center gap-1.5 mt-0.5 min-w-0 flex-nowrap">
+                  <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9px] sm:text-[9.5px] font-medium leading-tight truncate min-w-0 shadow-2xs" title="${escapeHtml(displayDept)}">
+                    <i class="fa-regular fa-building text-[8px] text-emerald-600 shrink-0"></i>
+                    <span class="truncate text-slate-700">${escapeHtml(displayDept)}</span>
                   </div>
-                </div>
-
-                ${single.role ? `
-                  <div class="mt-1">
-                    <span class="inline-flex items-center text-[8.5px] sm:text-[9px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.2 rounded">
+                  ${single.role ? `
+                    <span class="inline-flex items-center text-[8.5px] sm:text-[9px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded shrink-0">
                       ${escapeHtml(single.role)}
                     </span>
-                  </div>
-                ` : ''}
+                  ` : ''}
+                </div>
               </div>
             </div>
           </div>
