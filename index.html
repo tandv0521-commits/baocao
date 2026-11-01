@@ -8671,7 +8671,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     // ================= TIỆN ÍCH QUẢN LÝ VÀ SẮP XẾP THỨ TỰ CÔNG VIỆC TÙY CHỈNH =================
     function cleanTaskGuide(rawGuide) {
       if (!rawGuide) return "";
-      return rawGuide.replace(/\x3c!--ord:\d+-->/g, '').replace(/\x3c!--scope:[^>]+-->/g, '').trim();
+      return rawGuide
+        .replace(/\x3c!--ord:\d+-->/g, '')
+        .replace(/\x3c!--scope:[^>]+-->/g, '')
+        .replace(/\x3c!--valid_until:[^>]+-->/g, '')
+        .replace(/\x3c!--[\s\S]*?-->/g, '')
+        .trim();
     }
 
     function parseTaskOrder(rawGuide, fallbackIndex = 999999) {
@@ -8684,6 +8689,38 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       if (!rawGuide) return "";
       const match = rawGuide.match(/\x3c!--scope:([^>]+)-->/);
       return match ? match[1].trim() : "";
+    }
+
+    function parseTaskValidUntil(rawGuide) {
+      if (!rawGuide) return null;
+      const match = rawGuide.match(/\x3c!--valid_until:(\d{4})-(\d{1,2})-->/);
+      if (!match) return null;
+      return {
+        year: parseInt(match[1], 10),
+        month: parseInt(match[2], 10),
+        tag: `${match[1]}-${match[2].padStart(2, '0')}`
+      };
+    }
+
+    function isTaskEffectiveInPeriod(task, year, month) {
+      if (!task) return false;
+      // 1. Kiểm tra ngày bắt đầu (task không thể tồn tại trước tháng được tạo)
+      if (task.created_at) {
+        const taskCreated = new Date(task.created_at);
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+        if (taskCreated > endOfMonth) {
+          return false;
+        }
+      }
+      // 2. Kiểm tra ngày hết hạn / thay thế (<!--valid_until:YYYY-MM-->)
+      // Nếu task đã kết thúc ở kỳ trước (tháng đang xem > kỳ kết thúc) -> Không còn hiệu lực từ tháng này trở đi
+      const vu = parseTaskValidUntil(task.guide);
+      if (vu) {
+        if (year > vu.year || (year === vu.year && month > vu.month)) {
+          return false;
+        }
+      }
+      return true;
     }
 
     function formatTaskGuideWithOrder(cleanGuide, orderIndex) {
@@ -8958,15 +8995,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         // Tách biệt rõ Hàng nhập trả vs Tổ kho
         const isShared = isSharedGroupDeptClient(deptName);
 
-        // BẢO VỆ DỮ LIỆU THÁNG CŨ & LOẠI TRỪ CÔNG VIỆC MỚI TẠO Ở THÁNG SAU:
-        // Nếu công việc có mốc created_at và thời điểm tạo là sau tháng đang xem
-        // -> Loại bỏ công việc này khỏi kỳ quá khứ.
-        if (t.created_at) {
-          const taskCreated = new Date(t.created_at);
-          const endOfQueriedMonth = new Date(year, month, 0, 23, 59, 59, 999);
-          if (taskCreated > endOfQueriedMonth) {
-            return;
-          }
+        // BẢO VỆ DỮ LIỆU THÁNG CŨ & BẢO TOÀN DANH MỤC ĐẦU VIỆC THEO KỲ:
+        // Kiểm tra xem công việc có hiệu lực trong kỳ đang truy vấn (tháng/năm) hay không:
+        // - Loại trừ các công việc tạo ở các tháng tương lai (created_at > endOfQueriedMonth)
+        // - Loại trừ các công việc đã kết thúc ở các kỳ trước (valid_until < kỳ hiện tại)
+        // Ngoại lệ: Nếu kỳ này thực tế có số liệu báo cáo thì luôn giữ lại để bảo toàn dữ liệu
+        const isEffective = isTaskEffectiveInPeriod(t, year, month);
+        if (!isEffective && !hasReportsInThisMonth) {
+          return;
         }
 
         // Với kỳ quá khứ (đã khóa): Nếu task không có báo cáo trong tháng này và đã bị bỏ gán -> Không hiển thị
@@ -9014,18 +9050,19 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
             // Chuẩn hóa thứ tự thành viên kho: Kho chính / Trưởng nhóm xếp đầu, kế đến Thủ kho, Phụ kho, Bốc xếp
             deptMembers.sort((a, b) => {
-              const getRoleWeight = (r) => {
-                const norm = removeAccents(r || "").toLowerCase();
-                if (norm.includes('kho chinh') || norm.includes('chinh')) return 1;
-                if (norm.includes('to truong') || norm.includes('truong') || norm.includes('quan ly') || norm.includes('leader')) return 2;
-                if (norm.includes('pho') || norm.includes('to pho')) return 3;
-                if (norm.includes('thu kho')) return 4;
-                if (norm.includes('phu kho') || norm.includes('phu')) return 5;
-                if (norm.includes('boc xep')) return 6;
+              const getRoleWeight = (u) => {
+                const normRole = removeAccents(u.role || "").toLowerCase();
+                const normName = removeAccents(u.full_name || "").toLowerCase();
+                if (normRole.includes('kho chinh') || (normRole.includes('chinh') && !normRole.includes('phu')) || normName.includes('kho chinh') || normName.includes('khochinh')) return 1;
+                if (normRole.includes('to truong') || normRole.includes('truong') || normRole.includes('quan ly') || normRole.includes('leader') || normName.includes('truong') || normName.includes('leader')) return 2;
+                if (normRole.includes('pho') || normRole.includes('to pho') || normName.includes('pho')) return 3;
+                if (normRole.includes('thu kho') || normName.includes('thu kho')) return 4;
+                if (normRole.includes('phu kho') || normRole.includes('phu') || normName.includes('phu kho')) return 5;
+                if (normRole.includes('boc xep') || normName.includes('boc xep')) return 6;
                 return 10;
               };
-              const wA = getRoleWeight(a.role);
-              const wB = getRoleWeight(b.role);
+              const wA = getRoleWeight(a);
+              const wB = getRoleWeight(b);
               if (wA !== wB) return wA - wB;
               return (a.full_name || "").localeCompare(b.full_name || "", 'vi');
             });
@@ -9033,14 +9070,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             let strStaff = "";
             let leadUid = effectiveUserId;
             if (deptMembers.length > 0) {
+              const hasExplicitLead = deptMembers.some(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents((u.role || "") + " " + (u.full_name || ""))));
               strStaff = deptMembers.map((u, i) => {
                 let cleanName = u.full_name.replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
-                let isUserLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""));
+                let isUserLead = /chinh|truong|to truong|leader|quan ly/i.test(removeAccents((u.role || "") + " " + (u.full_name || "")));
+                if (!hasExplicitLead && i === 0) isUserLead = true;
                 let rStr = u.role ? ` (${u.role})` : (isUserLead ? " (Kho chính)" : " (Thành viên kho)");
                 return `${i + 1}. ${cleanName}${rStr}`;
               }).join('\n');
 
-              let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || "")));
+              let leadUser = deptMembers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents((u.role || "") + " " + (u.full_name || ""))));
               leadUid = leadUser ? leadUser.id : deptMembers[0].id;
             } else {
               const u = assignedUser;
@@ -12360,6 +12399,39 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               } else {
                 excelStaffName = excelStaffName.replace(/\s*\([^\)]*\)\s*$/, '').trim();
               }
+            } else {
+              // BỘ PHẬN NHÓM GỘP KHI XUẤT EXCEL:
+              // Chỉ lấy số thứ tự và họ tên, loại bỏ hoàn toàn các chức danh (Thủ kho, Kho chính, Phụ kho...)
+              // Mặc định Kho chính luôn ở vị trí số 1
+              const rawLines = String(excelStaffName).replace(/[\r\n]+/g, '\n').split('\n').map(l => l.trim()).filter(Boolean);
+              if (rawLines.length > 0) {
+                const parsedMembers = rawLines.map((line, idx) => {
+                  const norm = removeAccents(line).toLowerCase();
+                  // Nhận diện Kho chính / Đại diện tổ kho
+                  const isKhoChinh = norm.includes('kho chinh') || (norm.includes('chinh') && !norm.includes('phu')) || norm.includes('truong nhom') || norm.includes('to truong') || norm.includes('leader');
+
+                  // Bỏ số thứ tự cũ ở đầu dòng (ví dụ "1. ", "2) "...)
+                  let nameWithoutNum = line.replace(/^\d+[\.\,\-\)\:]*\s*/, '').trim();
+
+                  // Bỏ toàn bộ phần chức danh trong ngoặc đơn và gạch ngang: (Kho chính), (Thủ kho), (Phụ kho)...
+                  let cleanName = nameWithoutNum
+                    .replace(/\s*\([^\)]*(kho\s*chính|kho\s*chinh|thủ\s*kho|thu\s*kho|phụ\s*kho|phu\s*kho|thành\s*viên|thanh\s*vien|bốc\s*xếp|boc\s*xep|tổ\s*trưởng|trưởng|phó|leader|nhân\s*viên)[^\)]*\)/gi, '')
+                    .replace(/\s*\([^\)]*\)\s*$/g, '')
+                    .replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|PhuKho|Kho chính|Thủ kho|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/gi, '')
+                    .trim();
+
+                  return { cleanName, isKhoChinh, originalIndex: idx };
+                });
+
+                // Mặc định Kho chính luôn ở vị trí số 1
+                parsedMembers.sort((a, b) => {
+                  if (a.isKhoChinh && !b.isKhoChinh) return -1;
+                  if (!a.isKhoChinh && b.isKhoChinh) return 1;
+                  return a.originalIndex - b.originalIndex;
+                });
+
+                excelStaffName = parsedMembers.map((m, i) => `${i + 1}. ${m.cleanName}`).join('\n');
+              }
             }
 
             grp.tasks.forEach((t, tIdx) => {
@@ -12427,7 +12499,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               }
 
               const dataRow = ws.addRow(rowData);
-              dataRow.height = 22;
+              let baseRowHeight = 22;
+              if (isSharedGroup && staffTaskCount === 1) {
+                const lineCount = (excelStaffName.match(/\n/g) || []).length + 1;
+                baseRowHeight = Math.max(22, lineCount * 17);
+              }
+              dataRow.height = baseRowHeight;
 
               dataRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
                 cell.font = { name: 'Arial', size: 9 };
@@ -14737,7 +14814,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           if (tErr) throw tErr;
 
           // VIỆC CHUNG CỦA TỔ KHO: Toàn bộ công việc thuộc kho, ngoại trừ các task cá nhân riêng biệt
-          tasks = (deptTasks || []).filter(t => parseTaskScope(t.guide) !== 'personal');
+          // VÀ CHỈ LẤY CÁC ĐẦU VIỆC CÓ HIỆU LỰC TRONG KỲ ĐANG XEM (currentSelectedMonth, currentSelectedYear)!
+          tasks = (deptTasks || []).filter(t => {
+            if (parseTaskScope(t.guide) === 'personal') return false;
+            return isTaskEffectiveInPeriod(t, currentSelectedYear, currentSelectedMonth);
+          });
         } else {
           // LẤY CÔNG VIỆC CÁ NHÂN (HOẶC BỘ PHẬN THƯỜNG):
           if (!uId) {
@@ -14775,10 +14856,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
           if (isShared) {
             // Trong tổ kho / nhóm gộp: Lọc CHÍNH XÁC các task là việc cá nhân của thành viên (có gắn thẻ <!--scope:personal-->)
-            // TUYỆT ĐỐI KHÔNG nạp việc chung của tổ kho vào việc cá nhân riêng!
-            tasks = (userTasks || []).filter(t => parseTaskScope(t.guide) === 'personal');
+            // VÀ CHỈ LẤY CÁC ĐẦU VIỆC CÓ HIỆU LỰC TRONG KỲ ĐANG XEM!
+            tasks = (userTasks || []).filter(t => {
+              if (parseTaskScope(t.guide) !== 'personal') return false;
+              return isTaskEffectiveInPeriod(t, currentSelectedYear, currentSelectedMonth);
+            });
           } else {
-            tasks = userTasks || [];
+            tasks = (userTasks || []).filter(t => {
+              return isTaskEffectiveInPeriod(t, currentSelectedYear, currentSelectedMonth);
+            });
           }
         }
 
@@ -15657,10 +15743,20 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
             if (hasPriorReports || isCreatedBefore) {
               // Có dữ liệu kỳ cũ: Bảo toàn kỳ cũ!
-              // 1. Gỡ task cũ khỏi kỳ hiện tại
+              // 1. Đóng dấu hết hạn cho task cũ từ kỳ trước (giữ nguyên assigned_user_id để kỳ cũ bảo toàn 100%)
+              const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
+              const prevM = prevMonthDate.getMonth() + 1;
+              const prevY = prevMonthDate.getFullYear();
+              const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
+
+              const { data: exTask } = await supabase.from('tasks').select('guide').eq('id', taskId).limit(1);
+              let oldGuide = exTask && exTask[0] && exTask[0].guide ? exTask[0].guide : "";
+              oldGuide = oldGuide.replace(/\x3c!--valid_until:[^>]+-->/g, '').trim();
+              const retiredGuide = oldGuide ? `${oldGuide} \x3c!--valid_until:${prevPeriodTag}-->` : `\x3c!--valid_until:${prevPeriodTag}-->`;
+
               await supabase
                 .from('tasks')
-                .update({ assigned_user_id: null })
+                .update({ guide: retiredGuide })
                 .eq('id', taskId);
 
               // 2. Tạo task mới ở đích cho kỳ này
@@ -15783,14 +15879,25 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       try {
         if (taskId) {
           const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+          const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
+          const prevM = prevMonthDate.getMonth() + 1;
+          const prevY = prevMonthDate.getFullYear();
+          const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
 
-          // Kiểm tra xem công việc này có báo cáo ở các kỳ trước không
-          const { data: priorReps } = await supabase
-            .from('daily_reports')
-            .select('id')
-            .eq('task_id', taskId)
-            .lt('report_date', currentPeriodStartDate)
-            .limit(1);
+          // Kiểm tra xem công việc này có báo cáo ở các kỳ trước không, hoặc được tạo trước kỳ này
+          const [{ data: priorReps }, { data: existingTask }] = await Promise.all([
+            supabase
+              .from('daily_reports')
+              .select('id')
+              .eq('task_id', taskId)
+              .lt('report_date', currentPeriodStartDate)
+              .limit(1),
+            supabase
+              .from('tasks')
+              .select('created_at, guide, assigned_user_id')
+              .eq('id', taskId)
+              .limit(1)
+          ]);
 
           // Xóa các báo cáo thuộc kỳ hiện tại nếu có
           await supabase
@@ -15799,11 +15906,18 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             .eq('task_id', taskId)
             .gte('report_date', currentPeriodStartDate);
 
-          if (priorReps && priorReps.length > 0) {
-            // Task này có dữ liệu ở kỳ cũ: Giữ nguyên trong DB cho kỳ cũ, chỉ gỡ gán khỏi nhân sự để kỳ hiện tại không hiển thị
-            await supabase.from('tasks').update({ assigned_user_id: null }).eq('id', taskId);
+          const hasPriorReports = priorReps && priorReps.length > 0;
+          const isCreatedBefore = existingTask && existingTask[0] && existingTask[0].created_at && (new Date(existingTask[0].created_at) < new Date(currentPeriodStartDate));
+
+          if (hasPriorReports || isCreatedBefore) {
+            // BẢO VỆ TUYỆT ĐỐI KỲ CŨ:
+            // Giữ nguyên trong DB và giữ nguyên phân công cho kỳ cũ, đóng dấu kết thúc hiệu lực từ kỳ trước
+            let currentGuide = existingTask && existingTask[0] && existingTask[0].guide ? existingTask[0].guide : "";
+            currentGuide = currentGuide.replace(/\x3c!--valid_until:[^>]+-->/g, '').trim();
+            const retiredGuide = currentGuide ? `${currentGuide} \x3c!--valid_until:${prevPeriodTag}-->` : `\x3c!--valid_until:${prevPeriodTag}-->`;
+            await supabase.from('tasks').update({ guide: retiredGuide }).eq('id', taskId);
           } else {
-            // Không có dữ liệu ở kỳ cũ: Xóa an toàn khỏi DB
+            // Công việc được tạo mới trong chính kỳ này (chưa từng có lịch sử): Xóa an toàn khỏi DB
             const { error } = await supabase.from('tasks').delete().eq('id', taskId);
             if (error) throw error;
           }
@@ -15933,13 +16047,24 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
               if (hasPriorReports || isCreatedBefore) {
                 // BẢO VỆ TUYỆT ĐỐI KỲ CŨ:
-                // 1. Phục hồi tên gốc cho công việc cũ và tạo công việc mới song song
+                // 1. Phục hồi tên gốc cho công việc cũ, GIỮ NGUYÊN assigned_user_id, và đóng dấu hết hạn từ kỳ trước: <!--valid_until:YYYY-MM-->
+                const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
+                const prevM = prevMonthDate.getMonth() + 1;
+                const prevY = prevMonthDate.getFullYear();
+                const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
+
+                const { data: exTask } = await supabase.from('tasks').select('guide').eq('id', item.taskId).limit(1);
+                let oldGuide = exTask && exTask[0] && exTask[0].guide ? exTask[0].guide : "";
+                oldGuide = oldGuide.replace(/\x3c!--valid_until:[^>]+-->/g, '').trim();
+                const retiredGuide = oldGuide ? `${oldGuide} \x3c!--valid_until:${prevPeriodTag}-->` : `\x3c!--valid_until:${prevPeriodTag}-->`;
+
                 const [upOldRes, insNewRes] = await Promise.all([
                   supabase
                     .from('tasks')
                     .update({
                       task_name: item.origName,
-                      assigned_user_id: null
+                      assigned_user_id: uId,
+                      guide: retiredGuide
                     })
                     .eq('id', item.taskId),
                   supabase
@@ -17683,9 +17808,20 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                 await supabase.from('tasks').delete().in('id', deletableIds);
               }
 
-              // Có lịch sử ở kỳ cũ: Giữ lại để bảo toàn kỳ cũ, gỡ gán khỏi nhân sự để kỳ hiện tại sạch 100%
+              // Có lịch sử ở kỳ cũ: Giữ lại để bảo toàn kỳ cũ, đóng dấu hết hạn từ kỳ trước để kỳ hiện tại sạch 100%
               if (archiveIds.length > 0) {
-                await supabase.from('tasks').update({ assigned_user_id: null }).in('id', archiveIds);
+                const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
+                const prevM = prevMonthDate.getMonth() + 1;
+                const prevY = prevMonthDate.getFullYear();
+                const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
+
+                for (const aid of archiveIds) {
+                  const { data: exT } = await supabase.from('tasks').select('guide').eq('id', aid).limit(1);
+                  let oldGuide = exT && exT[0] && exT[0].guide ? exT[0].guide : "";
+                  oldGuide = oldGuide.replace(/\x3c!--valid_until:[^>]+-->/g, '').trim();
+                  const retiredGuide = oldGuide ? `${oldGuide} \x3c!--valid_until:${prevPeriodTag}-->` : `\x3c!--valid_until:${prevPeriodTag}-->`;
+                  await supabase.from('tasks').update({ guide: retiredGuide }).eq('id', aid);
+                }
               }
             }
 
