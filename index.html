@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v24') {
+          if (key !== 'baocao-dvkh-pwa-v25') {
             caches.delete(key);
           }
         });
@@ -3599,13 +3599,6 @@
           </p>
         </div>
 
-        <!-- NÚT BẮT ĐẦU LÀM VIỆC (PHƯƠNG ÁN 3 - POPUP CHÀO MỪNG ĐĂNG NHẬP) -->
-        <div class="pt-2 pb-1 flex items-center justify-center">
-          <button type="button" onclick="closeNovemberThematicModal()" class="px-8 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-950/60 hover:shadow-emerald-900/80 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5 border border-emerald-200/80 group">
-            <span class="tracking-wide">Bắt đầu làm việc</span>
-            <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
-          </button>
-        </div>
 
       </div>
 
@@ -4415,22 +4408,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     function closeNovemberThematicModal() {
       const modal = document.getElementById('novemberThematicModal');
       if (modal) modal.classList.add('hidden');
-    }
-
-    function checkAndShowNovemberWelcomePopup() {
-      if (!currentUser) return;
-      const shown = sessionStorage.getItem('shown_november_theme_welcome');
-      if (!shown) {
-        sessionStorage.setItem('shown_november_theme_welcome', 'true');
-        setTimeout(() => {
-          // Tránh đè lên popup cảnh báo chưa phân công công việc nếu có
-          const unassignedModal = document.getElementById('unassignedStaffModal');
-          if (unassignedModal && !unassignedModal.classList.contains('hidden')) {
-            return;
-          }
-          openNovemberThematicModal();
-        }, 500);
-      }
     }
 
     function openUserProfileModal() {
@@ -8183,8 +8160,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         loadMatrixData(false);
       }
 
-      // Tự động hiển thị popup Chào mừng Chủ điểm Tháng 11 (Phương án 3)
-      checkAndShowNovemberWelcomePopup();
     }
 
     function setupRoleControls() {
@@ -19541,7 +19516,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
       sessionStorage.setItem('ops_portal_manual_logout', 'true');
       sessionStorage.removeItem('ops_session_device_logged');
-      sessionStorage.removeItem('shown_november_theme_welcome');
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
       fullPeriodMatrixCache = null;
