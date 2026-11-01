@@ -5,6 +5,18 @@
   <title>Báo Cáo Công Việc - Ban DVKH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <script>
+    // CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP:
+    // Kiểm tra tức thì (0ms) trước khi trình duyệt vẽ pixel. Nếu đã lưu phiên hoặc mật khẩu thì ẩn màn hình đăng nhập ngay lập tức.
+    try {
+      var _manualLogout = sessionStorage.getItem('ops_portal_manual_logout');
+      var _savedSession = localStorage.getItem('ops_portal_session_final_v48');
+      var _remembered = localStorage.getItem('ops_portal_remembered_auth_v49');
+      if (_manualLogout !== 'true' && (_savedSession || _remembered)) {
+        document.documentElement.classList.add('app-auto-login-pending');
+      }
+    } catch(e) {}
+  </script>
+  <script>
     // Khóa tuyệt đối menu ngữ cảnh ngay từ giai đoạn nạp trang đầu tiên
     window.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
@@ -24,7 +36,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v27') {
+          if (key !== 'baocao-dvkh-pwa-v28') {
             caches.delete(key);
           }
         });
@@ -153,6 +165,17 @@
     .font-november-sub-clean {
       font-family: 'Inter', sans-serif !important;
       letter-spacing: 0.01em;
+    }
+
+    /* ================= CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP KHI ĐÃ LƯU TRÌNH DUYỆT ================= */
+    html.app-auto-login-pending #loginScreen {
+      display: none !important;
+    }
+    #appAutoLoginSplash {
+      display: none;
+    }
+    html.app-auto-login-pending #appAutoLoginSplash {
+      display: flex !important;
     }
 
     /* ================= GIAO DIỆN ĐĂNG NHẬP TOÀN MÀN HÌNH SPLIT-SCREEN 1/3 - 2/3 ================= */
@@ -739,6 +762,16 @@
   </style>
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
+
+  <!-- MÀN HÌNH CHUYỂN TIẾP SIÊU NHANH KHI ĐÃ LƯU TRÌNH DUYỆT (CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP) -->
+  <div id="appAutoLoginSplash" class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-200">
+    <div class="flex flex-col items-center gap-3.5">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-500/30 animate-pulse">
+        <i class="fa-solid fa-chart-line text-white text-2xl"></i>
+      </div>
+      <div class="text-sm font-bold text-emerald-300 tracking-wide">Đang vào chương trình...</div>
+    </div>
+  </div>
 
   <!-- ================= DẢI TIẾN TRÌNH HỆ THỐNG (PHONG CÁCH TỐI GIẢN, DỊU MẮT) ================= -->
   <div id="systemProgressHud" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -4528,8 +4561,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
      */
     async function tryAutoLoginForMobileDevice(depts, users, todayKey) {
       if (currentUser) return;
-      if (sessionStorage.getItem('ops_portal_manual_logout') === 'true') return;
-      if (!isMobileOrTabletClient() || !hasSavedAuthOnDevice()) return;
+      if (sessionStorage.getItem('ops_portal_manual_logout') === 'true') {
+        document.documentElement.classList.remove('app-auto-login-pending');
+        return;
+      }
+      if (!hasSavedAuthOnDevice()) {
+        document.documentElement.classList.remove('app-auto-login-pending');
+        return;
+      }
 
       try {
         const raw = localStorage.getItem('ops_portal_remembered_auth_v49');
@@ -5973,7 +6012,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           // 1. KIỂM TRA BẢO MẬT & CHÍNH SÁCH ĐĂNG NHẬP THEO THIẾT BỊ:
           // - Trên web máy tính PC: Sang ngày mới (sau khi tắt trình duyệt) tự động đăng xuất để yêu cầu đăng nhập lại
           // - Trên điện thoại, máy tính bảng (iOS, Android) có lưu mật khẩu: DUY TRÌ PHIÊN VÀ VÀO THẲNG KHÔNG PHẢI ĐĂNG NHẬP LẠI
-          if (isPastDay && (!isMobileTablet || !isUserRemembered)) {
+          // DUY TRÌ PHIÊN VÀ VÀO THẲNG CHO CẢ PC VÀ DI ĐỘNG KHI ĐÃ LƯU TRÌNH DUYỆT HOẶC NHỚ MẬT KHẨU
+          if (isPastDay && !isUserRemembered) {
             localStorage.removeItem('ops_portal_session_final_v48');
             currentUser = null;
           } else {
@@ -6025,8 +6065,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
 
       // 4. NẾU CHƯA CÓ PHIÊN (HOẶC VỪA TẮT MỞ LẠI PWA/TRÌNH DUYỆT): TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO DI ĐỘNG/TABLET CÓ LƯU MẬT KHẨU
-      if (!currentUser && isMobileTablet && hasSavedAuth) {
+      // TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO CẢ PC VÀ DI ĐỘNG NẾU ĐÃ LƯU TRÌNH DUYỆT
+      if (!currentUser && hasSavedAuth && sessionStorage.getItem('ops_portal_manual_logout') !== 'true') {
         tryAutoLoginForMobileDevice(depts, users, todayKey);
+      }
+
+      // Nếu không có người dùng hợp lệ, bỏ trạng thái chờ và hiển thị màn hình đăng nhập
+      if (!currentUser) {
+        document.documentElement.classList.remove('app-auto-login-pending');
+        const loginScreen = document.getElementById('loginScreen');
+        if (loginScreen) loginScreen.classList.remove('hidden');
       }
 
       // THÔNG BÁO XIN CHÀO NGÀY MỚI (CHỈ HIỂN THỊ 1 LẦN DUY NHẤT KHI MÁY ĐÓ LẦN ĐẦU MỞ TRÌNH DUYỆT TRONG NGÀY)
@@ -8073,6 +8121,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     }
 
     function initMainDashboard() {
+      document.documentElement.classList.remove('app-auto-login-pending');
+      const splash = document.getElementById('appAutoLoginSplash');
+      if (splash) splash.remove();
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('mainDashboard').classList.remove('hidden');
 
@@ -13674,7 +13725,79 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
+    async function openDayEntryModal() {
+      if (!currentUser) {
+        showToast("Vui lòng đăng nhập để điền báo cáo!", true);
+        return;
+      }
+      if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
+        showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
+        return;
+      }
+
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+
+      currentModalPeriodMonth = currentSelectedMonth || curM;
+      currentModalPeriodYear = currentSelectedYear || curY;
+
+      populateModalEntryPeriodDropdown();
+      updateModalDateBounds(false);
+
+      const staffLabel = document.getElementById('modalStaffLabel');
+      if (staffLabel) {
+        staffLabel.innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
+      }
+      const modal = document.getElementById('dayEntryModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+
+      await switchReportInputMode('day');
+    }
+
+    function closeDayEntryModal() {
+      const modal = document.getElementById('dayEntryModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }
+
+    async function switchReportInputMode(mode) {
+      currentReportInputMode = mode;
+      const btnDay = document.getElementById('tabModeDayBtn');
+      const btnTask = document.getElementById('tabModeTaskBtn');
+      const controlsDay = document.getElementById('controlsModeDay');
+      const controlsTask = document.getElementById('controlsModeTask');
+      const noReportCard = document.getElementById('noReportDayCard');
+      const taskHeaderCard = document.getElementById('taskHeaderInfoCard');
+      const btnCopyYesterday = document.getElementById('btnCopyYesterday');
+
+      if (mode === 'day') {
+        if (btnDay) btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
+        if (btnTask) btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
+        if (controlsDay) controlsDay.classList.remove('hidden');
+        if (controlsTask) controlsTask.classList.add('hidden');
+        if (noReportCard) noReportCard.classList.remove('hidden');
+        if (taskHeaderCard) taskHeaderCard.classList.add('hidden');
+        if (btnCopyYesterday) btnCopyYesterday.classList.remove('hidden');
+        await fetchDayEntryTasks();
+      } else {
+        if (btnDay) btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
+        if (btnTask) btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
+        if (controlsDay) controlsDay.classList.add('hidden');
+        if (controlsTask) controlsTask.classList.remove('hidden');
+        if (noReportCard) noReportCard.classList.add('hidden');
+        if (taskHeaderCard) taskHeaderCard.classList.remove('hidden');
+        if (btnCopyYesterday) btnCopyYesterday.classList.add('hidden');
+        const taskSelect = document.getElementById('modalTaskSelect');
+        await fetchTaskEntryDays(taskSelect ? taskSelect.value : null);
+      }
+    }
+
     async function fetchDayEntryTasks() {
+      if (!currentUser) return;
       let targetStaff = currentUser.fullName;
       const now = new Date();
       const curM = now.getMonth() + 1;
@@ -19538,6 +19661,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         _securityHeartbeatInterval = null;
       }
       sessionStorage.setItem('ops_portal_manual_logout', 'true');
+      document.documentElement.classList.remove('app-auto-login-pending');
       sessionStorage.removeItem('ops_session_device_logged');
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
