@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v25') {
+          if (key !== 'baocao-dvkh-pwa-v26') {
             caches.delete(key);
           }
         });
@@ -1832,13 +1832,26 @@
           </button>
         </div>
 
-        <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
-          <input type="date" id="modalEntryDate" onchange="fetchDayEntryTasks()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
-        </div>
+        <!-- Cụm chọn Kỳ / Tháng & Ngày báo cáo (Hỗ trợ điền ngày 30-31 tháng trước khi sang tháng mới) -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Dropdown Chọn Tháng / Kỳ báo cáo -->
+          <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
+            <i class="fa-solid fa-calendar-week text-emerald-700 text-xs"></i>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Kỳ:</span>
+            <select id="modalEntryPeriodSelect" onchange="onModalEntryPeriodChange()" class="bg-transparent text-xs font-bold text-emerald-900 focus:outline-none cursor-pointer pr-1">
+            </select>
+          </div>
 
-        <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
-          <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+          <!-- Ô chọn Ngày (chế độ Điền theo ngày) -->
+          <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
+            <input type="date" id="modalEntryDate" onchange="onModalEntryDateChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
+          </div>
+
+          <!-- Dropdown Chọn Đầu việc (chế độ Điền theo công việc) -->
+          <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
+            <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+          </div>
         </div>
       </div>
 
@@ -1869,6 +1882,26 @@
         <div id="warehouseReadOnlyBanner" class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
           <i class="fa-solid fa-shield-halved text-amber-600 text-sm flex-shrink-0"></i>
           <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>
+        </div>
+
+        <!-- BANNER TRẠNG THÁI BÁO CÁO CỦA NGÀY: NHẬN DIỆN ĐÃ ĐIỀN HAY CHƯA ĐIỀN ĐỂ TRÁNH ĐIỀN TRÙNG -->
+        <div id="dayReportStatusAlert" class="p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs border transition-all duration-200 bg-emerald-50/95 border-emerald-300 text-emerald-950">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div id="dayReportStatusAlertIconBox" class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs text-sm">
+              <i id="dayReportStatusAlertIcon" class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span id="dayReportStatusAlertTitle" class="text-xs sm:text-sm font-black leading-tight">ĐÃ CÓ BÁO CÁO SỐ LIỆU</span>
+                <span id="dayReportStatusAlertBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider font-num bg-emerald-200 text-emerald-900 border border-emerald-300 shrink-0">ĐÃ ĐIỀN BÁO CÁO</span>
+              </div>
+              <p id="dayReportStatusAlertDesc" class="text-[11px] font-medium mt-0.5 leading-snug">Số liệu ngày này đã được ghi nhận vào hệ thống. Bạn không cần điền thêm trừ khi muốn sửa đổi.</p>
+            </div>
+          </div>
+          <div id="dayReportStatusCountBadge" class="flex flex-col items-end shrink-0 pl-1">
+            <span class="text-[9px] uppercase font-bold text-slate-400">Tiến độ</span>
+            <span id="dayReportStatusCountText" class="text-xs font-black font-num text-emerald-700">4/4 việc</span>
+          </div>
         </div>
 
         <!-- DÒNG NỔI BẬT DÀNH CHO CÁC NGÀY NGHỈ / KHÔNG CÓ SỐ LIỆU ĐỂ NHÂN SỰ TÍCH CHỌN -->
@@ -13406,30 +13439,269 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
-    function copyPreviousDayValues() {
+    // ================= QUẢN LÝ KỲ BÁO CÁO & BỘ NHỚ ĐỆM CHO MODAL ĐIỀN BÁO CÁO =================
+    let currentModalPeriodMonth = null;
+    let currentModalPeriodYear = null;
+    const periodMatrixMemoryCache = new Map();
+
+    function populateModalEntryPeriodDropdown() {
+      const select = document.getElementById('modalEntryPeriodSelect');
+      if (!select) return;
+      select.innerHTML = '';
+
+      const existing = (globalInitData && globalInitData.existingMonths) ? globalInitData.existingMonths : [];
+      const periods = (globalInitData && globalInitData.availablePeriods && globalInitData.availablePeriods.length > 0)
+        ? globalInitData.availablePeriods
+        : buildAvailablePeriods(existing);
+
+      periods.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = `${p.month}_${p.year}`;
+        opt.innerText = p.label;
+        if (p.month === currentModalPeriodMonth && p.year === currentModalPeriodYear) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    }
+
+    function checkPeriodLockedState(month, year) {
+      if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) return false;
+      const saved = localStorage.getItem(`ops_period_lock_${year}_${month}`);
+      if (saved !== null) return saved === "true";
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      const curDay = now.getDate();
+      if (year === curY && month === curM) return false;
+      if ((year === curY && month === curM - 1) || (curM === 1 && year === curY - 1 && month === 12)) {
+        return (curDay >= 5); // Tháng trước: Mở đến hết ngày 04, từ ngày 05 tự động khóa
+      }
+      return true;
+    }
+
+    function updateModalDateBounds(forceSelectLastDay = false) {
+      const dateInp = document.getElementById('modalEntryDate');
+      if (!dateInp) return;
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      const curDay = now.getDate();
+      const todayIso = `${curY}-${String(curM).padStart(2, '0')}-${String(curDay).padStart(2, '0')}`;
+
+      const targetM = currentModalPeriodMonth || curM;
+      const targetY = currentModalPeriodYear || curY;
+      const daysInMonth = new Date(targetY, targetM, 0).getDate();
+      const mStr = String(targetM).padStart(2, '0');
+
+      const minDate = `${targetY}-${mStr}-01`;
+      let maxDate;
+      if (targetY === curY && targetM === curM) {
+        maxDate = todayIso;
+      } else {
+        maxDate = `${targetY}-${mStr}-${String(daysInMonth).padStart(2, '0')}`;
+      }
+
+      dateInp.min = minDate;
+      dateInp.max = maxDate;
+
+      if (forceSelectLastDay || !dateInp.value || dateInp.value < minDate || dateInp.value > maxDate) {
+        dateInp.value = maxDate;
+      }
+    }
+
+    async function onModalEntryPeriodChange() {
+      const select = document.getElementById('modalEntryPeriodSelect');
+      if (!select) return;
+      const parts = select.value.split('_');
+      currentModalPeriodMonth = parseInt(parts[0], 10);
+      currentModalPeriodYear = parseInt(parts[1], 10);
+
+      updateModalDateBounds(true);
+
+      if (currentReportInputMode === 'day') {
+        await fetchDayEntryTasks();
+      } else {
+        const taskSelect = document.getElementById('modalTaskSelect');
+        await fetchTaskEntryDays(taskSelect ? taskSelect.value : null);
+      }
+    }
+
+    async function onModalEntryDateChange() {
+      const dateInp = document.getElementById('modalEntryDate');
+      if (!dateInp || !dateInp.value) return;
+      const parts = dateInp.value.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+
+      if (y !== currentModalPeriodYear || m !== currentModalPeriodMonth) {
+        currentModalPeriodYear = y;
+        currentModalPeriodMonth = m;
+        const select = document.getElementById('modalEntryPeriodSelect');
+        if (select) {
+          select.value = `${m}_${y}`;
+          if (select.value !== `${m}_${y}`) {
+            populateModalEntryPeriodDropdown();
+            select.value = `${m}_${y}`;
+          }
+        }
+      }
+      await fetchDayEntryTasks();
+    }
+
+    async function getMatrixDataForDayEntry(month, year) {
+      const key = `${year}_${month}`;
+      if (periodMatrixMemoryCache.has(key)) {
+        return periodMatrixMemoryCache.get(key);
+      }
+      if (fullPeriodMatrixCache && fullPeriodMatrixCache.queryMonth === month && fullPeriodMatrixCache.queryYear === year) {
+        periodMatrixMemoryCache.set(key, fullPeriodMatrixCache);
+        return fullPeriodMatrixCache;
+      }
+      try {
+        const snap = localStorage.getItem(`ops_matrix_snapshot_${year}_${month}`);
+        if (snap) {
+          const p = JSON.parse(snap);
+          if (p && p.staffGroups && p.staffGroups.length > 0) {
+            periodMatrixMemoryCache.set(key, p);
+            return p;
+          }
+        }
+        const act = localStorage.getItem(`ops_matrix_active_cache_${year}_${month}`);
+        if (act) {
+          const p = JSON.parse(act);
+          if (p && p.staffGroups && p.staffGroups.length > 0) {
+            periodMatrixMemoryCache.set(key, p);
+            return p;
+          }
+        }
+      } catch(e) {}
+
+      try {
+        const loading = document.getElementById('modalLoadingTasks');
+        if (loading) loading.classList.remove('hidden');
+        const fresh = await fetchMatrixFromSupabase(month, year);
+        if (loading) loading.classList.add('hidden');
+        if (fresh) {
+          periodMatrixMemoryCache.set(key, fresh);
+          return fresh;
+        }
+      } catch(err) {
+        console.warn("Lỗi tải ma trận kỳ", month, year, err);
+      }
+      return fullPeriodMatrixCache || currentMatrixData;
+    }
+
+    function updateDayReportStatusAlertUI({ isLeave, leaveSym, isReported, filledCount, totalCount, targetDay, targetMonth, targetYear }) {
+      const alertBox = document.getElementById('dayReportStatusAlert');
+      const iconBox = document.getElementById('dayReportStatusAlertIconBox');
+      const icon = document.getElementById('dayReportStatusAlertIcon');
+      const title = document.getElementById('dayReportStatusAlertTitle');
+      const badge = document.getElementById('dayReportStatusAlertBadge');
+      const desc = document.getElementById('dayReportStatusAlertDesc');
+      const countText = document.getElementById('dayReportStatusCountText');
+
+      if (!alertBox) return;
+      alertBox.classList.remove('hidden');
+
+      const dStr = String(targetDay).padStart(2, '0');
+      const mStr = String(targetMonth).padStart(2, '0');
+      const dateLabel = `${dStr}/${mStr}/${targetYear}`;
+
+      if (isLeave && leaveSym) {
+        alertBox.className = "p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs border bg-teal-50/95 border-teal-300 text-teal-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs";
+        if (icon) icon.className = "fa-solid fa-calendar-check text-sm";
+        if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ BÁO CÁO NGHỈ / CÔNG TÁC`;
+        if (badge) {
+          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-200 text-teal-900 border border-teal-300 font-num shrink-0";
+          badge.innerText = `NGHỈ: ${leaveSym.code}`;
+        }
+        if (desc) desc.innerText = `Đã ghi nhận lý do "${leaveSym.title}" cho ngày này. Số liệu đã được lưu trữ, không cần điền thêm.`;
+        if (countText) {
+          countText.className = "text-xs font-black text-teal-800 font-num";
+          countText.innerText = `Nghỉ ${leaveSym.code}`;
+        }
+      } else if (isReported) {
+        alertBox.className = "p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs border bg-emerald-50/95 border-emerald-300 text-emerald-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs";
+        if (icon) icon.className = "fa-solid fa-circle-check text-sm";
+        if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ CÓ BÁO CÁO SỐ LIỆU`;
+        if (badge) {
+          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-900 border border-emerald-300 font-num shrink-0";
+          badge.innerText = "ĐÃ ĐIỀN BÁO CÁO";
+        }
+        if (desc) desc.innerText = `Ngày này đã có số liệu báo cáo được ghi nhận (${filledCount}/${totalCount} công việc). Bạn không cần điền lại nếu không có thay đổi.`;
+        if (countText) {
+          countText.className = "text-xs font-black text-emerald-700 font-num";
+          countText.innerText = `${filledCount}/${totalCount} việc`;
+        }
+      } else {
+        alertBox.className = "p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs border bg-amber-50/95 border-amber-300 text-amber-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs";
+        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-sm";
+        if (title) title.innerText = `NGÀY ${dateLabel}: CHƯA CÓ BÁO CÁO SỐ LIỆU`;
+        if (badge) {
+          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 border border-amber-300 font-num shrink-0";
+          badge.innerText = "CHƯA ĐIỀN";
+        }
+        if (desc) desc.innerText = `Ngày này hiện chưa có dữ liệu. Hãy nhập số liệu hoặc chọn lý do nghỉ bên dưới rồi bấm Lưu báo cáo.`;
+        if (countText) {
+          countText.className = "text-xs font-black text-amber-800 font-num";
+          countText.innerText = `0/${totalCount} việc`;
+        }
+      }
+    }
+
+    async function copyPreviousDayValues() {
       if (currentReportInputMode !== 'day') {
         showToast("Tính năng sao chép áp dụng khi đang ở chế độ 'Điền theo ngày'!", true);
         return;
       }
 
       const curDateInput = document.getElementById('modalEntryDate');
+      if (!curDateInput || !curDateInput.value) return;
       const curParts = curDateInput.value.split('-');
-      const prevDate = new Date(parseInt(curParts[0], 10), parseInt(curParts[1], 10) - 1, parseInt(curParts[2], 10) - 1);
+      const curY = parseInt(curParts[0], 10);
+      const curM = parseInt(curParts[1], 10);
+      const curD = parseInt(curParts[2], 10);
+
+      const prevDate = new Date(curY, curM - 1, curD - 1);
+      const prevY = prevDate.getFullYear();
+      const prevM = prevDate.getMonth() + 1;
       const prevDayNum = prevDate.getDate();
-      const prevLabel = (prevDayNum < 10 ? '0' : '') + prevDayNum + '/' + (('0' + (prevDate.getMonth() + 1)).slice(-2));
+      const prevLabel = (prevDayNum < 10 ? '0' : '') + prevDayNum + '/' + (('0' + prevM).slice(-2));
 
-      const activeData = fullPeriodMatrixCache || currentMatrixData;
-      if (!activeData) return;
+      // Lấy ma trận dữ liệu của ngày hôm trước (kể cả khi ngày trước thuộc tháng trước)
+      const prevData = await getMatrixDataForDayEntry(prevM, prevY);
+      if (!prevData || !prevData.dayCols) {
+        showToast("Không tìm thấy dữ liệu ngày trước để sao chép!", true);
+        return;
+      }
 
-      const matchedPrevCol = activeData.dayCols.find(dc => dc.dayNum === prevDayNum);
+      const matchedPrevCol = prevData.dayCols.find(dc => dc.dayNum === prevDayNum);
       if (!matchedPrevCol) {
-        showToast("Ngày làm việc trước đó không nằm trong kỳ báo cáo này!", true);
+        showToast(`Không tìm thấy cột ngày ${prevLabel} trong hệ thống!`, true);
         return;
       }
 
       let copiedCount = 0;
       currentDayEntryTasks.forEach((curT, idx) => {
-        let val = curT.taskRef ? curT.taskRef.dailyValues[matchedPrevCol.colIndex] : "";
+        let val = "";
+        // Tìm task tương ứng trong ma trận ngày trước
+        if (prevData.staffGroups) {
+          for (const grp of prevData.staffGroups) {
+            const fTask = (grp.tasks || []).find(t => t.taskId === curT.taskId);
+            if (fTask && fTask.dailyValues && fTask.dailyValues[matchedPrevCol.colIndex] !== undefined) {
+              val = fTask.dailyValues[matchedPrevCol.colIndex];
+              break;
+            }
+          }
+        }
+        if (!val && curT.taskRef && curT.taskRef.dailyValues && curT.taskRef.dailyValues[matchedPrevCol.colIndex] !== undefined) {
+          val = curT.taskRef.dailyValues[matchedPrevCol.colIndex];
+        }
+
         if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
           const el = document.getElementById(`dayInput_${idx}`);
           if (el) {
@@ -13459,42 +13731,40 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       } else {
         if (currentTaskEntryMeta && currentTaskEntryMeta.isSymbolTask) {
           currentTaskEntryDays.forEach((d, idx) => {
-            if (!isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear)) {
-              const el = document.getElementById(`taskDayInput_${idx}`);
-              if (el && !el.disabled) { el.value = "X"; filledCount++; }
-            }
+            const el = document.getElementById(`taskDayInput_${idx}`);
+            if (el && !el.disabled && !el.readOnly) { el.value = "X"; filledCount++; }
           });
         }
       }
-
       if (filledCount > 0) {
         triggerDraftAutosave();
-        showToast(`Đã điền X hoàn thành cho ${filledCount} ô!`);
-      } else {
-        showToast("Không có ô nào thuộc dạng công việc ký hiệu để đánh dấu!", true);
+        showToast(`Đã đánh dấu hoàn thành (X) cho ${filledCount} mục!`);
       }
     }
 
     function clearModalInputFields() {
-      if (confirm("Bạn có chắc chắn muốn xóa trắng toàn bộ dữ liệu đang nhập không?")) {
-        if (currentReportInputMode === 'day') {
-          currentDayEntryTasks.forEach((t, idx) => {
-            const el = document.getElementById(`dayInput_${idx}`);
-            if (el) el.value = "";
-          });
-        } else {
-          currentTaskEntryDays.forEach((d, idx) => {
-            const el = document.getElementById(`taskDayInput_${idx}`);
-            if (el) el.value = "";
-          });
-        }
-        clearLocalDraft();
-        updateSyncStatusUI('draft');
-        showToast("Đã làm mới toàn bộ ô nhập liệu!");
+      if (currentReportInputMode === 'day') {
+        currentDayEntryTasks.forEach((t, idx) => {
+          const el = document.getElementById(`dayInput_${idx}`);
+          if (el && !el.disabled && !el.readOnly) el.value = '';
+        });
+      } else {
+        currentTaskEntryDays.forEach((d, idx) => {
+          const el = document.getElementById(`taskDayInput_${idx}`);
+          if (el && !el.disabled && !el.readOnly) el.value = '';
+        });
       }
+      const chk = document.getElementById('chkNoReportReason');
+      if (chk) chk.checked = false;
+      const rc = document.getElementById('noReportReasonContainer');
+      if (rc) rc.classList.add('hidden');
+      const bd = document.getElementById('noReportBadge');
+      if (bd) bd.classList.add('hidden');
+      updateQuickReasonButtonsActive(null);
+      triggerDraftAutosave();
+      showToast("Đã xóa trắng các ô nhập liệu!");
     }
 
-    // ================= TIỆN ÍCH TĂNG TỐC ĐIỀN BÁO CÁO: GIỌNG NÓI, CHÉP NHANH, TĂNG GIẢM SỐ =================
     let activeSpeechRecognition = null;
     let activeVoiceBtnEl = null;
 
@@ -13584,9 +13854,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
-    function copySingleTaskPreviousValue(taskIdx) {
+    async function copySingleTaskPreviousValue(taskIdx) {
       const curT = currentDayEntryTasks[taskIdx];
-      if (!curT || !curT.taskRef) {
+      if (!curT) {
         showToast("Chưa có dữ liệu của đầu việc này!", true);
         return;
       }
@@ -13594,24 +13864,39 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const curDateInput = document.getElementById('modalEntryDate');
       const curParts = (curDateInput ? curDateInput.value : "").split('-');
       if (curParts.length < 3) return;
+      const curY = parseInt(curParts[0], 10);
+      const curM = parseInt(curParts[1], 10);
       const currentDayNum = parseInt(curParts[2], 10);
 
-      const activeData = fullPeriodMatrixCache || currentMatrixData;
-      if (!activeData) return;
+      const prevDate = new Date(curY, curM - 1, currentDayNum - 1);
+      const prevY = prevDate.getFullYear();
+      const prevM = prevDate.getMonth() + 1;
+      const prevDay = prevDate.getDate();
+      const prevLabel = (prevDay < 10 ? '0' : '') + prevDay + '/' + (('0' + prevM).slice(-2));
 
-      const candidateCols = activeData.dayCols
-        .filter(dc => dc.dayNum < currentDayNum)
-        .sort((a, b) => b.dayNum - a.dayNum);
+      const prevData = await getMatrixDataForDayEntry(prevM, prevY);
+      if (!prevData || !prevData.dayCols) {
+        showToast("Chưa có dữ liệu ngày trước để sao chép!", true);
+        return;
+      }
+
+      const matchedPrevCol = prevData.dayCols.find(dc => dc.dayNum === prevDay);
+      if (!matchedPrevCol) {
+        showToast("Không tìm thấy ngày làm việc trước đó!", true);
+        return;
+      }
 
       let foundVal = null;
-      let foundDayLabel = "";
-
-      for (const dc of candidateCols) {
-        const v = curT.taskRef.dailyValues[dc.colIndex];
-        if (v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== '-' && String(v).trim() !== '·' && String(v).trim() !== '0') {
-          foundVal = v;
-          foundDayLabel = dc.label;
-          break;
+      if (prevData.staffGroups) {
+        for (const grp of prevData.staffGroups) {
+          const fTask = (grp.tasks || []).find(t => t.taskId === curT.taskId);
+          if (fTask && fTask.dailyValues && fTask.dailyValues[matchedPrevCol.colIndex] !== undefined) {
+            const v = fTask.dailyValues[matchedPrevCol.colIndex];
+            if (v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== '-' && String(v).trim() !== '·' && String(v).trim() !== '0') {
+              foundVal = v;
+              break;
+            }
+          }
         }
       }
 
@@ -13621,10 +13906,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           el.value = formatNumberWithCommas(foundVal);
           formatNumberInputLive(el);
           triggerDraftAutosave();
-          showToast(`Đã lấy số liệu "${foundVal}" từ ngày ${foundDayLabel}!`);
+          showToast(`Đã lấy số liệu "${foundVal}" từ ngày ${prevLabel}!`);
         }
       } else {
-        showToast("Đầu việc này chưa có số liệu ở các ngày trước để sao chép!", true);
+        showToast("Đầu việc này chưa có số liệu ở ngày trước đó để sao chép!", true);
       }
     }
 
@@ -13648,33 +13933,33 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     }
 
     // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
-    function openDayEntryModal() {
+    async function openDayEntryModal() {
       if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
         showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
         return;
       }
 
       const now = new Date();
-      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const dateInp = document.getElementById('modalEntryDate');
-      if (dateInp) {
-        dateInp.max = todayIso;
-        if (!dateInp.value || dateInp.value > todayIso) {
-          dateInp.value = todayIso;
-        }
-      }
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+
+      currentModalPeriodMonth = currentSelectedMonth || curM;
+      currentModalPeriodYear = currentSelectedYear || curY;
+
+      populateModalEntryPeriodDropdown();
+      updateModalDateBounds(false);
 
       document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
       document.getElementById('dayEntryModal').classList.remove('hidden');
 
-      switchReportInputMode('day');
+      await switchReportInputMode('day');
     }
 
     function closeDayEntryModal() {
       document.getElementById('dayEntryModal').classList.add('hidden');
     }
 
-    function switchReportInputMode(mode) {
+    async function switchReportInputMode(mode) {
       currentReportInputMode = mode;
       const btnDay = document.getElementById('tabModeDayBtn');
       const btnTask = document.getElementById('tabModeTaskBtn');
@@ -13683,6 +13968,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const noReportCard = document.getElementById('noReportDayCard');
       const taskHeaderCard = document.getElementById('taskHeaderInfoCard');
       const btnCopyYesterday = document.getElementById('btnCopyYesterday');
+      const alertBox = document.getElementById('dayReportStatusAlert');
 
       if (mode === 'day') {
         btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
@@ -13691,8 +13977,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         controlsTask.classList.add('hidden');
         noReportCard.classList.remove('hidden');
         taskHeaderCard.classList.add('hidden');
+        if (alertBox) alertBox.classList.remove('hidden');
         if (btnCopyYesterday) btnCopyYesterday.classList.remove('hidden');
-        fetchDayEntryTasks();
+        await fetchDayEntryTasks();
       } else {
         btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
         btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
@@ -13700,22 +13987,25 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         controlsTask.classList.remove('hidden');
         noReportCard.classList.add('hidden');
         taskHeaderCard.classList.remove('hidden');
+        if (alertBox) alertBox.classList.add('hidden');
         if (btnCopyYesterday) btnCopyYesterday.classList.add('hidden');
 
         const taskSelect = document.getElementById('modalTaskSelect');
         const selectedRow = taskSelect ? taskSelect.value : null;
-        fetchTaskEntryDays(selectedRow);
+        await fetchTaskEntryDays(selectedRow);
       }
     }
 
-    function fetchDayEntryTasks() {
+    async function fetchDayEntryTasks() {
       let targetStaff = currentUser.fullName;
       const now = new Date();
-      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      const todayIso = `${curY}-${String(curM).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const entryDateEl = document.getElementById('modalEntryDate');
-      if (entryDateEl) entryDateEl.max = todayIso;
 
       let targetDate = entryDateEl ? entryDateEl.value : todayIso;
+      if (!targetDate) targetDate = todayIso;
       if (targetDate > todayIso) {
         showToast("Không được phép điền báo cáo trước! Chỉ được báo cáo từ ngày 01 đến hôm nay.", true);
         targetDate = todayIso;
@@ -13723,7 +14013,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
 
       const parts = targetDate.split('-');
+      const targetYear = parseInt(parts[0], 10);
+      const targetMonth = parseInt(parts[1], 10);
       const targetDay = parseInt(parts[2], 10);
+
+      currentModalPeriodMonth = targetMonth;
+      currentModalPeriodYear = targetYear;
 
       const chk = document.getElementById('chkNoReportReason');
       if (chk) chk.checked = false;
@@ -13733,10 +14028,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       if (badge) badge.classList.add('hidden');
       backupDayValuesBeforeReason = null;
 
-      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      const activeData = await getMatrixDataForDayEntry(targetMonth, targetYear);
 
       if (activeData && activeData.staffGroups) {
-        const matchedCol = activeData.dayCols.find(dc => dc.dayNum === targetDay);
+        const matchedCol = activeData.dayCols ? activeData.dayCols.find(dc => dc.dayNum === targetDay) : null;
         const dateCol = matchedCol ? matchedCol.colIndex : targetDay;
 
         let tasksForDay = [];
@@ -13745,7 +14040,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         let isShared = isSharedGroupDeptClient(currentUser.department);
         let isLead = isShared && isWarehouseLead(currentUser, currentUser.department);
 
-        // Kiểm tra xem người dùng hiện tại có công việc cá nhân riêng trong nhóm gộp/tổ kho hay không
         let hasPersonalTasksInShared = false;
         if (isShared) {
           hasPersonalTasksInShared = activeData.staffGroups.some(grp => 
@@ -13762,20 +14056,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           if (isShared) {
             if (isDeptEquivalent(grp.department, currentUser.department)) {
               if (hasPersonalTasksInShared) {
-                // Người dùng có việc cá nhân riêng trong tổ kho:
                 if (grp.isPersonalInShared) {
-                  // Chỉ lấy việc cá nhân của chính mình!
                   if (grp.userId === currentUser.id || isStaffMatchedInCell(currentUser.fullName, grp.staffName)) {
                     isMatch = true;
                   }
                 } else if (isLead) {
-                  // Nếu là Kho chính/Trưởng nhóm và có cả việc chung: nạp cả việc chung để báo cáo
                   isMatch = true;
                 }
               } else {
-                // Người dùng không có việc cá nhân riêng:
-                // Nếu là Kho chính: nạp việc chung để báo cáo
-                // Nếu là phụ kho không làm báo cáo chung: KHÔNG nạp việc chung
                 if (!grp.isPersonalInShared && isLead) {
                   isMatch = true;
                 }
@@ -13789,8 +14077,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
           if (isMatch) {
             grp.tasks.forEach(t => {
-              let curVal = t.dailyValues[dateCol] !== undefined ? t.dailyValues[dateCol] : "";
-              if (curVal === '0' || curVal === 0) curVal = "";
+              let curVal = (t.dailyValues && t.dailyValues[dateCol] !== undefined) ? t.dailyValues[dateCol] : "";
+              if (curVal === '-' || curVal === '·') curVal = "";
 
               tasksForDay.push({
                 taskId: t.taskId,
@@ -13818,11 +14106,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         });
 
         if (tasksForDay.length === 0) {
-          openUnassignedStaffModal(currentUser, currentSelectedMonth, currentSelectedYear);
-          return;
-        }
-        if (tasksForDay.length === 0) {
-          openUnassignedStaffModal(currentUser, currentSelectedMonth, currentSelectedYear);
+          openUnassignedStaffModal(currentUser, currentModalPeriodMonth, currentModalPeriodYear);
           return;
         }
         currentDayEntryTasks = tasksForDay;
@@ -13857,13 +14141,35 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         }
         updateQuickReasonButtonsActive(existingLeaveSym ? existingLeaveSym.code : null);
 
-        const canReportDayTasks = !isShared || isLead || hasPersonalTasksInShared;
+        // ĐÁNH GIÁ TRẠNG THÁI BÁO CÁO CỦA NGÀY (ĐÃ CÓ SỐ LIỆU HAY CHƯA ĐIỀN)
+        let filledCount = 0;
+        tasksForDay.forEach(t => {
+          if (t.currentValue !== undefined && t.currentValue !== null && String(t.currentValue).trim() !== '' && String(t.currentValue).trim() !== '0') {
+            filledCount++;
+          }
+        });
+        const isReported = (filledCount > 0);
+
+        updateDayReportStatusAlertUI({
+          isLeave: !!existingLeaveSym,
+          leaveSym: existingLeaveSym,
+          isReported: isReported,
+          filledCount: filledCount,
+          totalCount: tasksForDay.length,
+          targetDay: targetDay,
+          targetMonth: targetMonth,
+          targetYear: targetYear
+        });
+
+        const isPeriodLocked = checkPeriodLockedState(targetMonth, targetYear);
+        const canReportDayTasks = (!isShared || isLead || hasPersonalTasksInShared) && !isPeriodLocked;
 
         populateModalTaskSelectOptions(allTaskList);
         renderDayEntryTasks({
           tasks: tasksForDay,
           isWarehouse: isShared && !hasPersonalTasksInShared,
-          isLead: canReportDayTasks
+          isLead: canReportDayTasks,
+          isLocked: isPeriodLocked
         });
         checkAndShowDraftRestoreButton();
         updateSyncStatusUI('synced');
@@ -13885,9 +14191,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       });
     }
 
-    function fetchTaskEntryDays(targetRowIndex) {
+    async function fetchTaskEntryDays(targetRowIndex) {
       let targetStaff = currentUser.fullName;
-      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      const targetM = currentModalPeriodMonth || currentSelectedMonth;
+      const targetY = currentModalPeriodYear || currentSelectedYear;
+
+      const activeData = await getMatrixDataForDayEntry(targetM, targetY);
 
       if (activeData && activeData.staffGroups) {
         let allTaskList = [];
@@ -13895,7 +14204,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         let targetUserId = 1;
 
         let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
-        let myRole = removeAccents(currentUser.role || "");
         let isLeadTaskMode = isSharedTaskMode && isWarehouseLead(currentUser, currentUser.department);
 
         let hasPersonalTasksInSharedMode = false;
@@ -13957,8 +14265,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           populateModalTaskSelectOptions(allTaskList);
 
           const days = activeData.dayCols.map(dc => {
-            let dVal = targetTask.dailyValues[dc.colIndex] !== undefined ? targetTask.dailyValues[dc.colIndex] : "";
-            if (dVal === '0' || dVal === 0) dVal = "";
+            let dVal = (targetTask.dailyValues && targetTask.dailyValues[dc.colIndex] !== undefined) ? targetTask.dailyValues[dc.colIndex] : "";
+            if (dVal === '-' || dVal === '·') dVal = "";
             return {
               colIndex: dc.colIndex,
               dayNum: dc.dayNum,
@@ -13968,14 +14276,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             };
           });
 
-          const canReportSingleTask = !isSharedTaskMode || isLeadTaskMode || hasPersonalTasksInSharedMode;
+          const isPeriodLocked = checkPeriodLockedState(targetM, targetY);
+          const canReportSingleTask = (!isSharedTaskMode || isLeadTaskMode || hasPersonalTasksInSharedMode) && !isPeriodLocked;
 
           currentTaskEntryDays = days;
           renderTaskEntryDays({
             task: targetTask,
             days: days,
             isWarehouse: isSharedTaskMode && !hasPersonalTasksInSharedMode,
-            isLead: canReportSingleTask
+            isLead: canReportSingleTask,
+            isLocked: isPeriodLocked
           });
           checkAndShowDraftRestoreButton();
           updateSyncStatusUI('synced');
@@ -13983,10 +14293,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
-    function onModalTaskSelectChange() {
+    async function onModalTaskSelectChange() {
       const taskSelect = document.getElementById('modalTaskSelect');
       if (taskSelect) {
-        fetchTaskEntryDays(taskSelect.value);
+        await fetchTaskEntryDays(taskSelect.value);
       }
     }
 
@@ -13996,7 +14306,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const submitBtn = document.getElementById('btnSubmitDayReport');
       container.innerHTML = '';
 
-      const isLocked = currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username);
+      const isLocked = res.isLocked;
       const isReadOnly = (res.isWarehouse && !res.isLead) || isLocked;
 
       if (banner) {
@@ -14025,6 +14335,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       res.tasks.forEach((t, idx) => {
         const item = document.createElement('div');
+        const hasVal = (t.currentValue !== undefined && t.currentValue !== null && String(t.currentValue).trim() !== '' && String(t.currentValue).trim() !== '0');
+        const formattedVal = t.isSymbolTask ? t.currentValue : formatNumberWithCommas(t.currentValue);
+        const inputBgBorder = hasVal ? 'bg-emerald-50/30 border-emerald-400 text-emerald-950 font-bold' : 'bg-white border-slate-300 text-slate-800';
+
         item.className = "p-3 sm:p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:bg-slate-100/70";
 
         let inputControl = '';
@@ -14032,7 +14346,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           inputControl = `
             <div class="w-full sm:w-72 flex items-center gap-1.5">
               <div class="relative flex-1">
-                <input type="text" id="dayInput_${idx}" value="${t.currentValue}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 ${inputBgBorder} rounded-xl text-center sm:text-left font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
                 ${!isReadOnly ? `
                   <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
                     <i class="fa-solid fa-microphone text-xs"></i>
@@ -14047,11 +14361,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             </div>
           `;
         } else {
-          const formattedVal = formatNumberWithCommas(t.currentValue);
           inputControl = `
             <div class="w-full sm:w-72 flex items-center gap-1.5">
               <div class="relative flex-1">
-                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 ${inputBgBorder} rounded-xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
                 ${!isReadOnly ? `
                   <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập số liệu">
                     <i class="fa-solid fa-microphone text-xs"></i>
@@ -14071,7 +14384,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <div class="flex-1 min-w-0 pr-1">
             <div class="flex items-start gap-2 mb-1">
               <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-100">${idx + 1}</span>
-              <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug break-words">${escapeHtml(t.taskName)}</h4>
+              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug break-words">${escapeHtml(t.taskName)}</h4>
+                ${hasVal ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs shrink-0"><i class="fa-solid fa-check text-[8px] text-emerald-600"></i>Đã có số liệu</span>` : `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-400 border border-slate-200 inline-flex items-center shrink-0">Chưa điền</span>`}
+              </div>
             </div>
             <p class="text-[11px] text-slate-400 italic ml-7 break-words">${escapeHtml(cleanTaskGuide(t.guide))}</p>
           </div>
@@ -14087,7 +14403,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const submitBtn = document.getElementById('btnSubmitDayReport');
       container.innerHTML = '';
 
-      const isLocked = currentPeriodLocked && !isAdminOrManager(currentUser.role, currentUser.username);
+      const isLocked = res.isLocked;
       const isReadOnly = (res.isWarehouse && !res.isLead) || isLocked;
 
       if (banner) {
@@ -14111,13 +14427,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       const task = res.task;
       const isSymbol = task.isSymbolTask;
+      const targetM = currentModalPeriodMonth || currentSelectedMonth;
+      const targetY = currentModalPeriodYear || currentSelectedYear;
 
       res.days.forEach((d, idx) => {
         const item = document.createElement('div');
-        const hasNoData = (!d.value || d.value === '-' || d.value === '0');
+        const hasVal = (d.value !== undefined && d.value !== null && String(d.value).trim() !== '' && String(d.value).trim() !== '-' && String(d.value).trim() !== '0');
         const sym = getSmartSymbolInfo(d.value);
         const isLeave = !!(sym && sym.isLeave);
-        const isFuture = isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear);
+        const isFuture = isFutureDay(d.dayNum, targetM, targetY);
         const isDayReadOnly = isReadOnly || isFuture;
 
         let rowHighlightClass = "bg-white border-slate-200";
@@ -14126,21 +14444,24 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         } else if (d.isToday) {
           rowHighlightClass = "border-emerald-300 bg-emerald-50/20";
         } else if (isLeave) {
-          rowHighlightClass = "border-amber-300 bg-amber-50/50";
-        } else if (hasNoData) {
+          rowHighlightClass = "border-teal-300 bg-teal-50/50";
+        } else if (hasVal) {
+          rowHighlightClass = "border-emerald-300/80 bg-emerald-50/20";
+        } else {
           rowHighlightClass = "border-dashed border-slate-300 bg-slate-50/60 hover:bg-amber-50/20";
         }
 
         item.className = `p-3 border rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition ${rowHighlightClass}`;
 
         const placeholderText = isFuture ? 'Chưa đến ngày' : (isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc');
+        const formattedVal = isSymbol ? d.value : formatNumberWithCommas(d.value);
 
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
             <div class="flex items-center gap-1.5">
               <div class="relative w-44 sm:w-56">
-                <input type="text" id="taskDayInput_${idx}" value="${d.value}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
                 ${!isDayReadOnly ? `
                   <button type="button" id="voiceBtn_task_${idx}" onclick="toggleVoiceInput('taskDayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
                     <i class="fa-solid fa-microphone text-[10px]"></i>
@@ -14150,7 +14471,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             </div>
           `;
         } else {
-          const formattedVal = formatNumberWithCommas(d.value);
           inputControl = `
             <div class="flex items-center gap-1.5">
               <div class="relative w-44 sm:w-56">
@@ -14171,8 +14491,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               ${d.dayNum}
             </span>
             <div>
-              <p class="text-xs font-bold ${isFuture ? 'text-slate-400' : 'text-slate-800'} leading-tight">Ngày ${d.label}</p>
-              ${d.isToday ? '<span class="text-[9px] font-bold text-emerald-700 uppercase">Hôm nay</span>' : (isFuture ? '<span class="text-[9px] font-semibold text-slate-400">Chưa đến ngày</span>' : '')}
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">Ngày ${d.label}</span>
+                ${d.isToday ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 font-num">Hôm nay</span>' : ''}
+                ${hasVal ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shrink-0"><i class="fa-solid fa-check text-[8px] text-emerald-600"></i>Đã có số liệu</span>` : (!isFuture ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center shrink-0">Chưa điền</span>` : '')}
+              </div>
+              <p class="text-[11px] text-slate-400 font-medium">${isFuture ? 'Chưa phát sinh ngày' : (isLeave ? (sym.title || 'Nghỉ') : (hasVal ? 'Đã ghi nhận số liệu' : 'Chưa có số liệu'))}</p>
             </div>
           </div>
           <div>${inputControl}</div>
@@ -14319,7 +14643,23 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     }
 
     async function submitDayReport() {
-      if (currentPeriodLocked) {
+      let curDate = '';
+      let targetYear = currentModalPeriodYear || currentSelectedYear;
+      let targetMonth = currentModalPeriodMonth || currentSelectedMonth;
+      let targetDay = 1;
+
+      if (currentReportInputMode === 'day') {
+        if (currentDayEntryTasks.length === 0) return;
+        const dateInp = document.getElementById('modalEntryDate');
+        curDate = dateInp ? dateInp.value : '';
+        if (!curDate) return;
+        const parts = curDate.split('-');
+        targetYear = parseInt(parts[0], 10);
+        targetMonth = parseInt(parts[1], 10);
+        targetDay = parseInt(parts[2], 10);
+      }
+
+      if (checkPeriodLockedState(targetMonth, targetYear)) {
         showToast("Kỳ báo cáo này đã khóa sổ. Số liệu đã được bảo lưu nguyên vẹn, không thể chỉnh sửa!", true);
         return;
       }
@@ -14327,13 +14667,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       let updates = [];
 
       if (currentReportInputMode === 'day') {
-        if (currentDayEntryTasks.length === 0) return;
-        const curDate = document.getElementById('modalEntryDate').value;
-        const parts = curDate.split('-');
-        const targetYear = parseInt(parts[0], 10);
-        const targetMonth = parseInt(parts[1], 10);
-        const targetDay = parseInt(parts[2], 10);
-
         if (isFutureDay(targetDay, targetMonth, targetYear)) {
           showToast("Không được phép điền báo cáo trước! Chỉ được báo cáo từ ngày 01 đến hôm nay.", true);
           return;
@@ -14352,10 +14685,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         });
       } else {
         if (!currentTaskEntryMeta || currentTaskEntryDays.length === 0) return;
-        const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+        const mFormatted = (targetMonth < 10 ? '0' : '') + targetMonth;
 
         updates = currentTaskEntryDays
-          .filter(d => !isFutureDay(d.dayNum, currentSelectedMonth, currentSelectedYear))
+          .filter(d => !isFutureDay(d.dayNum, targetMonth, targetYear))
           .map((d, idx) => {
             const inp = document.getElementById(`taskDayInput_${idx}`);
             let val = inp ? inp.value.trim().replace(/,/g, '') : '';
@@ -14364,7 +14697,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             return {
               taskId: currentTaskEntryMeta.taskId,
               userId: currentTaskEntryMeta.userId,
-              reportDate: `${currentSelectedYear}-${mFormatted}-${dFormatted}`,
+              reportDate: `${targetYear}-${mFormatted}-${dFormatted}`,
               dayNum: d.dayNum,
               value: val
             };
@@ -14373,7 +14706,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       // ĐỒNG BỘ 7 KÝ HIỆU NGÀY NGHỈ (P, Ô, CT, VR, HT, H, L):
       // Khi điền ký hiệu nghỉ ở 1 ô thì cả cột ngày đó của nhân sự được gộp lại và đồng bộ cho tất cả đầu việc
-      const activeDataForModal = fullPeriodMatrixCache || currentMatrixData;
+      const activeDataForModal = periodMatrixMemoryCache.get(targetYear + '_' + targetMonth) || fullPeriodMatrixCache || currentMatrixData;
       if (activeDataForModal && activeDataForModal.staffGroups) {
         const leaveUpdates = [];
         updates.forEach(u => {
@@ -14419,7 +14752,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         return;
       }
 
-      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+      // Đồng bộ vào bộ nhớ đệm ma trận tương ứng của kỳ báo cáo
+      const memKey = `${targetYear}_${targetMonth}`;
+      const targetCaches = [];
+      if (periodMatrixMemoryCache.has(memKey)) targetCaches.push(periodMatrixMemoryCache.get(memKey));
+      if (targetYear === currentSelectedYear && targetMonth === currentSelectedMonth) {
+        if (fullPeriodMatrixCache && !targetCaches.includes(fullPeriodMatrixCache)) targetCaches.push(fullPeriodMatrixCache);
+        if (currentMatrixData && !targetCaches.includes(currentMatrixData)) targetCaches.push(currentMatrixData);
+      }
+
+      targetCaches.forEach(targetCache => {
         if (targetCache && targetCache.staffGroups) {
           updates.forEach(u => {
             targetCache.staffGroups.forEach(grp => {
@@ -14427,11 +14769,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               if (matchedTask) {
                 const symInfo = getSmartSymbolInfo(u.value);
                 const valToCache = symInfo ? symInfo.code : u.value;
+                if (!matchedTask.dailyValues) matchedTask.dailyValues = {};
                 matchedTask.dailyValues[u.dayNum] = valToCache;
-                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols || []);
               }
             });
           });
+          try {
+            localStorage.setItem(`ops_matrix_active_cache_${targetYear}_${targetMonth}`, JSON.stringify(targetCache));
+          } catch(e) {}
         }
       });
 
