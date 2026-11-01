@@ -11116,6 +11116,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const allTasks = [];
       if (data && data.staffGroups) {
         data.staffGroups.forEach((grp, gIdx) => {
+          const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+          const isPersonalInShared = !!grp.isPersonalInShared;
+          const isGroup = isGroupDept && !isPersonalInShared;
+
           (grp.tasks || []).forEach((t, tIdx) => {
             const tName = (t.taskName || '').trim();
             if (!tName) return;
@@ -11127,7 +11131,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               dailyValues: t.dailyValues || {},
               monthTotal: t.monthTotal,
               staffName: grp.staffName || '',
-              department: grp.department || ''
+              department: grp.department || '',
+              isGroup: isGroup
             });
           });
         });
@@ -11158,7 +11163,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           allTasks.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.key;
-            opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${t.staffName}`;
+            if (t.isGroup) {
+              // BỘ PHẬN NHÓM GỘP: Không hiển thị họ tên thành viên / kho chính phụ, chỉ hiển thị [Kho ...] + Tên đầu việc
+              opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName}`;
+            } else {
+              let cleanStaff = (t.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+              opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${cleanStaff || t.staffName}`;
+            }
             if (t.key === prevSelected) opt.selected = true;
             selectFrag.appendChild(opt);
           });
@@ -11230,10 +11241,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           }
 
           if (titleLabel) {
+            const subLabel = curTask.isGroup 
+              ? curTask.department 
+              : (curTask.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
             titleLabel.innerHTML = `
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
               <span class="truncate max-w-[280px] sm:max-w-md font-black text-slate-900" title="${escapeHtml(curTask.taskName)}">${escapeHtml(curTask.taskName)}</span>
-              <span class="text-[10px] text-slate-400 font-normal">(${escapeHtml(curTask.staffName)})</span>
+              <span class="text-[10px] text-slate-400 font-normal">(${escapeHtml(subLabel)})</span>
             `;
           }
 
