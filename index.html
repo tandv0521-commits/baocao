@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v26') {
+          if (key !== 'baocao-dvkh-pwa-v27') {
             caches.delete(key);
           }
         });
@@ -1893,7 +1893,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span id="dayReportStatusAlertTitle" class="text-xs sm:text-sm font-black leading-tight">ĐÃ CÓ BÁO CÁO SỐ LIỆU</span>
-                <span id="dayReportStatusAlertBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider font-num bg-emerald-200 text-emerald-900 border border-emerald-300 shrink-0">ĐÃ ĐIỀN BÁO CÁO</span>
+                <span id="dayReportStatusAlertBadge" class="hidden"></span>
               </div>
               <p id="dayReportStatusAlertDesc" class="text-[11px] font-medium mt-0.5 leading-snug">Số liệu ngày này đã được ghi nhận vào hệ thống. Bạn không cần điền thêm trừ khi muốn sửa đổi.</p>
             </div>
@@ -13592,6 +13592,37 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       return fullPeriodMatrixCache || currentMatrixData;
     }
 
+    function updateDayInputCellStatusLive(input) {
+      if (!input) return;
+      const val = (input.value || '').trim();
+      const hasVal = val !== '' && val !== '0' && val !== '-';
+      const container = input.parentElement;
+      let checkIcon = container ? container.querySelector('.day-input-check-icon') : null;
+
+      if (hasVal) {
+        input.classList.remove('border-slate-300', 'bg-white', 'text-slate-800');
+        input.classList.add('border-emerald-500', 'bg-emerald-50/20', 'text-emerald-950', 'font-bold');
+        input.style.borderColor = '#10b981';
+        input.style.paddingLeft = '1.75rem';
+        if (!checkIcon && container) {
+          checkIcon = document.createElement('span');
+          checkIcon.className = 'day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10';
+          checkIcon.innerText = '✓';
+          container.insertBefore(checkIcon, input);
+        } else if (checkIcon) {
+          checkIcon.classList.remove('hidden');
+        }
+      } else {
+        input.classList.add('border-slate-300', 'bg-white', 'text-slate-800');
+        input.classList.remove('border-emerald-500', 'bg-emerald-50/20', 'text-emerald-950', 'font-bold');
+        input.style.borderColor = '';
+        input.style.paddingLeft = '';
+        if (checkIcon) {
+          checkIcon.classList.add('hidden');
+        }
+      }
+    }
+
     function updateDayReportStatusAlertUI({ isLeave, leaveSym, isReported, filledCount, totalCount, targetDay, targetMonth, targetYear }) {
       const alertBox = document.getElementById('dayReportStatusAlert');
       const iconBox = document.getElementById('dayReportStatusAlertIconBox');
@@ -13604,6 +13635,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       if (!alertBox) return;
       alertBox.classList.remove('hidden');
 
+      if (badge) badge.classList.add('hidden');
+
       const dStr = String(targetDay).padStart(2, '0');
       const mStr = String(targetMonth).padStart(2, '0');
       const dateLabel = `${dStr}/${mStr}/${targetYear}`;
@@ -13613,10 +13646,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs";
         if (icon) icon.className = "fa-solid fa-calendar-check text-sm";
         if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ BÁO CÁO NGHỈ / CÔNG TÁC`;
-        if (badge) {
-          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-200 text-teal-900 border border-teal-300 font-num shrink-0";
-          badge.innerText = `NGHỈ: ${leaveSym.code}`;
-        }
         if (desc) desc.innerText = `Đã ghi nhận lý do "${leaveSym.title}" cho ngày này. Số liệu đã được lưu trữ, không cần điền thêm.`;
         if (countText) {
           countText.className = "text-xs font-black text-teal-800 font-num";
@@ -13627,10 +13656,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs";
         if (icon) icon.className = "fa-solid fa-circle-check text-sm";
         if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ CÓ BÁO CÁO SỐ LIỆU`;
-        if (badge) {
-          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-900 border border-emerald-300 font-num shrink-0";
-          badge.innerText = "ĐÃ ĐIỀN BÁO CÁO";
-        }
         if (desc) desc.innerText = `Ngày này đã có số liệu báo cáo được ghi nhận (${filledCount}/${totalCount} công việc). Bạn không cần điền lại nếu không có thay đổi.`;
         if (countText) {
           countText.className = "text-xs font-black text-emerald-700 font-num";
@@ -13641,358 +13666,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs";
         if (icon) icon.className = "fa-solid fa-triangle-exclamation text-sm";
         if (title) title.innerText = `NGÀY ${dateLabel}: CHƯA CÓ BÁO CÁO SỐ LIỆU`;
-        if (badge) {
-          badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 border border-amber-300 font-num shrink-0";
-          badge.innerText = "CHƯA ĐIỀN";
-        }
-        if (desc) desc.innerText = `Ngày này hiện chưa có dữ liệu. Hãy nhập số liệu hoặc chọn lý do nghỉ bên dưới rồi bấm Lưu báo cáo.`;
+        if (desc) desc.innerText = `Ngày này hiện chưa có dữ liệu. Hãy nhập số liệu hoặc chọn lý do nghỉ nếu không phát sinh công việc.`;
         if (countText) {
-          countText.className = "text-xs font-black text-amber-800 font-num";
+          countText.className = "text-xs font-black text-amber-700 font-num";
           countText.innerText = `0/${totalCount} việc`;
         }
-      }
-    }
-
-    async function copyPreviousDayValues() {
-      if (currentReportInputMode !== 'day') {
-        showToast("Tính năng sao chép áp dụng khi đang ở chế độ 'Điền theo ngày'!", true);
-        return;
-      }
-
-      const curDateInput = document.getElementById('modalEntryDate');
-      if (!curDateInput || !curDateInput.value) return;
-      const curParts = curDateInput.value.split('-');
-      const curY = parseInt(curParts[0], 10);
-      const curM = parseInt(curParts[1], 10);
-      const curD = parseInt(curParts[2], 10);
-
-      const prevDate = new Date(curY, curM - 1, curD - 1);
-      const prevY = prevDate.getFullYear();
-      const prevM = prevDate.getMonth() + 1;
-      const prevDayNum = prevDate.getDate();
-      const prevLabel = (prevDayNum < 10 ? '0' : '') + prevDayNum + '/' + (('0' + prevM).slice(-2));
-
-      // Lấy ma trận dữ liệu của ngày hôm trước (kể cả khi ngày trước thuộc tháng trước)
-      const prevData = await getMatrixDataForDayEntry(prevM, prevY);
-      if (!prevData || !prevData.dayCols) {
-        showToast("Không tìm thấy dữ liệu ngày trước để sao chép!", true);
-        return;
-      }
-
-      const matchedPrevCol = prevData.dayCols.find(dc => dc.dayNum === prevDayNum);
-      if (!matchedPrevCol) {
-        showToast(`Không tìm thấy cột ngày ${prevLabel} trong hệ thống!`, true);
-        return;
-      }
-
-      let copiedCount = 0;
-      currentDayEntryTasks.forEach((curT, idx) => {
-        let val = "";
-        // Tìm task tương ứng trong ma trận ngày trước
-        if (prevData.staffGroups) {
-          for (const grp of prevData.staffGroups) {
-            const fTask = (grp.tasks || []).find(t => t.taskId === curT.taskId);
-            if (fTask && fTask.dailyValues && fTask.dailyValues[matchedPrevCol.colIndex] !== undefined) {
-              val = fTask.dailyValues[matchedPrevCol.colIndex];
-              break;
-            }
-          }
-        }
-        if (!val && curT.taskRef && curT.taskRef.dailyValues && curT.taskRef.dailyValues[matchedPrevCol.colIndex] !== undefined) {
-          val = curT.taskRef.dailyValues[matchedPrevCol.colIndex];
-        }
-
-        if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
-          const el = document.getElementById(`dayInput_${idx}`);
-          if (el) {
-            el.value = formatNumberWithCommas(val);
-            copiedCount++;
-          }
-        }
-      });
-
-      if (copiedCount > 0) {
-        triggerDraftAutosave();
-        showToast(`Đã sao chép tức thì ${copiedCount} số liệu từ ngày ${prevLabel}!`);
-      } else {
-        showToast(`Ngày ${prevLabel} chưa có số liệu để sao chép!`, true);
-      }
-    }
-
-    function quickFillCompleteX() {
-      let filledCount = 0;
-      if (currentReportInputMode === 'day') {
-        currentDayEntryTasks.forEach((t, idx) => {
-          if (t.isSymbolTask) {
-            const el = document.getElementById(`dayInput_${idx}`);
-            if (el) { el.value = "X"; filledCount++; }
-          }
-        });
-      } else {
-        if (currentTaskEntryMeta && currentTaskEntryMeta.isSymbolTask) {
-          currentTaskEntryDays.forEach((d, idx) => {
-            const el = document.getElementById(`taskDayInput_${idx}`);
-            if (el && !el.disabled && !el.readOnly) { el.value = "X"; filledCount++; }
-          });
-        }
-      }
-      if (filledCount > 0) {
-        triggerDraftAutosave();
-        showToast(`Đã đánh dấu hoàn thành (X) cho ${filledCount} mục!`);
-      }
-    }
-
-    function clearModalInputFields() {
-      if (currentReportInputMode === 'day') {
-        currentDayEntryTasks.forEach((t, idx) => {
-          const el = document.getElementById(`dayInput_${idx}`);
-          if (el && !el.disabled && !el.readOnly) el.value = '';
-        });
-      } else {
-        currentTaskEntryDays.forEach((d, idx) => {
-          const el = document.getElementById(`taskDayInput_${idx}`);
-          if (el && !el.disabled && !el.readOnly) el.value = '';
-        });
-      }
-      const chk = document.getElementById('chkNoReportReason');
-      if (chk) chk.checked = false;
-      const rc = document.getElementById('noReportReasonContainer');
-      if (rc) rc.classList.add('hidden');
-      const bd = document.getElementById('noReportBadge');
-      if (bd) bd.classList.add('hidden');
-      updateQuickReasonButtonsActive(null);
-      triggerDraftAutosave();
-      showToast("Đã xóa trắng các ô nhập liệu!");
-    }
-
-    let activeSpeechRecognition = null;
-    let activeVoiceBtnEl = null;
-
-    function toggleVoiceInput(inputId, btnEl) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        showToast("Trình duyệt chưa hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome, Microsoft Edge hoặc Safari!", true);
-        return;
-      }
-
-      const inputEl = document.getElementById(inputId);
-      if (!inputEl) return;
-
-      if (activeSpeechRecognition) {
-        activeSpeechRecognition.stop();
-        activeSpeechRecognition = null;
-        if (activeVoiceBtnEl) {
-          activeVoiceBtnEl.classList.remove('bg-rose-100', 'text-rose-600', 'animate-pulse');
-          activeVoiceBtnEl.innerHTML = '<i class="fa-solid fa-microphone text-xs"></i>';
-        }
-        return;
-      }
-
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'vi-VN';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = function() {
-          activeSpeechRecognition = recognition;
-          activeVoiceBtnEl = btnEl;
-          if (btnEl) {
-            btnEl.classList.add('bg-rose-100', 'text-rose-600', 'animate-pulse');
-            btnEl.innerHTML = '<i class="fa-solid fa-circle text-xs text-rose-600"></i>';
-          }
-          showToast("Đang lắng nghe tiếng Việt... Hãy nói nội dung báo cáo!");
-        };
-
-        recognition.onresult = function(event) {
-          let transcript = event.results[0][0].transcript.trim();
-          if (transcript) {
-            const lower = transcript.toLowerCase();
-            const textToNumMap = {
-              'không': '0', 'một': '1', 'hai': '2', 'ba': '3', 'bốn': '4',
-              'năm': '5', 'sáu': '6', 'bảy': '7', 'tám': '8', 'chín': '9',
-              'mười': '10', 'mười một': '11', 'mười hai': '12', 'mười lăm': '15',
-              'hai mươi': '20', 'hai lăm': '25', 'ba mươi': '30',
-              'hoàn thành': 'X', 'xong': 'X', 'đạt': 'X'
-            };
-
-            let finalVal = textToNumMap[lower] !== undefined ? textToNumMap[lower] : transcript;
-            const cleanNum = finalVal.replace(/,/g, '');
-            if (!isNaN(cleanNum) && cleanNum !== '') {
-              finalVal = formatNumberWithCommas(cleanNum);
-            }
-
-            inputEl.value = finalVal;
-            formatNumberInputLive(inputEl);
-            triggerDraftAutosave();
-            showToast(`Đã nhận diện: "${finalVal}"`);
-          }
-        };
-
-        recognition.onerror = function(event) {
-          console.warn("Lỗi nhận diện giọng nói:", event.error);
-          if (event.error === 'not-allowed') {
-            showToast("Vui lòng cấp quyền Micro trong cài đặt trình duyệt!", true);
-          } else {
-            showToast("Không nghe rõ âm thanh hoặc môi trường ồn!", true);
-          }
-        };
-
-        recognition.onend = function() {
-          if (activeVoiceBtnEl) {
-            activeVoiceBtnEl.classList.remove('bg-rose-100', 'text-rose-600', 'animate-pulse');
-            activeVoiceBtnEl.innerHTML = '<i class="fa-solid fa-microphone text-xs"></i>';
-          }
-          activeSpeechRecognition = null;
-          activeVoiceBtnEl = null;
-        };
-
-        recognition.start();
-      } catch (err) {
-        console.error("Lỗi khởi động SpeechRecognition:", err);
-        showToast("Không thể khởi động micro: " + err.message, true);
-      }
-    }
-
-    async function copySingleTaskPreviousValue(taskIdx) {
-      const curT = currentDayEntryTasks[taskIdx];
-      if (!curT) {
-        showToast("Chưa có dữ liệu của đầu việc này!", true);
-        return;
-      }
-
-      const curDateInput = document.getElementById('modalEntryDate');
-      const curParts = (curDateInput ? curDateInput.value : "").split('-');
-      if (curParts.length < 3) return;
-      const curY = parseInt(curParts[0], 10);
-      const curM = parseInt(curParts[1], 10);
-      const currentDayNum = parseInt(curParts[2], 10);
-
-      const prevDate = new Date(curY, curM - 1, currentDayNum - 1);
-      const prevY = prevDate.getFullYear();
-      const prevM = prevDate.getMonth() + 1;
-      const prevDay = prevDate.getDate();
-      const prevLabel = (prevDay < 10 ? '0' : '') + prevDay + '/' + (('0' + prevM).slice(-2));
-
-      const prevData = await getMatrixDataForDayEntry(prevM, prevY);
-      if (!prevData || !prevData.dayCols) {
-        showToast("Chưa có dữ liệu ngày trước để sao chép!", true);
-        return;
-      }
-
-      const matchedPrevCol = prevData.dayCols.find(dc => dc.dayNum === prevDay);
-      if (!matchedPrevCol) {
-        showToast("Không tìm thấy ngày làm việc trước đó!", true);
-        return;
-      }
-
-      let foundVal = null;
-      if (prevData.staffGroups) {
-        for (const grp of prevData.staffGroups) {
-          const fTask = (grp.tasks || []).find(t => t.taskId === curT.taskId);
-          if (fTask && fTask.dailyValues && fTask.dailyValues[matchedPrevCol.colIndex] !== undefined) {
-            const v = fTask.dailyValues[matchedPrevCol.colIndex];
-            if (v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== '-' && String(v).trim() !== '·' && String(v).trim() !== '0') {
-              foundVal = v;
-              break;
-            }
-          }
-        }
-      }
-
-      if (foundVal !== null) {
-        const el = document.getElementById(`dayInput_${taskIdx}`);
-        if (el) {
-          el.value = formatNumberWithCommas(foundVal);
-          formatNumberInputLive(el);
-          triggerDraftAutosave();
-          showToast(`Đã lấy số liệu "${foundVal}" từ ngày ${prevLabel}!`);
-        }
-      } else {
-        showToast("Đầu việc này chưa có số liệu ở ngày trước đó để sao chép!", true);
-      }
-    }
-
-    function adjustQuickNumber(inputId, delta) {
-      const el = document.getElementById(inputId);
-      if (!el) return;
-      let curVal = el.value.replace(/,/g, '').trim();
-      let num = parseInt(curVal, 10);
-      if (isNaN(num)) num = 0;
-      num = Math.max(0, num + delta);
-      el.value = num === 0 ? '' : formatNumberWithCommas(num);
-      formatNumberInputLive(el);
-      triggerDraftAutosave();
-    }
-
-    function setQuickValue(inputId, val) {
-      const el = document.getElementById(inputId);
-      if (!el) return;
-      el.value = val;
-      triggerDraftAutosave();
-    }
-
-    // ================= MODAL ĐIỀN BÁO CÁO CÔNG VIỆC =================
-    async function openDayEntryModal() {
-      if (isDirectorOrAdmin(currentUser.role, currentUser.username)) {
-        showToast("Giám đốc ban chỉ có quyền xem, không được điền báo cáo!", true);
-        return;
-      }
-
-      const now = new Date();
-      const curM = now.getMonth() + 1;
-      const curY = now.getFullYear();
-
-      currentModalPeriodMonth = currentSelectedMonth || curM;
-      currentModalPeriodYear = currentSelectedYear || curY;
-
-      populateModalEntryPeriodDropdown();
-      updateModalDateBounds(false);
-
-      document.getElementById('modalStaffLabel').innerText = `Nhân sự: ${currentUser.fullName} (${currentUser.department})`;
-      document.getElementById('dayEntryModal').classList.remove('hidden');
-
-      await switchReportInputMode('day');
-    }
-
-    function closeDayEntryModal() {
-      document.getElementById('dayEntryModal').classList.add('hidden');
-    }
-
-    async function switchReportInputMode(mode) {
-      currentReportInputMode = mode;
-      const btnDay = document.getElementById('tabModeDayBtn');
-      const btnTask = document.getElementById('tabModeTaskBtn');
-      const controlsDay = document.getElementById('controlsModeDay');
-      const controlsTask = document.getElementById('controlsModeTask');
-      const noReportCard = document.getElementById('noReportDayCard');
-      const taskHeaderCard = document.getElementById('taskHeaderInfoCard');
-      const btnCopyYesterday = document.getElementById('btnCopyYesterday');
-      const alertBox = document.getElementById('dayReportStatusAlert');
-
-      if (mode === 'day') {
-        btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
-        btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
-        controlsDay.classList.remove('hidden');
-        controlsTask.classList.add('hidden');
-        noReportCard.classList.remove('hidden');
-        taskHeaderCard.classList.add('hidden');
-        if (alertBox) alertBox.classList.remove('hidden');
-        if (btnCopyYesterday) btnCopyYesterday.classList.remove('hidden');
-        await fetchDayEntryTasks();
-      } else {
-        btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
-        btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
-        controlsDay.classList.add('hidden');
-        controlsTask.classList.remove('hidden');
-        noReportCard.classList.add('hidden');
-        taskHeaderCard.classList.remove('hidden');
-        if (alertBox) alertBox.classList.add('hidden');
-        if (btnCopyYesterday) btnCopyYesterday.classList.add('hidden');
-
-        const taskSelect = document.getElementById('modalTaskSelect');
-        const selectedRow = taskSelect ? taskSelect.value : null;
-        await fetchTaskEntryDays(selectedRow);
       }
     }
 
@@ -14337,7 +14015,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         const item = document.createElement('div');
         const hasVal = (t.currentValue !== undefined && t.currentValue !== null && String(t.currentValue).trim() !== '' && String(t.currentValue).trim() !== '0');
         const formattedVal = t.isSymbolTask ? t.currentValue : formatNumberWithCommas(t.currentValue);
-        const inputBgBorder = hasVal ? 'bg-emerald-50/30 border-emerald-400 text-emerald-950 font-bold' : 'bg-white border-slate-300 text-slate-800';
 
         item.className = "p-3 sm:p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:bg-slate-100/70";
 
@@ -14346,7 +14023,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           inputControl = `
             <div class="w-full sm:w-72 flex items-center gap-1.5">
               <div class="relative flex-1">
-                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 ${inputBgBorder} rounded-xl text-center sm:text-left font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
+                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave(); updateDayInputCellStatusLive(this);" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 ${hasVal ? 'pl-7 pr-8 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-3 pr-8 border border-slate-300 bg-white text-slate-800'} rounded-xl text-center sm:text-left font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isReadOnly ? `
                   <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
                     <i class="fa-solid fa-microphone text-xs"></i>
@@ -14364,7 +14042,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           inputControl = `
             <div class="w-full sm:w-72 flex items-center gap-1.5">
               <div class="relative flex-1">
-                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 pl-3 pr-8 ${inputBgBorder} rounded-xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" />
+                ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
+                <input type="text" id="dayInput_${idx}" value="${formattedVal}" placeholder="${isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc'}" ${isReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave(); updateDayInputCellStatusLive(this);" onkeydown="handleModalInputKeydown(event, ${idx}, 'dayInput_')" class="w-full h-10 ${hasVal ? 'pl-7 pr-8 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-3 pr-8 border border-slate-300 bg-white text-slate-800'} rounded-xl text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition shadow-2xs placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isReadOnly ? 'bg-slate-100 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isReadOnly ? `
                   <button type="button" id="voiceBtn_day_${idx}" onclick="toggleVoiceInput('dayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập số liệu">
                     <i class="fa-solid fa-microphone text-xs"></i>
@@ -14384,10 +14063,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <div class="flex-1 min-w-0 pr-1">
             <div class="flex items-start gap-2 mb-1">
               <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-100">${idx + 1}</span>
-              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-                <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug break-words">${escapeHtml(t.taskName)}</h4>
-                ${hasVal ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shadow-2xs shrink-0"><i class="fa-solid fa-check text-[8px] text-emerald-600"></i>Đã có số liệu</span>` : `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-400 border border-slate-200 inline-flex items-center shrink-0">Chưa điền</span>`}
-              </div>
+              <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-snug break-words">${escapeHtml(t.taskName)}</h4>
             </div>
             <p class="text-[11px] text-slate-400 italic ml-7 break-words">${escapeHtml(cleanTaskGuide(t.guide))}</p>
           </div>
@@ -14461,7 +14137,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           inputControl = `
             <div class="flex items-center gap-1.5">
               <div class="relative w-44 sm:w-56">
-                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave()" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-white border border-slate-300 rounded-xl text-center sm:text-left font-bold text-slate-800 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+                ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
+                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave(); updateDayInputCellStatusLive(this);" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 ${hasVal ? 'pl-7 pr-7 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-2.5 pr-7 border border-slate-300 bg-white text-slate-800'} rounded-xl text-center sm:text-left font-bold text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isDayReadOnly ? `
                   <button type="button" id="voiceBtn_task_${idx}" onclick="toggleVoiceInput('taskDayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập báo cáo">
                     <i class="fa-solid fa-microphone text-[10px]"></i>
@@ -14474,7 +14151,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           inputControl = `
             <div class="flex items-center gap-1.5">
               <div class="relative w-44 sm:w-56">
-                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 pl-2.5 pr-7 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" />
+                ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
+                <input type="text" id="taskDayInput_${idx}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave(); updateDayInputCellStatusLive(this);" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 ${hasVal ? 'pl-7 pr-7 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-2.5 pr-7 border border-slate-300 bg-slate-50 text-slate-800'} rounded-xl text-xs sm:text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isDayReadOnly ? `
                   <button type="button" id="voiceBtn_task_${idx}" onclick="toggleVoiceInput('taskDayInput_${idx}', this)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95 transition cursor-pointer" title="Nói để nhập số liệu">
                     <i class="fa-solid fa-microphone text-[10px]"></i>
@@ -14494,7 +14172,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               <div class="flex items-center gap-1.5">
                 <span class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">Ngày ${d.label}</span>
                 ${d.isToday ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 font-num">Hôm nay</span>' : ''}
-                ${hasVal ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 shrink-0"><i class="fa-solid fa-check text-[8px] text-emerald-600"></i>Đã có số liệu</span>` : (!isFuture ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center shrink-0">Chưa điền</span>` : '')}
               </div>
               <p class="text-[11px] text-slate-400 font-medium">${isFuture ? 'Chưa phát sinh ngày' : (isLeave ? (sym.title || 'Nghỉ') : (hasVal ? 'Đã ghi nhận số liệu' : 'Chưa có số liệu'))}</p>
             </div>
