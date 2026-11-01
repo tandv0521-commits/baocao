@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v17') {
+          if (key !== 'baocao-dvkh-pwa-v18') {
             caches.delete(key);
           }
         });
@@ -3426,7 +3426,54 @@
     </div>
   </div>
 
-  <!-- ================= MODAL CHỦ ĐIỂM THÁNG 11: TRI ÂN & BẢN SẮC VĂN HÓA ================= -->
+    <!-- ================= MODAL THÔNG BÁO TÀI KHOẢN CHƯA ĐƯỢC PHÂN CÔNG CÔNG VIỆC ================= -->
+  <div id="unassignedStaffModal" class="fixed inset-0 z-[75] bg-slate-950/70 backdrop-blur-xs hidden flex items-center justify-center p-3 sm:p-4 select-none" onclick="if(event.target === this) closeUnassignedStaffModal()">
+    <div class="bg-white border border-amber-200/90 rounded-3xl max-w-md w-full shadow-2xl shadow-slate-950/30 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200 p-5 sm:p-6 text-center">
+      
+      <!-- Icon thông báo màu hổ phách sang trọng -->
+      <div class="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-3 shadow-xs">
+        <i class="fa-solid fa-clipboard-question text-3xl text-amber-500 animate-bounce"></i>
+      </div>
+
+      <!-- Tiêu đề -->
+      <h3 id="unassignedModalTitle" class="text-base sm:text-lg font-black text-slate-900 leading-tight">
+        Chưa phân công công việc
+      </h3>
+      <p class="text-[11px] sm:text-xs text-slate-400 font-semibold mt-1">
+        Kỳ báo cáo <span id="unassignedModalPeriodLabel" class="font-bold text-slate-700">Tháng 11/2026</span>
+      </p>
+
+      <!-- Nội dung thẻ thông báo -->
+      <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3.5 sm:p-4 my-3.5 text-left">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+          <span id="unassignedModalStaffName" class="text-xs sm:text-sm font-bold text-amber-950">
+            Xin chào!
+          </span>
+        </div>
+        <p id="unassignedModalMessage" class="text-xs text-amber-900/90 leading-relaxed mt-1">
+          Tài khoản của bạn hiện <b>chưa được phân công đầu mục công việc</b> nào trong kỳ báo cáo này.
+        </p>
+      </div>
+
+      <!-- Lời khuyên & Hướng dẫn liên hệ -->
+      <div class="flex items-start gap-2 text-left p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 text-[11px] sm:text-xs mb-4">
+        <i class="fa-solid fa-circle-info text-emerald-600 text-xs shrink-0 mt-0.5"></i>
+        <span id="unassignedModalGuide" class="leading-relaxed">
+          Vui lòng liên hệ <b>Quản trị viên</b> hoặc <b>Trưởng bộ phận</b> để được thiết lập danh mục công việc trước khi thực hiện báo cáo hàng ngày.
+        </span>
+      </div>
+
+      <!-- Nút xác nhận -->
+      <button type="button" onclick="closeUnassignedStaffModal()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-700/20 transition cursor-pointer flex items-center justify-center gap-2">
+        <i class="fa-solid fa-check text-xs"></i>
+        <span>Đã hiểu</span>
+      </button>
+
+    </div>
+  </div>
+
+<!-- ================= MODAL CHỦ ĐIỂM THÁNG 11: TRI ÂN & BẢN SẮC VĂN HÓA ================= -->
   <div id="novemberThematicModal" class="fixed inset-0 z-[70] bg-slate-950/70 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 select-none" onclick="if(event.target === this) closeNovemberThematicModal()">
     <div class="bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 border-2 border-emerald-300/50 rounded-3xl max-w-2xl w-full shadow-2xl shadow-emerald-950/80 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
       
@@ -4253,6 +4300,83 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       window.addEventListener('load', initAppOnLoad);
     }
 
+    // ================= XỬ LÝ THÔNG BÁO TÀI KHOẢN CHƯA PHÂN CÔNG CÔNG VIỆC =================
+    function openUnassignedStaffModal(user, month, year, customMsg, customGuide) {
+      const u = user || currentUser;
+      if (!u) return;
+      const modal = document.getElementById('unassignedStaffModal');
+      if (!modal) return;
+
+      const m = month || currentSelectedMonth || (new Date().getMonth() + 1);
+      const y = year || currentSelectedYear || new Date().getFullYear();
+
+      const nameEl = document.getElementById('unassignedModalStaffName');
+      const titleEl = document.getElementById('unassignedModalTitle');
+      const periodEl = document.getElementById('unassignedModalPeriodLabel');
+      const msgEl = document.getElementById('unassignedModalMessage');
+      const guideEl = document.getElementById('unassignedModalGuide');
+
+      if (nameEl) nameEl.innerText = `Xin chào ${u.fullName || u.full_name || 'Bạn'}!`;
+      if (periodEl) periodEl.innerText = `Tháng ${m}/${y}`;
+
+      const dept = (u.department || '').trim();
+      const isShared = isSharedGroupDeptClient(dept);
+      const isLead = isShared && isWarehouseLead(u, dept);
+      const isPhuKho = isShared && !isLead;
+
+      if (customMsg) {
+        if (msgEl) msgEl.innerHTML = customMsg;
+      } else if (isPhuKho) {
+        if (titleEl) titleEl.innerText = "Chưa phân công việc cá nhân";
+        if (msgEl) {
+          msgEl.innerHTML = `Bạn thuộc bộ phận <b>${escapeHtml(dept)}</b> nhưng hiện <b>chưa được phân công đầu mục công việc cá nhân</b> nào trong kỳ báo cáo này.<br><span class="text-[11px] text-amber-700/90 mt-1 block">*(Các đầu việc chung của tổ kho do Kho chính / Trưởng nhóm phụ trách báo cáo)*</span>`;
+        }
+      } else {
+        if (titleEl) titleEl.innerText = "Chưa phân công công việc";
+        if (msgEl) {
+          msgEl.innerHTML = `Tài khoản của bạn hiện <b>chưa được phân công đầu mục công việc</b> nào trong kỳ báo cáo này.`;
+        }
+      }
+
+      if (customGuide) {
+        if (guideEl) guideEl.innerHTML = customGuide;
+      } else if (isPhuKho) {
+        if (guideEl) guideEl.innerHTML = `Vui lòng liên hệ <b>Quản trị viên</b> hoặc <b>Kho chính / Trưởng bộ phận</b> nếu bạn cần được giao công việc cá nhân riêng.`;
+      } else {
+        if (guideEl) guideEl.innerHTML = `Vui lòng liên hệ <b>Quản trị viên</b> hoặc <b>Trưởng bộ phận</b> để được thiết lập danh mục công việc trước khi thực hiện báo cáo hàng ngày.`;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeUnassignedStaffModal() {
+      const modal = document.getElementById('unassignedStaffModal');
+      if (modal) modal.classList.add('hidden');
+      if (currentUser) {
+        const m = currentSelectedMonth || (new Date().getMonth() + 1);
+        const y = currentSelectedYear || new Date().getFullYear();
+        sessionStorage.setItem(`ops_unassigned_dismissed_${currentUser.id}_${m}_${y}`, 'true');
+      }
+    }
+
+    function checkAndNotifyUnassignedStaff(matrixData) {
+      if (!currentUser) return;
+      if (isDirectorOrAdmin(currentUser.role, currentUser.username)) return;
+      if (!matrixData || !matrixData.staffGroups) return;
+
+      const m = currentSelectedMonth || (new Date().getMonth() + 1);
+      const y = currentSelectedYear || new Date().getFullYear();
+      const taskCount = getUserAssignedTaskCount(currentUser, matrixData);
+
+      if (taskCount === 0) {
+        const dismissedKey = `ops_unassigned_dismissed_${currentUser.id}_${m}_${y}`;
+        const isDismissed = sessionStorage.getItem(dismissedKey) === 'true';
+        if (!isDismissed || window._justLoggedIn) {
+          window._justLoggedIn = false;
+          openUnassignedStaffModal(currentUser, m, y);
+        }
+      }
+    }
     // ================= XỬ LÝ XEM THÔNG TIN TÀI KHOẢN CÁ NHÂN =================
     function openNovemberThematicModal() {
       const modal = document.getElementById('novemberThematicModal');
@@ -5049,6 +5173,96 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
       return members;
     }
+    /**
+     * KIỂM TRA MỘT NHÂN SỰ CÓ PHẢI LÀ KHO CHÍNH / TRƯỞNG NHÓM CỦA TỔ KHO GỘP HAY KHÔNG
+     */
+    function isWarehouseLead(staffNameOrUser, grpOrDeptName) {
+      if (!staffNameOrUser) return false;
+      const staffName = (typeof staffNameOrUser === 'string') 
+        ? staffNameOrUser.trim() 
+        : ((staffNameOrUser.fullName || staffNameOrUser.full_name || "").trim());
+      const userRole = (typeof staffNameOrUser === 'object' && staffNameOrUser.role) 
+        ? removeAccents(staffNameOrUser.role).toLowerCase() 
+        : "";
+
+      // 1. Kiểm tra vai trò trực tiếp từ thông tin tài khoản nếu có
+      if (userRole.includes("kho chinh") || (userRole.includes("chinh") && !userRole.includes("phu")) || 
+          userRole.includes("truong nhom") || userRole.includes("to truong") || userRole.includes("leader")) {
+        return true;
+      }
+
+      // 2. Kiểm tra theo cấu trúc nhóm gộp (nếu truyền grp trực tiếp)
+      if (grpOrDeptName && typeof grpOrDeptName === 'object' && grpOrDeptName.staffName) {
+        const members = parseStaffList(grpOrDeptName.staffName);
+        if (members && members.length > 0) {
+          const leadMember = members.find(m => m.isLead) || members[0];
+          if (leadMember && isStaffMatchedInCell(staffName, leadMember.name)) {
+            return true;
+          }
+        }
+      }
+
+      // 3. Tra cứu từ fullPeriodMatrixCache nếu truyền deptName
+      const dept = (typeof grpOrDeptName === 'string') ? grpOrDeptName : (grpOrDeptName?.department || "");
+      if (dept && fullPeriodMatrixCache && Array.isArray(fullPeriodMatrixCache.staffGroups)) {
+        const sharedGrp = fullPeriodMatrixCache.staffGroups.find(g => 
+          isDeptEquivalent(g.department, dept) && (g.isShared || isSharedGroupDeptClient(g.department)) && !g.isPersonalInShared
+        );
+        if (sharedGrp && sharedGrp.staffName) {
+          const members = parseStaffList(sharedGrp.staffName);
+          if (members && members.length > 0) {
+            const leadMember = members.find(m => m.isLead) || members[0];
+            if (leadMember && isStaffMatchedInCell(staffName, leadMember.name)) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    }
+
+    /**
+     * TÍNH TỔNG SỐ ĐẦU VIỆC ĐƯỢC PHÂN CÔNG CỦA MỘT NHÂN SỰ TRONG KỲ
+     * Đối với phụ kho ở nhóm gộp: CHỈ tính đầu việc cá nhân (việc chung do Kho chính phụ trách)
+     */
+    function getUserAssignedTaskCount(user, matrixData) {
+      if (!user || !matrixData || !matrixData.staffGroups) return 0;
+      const userName = (user.fullName || user.full_name || "").trim();
+      const userDept = (user.department || "").trim();
+      const isShared = isSharedGroupDeptClient(userDept);
+
+      let count = 0;
+      matrixData.staffGroups.forEach(grp => {
+        if (isStaffGroupLockedOrPaused(grp)) return;
+
+        const isGrpShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+
+        if (isGrpShared) {
+          if (isDeptEquivalent(grp.department, userDept)) {
+            if (grp.isPersonalInShared) {
+              // Việc cá nhân trong nhóm gộp: chỉ tính nếu đúng nhân sự này
+              if (grp.userId === user.id || isStaffMatchedInCell(userName, grp.staffName)) {
+                count += (grp.tasks || []).length;
+              }
+            } else {
+              // Việc chung nhóm gộp: CHỈ tính cho Kho chính / Trưởng nhóm
+              const isLead = isWarehouseLead(userName, grp);
+              if (isLead) {
+                count += (grp.tasks || []).length;
+              }
+            }
+          }
+        } else {
+          // Bộ phận thông thường
+          if (grp.userId === user.id || isStaffMatchedInCell(userName, grp.staffName)) {
+            count += (grp.tasks || []).length;
+          }
+        }
+      });
+      return count;
+    }
+
 
     function countTotalPeopleInDept(deptStaffGroups) {
       if (!deptStaffGroups || deptStaffGroups.length === 0) return 0;
@@ -7775,6 +7989,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
         // Hoàn tất tiến trình 75% -> 100% siêu tốc trên nút và chuyển cảnh mượt mà vào Dashboard
         autoSimulateLoginButton(75, 100, "Xác thực thành công", 3, () => {
+          window._justLoggedIn = true;
           const todayKey = getSystemDateKey(new Date());
           const isMobileTablet = isMobileOrTabletClient();
           currentUser = Object.freeze({
@@ -8606,7 +8821,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           }
           const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
           if (isShared) {
-            return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
+            // Đối với nhóm gộp: Chỉ Kho chính mới hiển thị việc chung của tổ kho
+            // Phụ kho / thành viên không thực hiện báo cáo chung thì KHÔNG hiển thị việc chung (chỉ hiển thị việc cá nhân)
+            const isLead = isWarehouseLead(currentSelectedStaff, grp);
+            if (isLead) {
+              return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
+            }
+            return false;
           }
           return isStaffMatchedInCell(currentSelectedStaff, grp.staffName);
         });
@@ -8640,6 +8861,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       currentRhythmSelectedTaskKey = 'ALL';
       renderAnalyticsSection(filteredViewData);
       updateDirectorOverviewButtonUI();
+      checkAndNotifyUnassignedStaff(fullPeriodMatrixCache);
     }
 
     /**
@@ -9610,10 +9832,39 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       theadRow.appendChild(thTotal);
 
       if (data.staffGroups.length === 0) {
+        const u = currentUser;
+        const isStaffUser = u && !isDirectorOrAdmin(u.role, u.username);
+        const dept = (u?.department || '').trim();
+        const isShared = isSharedGroupDeptClient(dept);
+        const isLead = isShared && isWarehouseLead(u, dept);
+        const isPhuKho = isStaffUser && isShared && !isLead;
+
         tbody.innerHTML = `
           <tr>
-            <td colspan="${data.dayCols.length + 4}" class="py-16 text-center text-slate-400 font-semibold">
-              Chưa có danh mục công việc nào cho lựa chọn này.
+            <td colspan="${data.dayCols.length + 4}" class="py-12 px-4 text-center">
+              <div class="max-w-md mx-auto p-6 rounded-3xl bg-amber-50/70 border border-amber-200/80 shadow-xs text-center">
+                <div class="w-12 h-12 rounded-2xl bg-white border border-amber-200 text-amber-500 flex items-center justify-center mx-auto mb-2.5 shadow-2xs">
+                  <i class="fa-solid fa-clipboard-user text-xl"></i>
+                </div>
+                <h4 class="text-sm sm:text-base font-black text-amber-950">
+                  ${isPhuKho ? 'Chưa phân công công việc cá nhân' : (isStaffUser ? 'Tài khoản chưa được phân công công việc' : 'Chưa có danh mục công việc nào cho lựa chọn này')}
+                </h4>
+                <p class="text-xs text-amber-800/90 mt-1 leading-relaxed">
+                  ${isPhuKho 
+                    ? `Chào <b>${escapeHtml(u.fullName)}</b>! Bộ phận <b>${escapeHtml(dept)}</b> chưa phân công đầu việc cá nhân cho bạn (công việc chung do Kho chính phụ trách báo cáo).`
+                    : (isStaffUser 
+                      ? `Chào <b>${escapeHtml(u.fullName)}</b>! Bạn hiện chưa được thiết lập danh mục đầu việc nào trong kỳ báo cáo Tháng ${currentSelectedMonth}/${currentSelectedYear}.`
+                      : 'Vui lòng chọn bộ phận hoặc nhân sự khác để xem danh mục công việc.'
+                    )
+                  }
+                </p>
+                ${isStaffUser ? `
+                  <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-200 text-[11px] font-bold text-amber-900 shadow-2xs">
+                    <i class="fa-solid fa-headset text-amber-600"></i>
+                    <span>Liên hệ Quản trị viên / Trưởng bộ phận</span>
+                  </div>
+                ` : ''}
+              </div>
             </td>
           </tr>
         `;
@@ -10908,10 +11159,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           return false;
         }
 
-        // 3. Nhóm gộp (Tổ kho): việc chung chỉ giữ lại nếu mình là thành viên tổ kho đó
+        // 3. Nhóm gộp (Tổ kho): việc chung chỉ giữ lại nếu mình là Kho chính phụ trách báo cáo
         const isShared = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
         if (isShared) {
-          return isStaffMatchedInCell(myName, grp.staffName);
+          const isLead = isWarehouseLead(myName, grp);
+          if (isLead) {
+            return isStaffMatchedInCell(myName, grp.staffName);
+          }
+          return false; // Phụ kho không làm báo cáo chung -> chỉ giữ việc cá nhân
         }
 
         // 4. Bộ phận thông thường: chỉ lấy dòng của chính mình
@@ -13451,8 +13706,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         let allTaskList = [];
 
         let isShared = isSharedGroupDeptClient(currentUser.department);
-        let myRole = removeAccents(currentUser.role || "");
-        let isLead = isShared && (myRole.includes("chinh") || myRole.includes("truong"));
+        let isLead = isShared && isWarehouseLead(currentUser, currentUser.department);
 
         // Kiểm tra xem người dùng hiện tại có công việc cá nhân riêng trong nhóm gộp/tổ kho hay không
         let hasPersonalTasksInShared = false;
@@ -13484,8 +13738,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               } else {
                 // Người dùng không có việc cá nhân riêng:
                 // Nếu là Kho chính: nạp việc chung để báo cáo
-                // Nếu là thành viên thường: nạp việc chung để xem (chế độ chỉ xem)
-                if (!grp.isPersonalInShared) {
+                // Nếu là phụ kho không làm báo cáo chung: KHÔNG nạp việc chung
+                if (!grp.isPersonalInShared && isLead) {
                   isMatch = true;
                 }
               }
@@ -13526,6 +13780,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           }
         });
 
+        if (tasksForDay.length === 0) {
+          openUnassignedStaffModal(currentUser, currentSelectedMonth, currentSelectedYear);
+          return;
+        }
+        if (tasksForDay.length === 0) {
+          openUnassignedStaffModal(currentUser, currentSelectedMonth, currentSelectedYear);
+          return;
+        }
         currentDayEntryTasks = tasksForDay;
 
         // Tự động nhận diện nếu ngày được chọn đã có dữ liệu nghỉ
@@ -13597,7 +13859,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
         let isSharedTaskMode = isSharedGroupDeptClient(currentUser.department);
         let myRole = removeAccents(currentUser.role || "");
-        let isLeadTaskMode = isSharedTaskMode && (myRole.includes("chinh") || myRole.includes("truong"));
+        let isLeadTaskMode = isSharedTaskMode && isWarehouseLead(currentUser, currentUser.department);
 
         let hasPersonalTasksInSharedMode = false;
         if (isSharedTaskMode) {
@@ -13623,7 +13885,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                   isMatch = true;
                 }
               } else {
-                if (!grp.isPersonalInShared) {
+                if (!grp.isPersonalInShared && isLeadTaskMode) {
                   isMatch = true;
                 }
               }
