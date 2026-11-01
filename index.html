@@ -3527,6 +3527,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <i class="fa-solid fa-file-excel text-xs"></i>
             <span>Xuất Excel</span>
           </button>
+
+          <button type="button" id="btnOpenCleanupLoginHistory" onclick="openCleanupLoginHistoryModal()" class="px-3 sm:px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 hover:border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95" title="Dọn dẹp lọc trùng lặp hoặc xóa bớt nhật ký cũ">
+            <i class="fa-solid fa-broom text-xs text-rose-600"></i>
+            <span>Dọn dẹp</span>
+          </button>
         </div>
       </div>
 
@@ -3563,6 +3568,95 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ================= MODAL DỌN DẸP NHẬT KÝ ĐĂNG NHẬP ================= -->
+  <div id="cleanupLoginHistoryModal" class="fixed inset-0 z-[70] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-rose-50/70 via-slate-50 to-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-base shadow-2xs shrink-0">
+            <i class="fa-solid fa-broom"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-800 font-black text-base leading-tight">Dọn Dẹp Nhật Ký Đăng Nhập</h3>
+            <p class="text-xs text-slate-400 font-medium">Lọc trùng lặp hoặc giải phóng các bản ghi nhật ký cũ</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCleanupLoginHistoryModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Nội dung lựa chọn phương thức dọn dẹp -->
+      <div class="p-5 space-y-3 text-xs">
+        <p class="text-slate-600 font-medium leading-relaxed">
+          Vui lòng chọn hình thức dọn dẹp nhật ký đăng nhập của hệ thống:
+        </p>
+
+        <!-- Lựa chọn 1: Dọn bản ghi trùng lặp (Khuyên dùng) -->
+        <label class="flex items-start gap-3 p-3.5 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/50 hover:bg-emerald-50 cursor-pointer transition group">
+          <input type="radio" name="cleanupLoginOption" value="duplicates" checked class="mt-0.5 text-emerald-600 focus:ring-emerald-500" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-emerald-950 text-xs">Lọc bỏ các bản ghi trùng lặp</span>
+              <span class="px-2 py-0.2 rounded-full text-[9px] font-black uppercase bg-emerald-200 text-emerald-900">Khuyên dùng</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">
+              Giữ lại 1 bản ghi duy nhất cho mỗi phiên đăng nhập, tự động xóa các bản ghi bị ghi đè hoặc trùng giây.
+            </p>
+          </div>
+        </label>
+
+        <!-- Lựa chọn 2: Xóa bản ghi cũ hơn 30 ngày -->
+        <label class="flex items-start gap-3 p-3.5 rounded-2xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 cursor-pointer transition group">
+          <input type="radio" name="cleanupLoginOption" value="older_30_days" class="mt-0.5 text-sky-600 focus:ring-sky-500" />
+          <div class="flex-1 min-w-0">
+            <span class="font-bold text-slate-800 text-xs group-hover:text-sky-900">Xóa nhật ký cũ hơn 30 ngày</span>
+            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">
+              Chỉ lưu lại lịch sử đăng nhập trong vòng 30 ngày gần nhất, xóa toàn bộ các bản ghi trước đó.
+            </p>
+          </div>
+        </label>
+
+        <!-- Lựa chọn 3: Xóa bản ghi cũ hơn 7 ngày -->
+        <label class="flex items-start gap-3 p-3.5 rounded-2xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50/40 cursor-pointer transition group">
+          <input type="radio" name="cleanupLoginOption" value="older_7_days" class="mt-0.5 text-amber-600 focus:ring-amber-500" />
+          <div class="flex-1 min-w-0">
+            <span class="font-bold text-slate-800 text-xs group-hover:text-amber-900">Xóa nhật ký cũ hơn 7 ngày</span>
+            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">
+              Chỉ lưu lại lịch sử đăng nhập trong vòng 7 ngày gần nhất để danh sách luôn gọn gàng.
+            </p>
+          </div>
+        </label>
+
+        <!-- Lựa chọn 4: Xóa toàn bộ -->
+        <label class="flex items-start gap-3 p-3.5 rounded-2xl border border-rose-200 hover:border-rose-400 hover:bg-rose-50/40 cursor-pointer transition group">
+          <input type="radio" name="cleanupLoginOption" value="all" class="mt-0.5 text-rose-600 focus:ring-rose-500" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-rose-800 text-xs">Xóa toàn bộ lịch sử đăng nhập</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-100 text-rose-800">Cân nhắc</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">
+              Làm mới hoàn toàn bảng nhật ký, xóa sạch các lượt đăng nhập kiểm tra trước đây.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/80 flex items-center justify-end gap-2.5 shrink-0">
+        <button type="button" onclick="closeCleanupLoginHistoryModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" id="btnExecuteCleanupLoginHistory" onclick="executeCleanupLoginHistory()" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-black shadow-sm shadow-rose-600/30 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span>Thực hiện dọn dẹp</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -18983,6 +19077,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
      */
     async function recordAccountLoginLog(user, loginType = 'Thành công') {
       if (!user || !user.username) return;
+
+      // Chống ghi nhận trùng lặp liên tục trong vòng 8 giây (Debounce Guard)
+      const lastLoginRecordKey = 'ops_last_rec_' + (user.username || '');
+      const lastLoginTime = Number(sessionStorage.getItem(lastLoginRecordKey) || 0);
+      const nowMs = Date.now();
+      if (nowMs - lastLoginTime < 8000) {
+        return;
+      }
+      sessionStorage.setItem(lastLoginRecordKey, String(nowMs));
       const devId = getOrCreateDeviceMachineId();
       const devInfo = detectClientDeviceInfo();
       const loggedAt = new Date().toISOString();
@@ -19228,6 +19331,135 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     // ================= MODAL & GIAO DIỆN KIỂM TRA LỊCH SỬ ĐĂNG NHẬP =================
 
+    // ================= CHỨC NĂNG DỌN DẸP NHẬT KÝ ĐĂNG NHẬP =================
+    function openCleanupLoginHistoryModal() {
+      if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
+        showToast("Chức năng chỉ dành cho Ban Quản trị & Điều hành!", true);
+        return;
+      }
+      const modal = document.getElementById('cleanupLoginHistoryModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCleanupLoginHistoryModal() {
+      const modal = document.getElementById('cleanupLoginHistoryModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    /**
+     * THỰC HIỆN DỌN DẸP LỊCH SỬ ĐĂNG NHẬP (TRÙNG LẶP / CŨ / TOÀN BỘ)
+     */
+    async function executeCleanupLoginHistory() {
+      const selectedOption = document.querySelector('input[name="cleanupLoginOption"]:checked')?.value || 'duplicates';
+      const btn = document.getElementById('btnExecuteCleanupLoginHistory');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Đang dọn dẹp...';
+      }
+
+      try {
+        let deletedCount = 0;
+        const now = new Date();
+
+        if (selectedOption === 'duplicates') {
+          // 1. DỌN BẢN GHI TRÙNG LẶP:
+          // Sắp xếp giảm dần theo thời gian. Nếu cùng username và device_id cách nhau <= 60s -> Gom lại giữ 1 bản ghi duy nhất.
+          const sorted = [...allLoginHistoryCache].sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
+          const keepList = [];
+          const duplicateIdsToDelete = [];
+
+          sorted.forEach(item => {
+            const itemTime = new Date(item.logged_at).getTime();
+            const isDup = keepList.some(k => {
+              if (k.username === item.username && k.device_id === item.device_id) {
+                const diffSec = Math.abs(new Date(k.logged_at).getTime() - itemTime) / 1000;
+                return diffSec <= 60; // Trùng lặp cùng máy trong 60 giây
+              }
+              return false;
+            });
+
+            if (isDup) {
+              if (item.id) duplicateIdsToDelete.push(item.id);
+            } else {
+              keepList.push(item);
+            }
+          });
+
+          if (duplicateIdsToDelete.length > 0) {
+            if (supabase && isSupabaseLoginHistoryAvailable) {
+              for (let i = 0; i < duplicateIdsToDelete.length; i += 40) {
+                const chunk = duplicateIdsToDelete.slice(i, i + 40);
+                await supabase.from('login_history').delete().in('id', chunk);
+              }
+            }
+            deletedCount = duplicateIdsToDelete.length;
+            allLoginHistoryCache = keepList;
+          } else {
+            showToast("Không có bản ghi trùng lặp nào cần dọn dẹp!");
+            closeCleanupLoginHistoryModal();
+            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            return;
+          }
+
+        } else if (selectedOption === 'older_30_days') {
+          // 2. XÓA CŨ HƠN 30 NGÀY
+          const thresholdIso = new Date(now.getTime() - 30 * 86400000).toISOString();
+          const toDelete = allLoginHistoryCache.filter(x => new Date(x.logged_at) < new Date(now.getTime() - 30 * 86400000));
+          const idsToDelete = toDelete.map(x => x.id).filter(Boolean);
+
+          if (idsToDelete.length > 0 && supabase && isSupabaseLoginHistoryAvailable) {
+            for (let i = 0; i < idsToDelete.length; i += 40) {
+              const chunk = idsToDelete.slice(i, i + 40);
+              await supabase.from('login_history').delete().in('id', chunk);
+            }
+          }
+          deletedCount = toDelete.length;
+          allLoginHistoryCache = allLoginHistoryCache.filter(x => new Date(x.logged_at) >= new Date(now.getTime() - 30 * 86400000));
+
+        } else if (selectedOption === 'older_7_days') {
+          // 3. XÓA CŨ HƠN 7 NGÀY
+          const thresholdIso = new Date(now.getTime() - 7 * 86400000).toISOString();
+          const toDelete = allLoginHistoryCache.filter(x => new Date(x.logged_at) < new Date(now.getTime() - 7 * 86400000));
+          const idsToDelete = toDelete.map(x => x.id).filter(Boolean);
+
+          if (idsToDelete.length > 0 && supabase && isSupabaseLoginHistoryAvailable) {
+            for (let i = 0; i < idsToDelete.length; i += 40) {
+              const chunk = idsToDelete.slice(i, i + 40);
+              await supabase.from('login_history').delete().in('id', chunk);
+            }
+          }
+          deletedCount = toDelete.length;
+          allLoginHistoryCache = allLoginHistoryCache.filter(x => new Date(x.logged_at) >= new Date(now.getTime() - 7 * 86400000));
+
+        } else if (selectedOption === 'all') {
+          // 4. XÓA TOÀN BỘ (DỌN SẠCH CÁC BẢN GHI TEST)
+          if (supabase && isSupabaseLoginHistoryAvailable) {
+            await supabase.from('login_history').delete().gt('id', 0);
+          }
+          deletedCount = allLoginHistoryCache.length;
+          allLoginHistoryCache = [];
+        }
+
+        // Cập nhật lại bộ nhớ cục bộ
+        localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(allLoginHistoryCache.slice(0, 500)));
+
+        // Cập nhật lại giao diện bảng và chỉ số thống kê
+        filterLoginHistoryTable();
+        closeCleanupLoginHistoryModal();
+        showToast(`Đã dọn dẹp thành công! Đã loại bỏ ${deletedCount} bản ghi.`);
+
+      } catch (err) {
+        console.warn("Lỗi khi dọn dẹp:", err);
+        showToast("Có lỗi xảy ra trong quá trình dọn dẹp: " + (err.message || err), true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+    }
+
     function openLoginHistoryModal() {
       if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
         showToast("Chức năng chỉ dành cho Ban Quản trị & Điều hành!", true);
@@ -19294,33 +19526,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         }
       }
 
-      const localLogs = getLoginLogsFromLocalStorage();
-
-      // Kết hợp dữ liệu remote và local
+      // Khi có kết nối máy chủ Supabase, ưu tiên 100% dữ liệu đồng bộ từ máy chủ (nguồn chính xác duy nhất)
       let combined = [];
       if (remoteLogs.length > 0) {
-        const remoteKeys = new Set(remoteLogs.map(r => `${r.username}_${r.logged_at}`));
-        const unsynced = localLogs.filter(l => !remoteKeys.has(`${l.username}_${l.logged_at}`));
-        if (unsynced.length > 0 && supabase && isSupabaseLoginHistoryAvailable) {
-          supabase.from('login_history').insert(unsynced.map(u => ({
-            logged_at: u.logged_at,
-            username: u.username,
-            full_name: u.full_name,
-            department: u.department,
-            role: u.role,
-            device_id: u.device_id,
-            device_type: u.device_type,
-            browser: u.browser,
-            os: u.os,
-            user_agent: u.user_agent,
-            ip_address: u.ip_address,
-            ip_location: u.ip_location,
-            status: u.status
-          }))).then(() => {}).catch(() => {});
-        }
         combined = remoteLogs;
+        // Cập nhật lại bộ nhớ cục bộ để giữ dữ liệu đồng bộ
+        try {
+          localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(remoteLogs.slice(0, 500)));
+        } catch(e) {}
       } else {
-        combined = localLogs;
+        combined = getLoginLogsFromLocalStorage();
       }
 
       // Nếu hoàn toàn chưa có bản ghi nào, tự động thêm phiên hiện tại của Admin để giao diện không bị rỗng
