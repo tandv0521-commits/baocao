@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v22') {
+          if (key !== 'baocao-dvkh-pwa-v24') {
             caches.delete(key);
           }
         });
@@ -1150,58 +1150,7 @@
         </div>
       </div>
 
-      <!-- TIÊU ĐIỂM THÁNG 11: TRANG TRÍ CHUYÊN NGHIỆP PHONG CÁCH DOANH NGHIỆP ĐỒNG BỘ MÀN HÌNH ĐĂNG NHẬP -->
-      <div onclick="openNovemberThematicModal()" data-tooltip="Bấm để xem chi tiết Chủ điểm Tháng 11" class="flex items-center justify-center mx-auto my-auto cursor-pointer group/nov transition-all duration-300 select-none px-1 shrink-0">
-        <div class="relative px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-2xl bg-gradient-to-r from-emerald-50/95 via-teal-50/85 to-amber-50/90 border border-emerald-300/80 hover:border-emerald-400 shadow-[0_2px_10px_rgba(5,150,105,0.08)] hover:shadow-md transition-all duration-300 flex items-center gap-2 sm:gap-3 backdrop-blur-md">
-          
-          <!-- Huy hiệu Chủ điểm Tháng 11 phát sáng nhẹ -->
-          <div class="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white shadow-xs shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-ping"></span>
-            <span class="font-november-badge-modern text-[8.5px] sm:text-[9.5px] uppercase tracking-wider text-emerald-100 font-extrabold whitespace-nowrap">
-              TIÊU ĐIỂM THÁNG 11
-            </span>
-          </div>
 
-          <!-- Tiêu điểm 1: 20/11 - Ngày Nhà Giáo Việt Nam -->
-          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-600/10 border border-emerald-400/40 text-emerald-700 flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover/nov:scale-105 transition-transform">
-              <i class="fa-solid fa-graduation-cap text-emerald-700 text-xs sm:text-sm"></i>
-            </div>
-            <div class="leading-tight text-left">
-              <div class="flex items-center gap-1">
-                <span class="text-[9px] sm:text-[9.5px] font-black uppercase text-emerald-700 font-num">20/11</span>
-                <span class="text-[9px] text-slate-300">•</span>
-                <span class="text-[10.5px] sm:text-[11px] font-black text-slate-800 whitespace-nowrap">Tri Ân Người Thầy</span>
-              </div>
-              <span class="text-[8.5px] sm:text-[9px] text-emerald-700/90 font-medium whitespace-nowrap hidden md:block">Nâng tầm tri thức</span>
-            </div>
-          </div>
-
-          <!-- Vạch ngăn cách thanh lịch -->
-          <div class="h-4 sm:h-5 w-px bg-gradient-to-b from-transparent via-emerald-300 to-transparent shrink-0"></div>
-
-          <!-- Tiêu điểm 2: 24/11 - Ngày Văn Hóa Việt Nam -->
-          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-800 flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover/nov:scale-105 transition-transform">
-              <i class="fa-solid fa-landmark text-amber-700 text-[10px] sm:text-xs"></i>
-            </div>
-            <div class="leading-tight text-left">
-              <div class="flex items-center gap-1">
-                <span class="text-[9px] sm:text-[9.5px] font-black uppercase text-amber-700 font-num">24/11</span>
-                <span class="text-[9px] text-slate-300">•</span>
-                <span class="text-[10.5px] sm:text-[11px] font-black text-slate-800 whitespace-nowrap">Tôn Vinh Bản Sắc</span>
-              </div>
-              <span class="text-[8.5px] sm:text-[9px] text-amber-700/90 font-medium whitespace-nowrap hidden md:block">Vững bước vươn xa</span>
-            </div>
-          </div>
-
-          <!-- Mũi tên khám phá nhỏ gọn -->
-          <div class="hidden lg:flex items-center text-[10px] text-emerald-600 group-hover/nov:text-emerald-800 transition-colors pl-0.5">
-            <i class="fa-solid fa-chevron-right text-[9px] opacity-70 group-hover/nov:translate-x-0.5 transition-transform"></i>
-          </div>
-
-        </div>
-      </div>
 
       <!-- Chỉ số nhịp độ báo cáo hôm nay (Live Status) - Đã ẩn hoàn toàn theo yêu cầu -->
       <div id="headerTodayStatusBadge" class="hidden">
@@ -1265,6 +1214,20 @@
                 </div>
               </div>
               <i class="fa-solid fa-rotate text-xs text-slate-400 group-hover:text-sky-600 transition"></i>
+            </button>
+
+            <!-- Xem lại Chủ điểm Tháng 11 (Phương án 3) -->
+            <button type="button" onclick="closeHeaderActionsMenu(); openNovemberThematicModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50/70 transition text-left cursor-pointer group border border-transparent hover:border-emerald-200">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-800 border border-emerald-300 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <i class="fa-solid fa-spa"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-800">Chủ điểm Tháng 11</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Tri Ân &amp; Bản Sắc Văn Hóa Tiền Phong</span>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300/80 rounded-full">Tiêu điểm</span>
             </button>
 
             <!-- Nhóm 2: Quản trị & Điều hành (Admin / Quản lý) -->
@@ -3636,6 +3599,14 @@
           </p>
         </div>
 
+        <!-- NÚT BẮT ĐẦU LÀM VIỆC (PHƯƠNG ÁN 3 - POPUP CHÀO MỪNG ĐĂNG NHẬP) -->
+        <div class="pt-2 pb-1 flex items-center justify-center">
+          <button type="button" onclick="closeNovemberThematicModal()" class="px-8 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-950/60 hover:shadow-emerald-900/80 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5 border border-emerald-200/80 group">
+            <span class="tracking-wide">Bắt đầu làm việc</span>
+            <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -4435,7 +4406,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         }
       }
     }
-    // ================= XỬ LÝ XEM THÔNG TIN TÀI KHOẢN CÁ NHÂN =================
+    // ================= XỬ LÝ XEM THÔNG TIN TÀI KHOẢN CÁ NHÂN & POPUP CHỦ ĐIỂM THÁNG 11 =================
     function openNovemberThematicModal() {
       const modal = document.getElementById('novemberThematicModal');
       if (modal) modal.classList.remove('hidden');
@@ -4444,6 +4415,22 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     function closeNovemberThematicModal() {
       const modal = document.getElementById('novemberThematicModal');
       if (modal) modal.classList.add('hidden');
+    }
+
+    function checkAndShowNovemberWelcomePopup() {
+      if (!currentUser) return;
+      const shown = sessionStorage.getItem('shown_november_theme_welcome');
+      if (!shown) {
+        sessionStorage.setItem('shown_november_theme_welcome', 'true');
+        setTimeout(() => {
+          // Tránh đè lên popup cảnh báo chưa phân công công việc nếu có
+          const unassignedModal = document.getElementById('unassignedStaffModal');
+          if (unassignedModal && !unassignedModal.classList.contains('hidden')) {
+            return;
+          }
+          openNovemberThematicModal();
+        }, 500);
+      }
     }
 
     function openUserProfileModal() {
@@ -8195,6 +8182,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       } else {
         loadMatrixData(false);
       }
+
+      // Tự động hiển thị popup Chào mừng Chủ điểm Tháng 11 (Phương án 3)
+      checkAndShowNovemberWelcomePopup();
     }
 
     function setupRoleControls() {
@@ -19037,6 +19027,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           const myActions = [
             {
               type: 'action',
+              title: 'Chủ điểm Tháng 11: Tri Ân & Bản Sắc Văn Hóa Tiền Phong',
+              subtitle: 'Thi đua chào mừng Ngày Nhà Giáo 20/11 & Ngày Văn Hóa 24/11',
+              icon: 'fa-solid fa-spa text-emerald-600 bg-emerald-50',
+              badge: 'Chủ điểm',
+              handler: () => { closeCommandPalette(); openNovemberThematicModal(); },
+              tags: 'chu diem thang 11 tri an ban sac van hoa 20/11 24/11 nha giao van hoa tien phong trong dong hoa sen'
+            },
+            {
+              type: 'action',
               title: 'Điền báo cáo công việc',
               subtitle: 'Ghi nhận sản lượng & công việc hoàn thành hôm nay',
               icon: 'fa-solid fa-pen-to-square text-emerald-600 bg-emerald-50',
@@ -19132,6 +19131,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         } else {
           // ================= DANH MỤC HÀNH ĐỘNG DÀNH CHO ADMIN VÀ QUẢN LÝ =================
           const adminActions = [
+            {
+              type: 'action',
+              title: 'Chủ điểm Tháng 11: Tri Ân & Bản Sắc Văn Hóa Tiền Phong',
+              subtitle: 'Thi đua chào mừng Ngày Nhà Giáo 20/11 & Ngày Văn Hóa 24/11',
+              icon: 'fa-solid fa-spa text-emerald-600 bg-emerald-50',
+              badge: 'Chủ điểm',
+              handler: () => { closeCommandPalette(); openNovemberThematicModal(); },
+              tags: 'chu diem thang 11 tri an ban sac van hoa 20/11 24/11 nha giao van hoa tien phong trong dong hoa sen'
+            },
             {
               type: 'action',
               title: 'Điền báo cáo công việc',
@@ -19518,6 +19526,10 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (iosPrompt && !iosPrompt.classList.contains('hidden')) {
           closeIOSInstallPrompt();
         }
+        const novModal = document.getElementById('novemberThematicModal');
+        if (novModal && !novModal.classList.contains('hidden')) {
+          closeNovemberThematicModal();
+        }
       }
     });
 
@@ -19529,6 +19541,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
       sessionStorage.setItem('ops_portal_manual_logout', 'true');
       sessionStorage.removeItem('ops_session_device_logged');
+      sessionStorage.removeItem('shown_november_theme_welcome');
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
       fullPeriodMatrixCache = null;
