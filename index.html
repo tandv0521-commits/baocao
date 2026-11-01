@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v18') {
+          if (key !== 'baocao-dvkh-pwa-v19') {
             caches.delete(key);
           }
         });
@@ -490,20 +490,23 @@
       opacity: 1 !important;
     }
     th.matrix-col-highlight {
-      background-color: #d1fae5 !important;
-      color: #065f46 !important;
+      background-color: #a7f3d0 !important;
+      color: #064e3b !important;
       box-shadow: inset 0 -3px 0 #059669 !important;
-      transition: all 0.1s ease;
+      transition: background-color 0.1s ease;
     }
     td.matrix-col-highlight:not(.matrix-cell-active) {
-      background-color: rgba(240, 253, 244, 0.45) !important;
+      background-color: rgba(16, 185, 129, 0.14) !important;
+    }
+    tr.matrix-row-hover > td.matrix-col-highlight:not(.matrix-cell-active) {
+      background-color: #d1fae5 !important;
     }
     td.matrix-cell-active {
-      background-color: #ecfdf5 !important;
+      background-color: #a7f3d0 !important;
       outline: 2px solid #059669 !important;
       outline-offset: -2px;
       z-index: 20 !important;
-      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22) !important;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25) !important;
     }
 
     /* ================= CHẾ ĐỘ THU GỌN (COMPACT DENSITY) CHO MÁY TÍNH ================= */
@@ -9984,7 +9987,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                 }
 
                 dayCellsHtml += `
-                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell matrix-day-td py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" data-col="${cIdx}" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
+                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell matrix-day-td py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" data-col="${dc.dayNum}" data-col-index="${cIdx}" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
                     <div class="flex items-center justify-center h-full w-full">
                       ${mergedInputHtml}
                     </div>
@@ -10010,7 +10013,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             if (isLeaveDay) {
               cellStyle = `background-color: ${symInfo.bg} !important;`;
             } else if (isToday) {
-              cellBgClass = "bg-emerald-50/40 border-x-2 border-emerald-300 font-semibold";
+              cellBgClass = "bg-emerald-50/30 border-x border-emerald-200/60 font-semibold";
             } else if (isSunday) {
               cellBgClass = "col-sunday-cell bg-rose-50/25";
             } else if (isFuture) {
@@ -10094,7 +10097,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             }
 
             dayCellsHtml += `
-              <td class="matrix-day-td py-1 px-1 border-r border-slate-200 text-center ${cellBgClass} relative" data-col="${cIdx}" style="${cellStyle}">
+              <td class="matrix-day-td py-1 px-1 border-r border-slate-200 text-center ${cellBgClass} relative" data-col="${dc.dayNum}" data-col-index="${cIdx}" style="${cellStyle}">
                 ${cellContentHtml}
               </td>
             `;
@@ -10171,13 +10174,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       function clearCrosshairColHighlight() {
         document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
         tbody.querySelectorAll('td.matrix-day-td[data-col]').forEach(el => el.classList.remove('matrix-col-highlight'));
+        currentHoveredCol = null;
       }
 
-      tbody.addEventListener('mouseover', function(e) {
-        const cell = e.target.closest('td.matrix-day-td');
+      function handleCellTracking(cell) {
         if (!cell) return;
-
-        const colIdx = cell.dataset.col;
+        const colDay = cell.dataset.col;
         const row = cell.closest('tr');
 
         if (currentHoveredRow !== row) {
@@ -10186,21 +10188,37 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           currentHoveredRow = row;
         }
 
-        if (currentHoveredCol !== colIdx) {
+        if (currentHoveredCol !== colDay) {
           clearCrosshairColHighlight();
-          if (colIdx !== undefined) {
-            const th = document.getElementById(`th-col-${colIdx}`);
+          if (colDay !== undefined && colDay !== null && colDay !== '') {
+            const th = document.getElementById(`th-col-${colDay}`);
             if (th) th.classList.add('matrix-col-highlight');
-            const sameColCells = tbody.querySelectorAll(`td.matrix-day-td[data-col="${colIdx}"]`);
+            const sameColCells = tbody.querySelectorAll(`td.matrix-day-td[data-col="${colDay}"]`);
             sameColCells.forEach(c => c.classList.add('matrix-col-highlight'));
-            currentHoveredCol = colIdx;
+            currentHoveredCol = colDay;
           }
         }
 
         cell.classList.add('matrix-cell-active');
+      }
+
+      tbody.addEventListener('mouseover', function(e) {
+        const cell = e.target.closest('td.matrix-day-td');
+        if (!cell) return;
+        handleCellTracking(cell);
       });
 
       tbody.addEventListener('mouseout', function(e) {
+        const cell = e.target.closest('td.matrix-day-td');
+        if (cell) cell.classList.remove('matrix-cell-active');
+      });
+
+      tbody.addEventListener('focusin', function(e) {
+        const cell = e.target.closest('td.matrix-day-td');
+        if (cell) handleCellTracking(cell);
+      });
+
+      tbody.addEventListener('focusout', function(e) {
         const cell = e.target.closest('td.matrix-day-td');
         if (cell) cell.classList.remove('matrix-cell-active');
       });
@@ -10214,7 +10232,6 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             currentHoveredRow = null;
           }
           clearCrosshairColHighlight();
-          currentHoveredCol = null;
         });
       }
     }
