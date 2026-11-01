@@ -8945,6 +8945,23 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const staffGroupsMap = {};
       const sharedDeptCache = new Map();
 
+      // TẬP HỢP CÁC USER THỰC TẾ CÓ BÁO CÁO TRONG TỪNG PHÒNG BAN Ở KỲ ĐANG TRUY VẤN ĐỂ BẢO TOÀN LỊCH SỬ KỲ CŨ
+      const deptReportUsersMap = new Map();
+      if (reports) {
+        reports.forEach(r => {
+          if (!r.user_id) return;
+          const tObj = tasks.find(x => x.id === r.task_id);
+          if (tObj) {
+            const dId = tObj.department_id || (tObj.departments ? tObj.departments.id : null);
+            if (dId) {
+              let uSet = deptReportUsersMap.get(dId);
+              if (!uSet) { uSet = new Set(); deptReportUsersMap.set(dId, uSet); }
+              uSet.add(r.user_id);
+            }
+          }
+        });
+      }
+
       tasks.forEach(t => {
         const taskReportsInMonth = reportsByTaskId.get(t.id) || [];
         const hasReportsInThisMonth = taskReportsInMonth.length > 0;
@@ -9037,15 +9054,36 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
           let cachedGroup = sharedDeptCache.get(deptBaseKey);
           if (!cachedGroup) {
-            // Lọc thành viên thuộc kho này từ danh sách users mới nhất
+            const usersWithReportsHere = deptReportUsersMap.get(deptId) || new Set();
+
+            // Lọc thành viên thuộc kho này: Bảo tồn 100% nhân sự đã từng hoạt động/báo cáo ở kỳ cũ
             const deptMembers = (dbUsers || []).filter(u => {
-              if (!isPastPeriod && u.status !== 'Hoạt động') return false;
               // Loại trừ tài khoản quản trị/giám đốc khỏi danh sách thành viên tổ kho
               if (isDirectorOrAdmin(u.role, u.username)) return false;
-              if (deptId && u.department_id && u.department_id === deptId) return true;
-              const uDeptObj = deptMap.get(u.department_id);
-              const uDeptName = uDeptObj ? uDeptObj.name : "";
-              return isDeptEquivalent(uDeptName, deptName);
+
+              if (isPastPeriod) {
+                // Kỳ quá khứ:
+                // 1. Nếu nhân sự thực tế đã báo cáo ở kho này trong kỳ -> Luôn giữ lại (bất kể hiện tại đã chuyển kho hay bị khóa)
+                if (usersWithReportsHere.has(u.id)) return true;
+                // 2. Nếu nhân sự hiện tại thuộc kho này, kiểm tra xem kỳ cũ có báo cáo ở phòng ban khác hay không
+                if (deptId && u.department_id && u.department_id === deptId) {
+                  let reportedOtherDept = false;
+                  deptReportUsersMap.forEach((uSet, otherDId) => {
+                    if (otherDId !== deptId && uSet.has(u.id)) reportedOtherDept = true;
+                  });
+                  return !reportedOtherDept;
+                }
+                const uDeptObj = deptMap.get(u.department_id);
+                const uDeptName = uDeptObj ? uDeptObj.name : "";
+                return isDeptEquivalent(uDeptName, deptName);
+              } else {
+                // Kỳ hiện tại: Chỉ hiển thị nhân sự đang hoạt động và đang thuộc tổ kho này
+                if (u.status !== 'Hoạt động') return false;
+                if (deptId && u.department_id && u.department_id === deptId) return true;
+                const uDeptObj = deptMap.get(u.department_id);
+                const uDeptName = uDeptObj ? uDeptObj.name : "";
+                return isDeptEquivalent(uDeptName, deptName);
+              }
             });
 
             // Chuẩn hóa thứ tự thành viên kho: Kho chính / Trưởng nhóm xếp đầu, kế đến Thủ kho, Phụ kho, Bốc xếp
@@ -17789,135 +17827,164 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         let copiedTasksCount = 0;
         if (oldDeptId && dId && oldDeptId !== dId && currentUserId && !isLock) {
           const actionChoice = updateData.copyFromUserId;
+          const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+          const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
+          const prevM = prevMonthDate.getMonth() + 1;
+          const prevY = prevMonthDate.getFullYear();
+          const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
 
-          if (updateData.isWarehouse) {
-            // =========================================================================
-            // QUY TRÌNH CHUYỂN VÀO NHÓM KHO (NHÓM GỘP):
-            // - Xóa/làm sạch toàn bộ đầu việc hiện tại của nhân sự ở bộ phận cũ (KHÔNG mang việc cũ vào kho).
-            // - Nhân sự sẽ tự động tham gia vào danh mục công việc chung của tổ kho.
-            // =========================================================================
-            const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
+          // Lấy toàn bộ đầu việc của nhân sự tại bộ phận cũ (không thuộc bộ phận đích dId)
+          const { data: oldTasks } = await supabase
+            .from('tasks')
+            .select('id, task_name, guide, mode, created_at, department_id')
+            .eq('assigned_user_id', currentUserId)
+            .neq('department_id', dId);
 
-            // Lấy toàn bộ đầu việc của người đó tại bộ phận cũ (không thuộc kho đích)
-            const { data: oldTasks } = await supabase
-              .from('tasks')
-              .select('id')
-              .eq('assigned_user_id', currentUserId)
-              .neq('department_id', dId);
+          if (oldTasks && oldTasks.length > 0) {
+            const oldIds = oldTasks.map(t => t.id);
 
-            if (oldTasks && oldTasks.length > 0) {
-              const oldIds = oldTasks.map(t => t.id);
+            // Kiểm tra các báo cáo trước kỳ hiện tại để bảo toàn lịch sử đối soát
+            const { data: priorReps } = await supabase
+              .from('daily_reports')
+              .select('task_id')
+              .in('task_id', oldIds)
+              .lt('report_date', currentPeriodStartDate);
 
-              // 1. Xóa các báo cáo trong kỳ hiện tại của các đầu việc cũ này
+            const reportedPriorIds = new Set((priorReps || []).map(r => r.task_id));
+
+            // Phân loại: Các task có lịch sử kỳ cũ (có báo cáo cũ HOẶC tạo trước kỳ hiện tại)
+            const archiveOldTasks = oldTasks.filter(t => {
+              const isCreatedBefore = t.created_at && (new Date(t.created_at) < new Date(currentPeriodStartDate));
+              return reportedPriorIds.has(t.id) || isCreatedBefore;
+            });
+
+            // Các task tạo mới tinh trong kỳ này và chưa từng có báo cáo kỳ cũ
+            const disposableOldTasks = oldTasks.filter(t => !archiveOldTasks.some(at => at.id === t.id));
+
+            // 1. ĐỐI VỚI CÁC ĐẦU VIỆC CÓ LỊCH SỬ KỲ CŨ:
+            // BẢO VỆ TUYỆT ĐỐI 100%: Giữ nguyên department_id cũ, giữ nguyên assigned_user_id, giữ nguyên thứ tự <!--ord:X-->
+            // Chỉ đóng dấu kết thúc từ kỳ trước (valid_until) để kỳ hiện tại sạch bóng và kỳ cũ bảo lưu trọn vẹn
+            for (const ot of archiveOldTasks) {
+              const cleanGuide = cleanTaskGuide(ot.guide || '');
+              const oldOrd = parseTaskOrder(ot.guide, null);
+              const scope = parseTaskScope(ot.guide);
+              const retiredGuide = formatTaskGuideWithOrderAndScope(cleanGuide, oldOrd, scope) + ` \x3c!--valid_until:${prevPeriodTag}-->`;
+              await supabase.from('tasks').update({ guide: retiredGuide }).eq('id', ot.id);
+            }
+
+            // 2. XỬ LÝ THEO LỰA CHỌN CỦA QUẢN TRỊ VIÊN ĐỐI VỚI BỘ PHẬN ĐÍCH:
+            if (updateData.isWarehouse) {
+              // =========================================================================
+              // QUY TRÌNH CHUYỂN VÀO NHÓM KHO (NHÓM GỘP):
+              // - Xóa các báo cáo trong kỳ hiện tại của các việc cũ
+              // - Nhân sự sẽ tự động tham gia vào danh mục công việc chung của tổ kho
+              // =========================================================================
               await supabase
                 .from('daily_reports')
                 .delete()
                 .in('task_id', oldIds)
                 .gte('report_date', currentPeriodStartDate);
 
-              // 2. Kiểm tra xem đầu việc nào có số liệu ở các kỳ cũ trước đó để bảo tồn lịch sử đối soát
-              const { data: priorReps } = await supabase
-                .from('daily_reports')
-                .select('task_id')
-                .in('task_id', oldIds)
-                .lt('report_date', currentPeriodStartDate);
-
-              const reportedPriorIds = new Set((priorReps || []).map(r => r.task_id));
-              const deletableIds = oldIds.filter(id => !reportedPriorIds.has(id));
-              const archiveIds = oldIds.filter(id => reportedPriorIds.has(id));
-
-              // Không có lịch sử ở kỳ cũ: Xóa an toàn khỏi cơ sở dữ liệu
-              if (deletableIds.length > 0) {
-                await supabase.from('tasks').delete().in('id', deletableIds);
+              if (disposableOldTasks.length > 0) {
+                await supabase.from('tasks').delete().in('id', disposableOldTasks.map(t => t.id));
               }
 
-              // Có lịch sử ở kỳ cũ: Giữ lại để bảo toàn kỳ cũ, đóng dấu hết hạn từ kỳ trước để kỳ hiện tại sạch 100%
-              if (archiveIds.length > 0) {
-                const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
-                const prevM = prevMonthDate.getMonth() + 1;
-                const prevY = prevMonthDate.getFullYear();
-                const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
+            } else if (actionChoice === "keep_old") {
+              // =========================================================================
+              // TRƯỜNG HỢP 3: GIỮ ĐẦU VIỆC SANG BỘ PHẬN MỚI
+              // - Task có lịch sử cũ: ĐÃ ĐƯỢC BẢO LƯU Ở BỘ PHẬN CŨ (bước 1).
+              //   Ở bộ phận mới, ta tạo bản sao công việc cho kỳ hiện tại với department_id = dId
+              //   và chuyển toàn bộ số liệu báo cáo của kỳ hiện tại sang task mới!
+              // - Task tạo mới trong kỳ này: Cập nhật trực tiếp department_id = dId
+              // =========================================================================
+              for (const ot of archiveOldTasks) {
+                const cleanGuide = cleanTaskGuide(ot.guide || '');
+                const oldOrd = parseTaskOrder(ot.guide, null);
+                const scope = parseTaskScope(ot.guide);
+                const newGuide = formatTaskGuideWithOrderAndScope(cleanGuide, oldOrd, scope);
 
-                for (const aid of archiveIds) {
-                  const { data: exT } = await supabase.from('tasks').select('guide').eq('id', aid).limit(1);
-                  let oldGuide = exT && exT[0] && exT[0].guide ? exT[0].guide : "";
-                  oldGuide = oldGuide.replace(/\x3c!--valid_until:[^>]+-->/g, '').trim();
-                  const retiredGuide = oldGuide ? `${oldGuide} \x3c!--valid_until:${prevPeriodTag}-->` : `\x3c!--valid_until:${prevPeriodTag}-->`;
-                  await supabase.from('tasks').update({ guide: retiredGuide }).eq('id', aid);
+                const { data: insNew, error: inErr } = await supabase
+                  .from('tasks')
+                  .insert({
+                    department_id: dId,
+                    assigned_user_id: currentUserId,
+                    task_name: ot.task_name,
+                    guide: newGuide,
+                    mode: ot.mode || 'numeric',
+                    created_at: new Date().toISOString()
+                  })
+                  .select('id');
+
+                if (!inErr && insNew && insNew[0]) {
+                  copiedTasksCount++;
+                  // Di chuyển các báo cáo của kỳ hiện tại sang task mới ở bộ phận mới
+                  await supabase
+                    .from('daily_reports')
+                    .update({ task_id: insNew[0].id })
+                    .eq('task_id', ot.id)
+                    .gte('report_date', currentPeriodStartDate);
                 }
               }
-            }
 
-          } else if (actionChoice && actionChoice !== "keep_old" && actionChoice !== "fresh_empty") {
-            // Trường hợp 1: Chọn sao chép đầu việc từ đồng nghiệp ở bộ phận mới
-            const { data: sourceTasks, error: sErr } = await supabase
-              .from('tasks')
-              .select('task_name, guide, mode')
-              .eq('assigned_user_id', actionChoice);
+              if (disposableOldTasks.length > 0) {
+                await supabase
+                  .from('tasks')
+                  .update({ department_id: dId })
+                  .in('id', disposableOldTasks.map(t => t.id));
+                copiedTasksCount += disposableOldTasks.length;
+              }
 
-            if (!sErr && sourceTasks && sourceTasks.length > 0) {
-              const newTasksPayload = sourceTasks.map(st => ({
-                department_id: dId,
-                assigned_user_id: currentUserId,
-                task_name: st.task_name,
-                guide: st.guide,
-                mode: st.mode
-              }));
-
-              const { error: insErr } = await supabase.from('tasks').insert(newTasksPayload);
-              if (!insErr) copiedTasksCount = newTasksPayload.length;
-            }
-
-            // Dọn sạch các đầu việc cũ ở bộ phận cũ của nhân sự nếu không có số liệu báo cáo
-            const { data: oldTasks } = await supabase
-              .from('tasks')
-              .select('id')
-              .eq('assigned_user_id', currentUserId)
-              .eq('department_id', oldDeptId);
-
-            if (oldTasks && oldTasks.length > 0) {
-              const oldIds = oldTasks.map(t => t.id);
-              const { data: oldReports } = await supabase
+            } else if (actionChoice && actionChoice !== "fresh_empty") {
+              // =========================================================================
+              // TRƯỜNG HỢP 1: SAO CHÉP ĐẦU VIỆC TỪ ĐỒNG NGHIỆP Ở BỘ PHẬN MỚI
+              // =========================================================================
+              // Xóa báo cáo kỳ này của việc cũ
+              await supabase
                 .from('daily_reports')
-                .select('task_id')
+                .delete()
                 .in('task_id', oldIds)
-                .limit(10);
+                .gte('report_date', currentPeriodStartDate);
 
-              const reportedIds = new Set((oldReports || []).map(r => r.task_id));
-              const unneededIds = oldIds.filter(id => !reportedIds.has(id));
-              if (unneededIds.length > 0) {
-                await supabase.from('tasks').delete().in('id', unneededIds);
+              if (disposableOldTasks.length > 0) {
+                await supabase.from('tasks').delete().in('id', disposableOldTasks.map(t => t.id));
+              }
+
+              const { data: sourceTasks, error: sErr } = await supabase
+                .from('tasks')
+                .select('task_name, guide, mode')
+                .eq('assigned_user_id', actionChoice);
+
+              if (!sErr && sourceTasks && sourceTasks.length > 0) {
+                const activeSourceTasks = sourceTasks.filter(st => !parseTaskValidUntil(st.guide));
+                const newTasksPayload = activeSourceTasks.map(st => ({
+                  department_id: dId,
+                  assigned_user_id: currentUserId,
+                  task_name: st.task_name,
+                  guide: cleanTaskGuide(st.guide || ''),
+                  mode: st.mode || 'numeric',
+                  created_at: new Date().toISOString()
+                }));
+
+                if (newTasksPayload.length > 0) {
+                  const { error: insErr } = await supabase.from('tasks').insert(newTasksPayload);
+                  if (!insErr) copiedTasksCount = newTasksPayload.length;
+                }
+              }
+
+            } else {
+              // =========================================================================
+              // TRƯỜNG HỢP 2: LÀM MỚI CÔNG VIỆC (fresh_empty)
+              // =========================================================================
+              await supabase
+                .from('daily_reports')
+                .delete()
+                .in('task_id', oldIds)
+                .gte('report_date', currentPeriodStartDate);
+
+              if (disposableOldTasks.length > 0) {
+                await supabase.from('tasks').delete().in('id', disposableOldTasks.map(t => t.id));
               }
             }
-          } else if (actionChoice === "fresh_empty") {
-            // Trường hợp 2: Làm mới công việc (Không có đầu việc nào ở bộ phận mới, chờ phân công)
-            const { data: oldTasks } = await supabase
-              .from('tasks')
-              .select('id')
-              .eq('assigned_user_id', currentUserId)
-              .eq('department_id', oldDeptId);
-
-            if (oldTasks && oldTasks.length > 0) {
-              const oldIds = oldTasks.map(t => t.id);
-              const { data: oldReports } = await supabase
-                .from('daily_reports')
-                .select('task_id')
-                .in('task_id', oldIds)
-                .limit(10);
-
-              const reportedIds = new Set((oldReports || []).map(r => r.task_id));
-              const unneededIds = oldIds.filter(id => !reportedIds.has(id));
-              if (unneededIds.length > 0) {
-                await supabase.from('tasks').delete().in('id', unneededIds);
-              }
-            }
-          } else {
-            // Trường hợp 3: Giữ đầu việc ở bộ phận cũ (Chỉ áp dụng giữa các bộ phận thông thường)
-            await supabase
-              .from('tasks')
-              .update({ department_id: dId })
-              .eq('assigned_user_id', currentUserId)
-              .eq('department_id', oldDeptId);
           }
         }
 
@@ -17944,10 +18011,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             }
           }
 
-          await supabase
-            .from('tasks')
-            .update({ assigned_user_id: currentUserId })
-            .eq('department_id', dId);
+          // CHỈ CẬP NHẬT assigned_user_id CHO CÁC CÔNG VIỆC CHUNG (SHARED) ĐANG HOẠT ĐỘNG CỦA TỔ KHO
+          const { data: deptTasks } = await supabase.from('tasks').select('id, guide').eq('department_id', dId);
+          const activeSharedIds = (deptTasks || [])
+            .filter(dt => parseTaskScope(dt.guide) !== 'personal' && !parseTaskValidUntil(dt.guide))
+            .map(dt => dt.id);
+          if (activeSharedIds.length > 0) {
+            await supabase.from('tasks').update({ assigned_user_id: currentUserId }).in('id', activeSharedIds);
+          }
         }
 
         // ĐÓNG CỬA SỔ VÀ LÀM MỚI BẢNG MA TRẬN
