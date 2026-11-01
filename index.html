@@ -24,7 +24,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v19') {
+          if (key !== 'baocao-dvkh-pwa-v20') {
             caches.delete(key);
           }
         });
@@ -3476,110 +3476,156 @@
     </div>
   </div>
 
-<!-- ================= MODAL CHỦ ĐIỂM THÁNG 11: TRI ÂN & BẢN SẮC VĂN HÓA ================= -->
-  <div id="novemberThematicModal" class="fixed inset-0 z-[70] bg-slate-950/70 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 select-none" onclick="if(event.target === this) closeNovemberThematicModal()">
-    <div class="bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 border-2 border-emerald-300/50 rounded-3xl max-w-2xl w-full shadow-2xl shadow-emerald-950/80 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+<!-- ================= MODAL CHỦ ĐIỂM THÁNG 11: TRI ÂN & BẢN SẮC VĂN HÓA (ĐẦY ĐỦ NỘI DUNG 100% NHƯ GIAO DIỆN ĐĂNG NHẬP) ================= -->
+  <div id="novemberThematicModal" class="fixed inset-0 z-[70] bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-2.5 sm:p-4 md:p-6 select-none" onclick="if(event.target === this) closeNovemberThematicModal()">
+    <div class="bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 border-2 border-emerald-300/50 rounded-3xl max-w-4xl lg:max-w-5xl w-full shadow-2xl shadow-emerald-950/80 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
       
-      <!-- Quầng sáng nghệ thuật -->
-      <div class="absolute -top-20 -right-20 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+      <!-- Quầng sáng nghệ thuật phong cách cao cấp -->
+      <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
       <!-- Header Modal -->
-      <div class="relative z-10 p-5 sm:p-6 pb-4 border-b border-white/10 flex items-start justify-between gap-4">
-        <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-2xl bg-white/10 border border-emerald-300/40 p-1.5 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/50 backdrop-blur-md">
+      <div class="relative z-10 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/10 flex items-center justify-between gap-4 shrink-0">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-white/10 border border-emerald-300/40 p-1.5 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/50 backdrop-blur-md">
             <img src="tienphong_logo2.png" onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';" alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
           </div>
           <div>
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-300/40 text-[9.5px] font-november-badge-modern text-emerald-200 uppercase tracking-wider mb-1">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-300/40 text-[9.5px] sm:text-[10px] font-november-badge-modern text-emerald-200 uppercase tracking-wider mb-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
               CHỦ ĐIỂM THÁNG 11 • KỲ 11/2026
             </div>
-            <h3 class="font-november-editorial text-lg sm:text-xl font-black text-white leading-tight">
+            <h3 class="font-november-editorial text-lg sm:text-xl md:text-2xl font-black text-white leading-tight">
               Tri Ân & Bản Sắc Văn Hóa Tiền Phong
             </h3>
           </div>
         </div>
-        <button type="button" onclick="closeNovemberThematicModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0">
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button type="button" onclick="closeNovemberThematicModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0">
+          <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
         </button>
       </div>
 
-      <!-- Nội dung 2 tiêu điểm song hành -->
-      <div class="relative z-10 p-5 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scroll">
+      <!-- Nội dung 2 tiêu điểm song hành: MỞ RỘNG & HIỂN THỊ ĐẦY ĐỦ 100% -->
+      <div class="relative z-10 p-4 sm:p-6 space-y-4 overflow-y-auto custom-scroll flex-1">
         
         <!-- Khẩu hiệu trang trọng -->
-        <div class="text-center py-2.5 px-4 rounded-2xl bg-white/5 border border-white/10">
-          <p class="font-november-hero-line text-base sm:text-lg text-amber-200 font-black">
+        <div class="text-center py-3 px-4 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+          <p class="font-november-hero-line text-base sm:text-lg md:text-xl text-amber-200 font-black tracking-wide">
             "Tri Ân Người Thầy — Nâng Tầm Tri Thức"
           </p>
-          <p class="font-november-hero-line text-base sm:text-lg text-emerald-200 font-black mt-1">
+          <p class="font-november-hero-line text-base sm:text-lg md:text-xl text-emerald-200 font-black mt-1 tracking-wide">
             "Tôn Vinh Bản Sắc — Vững Bước Vươn Xa"
           </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <!-- Thẻ 20/11 -->
-          <div class="p-4 rounded-2xl bg-white/5 border border-emerald-300/30 flex flex-col justify-between space-y-3">
+        <!-- ĐOẠN DẪN DẮT Ý NGHĨA DOANH NGHIỆP NGUYÊN BẢN NHƯ GIAO DIỆN ĐĂNG NHẬP -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-emerald-950/45 border border-emerald-400/25 text-center shadow-sm">
+          <p class="text-xs sm:text-sm text-emerald-100/95 leading-relaxed font-medium">
+            Thiết thực chào mừng <strong class="text-white font-bold">Ngày Nhà giáo Việt Nam 20/11</strong> & <strong class="text-amber-200 font-bold">Ngày Văn hóa Việt Nam 24/11</strong>, toàn thể cán bộ công nhân viên Ban Dịch Vụ Khách Hàng phát động đợt thi đua cao điểm: Nâng cao tay nghề chuyên môn, giữ vững kỷ cương tác nghiệp và lan tỏa sâu rộng bản sắc Văn hóa Nhựa Tiền Phong.
+          </p>
+        </div>
+
+        <!-- 2 KHỐI TIÊU ĐIỂM LỚN BỀ THẾ SONG HÀNH (20/11 & 24/11) ĐẦY ĐỦ 100% KHÔNG TÓM TẮT -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          
+          <!-- TIÊU ĐIỂM 1: 20/11 - NGÀY NHÀ GIÁO VIỆT NAM (ĐẦY ĐỦ NỘI DUNG & 3 TRỤ CỘT HÀNH ĐỘNG) -->
+          <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/60 via-teal-950/45 to-black/35 border-2 border-emerald-300/40 backdrop-blur-xl shadow-[0_15px_30px_rgba(4,78,56,0.25)] flex flex-col justify-between group hover:border-emerald-300/70 transition-all duration-300">
             <div>
-              <div class="flex items-center justify-between gap-1 mb-2">
-                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-300 font-num">TIÊU ĐIỂM 20/11</span>
-                <span class="text-[10px] text-emerald-200/90 italic font-semibold">Tôn sư trọng đạo</span>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-300/40 text-[10px] font-november-badge-modern text-emerald-200 uppercase tracking-wider">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                  TIÊU ĐIỂM 20/11
+                </span>
+                <span class="text-xs font-bold text-emerald-200/90 italic font-november-sub-clean">Tôn sư trọng đạo</span>
               </div>
-              <div class="flex items-center gap-2.5 mb-2">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-300/40 text-emerald-200 flex items-center justify-center shrink-0">
-                  <i class="fa-solid fa-graduation-cap text-base"></i>
+              <div class="flex items-start gap-3.5 mb-2.5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-300/40 text-emerald-200 flex items-center justify-center text-xl shadow-lg shadow-emerald-950/40 shrink-0 group-hover:scale-105 group-hover:bg-emerald-500/25 transition-all backdrop-blur-md">
+                  <i class="fa-solid fa-graduation-cap text-emerald-300 text-xl drop-shadow-sm"></i>
                 </div>
-                <h4 class="text-xs sm:text-sm font-black text-white leading-tight">Ngày Nhà Giáo Việt Nam</h4>
+                <div>
+                  <h3 class="text-base sm:text-lg font-black text-white leading-tight">
+                    Ngày Nhà Giáo Việt Nam
+                  </h3>
+                  <p class="text-xs text-emerald-200 font-semibold mt-0.5">Lan tỏa Đạo lý "Uống nước nhớ nguồn"</p>
+                </div>
               </div>
-              <p class="text-[11px] text-emerald-100/80 leading-relaxed">
-                Tri ân những Người Thầy trong đời và Người Lãnh đạo tâm huyết nơi công sở đã dày công nâng bước đội ngũ trưởng thành vững vàng.
+              <p class="text-xs sm:text-[13px] text-emerald-100/95 leading-relaxed font-normal mt-2">
+                Gửi trọn lòng biết ơn sâu sắc tới những Người Thầy trong cuộc sống và những Người Lãnh đạo tận tâm nơi công sở đã dày công định hướng, nâng bước đội ngũ trưởng thành. Toàn thể CBCNV Ban Dịch Vụ Khách Hàng phát huy tinh thần tự học, chuẩn hóa quy trình tác nghiệp và nỗ lực cống hiến hết mình vì ngôi nhà chung Tiền Phong.
               </p>
             </div>
-            <div class="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-emerald-300 font-bold">
-              <span>Học tập suốt đời</span>
-              <span>•</span>
-              <span>Nâng tầm tay nghề</span>
+            <!-- 3 Trụ cột hành động 20/11 -->
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mt-4 pt-3.5 border-t border-emerald-300/25 text-center">
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-emerald-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-emerald-200 font-bold uppercase">Học Tập</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Suốt đời</span>
+              </div>
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-emerald-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-emerald-200 font-bold uppercase">Tay Nghề</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Nâng tầm</span>
+              </div>
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-emerald-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-emerald-200 font-bold uppercase">Tác Phong</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Chuyên nghiệp</span>
+              </div>
             </div>
           </div>
 
-          <!-- Thẻ 24/11 -->
-          <div class="p-4 rounded-2xl bg-white/5 border border-amber-300/30 flex flex-col justify-between space-y-3">
+          <!-- TIÊU ĐIỂM 2: 24/11 - NGÀY VĂN HÓA VIỆT NAM (ĐẦY ĐỦ NỘI DUNG & 3 TRỤ CỘT HÀNH ĐỘNG) -->
+          <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-amber-950/50 via-emerald-950/45 to-black/35 border-2 border-amber-300/40 backdrop-blur-xl shadow-[0_15px_30px_rgba(245,158,11,0.15)] flex flex-col justify-between group hover:border-amber-300/70 transition-all duration-300">
             <div>
-              <div class="flex items-center justify-between gap-1 mb-2">
-                <span class="text-[10px] font-black uppercase tracking-wider text-amber-300 font-num">TIÊU ĐIỂM 24/11</span>
-                <span class="text-[10px] text-amber-200/90 italic font-semibold">Bản sắc trường tồn</span>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-300/40 text-[10px] font-november-badge-modern text-amber-200 uppercase tracking-wider">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>
+                  TIÊU ĐIỂM 24/11
+                </span>
+                <span class="text-xs font-bold text-amber-200/90 italic font-november-sub-clean">Bản sắc trường tồn</span>
               </div>
-              <div class="flex items-center gap-2.5 mb-2">
-                <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-300/40 text-amber-200 flex items-center justify-center shrink-0">
-                  <i class="fa-solid fa-landmark text-base"></i>
+              <div class="flex items-start gap-3.5 mb-2.5">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-300/40 text-amber-200 flex items-center justify-center text-xl shadow-lg shadow-amber-950/40 shrink-0 group-hover:scale-105 group-hover:bg-amber-500/25 transition-all backdrop-blur-md">
+                  <i class="fa-solid fa-landmark text-amber-300 text-xl drop-shadow-sm"></i>
                 </div>
-                <h4 class="text-xs sm:text-sm font-black text-white leading-tight">Ngày Văn Hóa Việt Nam</h4>
+                <div>
+                  <h3 class="text-base sm:text-lg font-black text-white leading-tight">
+                    Ngày Văn Hóa Việt Nam
+                  </h3>
+                  <p class="text-xs text-amber-200 font-semibold mt-0.5">Kỷ niệm 66 năm Văn hóa Nhựa Tiền Phong</p>
+                </div>
               </div>
-              <p class="text-[11px] text-amber-100/80 leading-relaxed">
-                Kỷ niệm 66 năm truyền thống Văn hóa Nhựa Tiền Phong — Lan tỏa tinh thần Tiên Phong, gắn kết kỷ cương và bứt phá năng suất lao động.
+              <p class="text-xs sm:text-[13px] text-amber-100/95 leading-relaxed font-normal mt-2">
+                Kế thừa tinh hoa văn hóa truyền thống của non sông đất Việt và hành trình 66 năm vẻ vang của Nhựa Tiền Phong: Kỷ cương trong từng dòng báo cáo, Tiên phong trong hành động, Tận tâm với khách hàng và Đoàn kết cùng phát triển bền vững.
               </p>
             </div>
-            <div class="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-amber-300 font-bold">
-              <span>Giữ vững kỷ cương</span>
-              <span>•</span>
-              <span>Bứt phá năng suất</span>
+            <!-- 3 Trụ cột hành động 24/11 -->
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mt-4 pt-3.5 border-t border-amber-300/25 text-center">
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-amber-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-amber-200 font-bold uppercase">Kỷ Cương</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Chuẩn mực</span>
+              </div>
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-amber-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-amber-200 font-bold uppercase">Tiên Phong</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Hành động</span>
+              </div>
+              <div class="px-2 py-1.5 rounded-xl bg-white/10 border border-amber-300/30">
+                <span class="block text-[10px] sm:text-[11px] text-amber-200 font-bold uppercase">Đoàn Kết</span>
+                <span class="text-[9.5px] sm:text-[10px] text-white/90 font-medium">Bền vững</span>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- Slogan chân trang -->
         <div class="text-center pt-2">
-          <p class="font-november-sub-clean text-xs text-emerald-200/90 font-medium leading-relaxed">
+          <p class="font-november-sub-clean text-xs sm:text-sm text-emerald-200/95 font-medium leading-relaxed">
             🌿 Ban Dịch Vụ Khách Hàng — Thi đua cao điểm hoàn thành xuất sắc mục tiêu tháng 11/2026!
           </p>
         </div>
       </div>
 
       <!-- Footer Button -->
-      <div class="p-3 sm:p-4 bg-white/5 border-t border-white/10 flex items-center justify-end">
-        <button type="button" onclick="closeNovemberThematicModal()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-950/50 cursor-pointer transition active:scale-95">
-          Đóng cửa sổ
+      <div class="p-3 sm:p-4 bg-white/5 border-t border-white/10 flex items-center justify-end shrink-0">
+        <button type="button" onclick="closeNovemberThematicModal()" class="px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-950/50 cursor-pointer transition active:scale-95 flex items-center gap-2">
+          <span>Đóng cửa sổ</span>
         </button>
       </div>
 
