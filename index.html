@@ -11689,18 +11689,34 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         }
       });
 
-      // SẮP XẾP BẢNG CẦN ĐÔN ĐỐC: SỐ NGÀY CHƯA BÁO CÁO NHIỀU NHẤT ĐƯỢC ĐƯA LÊN ĐẦU TIÊN
+      // SẮP XẾP BẢNG CẦN ĐÔN ĐỐC: 
+      // 1. Số ngày chưa báo cáo nhiều nhất lên đầu tiên (giảm dần)
+      // 2. Cùng số ngày chưa báo cáo: Bộ phận nhóm gộp xếp trước, cá nhân xếp sau
+      // 3. Cùng loại: Sắp xếp theo bảng chữ cái tiếng Việt
       pendingList.sort((a, b) => {
         if (b.unreportedDaysCount !== a.unreportedDaysCount) {
           return b.unreportedDaysCount - a.unreportedDaysCount;
         }
+        const aGroup = a.isGroup ? 1 : 0;
+        const bGroup = b.isGroup ? 1 : 0;
+        if (aGroup !== bGroup) {
+          return bGroup - aGroup;
+        }
         return a.displayName.localeCompare(b.displayName, 'vi');
       });
 
-      // SẮP XẾP BẢNG THI ĐUA: Tỷ lệ hoàn thành cao nhất lên đầu
+      // SẮP XẾP BẢNG THI ĐUA: 
+      // 1. Tỷ lệ hoàn thành / số ngày đã nộp cao nhất lên đầu (giảm dần)
+      // 2. Cùng số ngày: Bộ phận nhóm gộp xếp trước, cá nhân xếp sau
+      // 3. Cùng loại: Sắp xếp theo bảng chữ cái tiếng Việt
       completedList.sort((a, b) => {
         if (b.reportedDaysCount !== a.reportedDaysCount) {
           return b.reportedDaysCount - a.reportedDaysCount;
+        }
+        const aGroup = a.isGroup ? 1 : 0;
+        const bGroup = b.isGroup ? 1 : 0;
+        if (aGroup !== bGroup) {
+          return bGroup - aGroup;
         }
         return a.displayName.localeCompare(b.displayName, 'vi');
       });
