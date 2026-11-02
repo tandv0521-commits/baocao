@@ -100,13 +100,42 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-  <style>
+    <style>
     html, body {
       overflow-x: hidden !important;
       max-width: 100% !important;
       width: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+
+    /* ================= KHÓA CUỘN NỀN VÀ CÔ LẬP CUỘN BẢNG / MODAL TRÊN ĐIỆN THOẠI =================
+       Khi mở bất kỳ bảng popup nào, chỉ cho phép vuốt cuộn bên trong bảng đó;
+       tuyệt đối không làm xê dịch, rung lắc hay cuộn màn hình chính bên ngoài. */
+    html.modal-open,
+    body.modal-open {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+      touch-action: none !important;
+    }
+
+    /* Cô lập cuộn bên trong tất cả các Modal Popup */
+    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) {
+      overscroll-behavior: contain !important;
+      touch-action: pan-y pinch-zoom;
+    }
+
+    /* Vùng danh sách nội dung cuộn bên trong Modal */
+    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) .overflow-y-auto,
+    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) [class*="overflow-y-auto"] {
+      overscroll-behavior: contain !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
+    }
+
+    /* Các phần cố định của modal (tiêu đề, thanh lọc, chân trang): không nhận cử chỉ cuộn */
+    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) .flex-shrink-0 {
+      touch-action: none;
     }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
     
@@ -4254,8 +4283,87 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
+    
+    /**
+     * HỆ THỐNG CÔ LẬP CUỘN VÀ CHỐNG CUỘN TRÀN MÀN HÌNH NỀN KHI MỞ BẢNG / MODAL:
+     * - Khi mở bất kỳ bảng popup nào: Khóa cứng cuộn màn hình nền bên ngoài, chỉ cho phép vuốt cuộn đúng bảng đó.
+     * - Bảng bên ngoài chỉ được phép cuộn bình thường khi không còn bảng popup nào mở.
+     */
+    let _modalScrollLockSavedY = 0;
+    let _isModalScrollLocked = false;
+
+    function syncBodyScrollLock() {
+      // Tìm các modal overlay đang mở (không có class hidden, loại trừ màn hình đăng nhập và splash)
+      const openModals = document.querySelectorAll('.fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash):not(#systemProgressHud)');
+      let hasOpenModal = false;
+      for (let i = 0; i < openModals.length; i++) {
+        const el = openModals[i];
+        if (!el.classList.contains('hidden') && el.offsetParent !== null) {
+          hasOpenModal = true;
+          break;
+        }
+      }
+
+      if (hasOpenModal && !_isModalScrollLocked) {
+        _isModalScrollLocked = true;
+        _modalScrollLockSavedY = window.scrollY || window.pageYOffset || 0;
+        document.body.classList.add('modal-open');
+        document.documentElement.classList.add('modal-open');
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${_modalScrollLockSavedY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+      } else if (!hasOpenModal && _isModalScrollLocked) {
+        _isModalScrollLocked = false;
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, _modalScrollLockSavedY);
+      }
+    }
+
+    function initModalScrollLockSystem() {
+      // 1. Lắng nghe mọi thay đổi thuộc tính class trên các modal để tự động khóa/mở cuộn nền
+      const observer = new MutationObserver((mutations) => {
+        let shouldSync = false;
+        for (const m of mutations) {
+          if (m.type === 'attributes' && m.attributeName === 'class') {
+            const target = m.target;
+            if (target && target.classList && target.classList.contains('fixed') && target.classList.contains('inset-0')) {
+              shouldSync = true;
+              break;
+            }
+          }
+        }
+        if (shouldSync) {
+          syncBodyScrollLock();
+        }
+      });
+
+      observer.observe(document.body, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['class']
+      });
+
+      // 2. Chặn cử chỉ touchmove trên các vùng không cuộn của modal (backdrop, header, footer)
+      document.addEventListener('touchmove', function(e) {
+        if (!_isModalScrollLocked) return;
+        const scrollable = e.target.closest('.overflow-y-auto, .overflow-x-auto, [class*="overflow-y-auto"]');
+        if (!scrollable) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+
     let hasInitializedApp = false;
     function initAppOnLoad() {
+      initModalScrollLockSystem();
       if (hasInitializedApp) return;
       hasInitializedApp = true;
 
@@ -13736,6 +13844,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const modal = document.getElementById('dayEntryModal');
       if (modal) {
         modal.classList.remove('hidden');
+        syncBodyScrollLock();
       }
 
       await switchReportInputMode('day');
@@ -13745,6 +13854,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const modal = document.getElementById('dayEntryModal');
       if (modal) {
         modal.classList.add('hidden');
+        syncBodyScrollLock();
       }
     }
 
