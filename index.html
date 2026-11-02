@@ -36,7 +36,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v28') {
+          if (key !== 'baocao-dvkh-pwa-v29') {
             caches.delete(key);
           }
         });
@@ -1853,61 +1853,38 @@
         </button>
       </div>
 
-      <div class="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
-        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs">
-          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
+      <div class="px-3.5 sm:px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 flex-shrink-0">
+        <!-- Hàng 1: Hai tab chuyển chế độ dàn đều 50/50 trên điện thoại -->
+        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs w-full sm:w-auto">
+          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
             <i class="fa-regular fa-calendar-days text-xs"></i>
             <span>Điền theo ngày</span>
           </button>
-          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
+          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
             <i class="fa-solid fa-list-check text-xs"></i>
             <span>Điền theo công việc</span>
           </button>
         </div>
 
-        <!-- Cụm chọn Kỳ / Tháng & Ngày báo cáo (Hỗ trợ điền ngày 30-31 tháng trước khi sang tháng mới) -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <!-- Dropdown Chọn Tháng / Kỳ báo cáo -->
-          <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
-            <i class="fa-solid fa-calendar-week text-emerald-700 text-xs"></i>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Kỳ:</span>
-            <select id="modalEntryPeriodSelect" onchange="onModalEntryPeriodChange()" class="bg-transparent text-xs font-bold text-emerald-900 focus:outline-none cursor-pointer pr-1">
+        <!-- Hàng 2: Bộ chọn Kỳ/Tháng nhỏ gọn + Ô chọn Ngày hoặc Chọn Đầu việc trên cùng 1 hàng duy nhất -->
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <!-- Dropdown Chọn Tháng / Kỳ báo cáo (nhỏ gọn ~105px trên điện thoại để dành không gian cho Đầu việc) -->
+          <div class="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1.5 rounded-xl shadow-2xs shrink-0 max-w-[110px] sm:max-w-none">
+            <i class="fa-solid fa-calendar-week text-emerald-700 text-xs shrink-0"></i>
+            <select id="modalEntryPeriodSelect" onchange="onModalEntryPeriodChange()" class="bg-transparent text-xs font-bold text-emerald-900 focus:outline-none cursor-pointer w-full truncate pr-0.5">
             </select>
           </div>
 
-          <!-- Ô chọn Ngày (chế độ Điền theo ngày) -->
-          <div id="controlsModeDay" class="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ngày:</span>
-            <input type="date" id="modalEntryDate" onchange="onModalEntryDateChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer" />
+          <!-- Ô chọn Ngày (chế độ Điền theo ngày - chiếm trọn không gian còn lại trên cùng dòng) -->
+          <div id="controlsModeDay" class="flex-1 min-w-0 flex items-center justify-between gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Ngày:</span>
+            <input type="date" id="modalEntryDate" onchange="onModalEntryDateChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer w-full text-right sm:text-left" />
           </div>
 
-          <!-- Dropdown Chọn Đầu việc (chế độ Điền theo công việc) -->
-          <div id="controlsModeTask" class="hidden flex-1 max-w-xs sm:max-w-sm">
-            <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+          <!-- Dropdown Chọn Đầu việc (chế độ Điền theo công việc - chiếm toàn bộ phần còn lại trên dòng) -->
+          <div id="controlsModeTask" class="hidden flex-1 min-w-0">
+            <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
           </div>
-        </div>
-      </div>
-
-      <div class="px-5 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <button type="button" id="btnCopyYesterday" onclick="copyPreviousDayValues()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer" title="Sao chép toàn bộ số liệu của ngày làm việc trước">
-            <i class="fa-solid fa-clone text-[11px]"></i>
-            <span>Chép ngày trước</span>
-          </button>
-
-          <button type="button" id="btnRestoreDraft" onclick="restoreLocalDraft()" class="hidden px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer">
-            <i class="fa-solid fa-clock-rotate-left text-[11px]"></i>
-            <span>Phục hồi nháp</span>
-          </button>
-
-          <button type="button" onclick="clearModalInputFields()" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer" title="Xóa trắng số liệu để nhập lại">
-            <i class="fa-solid fa-eraser"></i>
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1.5 ml-auto text-[11px]">
-          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span id="syncStatusLabel" class="font-semibold text-slate-500 font-num">Đã đồng bộ</span>
         </div>
       </div>
 
@@ -4601,7 +4578,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
           try {
             sessionStorage.setItem('ops_session_device_logged', 'true');
-            recordAccountLoginLog(uFound, 'Tự động (Lưu MK)');
+            recordAccountLoginLog(currentUser, 'Tự động (Lưu trình duyệt)');
           } catch(e) {}
           initMainDashboard();
         }
@@ -5979,6 +5956,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const availablePeriods = buildAvailablePeriods(existingMonths);
 
       globalInitData = {
+        allDeptsDetailed: depts,
         departments: deptNames,
         deptMap: deptMap,
         allUsers: validUsers,
@@ -13545,10 +13523,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const daysInMonth = new Date(targetY, targetM, 0).getDate();
       const mStr = String(targetM).padStart(2, '0');
 
-      const minDate = `${targetY}-${mStr}-01`;
+      let minDate = `${targetY}-${mStr}-01`;
       let maxDate;
       if (targetY === curY && targetM === curM) {
         maxDate = todayIso;
+        if (curDay < 5) {
+          const prevDateObj = new Date(curY, curM - 1, 0);
+          const pY = prevDateObj.getFullYear();
+          const pMStr = String(prevDateObj.getMonth() + 1).padStart(2, '0');
+          minDate = `${pY}-${pMStr}-01`;
+        }
       } else {
         maxDate = `${targetY}-${mStr}-${String(daysInMonth).padStart(2, '0')}`;
       }
@@ -13851,6 +13835,27 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           );
         }
 
+        // TRUY VẤN ĐỒNG BỘ TRỰC TIẾP TỪ SUPABASE CHO NGÀY ĐANG CHỌN (CHỐNG LỆCH CACHE TRÊN ĐIỆN THOẠI)
+        let directDayReportsMap = {};
+        try {
+          const { data: dReps, error: dErr } = await supabase
+            .from('daily_reports')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('report_date', targetDate);
+          if (!dErr && dReps && dReps.length > 0) {
+            dReps.forEach(dr => {
+              let v = '';
+              if (dr.num_val !== null) v = dr.num_val;
+              else if (dr.sym_val) v = dr.sym_val;
+              else if (dr.text_val) v = dr.text_val;
+              directDayReportsMap[dr.task_id] = v;
+            });
+          }
+        } catch(errDir) {
+          console.warn("Lỗi đồng bộ trực tiếp Supabase ngày", targetDate, errDir);
+        }
+
         activeData.staffGroups.forEach(grp => {
           let isMatch = false;
 
@@ -13871,14 +13876,17 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               }
             }
           } else {
-            if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
+            // Khớp theo ID người dùng HOẶC Họ tên (Đảm bảo luôn tìm thấy công việc của mình)
+            if (grp.userId === currentUser.id || isStaffMatchedInCell(targetStaff, grp.staffName)) {
               isMatch = true;
             }
           }
 
           if (isMatch) {
             grp.tasks.forEach(t => {
-              let curVal = (t.dailyValues && t.dailyValues[dateCol] !== undefined) ? t.dailyValues[dateCol] : "";
+              let curVal = (directDayReportsMap[t.taskId] !== undefined) 
+                ? directDayReportsMap[t.taskId] 
+                : ((t.dailyValues && t.dailyValues[dateCol] !== undefined) ? t.dailyValues[dateCol] : "");
               if (curVal === '-' || curVal === '·') curVal = "";
 
               tasksForDay.push({
@@ -14037,7 +14045,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               }
             }
           } else {
-            if (isStaffMatchedInCell(targetStaff, grp.staffName)) {
+            // Khớp theo ID người dùng HOẶC Họ tên (Đảm bảo luôn tìm thấy công việc của mình)
+            if (grp.userId === currentUser.id || isStaffMatchedInCell(targetStaff, grp.staffName)) {
               isMatch = true;
             }
           }
@@ -14065,8 +14074,36 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
           populateModalTaskSelectOptions(allTaskList);
 
+          // TRUY VẤN ĐỒNG BỘ TRỰC TIẾP TỪ SUPABASE CHO ĐẦU VIỆC TRONG THÁNG ĐANG CHỌN (CHỐNG LỆCH CACHE TRÊN ĐIỆN THOẠI)
+          let directMonthReportsMap = {};
+          try {
+            const daysInMonth = new Date(targetY, targetM, 0).getDate();
+            const mStr = String(targetM).padStart(2, '0');
+            const { data: mReps, error: mErr } = await supabase
+              .from('daily_reports')
+              .select('*')
+              .eq('user_id', currentUser.id)
+              .eq('task_id', targetTask.taskId)
+              .gte('report_date', `${targetY}-${mStr}-01`)
+              .lte('report_date', `${targetY}-${mStr}-${String(daysInMonth).padStart(2, '0')}`);
+            if (!mErr && mReps && mReps.length > 0) {
+              mReps.forEach(mr => {
+                const dayNum = parseInt(mr.report_date.split('-')[2], 10);
+                let v = '';
+                if (mr.num_val !== null) v = mr.num_val;
+                else if (mr.sym_val) v = mr.sym_val;
+                else if (mr.text_val) v = mr.text_val;
+                directMonthReportsMap[dayNum] = v;
+              });
+            }
+          } catch(errMonth) {
+            console.warn("Lỗi đồng bộ Supabase task tháng:", errMonth);
+          }
+
           const days = activeData.dayCols.map(dc => {
-            let dVal = (targetTask.dailyValues && targetTask.dailyValues[dc.colIndex] !== undefined) ? targetTask.dailyValues[dc.colIndex] : "";
+            let dVal = (directMonthReportsMap[dc.dayNum] !== undefined)
+              ? directMonthReportsMap[dc.dayNum]
+              : ((targetTask.dailyValues && targetTask.dailyValues[dc.colIndex] !== undefined) ? targetTask.dailyValues[dc.colIndex] : "");
             if (dVal === '-' || dVal === '·') dVal = "";
             return {
               colIndex: dc.colIndex,
@@ -20016,11 +20053,27 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const devInfo = detectClientDeviceInfo();
       const loggedAt = new Date().toISOString();
 
-      let deptName = user.department || (user.departments ? user.departments.name : "Ban DVKH");
-      if ((!deptName || deptName === 'Chưa phân bổ') && globalInitData && globalInitData.departments && user.department_id) {
-        const dObj = globalInitData.departments.find(d => d.id === user.department_id);
-        if (dObj) deptName = dObj.name;
+            let deptName = user.department || (user.departments ? user.departments.name : "");
+      if (!deptName || deptName === 'Chưa phân bổ' || deptName === 'Chưa phân' || deptName === 'Ban DVKH') {
+        const uId = user.id;
+        const uName = (user.username || '').toLowerCase();
+        if (globalInitData && globalInitData.allDeptsDetailed && user.department_id) {
+          const dFound = globalInitData.allDeptsDetailed.find(d => d.id === user.department_id);
+          if (dFound && dFound.name) deptName = dFound.name;
+        }
+        if ((!deptName || deptName === 'Ban DVKH') && globalInitData && globalInitData.deptMap) {
+          for (const dk of Object.keys(globalInitData.deptMap)) {
+            if ((globalInitData.deptMap[dk] || []).some(x => x.username.toLowerCase() === uName || x.id === uId)) {
+              deptName = dk;
+              break;
+            }
+          }
+        }
+        if ((!deptName || deptName === 'Ban DVKH') && user.department_id === 335) {
+          deptName = "Bộ phận đánh hóa đơn";
+        }
       }
+      if (!deptName) deptName = "Ban DVKH";
 
       const defaultIp = cachedClientIpData ? cachedClientIpData.ip : (localStorage.getItem('ops_last_known_ip') || (isMobileOrTabletClient() ? 'Mạng di động/Wifi' : 'Mạng nội bộ/LAN'));
       const defaultLoc = cachedClientIpData ? cachedClientIpData.location : (localStorage.getItem('ops_last_known_loc') || 'Việt Nam');
