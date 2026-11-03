@@ -127,21 +127,21 @@
     }
 
     /* Cô lập cuộn bên trong tất cả các Modal Popup */
-    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) {
+    .fixed.inset-0:not(#loginScreen) {
       overscroll-behavior: contain !important;
       touch-action: pan-y pinch-zoom;
     }
 
     /* Vùng danh sách nội dung cuộn bên trong Modal */
-    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) .overflow-y-auto,
-    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) [class*="overflow-y-auto"] {
+    .fixed.inset-0:not(#loginScreen) .overflow-y-auto,
+    .fixed.inset-0:not(#loginScreen) [class*="overflow-y-auto"] {
       overscroll-behavior: contain !important;
       -webkit-overflow-scrolling: touch !important;
       touch-action: pan-y !important;
     }
 
     /* Các phần cố định của modal (tiêu đề, thanh lọc, chân trang): không nhận cử chỉ cuộn */
-    .fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash) .flex-shrink-0 {
+    .fixed.inset-0:not(#loginScreen) .flex-shrink-0 {
       touch-action: none;
     }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -203,14 +203,11 @@
       letter-spacing: 0.01em;
     }
 
-    /* ================= CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP KHI ĐÃ LƯU TRÌNH DUYỆT ================= */
+    /* ================= VÀO THẲNG CHƯƠNG TRÌNH KHI ĐÃ LƯU PHIÊN (LOẠI BỎ HOÀN TOÀN NHÁY CHỚP) ================= */
     html.app-auto-login-pending #loginScreen {
       display: none !important;
     }
-    #appAutoLoginSplash {
-      display: none;
-    }
-    html.app-auto-login-pending #appAutoLoginSplash {
+    html.app-auto-login-pending #mainDashboard {
       display: flex !important;
     }
 
@@ -799,13 +796,7 @@
 </head>
 <body class="bg-slate-100/60 text-slate-800 min-h-screen flex flex-col antialiased select-none custom-scroll">
 
-  <!-- MÀN HÌNH CHUYỂN TIẾP SIÊU NHANH KHI ĐÃ LƯU TRÌNH DUYỆT (CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP) -->
-  <div id="appAutoLoginSplash" class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-200">
-    <div class="flex flex-col items-center gap-3.5">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-500/30 animate-pulse">
-        <i class="fa-solid fa-chart-line text-white text-2xl"></i>
-      </div>
-      <div class="text-sm font-bold text-emerald-300 tracking-wide">Đang vào chương trình...</div>
+  
     </div>
   </div>
 
@@ -1201,6 +1192,21 @@
 
   <!-- ================= DASHBOARD CHÍNH ================= -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
+    <script>
+      (function earlyRenderUserData() {
+        try {
+          var u = window._earlySavedUser;
+          if (u) {
+            var fn = document.getElementById('userFullnameLabel');
+            var dp = document.getElementById('userDeptLabel');
+            var rl = document.getElementById('userRoleBadge');
+            if (fn && u.fullName) fn.innerText = u.fullName;
+            if (dp && u.department) dp.innerText = u.department;
+            if (rl && u.role) rl.innerText = u.role;
+          }
+        } catch(e) {}
+      })();
+    </script>
     <!-- Header: Thẻ gợi ý bắt mắt, ngắn gọn khi rê chuột -->
     <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
       <!-- Thông tin nhân sự đăng nhập & Logo công ty: BẤM VÀO ĐỂ XEM BẢNG THÔNG TIN TÀI KHOẢN -->
@@ -4460,7 +4466,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     function syncBodyScrollLock() {
       // Tìm các modal overlay đang mở (không có class hidden, loại trừ màn hình đăng nhập và splash)
-      const openModals = document.querySelectorAll('.fixed.inset-0:not(#loginScreen):not(#appAutoLoginSplash):not(#systemProgressHud)');
+      const openModals = document.querySelectorAll('.fixed.inset-0:not(#loginScreen):not(#systemProgressHud)');
       let hasOpenModal = false;
       for (let i = 0; i < openModals.length; i++) {
         const el = openModals[i];
