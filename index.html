@@ -1321,6 +1321,19 @@
               <span id="personalWorkspaceMenuBadge" class="hidden px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num">0</span>
             </button>
 
+            <!-- Hộp thư báo cáo lãnh đạo trong menu -->
+            <button type="button" onclick="closeHeaderActionsMenu(); openLeadershipReportsBoxModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50/80 transition text-left cursor-pointer group border border-transparent hover:border-emerald-200">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <i class="fa-solid fa-inbox"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-900">Hộp thư Báo cáo Lãnh đạo</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Xem lịch sử báo cáo &amp; ý kiến phê duyệt</span>
+                </div>
+              </div>
+            </button>
+
             <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-amber-500"></i>
               <span>Tác vụ nhanh</span>
@@ -4239,25 +4252,30 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   </div>
 
 
-  <!-- ================= 1. MODAL SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (MỌI TÀI KHOẢN) ================= -->
-  <div id="personalWorkspaceModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-5xl w-full max-h-[96vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+  <!-- ================= 1. MODAL SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (MỌI TÀI KHOẢN - BẢNG RỘNG CHUYÊN NGHIỆP) ================= -->
+  <div id="personalWorkspaceModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-2 lg:p-3 transition-all duration-200">
+    <div id="personalWorkspaceDialog" class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl w-[98vw] max-w-[1750px] h-[96vh] sm:h-[93vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200">
       
       <!-- HEADER CỦA SỔ TAY -->
-      <div class="px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-amber-500/30 flex-shrink-0">
+      <div class="px-4 sm:px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-amber-500/30 flex-shrink-0">
             <i class="fa-solid fa-calendar-check"></i>
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Việc Riêng & Kế Hoạch Cá Nhân</h3>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">Việc riêng</span>
+              <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Việc Riêng &amp; Kế Hoạch Cá Nhân</h3>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Bảng theo dõi cá nhân</span>
+              <!-- Badge trạng thái kết nối CSDL Supabase Cloud -->
+              <button type="button" id="pwSyncCloudBadge" onclick="showSupabaseTableSetupGuide()" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs hover:bg-amber-100 transition" title="Nhấp vào để xem trạng thái kết nối & hướng dẫn Supabase">
+                <i class="fa-solid fa-hard-drive text-amber-600 text-xs"></i>
+                <span id="pwSyncCloudText">Lưu thiết bị (Bấm để kết nối Supabase)</span>
+              </button>
             </div>
             <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">
-              <span id="pwUserFullName" class="font-bold text-slate-800">---</span> • 
-              <span id="pwUserDept" class="text-slate-600">---</span> • 
-              <span id="pwUserRole" class="text-emerald-700 font-bold">---</span>
+              Họ tên: <span id="pwUserFullName" class="font-bold text-slate-800">---</span> • 
+              Bộ phận: <span id="pwUserDept" class="text-slate-600 font-semibold">---</span> • 
+              Chức danh: <span id="pwUserRole" class="text-emerald-700 font-bold">---</span>
             </p>
           </div>
         </div>
@@ -4271,9 +4289,20 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           </button>
 
           <!-- Nút Hộp thư báo cáo -->
-          <button type="button" onclick="openLeadershipReportsBoxModal()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem lịch sử các lần đẩy báo cáo & hộp thư lãnh đạo">
+          <button type="button" onclick="openLeadershipReportsBoxModal()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem lịch sử các lần đẩy báo cáo &amp; hộp thư lãnh đạo">
             <i class="fa-solid fa-inbox text-slate-600 text-xs"></i>
             <span class="hidden md:inline">Hộp thư báo cáo</span>
+          </button>
+
+          <!-- Nút Xuất Excel sổ tay -->
+          <button type="button" onclick="exportPersonalWorkspaceToExcel()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 hover:border-emerald-300 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Tải sổ tay công việc dạng file Excel (.xls)">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+            <span class="hidden md:inline">Xuất Excel</span>
+          </button>
+
+          <!-- Nút Phóng to toàn màn hình / Thu nhỏ -->
+          <button type="button" id="btnTogglePwFullscreen" onclick="togglePersonalWorkspaceFullscreen()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition duration-200 cursor-pointer shrink-0 border border-slate-200/60 shadow-2xs" title="Phóng to toàn màn hình / Thu nhỏ">
+            <i id="pwFullscreenIcon" class="fa-solid fa-expand text-xs"></i>
           </button>
 
           <!-- Nút Đóng -->
@@ -4284,68 +4313,68 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- THANH THỐNG KÊ NHANH 5 NHÓM MỤC -->
-      <div class="px-4 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+      <div class="px-4 sm:px-6 py-2 bg-slate-50 border-b border-slate-200 flex-shrink-0">
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
           <!-- 1. Việc phát sinh -->
-          <div onclick="switchPersonalWorkspaceTab('adhoc')" class="bg-white border border-slate-200 hover:border-amber-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+          <div onclick="switchPersonalWorkspaceTab('adhoc')" class="bg-white border border-slate-200 hover:border-amber-400 px-3 py-1.5 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
             <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-bolt"></i></span>
             <div class="min-w-0">
-              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Phát sinh</span>
+              <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Phát sinh</span>
               <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatAdhocCount">0</span> việc (<span id="pwStatAdhocDone" class="text-emerald-600">0</span> xong)</span>
             </div>
           </div>
 
           <!-- 2. Kế hoạch / Lịch làm việc -->
-          <div onclick="switchPersonalWorkspaceTab('plan')" class="bg-white border border-slate-200 hover:border-sky-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+          <div onclick="switchPersonalWorkspaceTab('plan')" class="bg-white border border-slate-200 hover:border-sky-400 px-3 py-1.5 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
             <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-calendar-days"></i></span>
             <div class="min-w-0">
-              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Lịch kế hoạch</span>
+              <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Lịch kế hoạch</span>
               <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatPlanCount">0</span> việc (<span id="pwStatPlanDue" class="text-rose-600 font-bold">0</span> gấp)</span>
             </div>
           </div>
 
           <!-- 3. Đề xuất -->
-          <div onclick="switchPersonalWorkspaceTab('proposal')" class="bg-white border border-slate-200 hover:border-purple-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+          <div onclick="switchPersonalWorkspaceTab('proposal')" class="bg-white border border-slate-200 hover:border-purple-400 px-3 py-1.5 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
             <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-lightbulb"></i></span>
             <div class="min-w-0">
-              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Đề xuất</span>
+              <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Đề xuất</span>
               <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatProposalCount">0</span> mục (<span id="pwStatProposalApproved" class="text-emerald-600">0</span> duyệt)</span>
             </div>
           </div>
 
           <!-- 4. Ý kiến / Phản ánh -->
-          <div onclick="switchPersonalWorkspaceTab('feedback')" class="bg-white border border-slate-200 hover:border-teal-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+          <div onclick="switchPersonalWorkspaceTab('feedback')" class="bg-white border border-slate-200 hover:border-teal-400 px-3 py-1.5 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
             <span class="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-comment-dots"></i></span>
             <div class="min-w-0">
-              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Ý kiến / Phản ánh</span>
+              <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Ý kiến / Phản ánh</span>
               <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatFeedbackCount">0</span> ý kiến</span>
             </div>
           </div>
 
           <!-- 5. Việc quan trọng -->
-          <div onclick="togglePersonalWorkspaceFilter('important')" class="col-span-2 sm:col-span-1 bg-amber-50/80 border border-amber-300 hover:border-amber-500 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+          <div onclick="togglePersonalWorkspaceFilter('important')" class="col-span-2 sm:col-span-1 bg-amber-50/80 border border-amber-300 hover:border-amber-500 px-3 py-1.5 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
             <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-star"></i></span>
             <div class="min-w-0">
-              <span class="text-[10px] text-amber-800 font-bold block uppercase tracking-wider truncate">Quan trọng</span>
+              <span class="text-[9.5px] text-amber-800 font-bold block uppercase tracking-wider truncate">Quan trọng</span>
               <span class="font-black text-amber-950 text-xs truncate block"><span id="pwStatImportantCount">0</span> mục ưu tiên ⭐</span>
             </div>
           </div>
         </div>
 
         <!-- BANNER CẢNH BÁO NHẮC NHỞ VIỆC ĐẾN HẠN & QUÁ HẠN -->
-        <div id="pwReminderAlertBanner" class="hidden mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
+        <div id="pwReminderAlertBanner" class="hidden mt-2 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
           <div class="flex items-center gap-2 min-w-0">
-            <span class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-bell animate-bounce"></i></span>
-            <span id="pwReminderAlertText" class="font-bold truncate">Bạn có công việc cần hoàn thành hôm nay!</span>
+            <span class="w-5 h-5 rounded-md bg-rose-500 text-white flex items-center justify-center text-[10px] shrink-0"><i class="fa-solid fa-bell animate-bounce"></i></span>
+            <span id="pwReminderAlertText" class="font-bold truncate text-[11.5px]">Bạn có công việc cần hoàn thành hôm nay!</span>
           </div>
-          <button type="button" onclick="setPersonalWorkspaceQuickFilter('due')" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer">
+          <button type="button" onclick="setPersonalWorkspaceQuickFilter('due')" class="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer">
             Xem ngay
           </button>
         </div>
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG TAB & TÁC VỤ LỌC -->
-      <div class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 flex-shrink-0">
+      <!-- THANH ĐIỀU HƯỚNG TAB, BỘ LỌC, TÌM KIẾM & CHUYỂN DẠNG BẢNG / THẺ -->
+      <div class="px-4 sm:px-6 py-2 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 flex-shrink-0">
         
         <!-- Tabs chuyển đổi danh mục -->
         <div class="flex items-center gap-1 overflow-x-auto custom-scroll pb-1 md:pb-0 text-xs">
@@ -4363,7 +4392,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
           <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer">
             <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
-            <span>Lịch & Kế hoạch</span>
+            <span>Lịch &amp; Kế hoạch</span>
             <span id="pwTabCount_plan" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-600 font-num">0</span>
           </button>
 
@@ -4380,43 +4409,55 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           </button>
         </div>
 
-        <!-- Cụm tìm kiếm, lọc nhanh & Nút thêm mới -->
+        <!-- Cụm tìm kiếm, lọc nhanh, chuyển Bảng / Thẻ & Nút thêm mới -->
         <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <!-- Chuyển đổi giao diện Bảng / Thẻ -->
+          <div class="inline-flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200 shrink-0 shadow-inner">
+            <button type="button" id="pwViewModeBtn_table" onclick="setPersonalWorkspaceViewMode('table')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-800 shadow-2xs" title="Xem theo bảng ma trận dữ liệu chuẩn">
+              <i class="fa-solid fa-table text-emerald-600 text-[11px]"></i>
+              <span class="hidden sm:inline">Dạng bảng</span>
+            </button>
+            <button type="button" id="pwViewModeBtn_card" onclick="setPersonalWorkspaceViewMode('card')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer" title="Xem theo danh sách thẻ">
+              <i class="fa-solid fa-table-cells-large text-slate-400 text-[11px]"></i>
+              <span class="hidden sm:inline">Dạng thẻ</span>
+            </button>
+          </div>
+
           <!-- Lọc nhanh: Việc quan trọng -->
           <button type="button" id="pwFilterBtn_important" onclick="togglePersonalWorkspaceFilter('important')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-800 transition flex items-center gap-1 cursor-pointer shadow-2xs">
             <i class="fa-solid fa-star text-amber-500 text-xs"></i>
-            <span class="hidden sm:inline">Quan trọng</span>
+            <span class="hidden lg:inline">Quan trọng</span>
           </button>
 
           <!-- Lọc nhanh: Đến hạn / Quá hạn -->
           <button type="button" id="pwFilterBtn_due" onclick="togglePersonalWorkspaceFilter('due')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs">
             <i class="fa-solid fa-clock text-rose-500 text-xs"></i>
-            <span class="hidden sm:inline">Đến / Quá hạn</span>
+            <span class="hidden lg:inline">Đến/Quá hạn</span>
           </button>
 
           <!-- Ô tìm kiếm -->
-          <div class="relative flex-1 sm:w-44">
+          <div class="relative flex-1 sm:w-48">
             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="text" id="pwSearchInput" oninput="onPersonalWorkspaceSearchInput(this.value)" placeholder="Tìm công việc..." class="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500" />
+            <input type="text" id="pwSearchInput" oninput="onPersonalWorkspaceSearchInput(this.value)" placeholder="Tìm kiếm nội dung..." class="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-inner" />
           </div>
 
           <!-- Nút Thêm việc mới -->
-          <button type="button" onclick="openPersonalItemEditModal()" class="px-3 sm:px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer shrink-0">
+          <button type="button" onclick="openPersonalItemEditModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm shadow-amber-600/20 transition flex items-center gap-1.5 cursor-pointer shrink-0">
             <i class="fa-solid fa-plus text-xs"></i>
             <span>Thêm mục</span>
           </button>
         </div>
       </div>
 
-      <!-- VÙNG DANH SÁCH CÔNG VIỆC -->
-      <div id="pwItemsScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2.5 custom-scroll bg-slate-50/50">
-        <div id="pwItemsList" class="space-y-2.5">
-          <!-- Render tự động bằng JavaScript -->
+      <!-- VÙNG DANH SÁCH / BẢNG MA TRẬN CÔNG VIỆC -->
+      <div id="pwItemsScrollContainer" class="flex-1 overflow-y-auto p-3 sm:p-4 custom-scroll bg-slate-50/60 flex flex-col">
+        <div id="pwItemsList" class="flex-1 flex flex-col min-h-0">
+          <!-- Render tự động dạng Bảng rộng hoặc Thẻ bằng JavaScript -->
         </div>
       </div>
 
       <!-- FOOTER: CHỌN ĐẨY BÁO CÁO LÃNH ĐẠO -->
-      <div class="px-5 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+      <div class="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
         <div class="flex items-center gap-3 text-xs text-slate-600">
           <label class="flex items-center gap-1.5 cursor-pointer select-none font-bold text-slate-700">
             <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItemsForReport(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
@@ -4806,6 +4847,142 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <span id="toastMsg" class="font-semibold leading-snug">Thông báo</span>
     </div>
   </div>
+
+  <!-- ================= 5. MODAL HƯỚNG DẪN THIẾT LẬP CƠ SỞ DỮ LIỆU SUPABASE ================= -->
+  <div id="supabaseSetupGuideModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 transition-all">
+    <div class="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-200 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-emerald-500/30">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <h3 class="text-slate-900 font-black text-base leading-tight">Cơ sở dữ liệu Supabase - Sổ tay &amp; Báo cáo Lãnh đạo</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Lưu trữ đám mây an toàn cho mọi tài khoản &amp; đồng bộ đa thiết bị tức thì</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSupabaseTableSetupGuide()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-sm transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar text-sm text-slate-700">
+        <!-- Status Box -->
+        <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-start gap-3">
+          <i class="fa-solid fa-circle-question text-amber-600 text-lg mt-0.5 shrink-0"></i>
+          <div class="text-xs sm:text-sm text-amber-950 leading-relaxed">
+            <p class="font-bold text-slate-900 mb-1">Nên tạo cơ sở dữ liệu riêng trong Supabase để theo dõi và kiểm soát không?</p>
+            <p class="text-slate-700 mb-2 font-medium"><strong>RẤT NÊN VÀ HOÀN TOÀN TỐI ƯU!</strong> Khi tạo bảng trên Supabase:</p>
+            <ul class="list-disc pl-4 space-y-1 text-slate-700">
+              <li><strong>Đồng bộ xuyên suốt đa thiết bị:</strong> Bạn có thể mở sổ tay trên máy tính công ty, laptop cá nhân hay điện thoại di động - mọi việc riêng và kế hoạch luôn cập nhật theo thời gian thực.</li>
+              <li><strong>Báo cáo Lãnh đạo tức thì:</strong> Các mục chọn đẩy báo cáo được gửi ngay vào bảng <code>leadership_reports</code> trên Supabase, Lãnh đạo nhận được báo cáo và phê duyệt đề xuất từ xa.</li>
+              <li><strong>Cơ chế tự động Offline-First:</strong> Ngay cả khi chưa chạy lệnh SQL hoặc mất kết nối mạng, hệ thống vẫn lưu cục bộ tự động, không lo mất dữ liệu!</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3 Quick Steps -->
+        <div>
+          <h4 class="font-black text-slate-900 text-sm mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-amber-500"></i>
+            3 bước khởi tạo bảng Supabase (chưa đầy 10 giây):
+          </h4>
+          <ol class="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600">
+            <li>Đăng nhập Supabase Console: <a href="https://supabase.com/dashboard/project/pyyjgtzwvkphoxcjvgpl/sql/new" target="_blank" class="text-emerald-700 hover:text-emerald-800 font-bold underline">Vào mục SQL Editor dự án</a>.</li>
+            <li>Bấm nút <strong>"Sao chép mã SQL"</strong> màu xanh bên dưới.</li>
+            <li>Dán toàn bộ mã vào ô soạn thảo trong Supabase SQL Editor và bấm nút <strong>RUN</strong> màu xanh lá. Xong ngay lập tức!</li>
+          </ol>
+        </div>
+
+        <!-- SQL Box -->
+        <div class="relative rounded-2xl bg-slate-900 text-slate-100 p-4 font-mono text-xs overflow-x-auto max-h-56 custom-scrollbar border border-slate-800">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+            <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">MÃ SQL TẠO BẢNG CƠ SỞ DỮ LIỆU</span>
+            <button type="button" onclick="copySupabaseSqlScript()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+              <i class="fa-regular fa-copy"></i>
+              <span>Sao chép mã SQL</span>
+            </button>
+          </div>
+          <pre class="text-emerald-300 whitespace-pre leading-relaxed select-all">-- =========================================================================
+-- BẢNG 1: QUẢN LÝ VIỆC RIÊNG, KẾ HOẠCH CÁ NHÂN, ĐỀ XUẤT & PHẢN ÁNH
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS public.personal_tasks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    username TEXT,
+    user_fullname TEXT,
+    department TEXT,
+    type TEXT NOT NULL DEFAULT 'adhoc',
+    title TEXT NOT NULL,
+    content TEXT,
+    date DATE,
+    due_date DATE,
+    is_important BOOLEAN DEFAULT false,
+    status TEXT DEFAULT 'pending',
+    is_completed BOOLEAN DEFAULT false,
+    feedback_response TEXT,
+    selected_for_report BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_personal_tasks_user_id ON public.personal_tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_personal_tasks_due_date ON public.personal_tasks(due_date);
+
+ALTER TABLE public.personal_tasks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Cho phep tat ca thao tac personal_tasks" ON public.personal_tasks FOR ALL USING (true) WITH CHECK (true);
+
+-- =========================================================================
+-- BẢNG 2: TIẾP NHẬN VÀ LƯU TRỮ BÁO CÁO GỬI LÃNH ĐẠO
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS public.leadership_reports (
+    id TEXT PRIMARY KEY,
+    sender_id TEXT NOT NULL,
+    sender_username TEXT,
+    sender_fullname TEXT,
+    sender_department TEXT,
+    sender_role TEXT,
+    period_month INTEGER,
+    period_year INTEGER,
+    submission_date TIMESTAMPTZ DEFAULT NOW(),
+    display_date TEXT,
+    notes TEXT,
+    items JSONB DEFAULT '[]'::jsonb,
+    status TEXT DEFAULT 'submitted',
+    leader_feedback TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leadership_reports_sender ON public.leadership_reports(sender_id);
+CREATE INDEX IF NOT EXISTS idx_leadership_reports_period ON public.leadership_reports(period_year, period_month);
+
+ALTER TABLE public.leadership_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership_reports FOR ALL USING (true) WITH CHECK (true);</pre>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
+        <button type="button" onclick="closeSupabaseTableSetupGuide()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+          Đóng
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="copySupabaseSqlScript()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-regular fa-copy"></i>
+            <span>Sao chép mã SQL</span>
+          </button>
+          <button type="button" onclick="fetchPersonalTasksFromSupabase(); closeSupabaseTableSetupGuide(); showToast('Đang kết nối lại CSDL Supabase...');" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Kiểm tra kết nối lại</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= BẮT ĐẦU KHỐI JAVASCRIPT ================= -->
   <script>
     // ================= KHỞI TẠO CLIENT KẾT NỐI AN TOÀN =================
@@ -20632,7 +20809,300 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
 
 // =========================================================================
-// HỆ THỐNG SỔ TAY VIỆC RIÊNG, KẾ HOẠCH CÁ NHÂN & ĐẨY BÁO CÁO LÃNH ĐẠO
+// =========================================================================
+
+// ================= ĐỒNG BỘ CƠ SỞ DỮ LIỆU SUPABASE CLOUD (HYBRID SYNC) =================
+let pwCloudAvailable = null; // null: đang kiểm tra, true: bảng đã có trên Supabase, false: chưa tạo bảng
+
+const SUPABASE_NOTEBOOK_SQL_SCRIPT = `-- =========================================================================
+-- BẢNG 1: QUẢN LÝ VIỆC RIÊNG, KẾ HOẠCH CÁ NHÂN, ĐỀ XUẤT & PHẢN ÁNH
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS public.personal_tasks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    username TEXT,
+    user_fullname TEXT,
+    department TEXT,
+    type TEXT NOT NULL DEFAULT 'adhoc',
+    title TEXT NOT NULL,
+    content TEXT,
+    date DATE,
+    due_date DATE,
+    is_important BOOLEAN DEFAULT false,
+    status TEXT DEFAULT 'pending',
+    is_completed BOOLEAN DEFAULT false,
+    feedback_response TEXT,
+    selected_for_report BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_personal_tasks_user_id ON public.personal_tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_personal_tasks_due_date ON public.personal_tasks(due_date);
+
+ALTER TABLE public.personal_tasks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Cho phep tat ca thao tac personal_tasks" ON public.personal_tasks FOR ALL USING (true) WITH CHECK (true);
+
+-- =========================================================================
+-- BẢNG 2: TIẾP NHẬN VÀ LƯU TRỮ BÁO CÁO GỬI LÃNH ĐẠO
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS public.leadership_reports (
+    id TEXT PRIMARY KEY,
+    sender_id TEXT NOT NULL,
+    sender_username TEXT,
+    sender_fullname TEXT,
+    sender_department TEXT,
+    sender_role TEXT,
+    period_month INTEGER,
+    period_year INTEGER,
+    submission_date TIMESTAMPTZ DEFAULT NOW(),
+    display_date TEXT,
+    notes TEXT,
+    items JSONB DEFAULT '[]'::jsonb,
+    status TEXT DEFAULT 'submitted',
+    leader_feedback TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leadership_reports_sender ON public.leadership_reports(sender_id);
+CREATE INDEX IF NOT EXISTS idx_leadership_reports_period ON public.leadership_reports(period_year, period_month);
+
+ALTER TABLE public.leadership_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership_reports FOR ALL USING (true) WITH CHECK (true);`;
+
+function toSupabaseTaskRow(it, user = currentUser) {
+  return {
+    id: it.id,
+    user_id: String(it.userId || (user ? user.id : '')),
+    username: it.username || (user ? user.username : ''),
+    user_fullname: it.userFullname || (user ? user.fullName : ''),
+    department: it.department || (user ? user.department : ''),
+    type: it.type || 'adhoc',
+    title: it.title || '',
+    content: it.content || '',
+    date: it.date || null,
+    due_date: it.dueDate || null,
+    is_important: !!it.isImportant,
+    status: it.status || 'pending',
+    is_completed: !!it.isCompleted,
+    feedback_response: it.feedbackResponse || null,
+    selected_for_report: (it.selectedForReport !== false),
+    updated_at: new Date().toISOString()
+  };
+}
+
+function fromSupabaseTaskRow(r) {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    username: r.username,
+    userFullname: r.user_fullname,
+    department: r.department,
+    type: r.type,
+    title: r.title,
+    content: r.content || '',
+    date: r.date || '',
+    dueDate: r.due_date || '',
+    isImportant: !!r.is_important,
+    status: r.status,
+    isCompleted: !!r.is_completed,
+    feedbackResponse: r.feedback_response || '',
+    selectedForReport: (r.selected_for_report !== false),
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  };
+}
+
+function toSupabaseReportRow(r) {
+  return {
+    id: r.id,
+    sender_id: String(r.senderId),
+    sender_username: r.senderUsername || '',
+    sender_fullname: r.senderFullName || '',
+    sender_department: r.senderDepartment || '',
+    sender_role: r.senderRole || '',
+    period_month: r.periodMonth || null,
+    period_year: r.periodYear || null,
+    submission_date: r.submissionDate || new Date().toISOString(),
+    display_date: r.displayDate || '',
+    notes: r.notes || '',
+    items: r.items || [],
+    status: r.status || 'submitted',
+    leader_feedback: r.leaderFeedback || '',
+    updated_at: new Date().toISOString()
+  };
+}
+
+function fromSupabaseReportRow(r) {
+  return {
+    id: r.id,
+    senderId: r.sender_id,
+    senderUsername: r.sender_username,
+    senderFullName: r.sender_fullname,
+    senderDepartment: r.sender_department,
+    senderRole: r.sender_role,
+    periodMonth: r.period_month,
+    periodYear: r.period_year,
+    submissionDate: r.submission_date,
+    displayDate: r.display_date,
+    notes: r.notes || '',
+    items: Array.isArray(r.items) ? r.items : [],
+    status: r.status || 'submitted',
+    leaderFeedback: r.leader_feedback || ''
+  };
+}
+
+async function fetchPersonalTasksFromSupabase() {
+  if (!supabase || !currentUser) return;
+  try {
+    const { data, error } = await supabase
+      .from('personal_tasks')
+      .select('*')
+      .eq('user_id', String(currentUser.id))
+      .order('created_at', { ascending: false })
+      .limit(1000);
+
+    if (error) {
+      if (error.code === 'PGRST205') {
+        pwCloudAvailable = false;
+        updateCloudSyncBadge(false);
+      }
+      return;
+    }
+
+    pwCloudAvailable = true;
+    updateCloudSyncBadge(true);
+
+    if (Array.isArray(data)) {
+      const cloudItems = data.map(fromSupabaseTaskRow);
+      const localData = getPersonalWorkspaceData(currentUser);
+      const localItems = localData.items || [];
+
+      // Đồng bộ: Đẩy những mục chỉ có ở local lên cloud (nếu có)
+      const cloudIds = new Set(cloudItems.map(c => c.id));
+      const unuploaded = localItems.filter(l => !cloudIds.has(l.id));
+
+      if (unuploaded.length > 0) {
+        const rowsToInsert = unuploaded.map(u => toSupabaseTaskRow(u, currentUser));
+        supabase.from('personal_tasks').upsert(rowsToInsert).then(() => {});
+      }
+
+      // Hợp nhất danh sách
+      const mergedMap = new Map();
+      cloudItems.forEach(ci => mergedMap.set(ci.id, ci));
+      localItems.forEach(li => {
+        if (!mergedMap.has(li.id)) mergedMap.set(li.id, li);
+      });
+
+      localData.items = Array.from(mergedMap.values());
+      const key = getPersonalWorkspaceStorageKey(currentUser);
+      localStorage.setItem(key, JSON.stringify(localData));
+      renderPersonalWorkspaceUI();
+    }
+  } catch(e) {
+    console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
+  }
+}
+
+async function savePersonalTaskToSupabase(item) {
+  if (!supabase || !currentUser || pwCloudAvailable === false) return;
+  try {
+    const row = toSupabaseTaskRow(item, currentUser);
+    await supabase.from('personal_tasks').upsert(row);
+    pwCloudAvailable = true;
+    updateCloudSyncBadge(true);
+  } catch(e) {}
+}
+
+async function deletePersonalTaskFromSupabase(itemId) {
+  if (!supabase || !currentUser || pwCloudAvailable === false) return;
+  try {
+    await supabase.from('personal_tasks').delete().eq('id', itemId);
+  } catch(e) {}
+}
+
+async function saveLeadershipReportToSupabase(reportPayload) {
+  if (!supabase) return;
+  try {
+    const row = toSupabaseReportRow(reportPayload);
+    await supabase.from('leadership_reports').upsert(row);
+  } catch(e) {}
+}
+
+async function fetchLeadershipReportsFromSupabase() {
+  if (!supabase || !currentUser) return;
+  const isDirOrMgr = isAdminOrManager(currentUser.role, currentUser.username) || isBoardOfDirectors(currentUser);
+
+  try {
+    let query = supabase.from('leadership_reports').select('*').order('submission_date', { ascending: false });
+    if (!isDirOrMgr) {
+      query = query.eq('sender_id', String(currentUser.id)).limit(100);
+    } else {
+      query = query.limit(500);
+    }
+
+    const { data, error } = await query;
+    if (error) return;
+
+    if (Array.isArray(data)) {
+      const cloudReports = data.map(fromSupabaseReportRow);
+      const localReports = getLeadershipReportsShared();
+
+      const mergedMap = new Map();
+      cloudReports.forEach(cr => mergedMap.set(cr.id, cr));
+      localReports.forEach(lr => {
+        if (!mergedMap.has(lr.id)) mergedMap.set(lr.id, lr);
+      });
+
+      const mergedList = Array.from(mergedMap.values());
+      saveLeadershipReportsShared(mergedList);
+      renderLeadershipReportsBoxUI();
+    }
+  } catch(e) {}
+}
+
+function updateCloudSyncBadge(isCloudSynced) {
+  const badge = document.getElementById('pwSyncCloudBadge');
+  if (!badge) return;
+
+  if (isCloudSynced) {
+    badge.className = "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs hover:bg-emerald-100 transition";
+    badge.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-600 text-xs"></i><span>Đồng bộ Supabase Cloud</span>`;
+    badge.title = "Dữ liệu được lưu trữ trực tiếp trên cơ sở dữ liệu Supabase Cloud thời gian thực!";
+  } else {
+    badge.className = "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs hover:bg-amber-100 transition";
+    badge.innerHTML = `<i class="fa-solid fa-hard-drive text-amber-600 text-xs"></i><span>Lưu thiết bị (Bấm để kết nối Supabase)</span>`;
+    badge.title = "Nhấp vào để xem hướng dẫn và sao chép mã SQL tạo bảng trên Supabase!";
+  }
+}
+
+function showSupabaseTableSetupGuide() {
+  const modal = document.getElementById('supabaseSetupGuideModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeSupabaseTableSetupGuide() {
+  const modal = document.getElementById('supabaseSetupGuideModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copySupabaseSqlScript() {
+  const txt = SUPABASE_NOTEBOOK_SQL_SCRIPT;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast("📋 Đã sao chép mã SQL! Hãy dán vào Supabase Dashboard -> SQL Editor và bấm Run.");
+    }).catch(() => {
+      fallbackCopyText(txt);
+    });
+  } else {
+    fallbackCopyText(txt);
+  }
+}
+
+
+// =========================================================================
+// HỆ THỐNG SỔ TAY VIỆC RIÊNG, KẾ HOẠCH CÁ NHÂN & ĐẨY BÁO CÁO LÃNH ĐẠO (V2 - BẢNG RỘNG)
 // Dành cho MỌI TÀI KHOẢN (Nhân viên, Chuyên viên, Quản lý, Giám đốc, Admin)
 // =========================================================================
 
@@ -20640,6 +21110,8 @@ let pwCurrentTab = 'all'; // 'all', 'adhoc', 'plan', 'proposal', 'feedback'
 let pwFilterImportantOnly = false;
 let pwFilterDueOrOverdue = false;
 let pwSearchKeyword = '';
+let pwViewMode = 'table'; // 'table' (Mặc định bảng rộng) hoặc 'card' (dạng thẻ)
+let pwIsFullscreen = false;
 
 function getPersonalWorkspaceStorageKey(user = currentUser) {
   const uId = user ? (user.id || user.username || 'guest') : 'guest';
@@ -20894,11 +21366,42 @@ function openPersonalWorkspaceModal() {
 
   modal.classList.remove('hidden');
   renderPersonalWorkspaceUI();
+  fetchPersonalTasksFromSupabase();
 }
 
 function closePersonalWorkspaceModal() {
   const modal = document.getElementById('personalWorkspaceModal');
   if (modal) modal.classList.add('hidden');
+}
+
+function togglePersonalWorkspaceFullscreen() {
+  pwIsFullscreen = !pwIsFullscreen;
+  const dialog = document.getElementById('personalWorkspaceDialog');
+  const icon = document.getElementById('pwFullscreenIcon');
+  if (!dialog) return;
+
+  if (pwIsFullscreen) {
+    dialog.className = "bg-white w-screen h-screen max-w-none max-h-none rounded-none flex flex-col shadow-2xl overflow-hidden transition-all duration-200";
+    if (icon) icon.className = "fa-solid fa-compress text-xs";
+  } else {
+    dialog.className = "bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl w-[98vw] max-w-[1750px] h-[96vh] sm:h-[93vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200";
+    if (icon) icon.className = "fa-solid fa-expand text-xs";
+  }
+}
+
+function setPersonalWorkspaceViewMode(mode) {
+  pwViewMode = mode;
+  const btnTable = document.getElementById('pwViewModeBtn_table');
+  const btnCard = document.getElementById('pwViewModeBtn_card');
+
+  if (mode === 'table') {
+    if (btnTable) btnTable.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-800 shadow-2xs";
+    if (btnCard) btnCard.className = "px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer";
+  } else {
+    if (btnTable) btnTable.className = "px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer";
+    if (btnCard) btnCard.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-800 shadow-2xs";
+  }
+  renderPersonalWorkspaceUI();
 }
 
 function switchPersonalWorkspaceTab(tab) {
@@ -21020,13 +21523,13 @@ function renderPersonalWorkspaceUI() {
 
   if (items.length === 0) {
     container.innerHTML = `
-      <div class="py-16 text-center space-y-3">
+      <div class="py-16 text-center space-y-3 bg-white rounded-2xl border border-slate-200">
         <div class="w-16 h-16 rounded-3xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-2xl mx-auto shadow-2xs">
           <i class="fa-solid fa-clipboard-list"></i>
         </div>
         <div class="space-y-1">
           <h4 class="font-bold text-slate-700 text-sm">Chưa có mục công việc nào phù hợp</h4>
-          <p class="text-xs text-slate-400 max-w-sm mx-auto">Ghi lại công việc phát sinh, lập lịch làm việc, đề xuất ý kiến và đẩy báo cáo lãnh đạo khi cần.</p>
+          <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">Theo dõi công việc phát sinh, kế hoạch làm việc, sáng kiến đề xuất và ý kiến phản ánh để quản lý gọn gàng và đẩy báo cáo lãnh đạo.</p>
         </div>
         <div class="pt-2 flex items-center justify-center gap-2 flex-wrap">
           <button type="button" onclick="seedSamplePersonalWorkspace()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
@@ -21047,7 +21550,160 @@ function renderPersonalWorkspaceUI() {
     return;
   }
 
-  let html = '';
+  // ================= 1. GIAO DIỆN BẢNG RỘNG CHUẨN CHUYÊN NGHIỆP (TABLE VIEW) =================
+  if (pwViewMode === 'table') {
+    let rowsHtml = '';
+    items.forEach((it, idx) => {
+      let typeBadge = '';
+      let statusHtml = '';
+      let dateHtml = '';
+
+      if (it.type === 'adhoc') {
+        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs shrink-0"><i class="fa-solid fa-bolt text-[9px] text-amber-600"></i>Phát sinh</span>`;
+        const isDone = (it.status === 'done');
+        statusHtml = `
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Nhấp đổi: Đã làm / Chưa làm" class="px-2.5 py-1 rounded-xl text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer ${isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'}">
+            <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'} text-[10px]"></i>
+            <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
+          </button>
+        `;
+        dateHtml = it.date ? `<span class="text-slate-600">${formatVNDate(it.date)}</span>` : '<span class="text-slate-300">---</span>';
+      } else if (it.type === 'plan') {
+        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-sky-100 text-sky-900 border border-sky-300 shadow-2xs shrink-0"><i class="fa-solid fa-calendar-days text-[9px] text-sky-600"></i>Kế hoạch</span>`;
+        const timeline = calculatePlanTimelineStatus(it);
+        statusHtml = `
+          <div class="inline-flex items-center gap-1.5 justify-center">
+            <span class="px-2.5 py-1 rounded-xl text-xs border inline-flex items-center gap-1 ${timeline.badgeClass}">
+              <i class="${timeline.icon} text-[10px]"></i>
+              <span>${timeline.label}</span>
+            </span>
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Đánh dấu đã hoàn thành / chưa xong" class="w-6 h-6 rounded-lg ${it.isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50'} border border-slate-200 flex items-center justify-center text-[10px] transition cursor-pointer">
+              <i class="fa-solid fa-check"></i>
+            </button>
+          </div>
+        `;
+        dateHtml = it.dueDate ? `<span class="font-bold ${timeline.code === 'overdue' ? 'text-rose-700 animate-pulse' : (timeline.code === 'duetoday' ? 'text-amber-700' : 'text-slate-700')}">${formatVNDate(it.dueDate)}</span>` : (it.date ? `<span class="text-slate-600">${formatVNDate(it.date)}</span>` : '<span class="text-slate-300">---</span>');
+      } else if (it.type === 'proposal') {
+        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300 shadow-2xs shrink-0"><i class="fa-solid fa-lightbulb text-[9px] text-purple-600"></i>Đề xuất</span>`;
+        const isApproved = (it.status === 'approved_executed');
+        statusHtml = `
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Nhấp đổi: Đã duyệt / Chưa thực hiện" class="px-2.5 py-1 rounded-xl text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer ${isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'}">
+            <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass text-slate-500'} text-[10px]"></i>
+            <span>${isApproved ? 'Đã duyệt / Làm' : 'Chưa duyệt'}</span>
+          </button>
+        `;
+        dateHtml = it.date ? `<span class="text-slate-600">${formatVNDate(it.date)}</span>` : '<span class="text-slate-300">---</span>';
+      } else if (it.type === 'feedback') {
+        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-teal-100 text-teal-900 border border-teal-300 shadow-2xs shrink-0"><i class="fa-solid fa-comment-dots text-[9px] text-teal-600"></i>Phản ánh</span>`;
+        let fLabel = 'Chờ tiếp nhận', fClass = 'bg-amber-100 text-amber-900 border-amber-300';
+        if (it.status === 'acknowledged') {
+          fLabel = 'Đã tiếp nhận';
+          fClass = 'bg-sky-100 text-sky-900 border-sky-300';
+        } else if (it.status === 'resolved') {
+          fLabel = 'Đã giải quyết';
+          fClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        }
+        statusHtml = `
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Đổi trạng thái phản ánh" class="px-2.5 py-1 rounded-xl text-xs font-bold transition inline-flex items-center gap-1 border ${fClass} cursor-pointer">
+            <i class="fa-solid fa-check-double text-[10px]"></i>
+            <span>${fLabel}</span>
+          </button>
+        `;
+        dateHtml = it.date ? `<span class="text-slate-600">${formatVNDate(it.date)}</span>` : '<span class="text-slate-300">---</span>';
+      }
+
+      rowsHtml += `
+        <tr class="hover:bg-amber-50/50 transition-colors group ${it.isImportant ? 'bg-amber-50/20' : ''}">
+          <!-- 1. TT -->
+          <td class="py-2.5 px-2 text-center text-slate-400 font-num font-bold border-r border-slate-100">${idx + 1}</td>
+          
+          <!-- 2. Chọn đẩy báo cáo -->
+          <td class="py-2.5 px-2 text-center border-r border-slate-100">
+            <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" title="Tích chọn đưa vào báo cáo lãnh đạo" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+          </td>
+
+          <!-- 3. Đánh dấu quan trọng ⭐ -->
+          <td class="py-2.5 px-2 text-center border-r border-slate-100">
+            <button type="button" onclick="togglePersonalItemImportant('${it.id}')" title="${it.isImportant ? 'Bỏ đánh dấu quan trọng' : 'Đánh dấu là mục quan trọng để nhắc nhở làm'}" class="w-7 h-7 rounded-lg inline-flex items-center justify-center transition cursor-pointer ${it.isImportant ? 'text-amber-500 hover:scale-110' : 'text-slate-300 hover:text-amber-500'}">
+              <i class="fa-solid fa-star text-sm"></i>
+            </button>
+          </td>
+
+          <!-- 4. Phân loại -->
+          <td class="py-2.5 px-3 border-r border-slate-100 whitespace-nowrap">
+            ${typeBadge}
+          </td>
+
+          <!-- 5. Tiêu đề / Nội dung -->
+          <td class="py-2.5 px-3 border-r border-slate-100 whitespace-normal">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span onclick="openPersonalItemEditModal('${it.id}')" class="font-bold text-slate-900 text-xs sm:text-[13px] leading-snug cursor-pointer hover:text-emerald-700 transition">${escapeHtml(it.title)}</span>
+              ${it.isImportant ? '<span class="px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase bg-amber-500 text-white shrink-0 shadow-2xs">Ưu tiên</span>' : ''}
+            </div>
+          </td>
+
+          <!-- 6. Chi tiết / Kế hoạch / Căn cứ -->
+          <td class="py-2.5 px-3 border-r border-slate-100 whitespace-normal">
+            <div class="max-w-[320px] lg:max-w-[420px] text-[11.5px] text-slate-600 line-clamp-2 leading-relaxed" title="${escapeHtml(it.content || '')}">
+              ${escapeHtml(it.content || '---')}
+            </div>
+            ${it.feedbackResponse ? `<div class="mt-1 text-[10.5px] text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 truncate inline-block max-w-full" title="Sếp phản hồi: ${escapeHtml(it.feedbackResponse)}"><i class="fa-solid fa-reply mr-1 text-emerald-700"></i><b>Sếp phản hồi:</b> ${escapeHtml(it.feedbackResponse)}</div>` : ''}
+          </td>
+
+          <!-- 7. Thời hạn / Ngày -->
+          <td class="py-2.5 px-3 text-center border-r border-slate-100 text-xs font-num whitespace-nowrap">
+            ${dateHtml}
+          </td>
+
+          <!-- 8. Tiến độ / Trạng thái -->
+          <td class="py-2.5 px-3 text-center border-r border-slate-100 whitespace-nowrap">
+            ${statusHtml}
+          </td>
+
+          <!-- 9. Thao tác -->
+          <td class="py-2.5 px-2 text-center whitespace-nowrap">
+            <div class="inline-flex items-center justify-center gap-1">
+              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" title="Chỉnh sửa mục này" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs transition cursor-pointer">
+                <i class="fa-solid fa-pen text-[10px]"></i>
+              </button>
+              <button type="button" onclick="deletePersonalItem('${it.id}')" title="Xóa mục này" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs transition cursor-pointer">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    container.innerHTML = `
+      <div class="w-full overflow-x-auto overflow-y-auto custom-scroll bg-white border border-slate-200 rounded-2xl shadow-2xs max-h-[58vh] sm:max-h-[63vh]">
+        <table class="w-full text-left text-xs whitespace-nowrap border-collapse min-w-[1050px]">
+          <thead class="sticky top-0 z-20 bg-slate-100/95 backdrop-blur-sm border-b border-slate-200 text-slate-700 font-bold uppercase text-[10.5px] tracking-wider select-none">
+            <tr>
+              <th class="py-3 px-2 text-center w-10 border-r border-slate-200">TT</th>
+              <th class="py-3 px-2 text-center w-14 border-r border-slate-200" title="Tích chọn đưa vào báo cáo lãnh đạo">
+                <span class="text-[9.5px]">Báo cáo</span>
+              </th>
+              <th class="py-3 px-2 text-center w-10 border-r border-slate-200" title="Mục quan trọng ưu tiên">⭐</th>
+              <th class="py-3 px-3 w-32 border-r border-slate-200">Phân loại</th>
+              <th class="py-3 px-3 min-w-[260px] border-r border-slate-200">Nội dung / Tiêu đề công việc</th>
+              <th class="py-3 px-3 min-w-[260px] border-r border-slate-200">Chi tiết / Kế hoạch / Căn cứ</th>
+              <th class="py-3 px-3 w-32 text-center border-r border-slate-200">Thời hạn / Ngày</th>
+              <th class="py-3 px-3 w-44 text-center border-r border-slate-200">Tiến độ &amp; Trạng thái</th>
+              <th class="py-3 px-2 text-center w-20">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
+    return;
+  }
+
+  // ================= 2. GIAO DIỆN DẠNG THẺ (CARD VIEW) =================
+  let cardsHtml = '';
   items.forEach(it => {
     let typeBadge = '';
     let statusBadge = '';
@@ -21119,7 +21775,7 @@ function renderPersonalWorkspaceUI() {
       </label>
     `;
 
-    html += `
+    cardsHtml += `
       <div class="bg-white border ${it.isImportant ? 'border-amber-300 shadow-amber-500/10' : 'border-slate-200'} hover:border-emerald-300 p-3.5 sm:p-4 rounded-2xl shadow-2xs hover:shadow-md transition space-y-2">
         <div class="flex items-start justify-between gap-2.5">
           <div class="flex items-start gap-2.5 min-w-0 flex-1">
@@ -21158,7 +21814,7 @@ function renderPersonalWorkspaceUI() {
     `;
   });
 
-  container.innerHTML = html;
+  container.innerHTML = `<div class="space-y-2.5">${cardsHtml}</div>`;
 }
 
 function formatVNDate(isoDateStr) {
@@ -21177,6 +21833,7 @@ function togglePersonalItemImportant(id) {
   if (item) {
     item.isImportant = !item.isImportant;
     savePersonalWorkspaceData(data, currentUser);
+    savePersonalTaskToSupabase(item);
     renderPersonalWorkspaceUI();
     showToast(item.isImportant ? "⭐ Đã đánh dấu mục quan trọng để nhắc nhở làm!" : "Đã bỏ đánh dấu quan trọng.");
   }
@@ -21206,6 +21863,7 @@ function togglePersonalItemStatus(id) {
   }
 
   savePersonalWorkspaceData(data, currentUser);
+  savePersonalTaskToSupabase(item);
   renderPersonalWorkspaceUI();
 }
 
@@ -21432,6 +22090,12 @@ function savePersonalItem() {
   }
 
   savePersonalWorkspaceData(data, currentUser);
+  if (itemId) {
+    const existing = data.items.find(it => it.id === itemId);
+    if (existing) savePersonalTaskToSupabase(existing);
+  } else if (data.items.length > 0) {
+    savePersonalTaskToSupabase(data.items[0]);
+  }
   closePersonalItemEditModal();
   renderPersonalWorkspaceUI();
   showToast("Đã lưu mục công việc cá nhân thành công!");
@@ -21442,6 +22106,7 @@ function deletePersonalItem(id) {
   const data = getPersonalWorkspaceData(currentUser);
   data.items = (data.items || []).filter(it => it.id !== id);
   savePersonalWorkspaceData(data, currentUser);
+  deletePersonalTaskFromSupabase(id);
   renderPersonalWorkspaceUI();
   showToast("Đã xóa mục công việc.");
 }
@@ -21616,6 +22281,7 @@ function submitLeadershipReport() {
   const sharedReports = getLeadershipReportsShared();
   sharedReports.unshift(reportPayload);
   saveLeadershipReportsShared(sharedReports);
+  saveLeadershipReportToSupabase(reportPayload);
 
   closeLeadershipReportPreviewModal();
   showToast("🎉 Đã đẩy báo cáo lên lãnh đạo thành công!");
@@ -21755,6 +22421,7 @@ function openLeadershipReportsBoxModal() {
 
   modal.classList.remove('hidden');
   renderLeadershipReportsBoxUI();
+  fetchLeadershipReportsFromSupabase();
 }
 
 function closeLeadershipReportsBoxModal() {
@@ -21879,8 +22546,8 @@ function promptLeaderFeedback(reportId) {
   if (rep) {
     rep.leaderFeedback = fb.trim();
     saveLeadershipReportsShared(sharedReports);
+    if (supabase) supabase.from('leadership_reports').update({ leader_feedback: fb.trim() }).eq('id', reportId).then(()=>{});
 
-    // Đồng bộ về sổ tay của nhân viên đó nếu đang trên cùng máy
     try {
       const uKey = `ops_personal_workspace_final_v1_${rep.senderId || rep.senderUsername}`;
       const raw = localStorage.getItem(uKey);
@@ -21910,8 +22577,8 @@ function approveReportProposals(reportId) {
       if (it.type === 'proposal') it.status = 'approved_executed';
     });
     saveLeadershipReportsShared(sharedReports);
+    if (supabase) supabase.from('leadership_reports').update({ status: 'approved', items: rep.items }).eq('id', reportId).then(()=>{});
 
-    // Đồng bộ về sổ tay của nhân viên
     try {
       const uKey = `ops_personal_workspace_final_v1_${rep.senderId || rep.senderUsername}`;
       const raw = localStorage.getItem(uKey);
@@ -22047,6 +22714,86 @@ function checkPersonalWorkspaceRemindersOnLogin() {
   }
 }
 
+function exportPersonalWorkspaceToExcel() {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  let items = data.items || [];
+  if (items.length === 0) {
+    showToast("Không có dữ liệu công việc để xuất Excel!", true);
+    return;
+  }
+
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+
+  let tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="utf-8"/></head>
+    <body>
+      <table border="1">
+        <tr><th colspan="7" style="font-size:16px;font-weight:bold;text-align:center;background:#059669;color:white;height:40px;">SỔ TAY CÔNG VIỆC CÁ NHÂN & KẾ HOẠCH - THÁNG ${m}/${y}</th></tr>
+        <tr><th colspan="7" style="text-align:left;height:30px;">Họ và tên: ${escapeHtml(currentUser.fullName)} - Bộ phận: ${escapeHtml(currentUser.department || 'Ban DVKH')} - Chức danh: ${escapeHtml(currentUser.role)}</th></tr>
+        <tr style="background:#f1f5f9;font-weight:bold;height:30px;">
+          <th>TT</th>
+          <th>Phân loại</th>
+          <th>Quan trọng</th>
+          <th>Nội dung / Tiêu đề công việc</th>
+          <th>Chi tiết / Kế hoạch / Căn cứ</th>
+          <th>Thời hạn / Ngày</th>
+          <th>Tiến độ & Trạng thái</th>
+        </tr>
+  `;
+
+  items.forEach((it, idx) => {
+    let typeStr = 'Việc phát sinh';
+    if (it.type === 'plan') typeStr = 'Kế hoạch làm việc';
+    else if (it.type === 'proposal') typeStr = 'Đề xuất sáng kiến';
+    else if (it.type === 'feedback') typeStr = 'Ý kiến phản ánh';
+
+    let statusStr = '';
+    if (it.type === 'adhoc') {
+      statusStr = (it.status === 'done') ? 'Đã làm' : 'Chưa làm';
+    } else if (it.type === 'plan') {
+      const tl = calculatePlanTimelineStatus(it);
+      statusStr = tl.label;
+    } else if (it.type === 'proposal') {
+      statusStr = (it.status === 'approved_executed') ? 'Được duyệt / Đã thực hiện' : 'Chưa duyệt / Chưa thực hiện';
+    } else if (it.type === 'feedback') {
+      statusStr = (it.status === 'resolved') ? 'Đã giải quyết' : (it.status === 'acknowledged' ? 'Đã tiếp nhận' : 'Chờ tiếp nhận');
+    }
+
+    const dateStr = (it.type === 'plan' && it.dueDate) ? `Hạn: ${formatVNDate(it.dueDate)}` : (it.date ? formatVNDate(it.date) : '');
+
+    tableHtml += `
+      <tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td>${typeStr}</td>
+        <td style="text-align:center;">${it.isImportant ? '⭐ Quan trọng' : ''}</td>
+        <td>${escapeHtml(it.title || '')}</td>
+        <td>${escapeHtml(it.content || '')}</td>
+        <td style="text-align:center;">${dateStr}</td>
+        <td style="text-align:center;">${statusStr}</td>
+      </tr>
+    `;
+  });
+
+  tableHtml += `</table></body></html>`;
+
+  const blob = new Blob(['\uFEFF' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
+  a.download = `So_tay_cong_viec_${safeName}_Thang_${m}_${y}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("📊 Đã xuất file Excel sổ tay công việc thành công!");
+}
+
+function openSupabaseSetupGuideModal() { showSupabaseTableSetupGuide(); }
+
 
     // ================= TỰ ĐỘNG ĐÓNG CỬA SỔ / BẢNG LÀM VIỆC BẰNG PHÍM ESC =================
     function closeTopmostModal() {
@@ -22085,6 +22832,7 @@ function checkPersonalWorkspaceRemindersOnLogin() {
         { id: 'loginHistoryModal', fn: closeLoginHistoryModal },
         { id: 'changePasswordModal', fn: closeChangePasswordModal },
         { id: 'userProfileModal', fn: closeUserProfileModal },
+        { id: 'supabaseSetupGuideModal', fn: closeSupabaseTableSetupGuide },
         { id: 'personalItemEditModal', fn: closePersonalItemEditModal },
         { id: 'leadershipReportPreviewModal', fn: closeLeadershipReportPreviewModal },
         { id: 'leadershipReportsBoxModal', fn: closeLeadershipReportsBoxModal },
