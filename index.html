@@ -22066,6 +22066,299 @@ function renderPersonalWorkspaceUI() {
   `;
 }
 
+// ================= TIỆN ÍCH ĐỊNH DẠNG NGÀY & THAO TÁC CÔNG VIỆC CÁ NHÂN =================
+function formatVNDate(isoDateStr) {
+  if (!isoDateStr) return '';
+  const dateOnly = String(isoDateStr).split('T')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return String(isoDateStr);
+}
+
+function togglePersonalItemImportant(id) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (item) {
+    item.isImportant = !item.isImportant;
+    item.updatedAt = new Date().toISOString();
+    savePersonalWorkspaceData(data, currentUser);
+    savePersonalTaskToSupabase(item);
+    renderPersonalWorkspaceUI();
+    showToast(item.isImportant ? "⭐ Đã ghim mục này vào danh sách quan trọng!" : "Đã bỏ đánh dấu quan trọng.");
+  }
+}
+
+function togglePersonalItemStatus(id) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (!item) return;
+
+  if (item.type === 'adhoc') {
+    item.status = (item.status === 'done') ? 'pending' : 'done';
+    item.isCompleted = (item.status === 'done');
+  } else if (item.type === 'plan') {
+    item.isCompleted = !item.isCompleted;
+    item.status = item.isCompleted ? 'completed' : 'pending';
+  } else if (item.type === 'proposal') {
+    item.status = (item.status === 'approved_executed') ? 'rejected_pending' : 'approved_executed';
+  } else if (item.type === 'feedback') {
+    item.status = (item.status === 'processed') ? 'pending' : 'processed';
+  }
+
+  item.updatedAt = new Date().toISOString();
+  savePersonalWorkspaceData(data, currentUser);
+  savePersonalTaskToSupabase(item);
+  renderPersonalWorkspaceUI();
+  showToast("Đã cập nhật trạng thái mục công việc!");
+}
+
+function togglePersonalItemReportSelect(id, checked) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (item) {
+    item.selectedForReport = checked;
+    savePersonalWorkspaceData(data, currentUser);
+    updatePersonalWorkspaceReportButtonsUI();
+  }
+}
+
+function toggleSelectAllPersonalItemsForReport(checked) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  (data.items || []).forEach(it => {
+    it.selectedForReport = checked;
+  });
+  savePersonalWorkspaceData(data, currentUser);
+  renderPersonalWorkspaceUI();
+}
+
+function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc') {
+  const modal = document.getElementById('personalItemEditModal');
+  if (!modal) return;
+
+  const idInput = document.getElementById('pwEditItemId');
+  const titleInput = document.getElementById('pwEditTitle');
+  const contentInput = document.getElementById('pwEditContent');
+  const dateInput = document.getElementById('pwEditDate');
+  const dueDateInput = document.getElementById('pwEditDueDate');
+  const impChk = document.getElementById('pwEditImportant');
+  const selChk = document.getElementById('pwEditSelectedForReport');
+  const modalTitle = document.getElementById('pwEditModalTitle');
+
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  if (itemId) {
+    const data = getPersonalWorkspaceData(currentUser);
+    const item = (data.items || []).find(it => it.id === itemId);
+    if (!item) return;
+
+    if (idInput) idInput.value = item.id;
+    if (titleInput) titleInput.value = item.title || '';
+    if (contentInput) contentInput.value = item.content || '';
+    if (dateInput) dateInput.value = item.date || todayStr;
+    if (dueDateInput) dueDateInput.value = item.dueDate || '';
+    if (impChk) impChk.checked = !!item.isImportant;
+    if (selChk) selChk.checked = (item.selectedForReport !== false);
+    if (modalTitle) modalTitle.innerText = "Chỉnh Sửa Mục Công Việc";
+
+    const typeRadios = document.getElementsByName('pwItemTypeRadio');
+    for (let r of typeRadios) {
+      if (r.value === item.type) {
+        r.checked = true;
+        break;
+      }
+    }
+    onPersonalItemTypeChange(item.type);
+
+    if (item.type === 'adhoc') {
+      const rad = document.querySelector(`input[name="pwStatusAdhoc"][value="${item.status || 'pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'plan') {
+      const rad = document.querySelector(`input[name="pwStatusPlan"][value="${item.isCompleted ? 'completed' : 'pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'proposal') {
+      const rad = document.querySelector(`input[name="pwStatusProposal"][value="${item.status || 'rejected_pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'feedback') {
+      const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${item.status || 'pending'}"]`);
+      if (rad) rad.checked = true;
+    }
+  } else {
+    if (idInput) idInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (contentInput) contentInput.value = '';
+    if (dateInput) dateInput.value = todayStr;
+    if (dueDateInput) dueDateInput.value = todayStr;
+    if (impChk) impChk.checked = false;
+    if (selChk) selChk.checked = true;
+    if (modalTitle) modalTitle.innerText = "Thêm Mục Công Việc / Kế Hoạch";
+
+    const typeRadios = document.getElementsByName('pwItemTypeRadio');
+    for (let r of typeRadios) {
+      if (r.value === defaultType) {
+        r.checked = true;
+        break;
+      }
+    }
+    onPersonalItemTypeChange(defaultType);
+  }
+
+  modal.classList.remove('hidden');
+  setTimeout(() => { if (titleInput) titleInput.focus(); }, 80);
+}
+
+function closePersonalItemEditModal() {
+  const modal = document.getElementById('personalItemEditModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onPersonalItemTypeChange(type) {
+  const dueBox = document.getElementById('pwEditDueDateContainer');
+  const dateLabel = document.getElementById('pwEditDateLabel');
+
+  const cAdhoc = document.getElementById('pwStatusAdhocControls');
+  const cPlan = document.getElementById('pwStatusPlanControls');
+  const cProp = document.getElementById('pwStatusProposalControls');
+  const cFeed = document.getElementById('pwStatusFeedbackControls');
+
+  if (cAdhoc) cAdhoc.classList.add('hidden');
+  if (cPlan) cPlan.classList.add('hidden');
+  if (cProp) cProp.classList.add('hidden');
+  if (cFeed) cFeed.classList.add('hidden');
+
+  if (type === 'plan') {
+    if (dueBox) dueBox.classList.remove('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày bắt đầu:";
+    if (cPlan) cPlan.classList.remove('hidden');
+  } else if (type === 'adhoc') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày phát sinh:";
+    if (cAdhoc) cAdhoc.classList.remove('hidden');
+  } else if (type === 'proposal') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày đề xuất:";
+    if (cProp) cProp.classList.remove('hidden');
+  } else if (type === 'feedback') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày ghi nhận:";
+    if (cFeed) cFeed.classList.remove('hidden');
+  }
+}
+
+function savePersonalItem() {
+  if (!currentUser) return;
+  const title = (document.getElementById('pwEditTitle')?.value || '').trim();
+  if (!title) {
+    showToast("Vui lòng nhập tiêu đề hoặc tên công việc!", true);
+    return;
+  }
+
+  const itemId = document.getElementById('pwEditItemId')?.value || '';
+  const content = (document.getElementById('pwEditContent')?.value || '').trim();
+  const dateVal = document.getElementById('pwEditDate')?.value || '';
+  const dueDateVal = document.getElementById('pwEditDueDate')?.value || '';
+  const isImportant = !!document.getElementById('pwEditImportant')?.checked;
+  const selectedForReport = !!document.getElementById('pwEditSelectedForReport')?.checked;
+
+  let selectedType = 'adhoc';
+  const typeRadios = document.getElementsByName('pwItemTypeRadio');
+  for (let r of typeRadios) {
+    if (r.checked) {
+      selectedType = r.value;
+      break;
+    }
+  }
+
+  let statusVal = 'pending';
+  let isCompletedVal = false;
+
+  if (selectedType === 'adhoc') {
+    const rad = document.querySelector('input[name="pwStatusAdhoc"]:checked');
+    statusVal = rad ? rad.value : 'pending';
+  } else if (selectedType === 'plan') {
+    const rad = document.querySelector('input[name="pwStatusPlan"]:checked');
+    isCompletedVal = (rad && rad.value === 'completed');
+    statusVal = isCompletedVal ? 'completed' : 'pending';
+  } else if (selectedType === 'proposal') {
+    const rad = document.querySelector('input[name="pwStatusProposal"]:checked');
+    statusVal = rad ? rad.value : 'rejected_pending';
+  } else if (selectedType === 'feedback') {
+    const rad = document.querySelector('input[name="pwStatusFeedback"]:checked');
+    statusVal = rad ? rad.value : 'pending';
+  }
+
+  const data = getPersonalWorkspaceData(currentUser);
+  if (!data.items) data.items = [];
+
+  const nowIso = new Date().toISOString();
+
+  if (itemId) {
+    const existing = data.items.find(it => it.id === itemId);
+    if (existing) {
+      existing.type = selectedType;
+      existing.title = title;
+      existing.content = content;
+      existing.date = dateVal;
+      existing.dueDate = (selectedType === 'plan') ? dueDateVal : '';
+      existing.isImportant = isImportant;
+      existing.status = statusVal;
+      existing.isCompleted = isCompletedVal;
+      existing.selectedForReport = selectedForReport;
+      existing.updatedAt = nowIso;
+    }
+  } else {
+    const newItem = {
+      id: 'pw_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: selectedType,
+      title: title,
+      content: content,
+      date: dateVal,
+      dueDate: (selectedType === 'plan') ? dueDateVal : '',
+      isImportant: isImportant,
+      status: statusVal,
+      isCompleted: isCompletedVal,
+      selectedForReport: selectedForReport,
+      createdAt: nowIso,
+      updatedAt: nowIso
+    };
+    data.items.unshift(newItem);
+  }
+
+  savePersonalWorkspaceData(data, currentUser);
+  if (itemId) {
+    const existing = data.items.find(it => it.id === itemId);
+    if (existing) savePersonalTaskToSupabase(existing);
+  } else if (data.items.length > 0) {
+    savePersonalTaskToSupabase(data.items[0]);
+  }
+  closePersonalItemEditModal();
+  renderPersonalWorkspaceUI();
+  showToast("Đã lưu mục công việc cá nhân thành công!");
+}
+
+function deletePersonalItem(id) {
+  if (!confirm("Bạn có chắc chắn muốn xóa mục này khỏi sổ tay công việc?")) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  data.items = (data.items || []).filter(it => it.id !== id);
+  savePersonalWorkspaceData(data, currentUser);
+  deletePersonalTaskFromSupabase(id);
+  renderPersonalWorkspaceUI();
+  showToast("Đã xóa mục công việc.");
+}
+
+let currentReportSelectedItems = [];
+
 // ================= BÁO CÁO: QUẢN LÝ TỔNG HỢP VÀ CHUYỂN BAN LÃNH ĐẠO =================
 function openLeadershipReportPreviewModal() {
   if (!currentUser) return;
@@ -22248,6 +22541,107 @@ function submitLeadershipReport() {
   }
 
   openLeadershipReportsBoxModal();
+}
+
+function copyLeadershipReportToClipboard() {
+  if (!currentUser || currentReportSelectedItems.length === 0) return;
+
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  const now = new Date();
+  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+
+  let txt = `===============================\n`;
+  txt += `BÁO CÁO CÔNG VIỆC CÁ NHÂN & ĐỀ XUẤT KIẾN NGHỊ\n`;
+  txt += `Kỳ: Tháng ${m}/${y} • Ngày gửi: ${dateFormatted}\n`;
+  txt += `Người báo cáo: ${currentUser.fullName}\n`;
+  txt += `Bộ phận: ${currentUser.department || 'Ban DVKH'} • Chức vụ: ${currentUser.role}\n`;
+  txt += `===============================\n\n`;
+
+  const adhocItems = currentReportSelectedItems.filter(it => it.type === 'adhoc');
+  if (adhocItems.length > 0) {
+    txt += `I. CÔNG VIỆC PHÁT SINH TRONG THÁNG:\n`;
+    adhocItems.forEach((it, i) => {
+      const st = (it.status === 'done') ? '[ĐÃ LÀM]' : '[CHƯA LÀM]';
+      txt += `  ${i+1}. ${st} ${it.title}${it.content ? ` (${it.content})` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const planItems = currentReportSelectedItems.filter(it => it.type === 'plan');
+  if (planItems.length > 0) {
+    txt += `II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC (LỊCH LÀM VIỆC):\n`;
+    planItems.forEach((it, i) => {
+      const tl = calculatePlanTimelineStatus(it);
+      txt += `  ${i+1}. [${tl.label.toUpperCase()}] ${it.title}${it.dueDate ? ` - Hạn: ${formatVNDate(it.dueDate)}` : ''}${it.content ? ` (${it.content})` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const propItems = currentReportSelectedItems.filter(it => it.type === 'proposal');
+  if (propItems.length > 0) {
+    txt += `III. ĐỀ XUẤT, SÁNG KIẾN KIẾN NGHỊ:\n`;
+    propItems.forEach((it, i) => {
+      const st = (it.status === 'approved_executed') ? '[ĐƯỢC DUYỆT / ĐÃ THỰC HIỆN]' : '[CHƯA DUYỆT / CHƯA THỰC HIỆN]';
+      txt += `  ${i+1}. ${st} ${it.title}${it.content ? `: ${it.content}` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const feedItems = currentReportSelectedItems.filter(it => it.type === 'feedback');
+  if (feedItems.length > 0) {
+    txt += `IV. Ý KIẾN ĐÓNG GÓP & PHẢN ÁNH:\n`;
+    feedItems.forEach((it, i) => {
+      txt += `  ${i+1}. ${it.title}${it.content ? `: ${it.content}` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const noteInput = document.getElementById('rpLeaderNoteInput');
+  if (noteInput && noteInput.value.trim()) {
+    txt += `V. LỜI NHẮN / GHI CHÚ BÁO CÁO:\n`;
+    txt += `  ${noteInput.value.trim()}\n\n`;
+  }
+
+  txt += `(Báo cáo xuất từ Hệ thống Quản trị Báo cáo NTP)`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast("📋 Đã sao chép nội dung báo cáo! Bạn có thể dán vào Zalo hoặc Email ngay.");
+    }).catch(() => {
+      fallbackCopyText(txt);
+    });
+  } else {
+    fallbackCopyText(txt);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast("📋 Đã sao chép nội dung báo cáo!");
+}
+
+function printLeadershipReport() {
+  const printArea = document.getElementById('leadershipReportPrintArea');
+  if (!printArea) return;
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    window.print();
+    return;
+  }
+  const htmlContent = '<!DOCTYPE html><html><head><title>Báo cáo lãnh đạo - Nhựa Tiền Phong</title>' +
+    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">' +
+    '<style>body { font-family: sans-serif; padding: 25px; } @media print { body { padding: 0; } }</style>' +
+    '</head><body>' + printArea.innerHTML +
+    '<' + 'script>window.onload = function() { window.print(); };<' + '/script>' +
+    '</body></html>';
+  printWin.document.write(htmlContent);
+  printWin.document.close();
 }
 
 // ================= HỘP THƯ TIẾP NHẬN BÁO CÁO & PHÊ DUYỆT THEO PHÂN CẤP =================
