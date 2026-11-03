@@ -1282,6 +1282,14 @@
         </button>
 
         <!-- Nút Xuất bảng Excel: Đặt cạnh nút Điền báo cáo theo thứ tự Điền báo cáo -> Xuất bảng Excel -> Menu -->
+        <!-- Nút Sổ tay việc riêng & Kế hoạch cá nhân: MỌI TÀI KHOẢN -->
+        <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspaceModal()" class="relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Theo dõi việc riêng, lịch kế hoạch, đề xuất & đẩy báo cáo lãnh đạo">
+          <i class="fa-solid fa-calendar-check text-xs"></i>
+          <span class="hidden sm:inline">Việc riêng & Kế hoạch</span>
+          <span class="sm:hidden">Việc riêng</span>
+          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse">0</span>
+        </button>
+
         <button type="button" id="btnExportExcel" onclick="exportToExcel()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 hover:border-teal-300 active:scale-95 text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Tải file .xlsx chuẩn in ấn & báo cáo">
           <i class="fa-solid fa-file-excel text-teal-600 text-xs sm:text-sm"></i>
           <span class="hidden sm:inline">Xuất bảng Excel</span>
@@ -1300,6 +1308,19 @@
           <div id="headerActionsMenu" class="hidden absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-2xl shadow-emerald-950/20 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-2 space-y-1">
             
             <!-- Nhóm 1: Tác vụ & Tra cứu nhanh -->
+            <button type="button" onclick="closeHeaderActionsMenu(); openPersonalWorkspaceModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50/80 transition text-left cursor-pointer group border border-transparent hover:border-amber-200">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                  <i class="fa-solid fa-calendar-check"></i>
+                </span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-amber-900">Việc riêng & Kế hoạch cá nhân</span>
+                  <span class="text-[10px] text-slate-400 block truncate">Việc phát sinh, lịch làm việc, đề xuất & báo cáo</span>
+                </div>
+              </div>
+              <span id="personalWorkspaceMenuBadge" class="hidden px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num">0</span>
+            </button>
+
             <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-amber-500"></i>
               <span>Tác vụ nhanh</span>
@@ -1831,6 +1852,12 @@
       <button type="button" onclick="scrollToElement('matrixCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-emerald-700 active:scale-95 transition cursor-pointer">
         <i class="fa-solid fa-table-cells text-base"></i>
         <span class="text-[10px] font-bold mt-0.5">Ma trận</span>
+      </button>
+      <!-- Nút Sổ tay việc riêng trên Mobile Bottom Nav -->
+      <button type="button" onclick="openPersonalWorkspaceModal()" class="relative flex flex-col items-center justify-center p-1 text-slate-500 hover:text-amber-600 active:scale-95 transition cursor-pointer">
+        <i class="fa-solid fa-calendar-check text-base text-amber-600"></i>
+        <span class="text-[10px] font-bold mt-0.5">Việc riêng</span>
+        <span id="personalWorkspaceMobileBadge" class="hidden absolute top-0 right-1 w-2 h-2 rounded-full bg-rose-600"></span>
       </button>
       <button type="button" onclick="scrollToElement('activityRhythmCard')" class="flex flex-col items-center justify-center p-1 text-slate-500 hover:text-teal-700 active:scale-95 transition cursor-pointer">
         <i class="fa-solid fa-chart-simple text-base"></i>
@@ -4208,6 +4235,565 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <span>Thực hiện dọn dẹp</span>
         </button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ================= 1. MODAL SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (MỌI TÀI KHOẢN) ================= -->
+  <div id="personalWorkspaceModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-5xl w-full max-h-[96vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+      
+      <!-- HEADER CỦA SỔ TAY -->
+      <div class="px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-amber-500/30 flex-shrink-0">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Việc Riêng & Kế Hoạch Cá Nhân</h3>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">Việc riêng</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+              <span id="pwUserFullName" class="font-bold text-slate-800">---</span> • 
+              <span id="pwUserDept" class="text-slate-600">---</span> • 
+              <span id="pwUserRole" class="text-emerald-700 font-bold">---</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <!-- Nút Đẩy báo cáo lãnh đạo nổi bật -->
+          <button type="button" onclick="openLeadershipReportPreviewModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer" title="Đẩy các mục đã chọn thành báo cáo gửi lãnh đạo">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span class="hidden sm:inline">Đẩy báo cáo lãnh đạo</span>
+            <span class="sm:hidden">Báo cáo</span>
+          </button>
+
+          <!-- Nút Hộp thư báo cáo -->
+          <button type="button" onclick="openLeadershipReportsBoxModal()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem lịch sử các lần đẩy báo cáo & hộp thư lãnh đạo">
+            <i class="fa-solid fa-inbox text-slate-600 text-xs"></i>
+            <span class="hidden md:inline">Hộp thư báo cáo</span>
+          </button>
+
+          <!-- Nút Đóng -->
+          <button type="button" onclick="closePersonalWorkspaceModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 shadow-2xs">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- THANH THỐNG KÊ NHANH 5 NHÓM MỤC -->
+      <div class="px-4 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+          <!-- 1. Việc phát sinh -->
+          <div onclick="switchPersonalWorkspaceTab('adhoc')" class="bg-white border border-slate-200 hover:border-amber-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+            <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-bolt"></i></span>
+            <div class="min-w-0">
+              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Phát sinh</span>
+              <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatAdhocCount">0</span> việc (<span id="pwStatAdhocDone" class="text-emerald-600">0</span> xong)</span>
+            </div>
+          </div>
+
+          <!-- 2. Kế hoạch / Lịch làm việc -->
+          <div onclick="switchPersonalWorkspaceTab('plan')" class="bg-white border border-slate-200 hover:border-sky-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+            <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-calendar-days"></i></span>
+            <div class="min-w-0">
+              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Lịch kế hoạch</span>
+              <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatPlanCount">0</span> việc (<span id="pwStatPlanDue" class="text-rose-600 font-bold">0</span> gấp)</span>
+            </div>
+          </div>
+
+          <!-- 3. Đề xuất -->
+          <div onclick="switchPersonalWorkspaceTab('proposal')" class="bg-white border border-slate-200 hover:border-purple-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+            <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-lightbulb"></i></span>
+            <div class="min-w-0">
+              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Đề xuất</span>
+              <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatProposalCount">0</span> mục (<span id="pwStatProposalApproved" class="text-emerald-600">0</span> duyệt)</span>
+            </div>
+          </div>
+
+          <!-- 4. Ý kiến / Phản ánh -->
+          <div onclick="switchPersonalWorkspaceTab('feedback')" class="bg-white border border-slate-200 hover:border-teal-400 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+            <span class="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-comment-dots"></i></span>
+            <div class="min-w-0">
+              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider truncate">Ý kiến / Phản ánh</span>
+              <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatFeedbackCount">0</span> ý kiến</span>
+            </div>
+          </div>
+
+          <!-- 5. Việc quan trọng -->
+          <div onclick="togglePersonalWorkspaceFilter('important')" class="col-span-2 sm:col-span-1 bg-amber-50/80 border border-amber-300 hover:border-amber-500 p-2 rounded-xl cursor-pointer transition shadow-2xs flex items-center gap-2 group">
+            <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-star"></i></span>
+            <div class="min-w-0">
+              <span class="text-[10px] text-amber-800 font-bold block uppercase tracking-wider truncate">Quan trọng</span>
+              <span class="font-black text-amber-950 text-xs truncate block"><span id="pwStatImportantCount">0</span> mục ưu tiên ⭐</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BANNER CẢNH BÁO NHẮC NHỞ VIỆC ĐẾN HẠN & QUÁ HẠN -->
+        <div id="pwReminderAlertBanner" class="hidden mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-bell animate-bounce"></i></span>
+            <span id="pwReminderAlertText" class="font-bold truncate">Bạn có công việc cần hoàn thành hôm nay!</span>
+          </div>
+          <button type="button" onclick="setPersonalWorkspaceQuickFilter('due')" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider shrink-0 cursor-pointer">
+            Xem ngay
+          </button>
+        </div>
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG TAB & TÁC VỤ LỌC -->
+      <div class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 flex-shrink-0">
+        
+        <!-- Tabs chuyển đổi danh mục -->
+        <div class="flex items-center gap-1 overflow-x-auto custom-scroll pb-1 md:pb-0 text-xs">
+          <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-bold bg-slate-900 text-white shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-layer-group text-xs"></i>
+            <span>Tất cả</span>
+            <span id="pwTabCount_all" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-800 text-slate-300 font-num">0</span>
+          </button>
+
+          <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
+            <span>Việc phát sinh</span>
+            <span id="pwTabCount_adhoc" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-600 font-num">0</span>
+          </button>
+
+          <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
+            <span>Lịch & Kế hoạch</span>
+            <span id="pwTabCount_plan" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-600 font-num">0</span>
+          </button>
+
+          <button type="button" id="pwTabBtn_proposal" onclick="switchPersonalWorkspaceTab('proposal')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
+            <span>Đề xuất</span>
+            <span id="pwTabCount_proposal" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-600 font-num">0</span>
+          </button>
+
+          <button type="button" id="pwTabBtn_feedback" onclick="switchPersonalWorkspaceTab('feedback')" class="pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
+            <span>Ý kiến / Phản ánh</span>
+            <span id="pwTabCount_feedback" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-600 font-num">0</span>
+          </button>
+        </div>
+
+        <!-- Cụm tìm kiếm, lọc nhanh & Nút thêm mới -->
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <!-- Lọc nhanh: Việc quan trọng -->
+          <button type="button" id="pwFilterBtn_important" onclick="togglePersonalWorkspaceFilter('important')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-800 transition flex items-center gap-1 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-star text-amber-500 text-xs"></i>
+            <span class="hidden sm:inline">Quan trọng</span>
+          </button>
+
+          <!-- Lọc nhanh: Đến hạn / Quá hạn -->
+          <button type="button" id="pwFilterBtn_due" onclick="togglePersonalWorkspaceFilter('due')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-clock text-rose-500 text-xs"></i>
+            <span class="hidden sm:inline">Đến / Quá hạn</span>
+          </button>
+
+          <!-- Ô tìm kiếm -->
+          <div class="relative flex-1 sm:w-44">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" id="pwSearchInput" oninput="onPersonalWorkspaceSearchInput(this.value)" placeholder="Tìm công việc..." class="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500" />
+          </div>
+
+          <!-- Nút Thêm việc mới -->
+          <button type="button" onclick="openPersonalItemEditModal()" class="px-3 sm:px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer shrink-0">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Thêm mục</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VÙNG DANH SÁCH CÔNG VIỆC -->
+      <div id="pwItemsScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2.5 custom-scroll bg-slate-50/50">
+        <div id="pwItemsList" class="space-y-2.5">
+          <!-- Render tự động bằng JavaScript -->
+        </div>
+      </div>
+
+      <!-- FOOTER: CHỌN ĐẨY BÁO CÁO LÃNH ĐẠO -->
+      <div class="px-5 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex items-center gap-3 text-xs text-slate-600">
+          <label class="flex items-center gap-1.5 cursor-pointer select-none font-bold text-slate-700">
+            <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItemsForReport(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+            <span>Chọn tất cả</span>
+          </label>
+          <span class="text-slate-300">|</span>
+          <span id="pwSelectedSummaryText" class="font-medium">Đã chọn <b id="pwSelectedCountNum" class="text-emerald-700 font-black">0</b> mục để đẩy báo cáo lãnh đạo</span>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button type="button" onclick="closePersonalWorkspaceModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+            Đóng
+          </button>
+          <button type="button" onclick="openLeadershipReportPreviewModal()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span>Đẩy Báo Cáo Lãnh Đạo Ngay</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= 2. MODAL THÊM / SỬA CÔNG VIỆC RIÊNG ================= -->
+  <div id="personalItemEditModal" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div id="pwEditModalIconBox" class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-base shadow-2xs">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 id="pwEditModalTitle" class="text-slate-900 font-black text-base sm:text-lg leading-tight">Thêm Mục Công Việc / Kế Hoạch</h3>
+            <p class="text-xs text-slate-400">Theo dõi việc riêng, nhắc nhở lịch làm &amp; gửi báo cáo lãnh đạo</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePersonalItemEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3.5 custom-scroll pr-1">
+        <input type="hidden" id="pwEditItemId" value="" />
+
+        <!-- 1. CHỌN LOẠI MỤC -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            Loại mục theo dõi:
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:border-amber-400 cursor-pointer transition select-none bg-slate-50/50 has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 has-[:checked]:text-amber-950 font-bold">
+              <input type="radio" name="pwItemTypeRadio" value="adhoc" checked onchange="onPersonalItemTypeChange(this.value)" class="text-amber-600 focus:ring-amber-500 cursor-pointer" />
+              <span>📌 Phát sinh</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:border-sky-400 cursor-pointer transition select-none bg-slate-50/50 has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400 has-[:checked]:text-sky-950 font-bold">
+              <input type="radio" name="pwItemTypeRadio" value="plan" onchange="onPersonalItemTypeChange(this.value)" class="text-sky-600 focus:ring-sky-500 cursor-pointer" />
+              <span>📅 Kế hoạch</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:border-purple-400 cursor-pointer transition select-none bg-slate-50/50 has-[:checked]:bg-purple-50 has-[:checked]:border-purple-400 has-[:checked]:text-purple-950 font-bold">
+              <input type="radio" name="pwItemTypeRadio" value="proposal" onchange="onPersonalItemTypeChange(this.value)" class="text-purple-600 focus:ring-purple-500 cursor-pointer" />
+              <span>💡 Đề xuất</span>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:border-teal-400 cursor-pointer transition select-none bg-slate-50/50 has-[:checked]:bg-teal-50 has-[:checked]:border-teal-400 has-[:checked]:text-teal-950 font-bold">
+              <input type="radio" name="pwItemTypeRadio" value="feedback" onchange="onPersonalItemTypeChange(this.value)" class="text-teal-600 focus:ring-teal-500 cursor-pointer" />
+              <span>📝 Phản ánh</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. TIÊU ĐỀ CÔNG VIỆC -->
+        <div>
+          <label for="pwEditTitle" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Tiêu đề / Nội dung ngắn gọn: <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="pwEditTitle" placeholder="Nhập tên việc phát sinh, kế hoạch hoặc đề xuất..." class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+        </div>
+
+        <!-- 3. NỘI DUNG CHI TIẾT & GHI CHÚ -->
+        <div>
+          <label for="pwEditContent" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Chi tiết / Kế hoạch thực hiện / Căn cứ đề xuất:
+          </label>
+          <textarea id="pwEditContent" rows="3" placeholder="Mô tả cụ thể cách làm, giải pháp, người phối hợp hoặc ghi chú kết quả..." class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none custom-scroll"></textarea>
+        </div>
+
+        <!-- 4. NGÀY THỰC HIỆN / HẠN HOÀN THÀNH (DEADLINE) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="pwEditDate" id="pwEditDateLabel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Ngày phát sinh / Bắt đầu:
+            </label>
+            <input type="date" id="pwEditDate" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer" />
+          </div>
+
+          <div id="pwEditDueDateContainer">
+            <label for="pwEditDueDate" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Hạn hoàn thành (Deadline):</span>
+              <span class="text-[10px] text-amber-700 font-normal">Nhắc nhở lịch làm</span>
+            </label>
+            <input type="date" id="pwEditDueDate" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-rose-700 focus:ring-2 focus:ring-rose-500 focus:outline-none cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- 5. TRẠNG THÁI (ĐỘNG THEO LOẠI) -->
+        <div id="pwEditStatusGroup" class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Trạng thái hiện tại:
+          </label>
+
+          <!-- Status cho Phát sinh -->
+          <div id="pwStatusAdhocControls" class="flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-amber-900 bg-white border border-amber-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusAdhoc" value="pending" checked class="text-amber-600 focus:ring-amber-500" />
+              <span>⏳ Chưa làm</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusAdhoc" value="done" class="text-emerald-600 focus:ring-emerald-500" />
+              <span>✅ Đã làm</span>
+            </label>
+          </div>
+
+          <!-- Status cho Kế hoạch -->
+          <div id="pwStatusPlanControls" class="hidden flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-sky-900 bg-white border border-sky-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusPlan" value="pending" checked class="text-sky-600 focus:ring-sky-500" />
+              <span>📅 Đang tiến hành / Sẽ làm</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusPlan" value="completed" class="text-emerald-600 focus:ring-emerald-500" />
+              <span>✅ Đã hoàn thành</span>
+            </label>
+          </div>
+
+          <!-- Status cho Đề xuất -->
+          <div id="pwStatusProposalControls" class="hidden flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusProposal" value="rejected_pending" checked class="text-slate-600 focus:ring-slate-500" />
+              <span>⏳ Không được duyệt / Chưa thực hiện</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusProposal" value="approved_executed" class="text-emerald-600 focus:ring-emerald-500" />
+              <span>✅ Được duyệt / Đã thực hiện</span>
+            </label>
+          </div>
+
+          <!-- Status cho Phản ánh -->
+          <div id="pwStatusFeedbackControls" class="hidden flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-amber-900 bg-white border border-amber-200 px-2.5 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusFeedback" value="pending" checked class="text-amber-600" />
+              <span>Chờ tiếp nhận</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-sky-900 bg-white border border-sky-200 px-2.5 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusFeedback" value="acknowledged" class="text-sky-600" />
+              <span>Đã tiếp nhận</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-2.5 py-1.5 rounded-xl">
+              <input type="radio" name="pwStatusFeedback" value="resolved" class="text-emerald-600" />
+              <span>Đã giải quyết</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 6. ĐÁNH DẤU QUAN TRỌNG & TÍCH CHỌN ĐẨY BÁO CÁO -->
+        <div class="space-y-2 pt-1">
+          <!-- Đánh dấu quan trọng để nhắc nhở làm -->
+          <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/60 cursor-pointer transition select-none">
+            <input type="checkbox" id="pwEditImportant" class="w-4 h-4 text-amber-600 rounded border-amber-400 focus:ring-amber-500 cursor-pointer accent-amber-600" />
+            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950">
+              <i class="fa-solid fa-star text-amber-500"></i>
+              <span>Đánh dấu là mục quan trọng để nhắc nhở làm ưu tiên ⭐</span>
+            </div>
+          </label>
+
+          <!-- Tích chọn sẵn để đẩy vào báo cáo lãnh đạo -->
+          <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/60 cursor-pointer transition select-none">
+            <input type="checkbox" id="pwEditSelectedForReport" checked class="w-4 h-4 text-emerald-600 rounded border-emerald-400 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-950">
+              <i class="fa-solid fa-paper-plane text-emerald-600"></i>
+              <span>Chọn mục này để đưa vào báo cáo lãnh đạo</span>
+            </div>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 flex-shrink-0">
+        <button type="button" onclick="closePersonalItemEditModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="savePersonalItem()" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-check"></i>
+          <span>Lưu công việc</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= 3. MODAL DUYỆT & ĐẨY BÁO CÁO LÃNH ĐẠO (REPORT PREVIEW) ================= -->
+  <div id="leadershipReportPreviewModal" class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-3xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md text-white flex items-center justify-center font-bold text-base shadow-inner">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div>
+            <h3 class="text-white font-black text-sm sm:text-base leading-tight">Đẩy Báo Cáo Công Việc &amp; Đề Xuất Lên Lãnh Đạo</h3>
+            <p class="text-[11px] text-emerald-100/90 font-medium">Kiểm tra nội dung, sao chép hoặc gửi trực tiếp lên hệ thống</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeLeadershipReportPreviewModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition duration-200 cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- VĂN BẢN BÁO CÁO CHÍNH THỨC -->
+      <div id="leadershipReportPrintArea" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scroll bg-slate-50/70">
+        
+        <div class="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+          <!-- TIÊU ĐỀ DOANH NGHIỆP TRANG TRỌNG -->
+          <div class="text-center pb-3 border-b-2 border-slate-200">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</p>
+            <p class="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">BAN DỊCH VỤ KHÁCH HÀNG</p>
+            <h2 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wide mt-2">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
+            <p class="text-xs text-slate-500 italic mt-0.5">Kỳ báo cáo: <span id="rpPeriodText" class="font-bold text-slate-700">Tháng 11/2026</span> • Ngày lập: <span id="rpDateText" class="font-bold text-slate-700">--/--/----</span></p>
+          </div>
+
+          <!-- THÔNG TIN NGƯỜI BÁO CÁO -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-xs">
+            <div>
+              <span class="text-slate-400 font-medium">Người báo cáo:</span>
+              <p id="rpFullName" class="font-black text-slate-800 text-sm">---</p>
+            </div>
+            <div>
+              <span class="text-slate-400 font-medium">Bộ phận / Tổ kho:</span>
+              <p id="rpDept" class="font-bold text-slate-700">---</p>
+            </div>
+            <div>
+              <span class="text-slate-400 font-medium">Chức vụ / Vị trí:</span>
+              <p id="rpRole" class="font-bold text-emerald-700">---</p>
+            </div>
+          </div>
+
+          <!-- KHUNG NỘI DUNG 4 PHẦN CHÍNH -->
+          <div id="rpSectionsContainer" class="space-y-4 text-xs">
+            <!-- 1. Công việc phát sinh trong tháng -->
+            <div id="rpSectionAdhoc">
+              <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-amber-200 text-amber-900">
+                <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
+                <span>I. Công việc phát sinh trong tháng</span>
+              </h4>
+              <div id="rpAdhocList" class="mt-2 space-y-1.5 pl-2"></div>
+            </div>
+
+            <!-- 2. Kế hoạch thực hiện công việc (Lịch làm việc) -->
+            <div id="rpSectionPlan">
+              <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-sky-200 text-sky-900">
+                <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
+                <span>II. Kế hoạch thực hiện công việc &amp; Lịch làm việc</span>
+              </h4>
+              <div id="rpPlanList" class="mt-2 space-y-1.5 pl-2"></div>
+            </div>
+
+            <!-- 3. Đề xuất kiến nghị -->
+            <div id="rpSectionProposal">
+              <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-purple-200 text-purple-900">
+                <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
+                <span>III. Đề xuất &amp; Sáng kiến kiến nghị</span>
+              </h4>
+              <div id="rpProposalList" class="mt-2 space-y-1.5 pl-2"></div>
+            </div>
+
+            <!-- 4. Ý kiến đóng góp & Phản ánh -->
+            <div id="rpSectionFeedback">
+              <h4 class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-teal-200 text-teal-900">
+                <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
+                <span>IV. Ý kiến đóng góp &amp; Phản ánh khó khăn</span>
+              </h4>
+              <div id="rpFeedbackList" class="mt-2 space-y-1.5 pl-2"></div>
+            </div>
+          </div>
+
+          <!-- Ô LỜI NHẮN GỬI LÃNH ĐẠO -->
+          <div class="pt-2 border-t border-slate-100">
+            <label for="rpLeaderNoteInput" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-message text-emerald-600"></i>
+              <span>Ý kiến / Lời nhắn thêm gửi Ban Lãnh đạo (tùy chọn):</span>
+            </label>
+            <textarea id="rpLeaderNoteInput" rows="2" placeholder="Ghi chú thêm thông tin hoặc nguyện vọng gửi lãnh đạo phụ trách..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER BUTTONS -->
+      <div class="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <!-- Nút sao chép nội dung gửi Zalo / Email -->
+          <button type="button" onclick="copyLeadershipReportToClipboard()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-copy text-slate-500 text-xs"></i>
+            <span>Sao chép (Zalo / Email)</span>
+          </button>
+
+          <!-- Nút in / xuất PDF -->
+          <button type="button" onclick="printLeadershipReport()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-print text-slate-500 text-xs"></i>
+            <span>In / Lưu PDF</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeLeadershipReportPreviewModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+            Đóng
+          </button>
+
+          <button type="button" onclick="submitLeadershipReport()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+            <span>Xác Nhận Đẩy Lên Lãnh Đạo</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= 4. MODAL HỘP THƯ BÁO CÁO LÃNH ĐẠO & LỊCH SỬ GỬI ================= -->
+  <div id="leadershipReportsBoxModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-4xl w-full max-h-[96vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-base shadow-2xs">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+          <div>
+            <h3 id="rpBoxModalTitle" class="text-slate-900 font-black text-sm sm:text-base leading-tight">Hộp Thư Báo Cáo Lãnh Đạo &amp; Lịch Sử Gửi</h3>
+            <p id="rpBoxModalSubtitle" class="text-[11px] text-slate-500">Xem lại các lần đẩy báo cáo, tình trạng duyệt đề xuất &amp; phản hồi</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- THANH LỌC CHO LÃNH ĐẠO / QUẢN LÝ -->
+      <div id="rpBoxManagerFilterBar" class="hidden px-4 sm:px-6 py-2 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-600 uppercase text-[10px] tracking-wider"><i class="fa-solid fa-filter text-emerald-600 mr-1"></i>Bộ lọc quản lý:</span>
+          <select id="rpBoxFilterDept" onchange="renderLeadershipReportsBoxUI()" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <option value="ALL">Tất cả bộ phận</option>
+          </select>
+        </div>
+        <span id="rpBoxReportsCountBadge" class="text-[11px] font-bold text-emerald-800 font-num">0 báo cáo</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll bg-slate-50/50">
+        <div id="rpBoxReportsList" class="space-y-3">
+          <!-- Render danh sách báo cáo tự động -->
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-100 bg-white flex justify-end flex-shrink-0">
+        <button type="button" onclick="closeLeadershipReportsBoxModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+          Đóng
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -8454,6 +9040,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       document.getElementById('userFullnameLabel').innerText = currentUser.fullName;
       document.getElementById('userAvatarChar').innerText = currentUser.fullName.charAt(0);
       document.getElementById('userDeptLabel').innerText = currentUser.department || "Ban Điều Hành DVKH";
+      updatePersonalWorkspaceReminders();
+      checkPersonalWorkspaceRemindersOnLogin();
 
       const roleBadgeEl = document.getElementById('userRoleBadge');
       if (roleBadgeEl) {
@@ -19553,6 +20141,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             },
             {
               type: 'action',
+              title: 'Sổ tay việc riêng & Kế hoạch cá nhân',
+              subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
+              icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
+              badge: 'Việc riêng',
+              handler: () => { closeCommandPalette(); openPersonalWorkspaceModal(); },
+              tags: 'so tay viec rieng ke hoach ca nhan de xuat phan anh bao cao lich lam viec'
+            },
+            {
+              type: 'action',
               title: 'Điền báo cáo công việc',
               subtitle: 'Ghi nhận sản lượng & công việc hoàn thành hôm nay',
               icon: 'fa-solid fa-pen-to-square text-emerald-600 bg-emerald-50',
@@ -19656,6 +20253,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               badge: 'Chủ điểm',
               handler: () => { closeCommandPalette(); openNovemberThematicModal(); },
               tags: 'chu diem thang 11 tri an ban sac van hoa 20/11 24/11 nha giao van hoa tien phong trong dong hoa sen'
+            },
+            {
+              type: 'action',
+              title: 'Sổ tay việc riêng & Kế hoạch cá nhân',
+              subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
+              icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
+              badge: 'Việc riêng',
+              handler: () => { closeCommandPalette(); openPersonalWorkspaceModal(); },
+              tags: 'so tay viec rieng ke hoach ca nhan de xuat phan anh bao cao lich lam viec'
             },
             {
               type: 'action',
@@ -20024,6 +20630,1424 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
+
+// =========================================================================
+// HỆ THỐNG SỔ TAY VIỆC RIÊNG, KẾ HOẠCH CÁ NHÂN & ĐẨY BÁO CÁO LÃNH ĐẠO
+// Dành cho MỌI TÀI KHOẢN (Nhân viên, Chuyên viên, Quản lý, Giám đốc, Admin)
+// =========================================================================
+
+let pwCurrentTab = 'all'; // 'all', 'adhoc', 'plan', 'proposal', 'feedback'
+let pwFilterImportantOnly = false;
+let pwFilterDueOrOverdue = false;
+let pwSearchKeyword = '';
+
+function getPersonalWorkspaceStorageKey(user = currentUser) {
+  const uId = user ? (user.id || user.username || 'guest') : 'guest';
+  return `ops_personal_workspace_final_v1_${uId}`;
+}
+
+function getPersonalWorkspaceData(user = currentUser) {
+  if (!user) return { items: [] };
+  const key = getPersonalWorkspaceStorageKey(user);
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.items)) return data;
+    }
+  } catch(e) {
+    console.error("Lỗi đọc dữ liệu việc riêng:", e);
+  }
+  return { items: [] };
+}
+
+function savePersonalWorkspaceData(data, user = currentUser) {
+  if (!user) return;
+  const key = getPersonalWorkspaceStorageKey(user);
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch(e) {
+    console.error("Lỗi ghi dữ liệu việc riêng:", e);
+  }
+  updatePersonalWorkspaceReminders();
+}
+
+const LEADERSHIP_REPORTS_SHARED_KEY = 'ops_leadership_reports_shared_final_v1';
+
+function getLeadershipReportsShared() {
+  try {
+    const raw = localStorage.getItem(LEADERSHIP_REPORTS_SHARED_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) return list;
+    }
+  } catch(e) {}
+  return [];
+}
+
+function saveLeadershipReportsShared(list) {
+  try {
+    localStorage.setItem(LEADERSHIP_REPORTS_SHARED_KEY, JSON.stringify(list));
+  } catch(e) {}
+}
+
+function calculatePlanTimelineStatus(item) {
+  if (item.isCompleted || item.status === 'completed' || item.status === 'done') {
+    return {
+      code: 'completed',
+      label: 'Đã hoàn thành',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold',
+      icon: 'fa-solid fa-circle-check text-emerald-600'
+    };
+  }
+  if (!item.dueDate) {
+    return {
+      code: 'upcoming',
+      label: 'Sẽ làm',
+      badgeClass: 'bg-sky-100 text-sky-800 border-sky-300 font-bold',
+      icon: 'fa-regular fa-calendar text-sky-600'
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const parts = item.dueDate.split('-');
+  const due = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  due.setHours(0, 0, 0, 0);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      code: 'overdue',
+      days: Math.abs(diffDays),
+      label: `Quá hạn ${Math.abs(diffDays)} ngày`,
+      badgeClass: 'bg-rose-100 text-rose-900 border-rose-300 animate-pulse font-black',
+      icon: 'fa-solid fa-triangle-exclamation text-rose-600'
+    };
+  } else if (diffDays === 0) {
+    return {
+      code: 'duetoday',
+      label: 'Đến hạn hôm nay',
+      badgeClass: 'bg-amber-100 text-amber-950 border-amber-300 font-black',
+      icon: 'fa-solid fa-clock text-amber-600'
+    };
+  } else {
+    return {
+      code: 'upcoming',
+      days: diffDays,
+      label: diffDays === 1 ? 'Đến hạn ngày mai' : `Sẽ làm (còn ${diffDays} ngày)`,
+      badgeClass: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
+      icon: 'fa-solid fa-hourglass-start text-sky-600'
+    };
+  }
+}
+
+function updatePersonalWorkspaceReminders() {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const items = data.items || [];
+
+  let adhocCount = 0, adhocDone = 0;
+  let planCount = 0, planDue = 0, planOverdue = 0;
+  let proposalCount = 0, proposalApproved = 0;
+  let feedbackCount = 0;
+  let importantCount = 0;
+  let urgentAlertCount = 0;
+
+  items.forEach(it => {
+    if (it.isImportant) importantCount++;
+
+    if (it.type === 'adhoc') {
+      adhocCount++;
+      if (it.status === 'done') adhocDone++;
+      else if (it.isImportant) urgentAlertCount++;
+    } else if (it.type === 'plan') {
+      planCount++;
+      const timeline = calculatePlanTimelineStatus(it);
+      if (timeline.code === 'overdue') {
+        planOverdue++;
+        urgentAlertCount++;
+      } else if (timeline.code === 'duetoday') {
+        planDue++;
+        urgentAlertCount++;
+      } else if (it.isImportant && timeline.code !== 'completed') {
+        urgentAlertCount++;
+      }
+    } else if (it.type === 'proposal') {
+      proposalCount++;
+      if (it.status === 'approved_executed') proposalApproved++;
+    } else if (it.type === 'feedback') {
+      feedbackCount++;
+    }
+  });
+
+  const elAdhocCount = document.getElementById('pwStatAdhocCount');
+  if (elAdhocCount) elAdhocCount.innerText = adhocCount;
+  const elAdhocDone = document.getElementById('pwStatAdhocDone');
+  if (elAdhocDone) elAdhocDone.innerText = adhocDone;
+
+  const elPlanCount = document.getElementById('pwStatPlanCount');
+  if (elPlanCount) elPlanCount.innerText = planCount;
+  const elPlanDue = document.getElementById('pwStatPlanDue');
+  if (elPlanDue) elPlanDue.innerText = (planDue + planOverdue);
+
+  const elProposalCount = document.getElementById('pwStatProposalCount');
+  if (elProposalCount) elProposalCount.innerText = proposalCount;
+  const elProposalApproved = document.getElementById('pwStatProposalApproved');
+  if (elProposalApproved) elProposalApproved.innerText = proposalApproved;
+
+  const elFeedbackCount = document.getElementById('pwStatFeedbackCount');
+  if (elFeedbackCount) elFeedbackCount.innerText = feedbackCount;
+
+  const elImportantCount = document.getElementById('pwStatImportantCount');
+  if (elImportantCount) elImportantCount.innerText = importantCount;
+
+  const banner = document.getElementById('pwReminderAlertBanner');
+  const bannerText = document.getElementById('pwReminderAlertText');
+  if (banner && bannerText) {
+    if (planOverdue > 0 || planDue > 0) {
+      banner.classList.remove('hidden');
+      banner.className = "mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200";
+      let msg = "🚨 <b>Nhắc nhở công việc:</b> Bạn có ";
+      if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline'>${planOverdue} việc quá hạn</span> `;
+      if (planOverdue > 0 && planDue > 0) msg += "và ";
+      if (planDue > 0) msg += `<span class='font-black text-amber-700 underline'>${planDue} việc đến hạn hôm nay</span> `;
+      msg += "cần ưu tiên giải quyết!";
+      bannerText.innerHTML = msg;
+    } else if (importantCount > 0) {
+      banner.classList.remove('hidden');
+      banner.className = "mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2";
+      bannerText.innerHTML = `⭐ Bạn có <b>${importantCount} mục quan trọng</b> được đánh dấu để theo dõi và nhắc nhở làm.`;
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  const cAll = document.getElementById('pwTabCount_all');
+  if (cAll) cAll.innerText = items.length;
+  const cAdhoc = document.getElementById('pwTabCount_adhoc');
+  if (cAdhoc) cAdhoc.innerText = adhocCount;
+  const cPlan = document.getElementById('pwTabCount_plan');
+  if (cPlan) cPlan.innerText = planCount;
+  const cProp = document.getElementById('pwTabCount_proposal');
+  if (cProp) cProp.innerText = proposalCount;
+  const cFeed = document.getElementById('pwTabCount_feedback');
+  if (cFeed) cFeed.innerText = feedbackCount;
+
+  const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
+  if (headerBadge) {
+    if (urgentAlertCount > 0) {
+      headerBadge.innerText = urgentAlertCount;
+      headerBadge.classList.remove('hidden');
+      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse";
+    } else if (importantCount > 0) {
+      headerBadge.innerText = importantCount;
+      headerBadge.classList.remove('hidden');
+      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white border border-white shadow-2xs font-num";
+    } else {
+      headerBadge.classList.add('hidden');
+    }
+  }
+
+  const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
+  if (menuBadge) {
+    if (urgentAlertCount > 0) {
+      menuBadge.innerText = `${urgentAlertCount} cần làm`;
+      menuBadge.classList.remove('hidden');
+      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
+    } else if (importantCount > 0) {
+      menuBadge.innerText = `${importantCount} quan trọng`;
+      menuBadge.classList.remove('hidden');
+      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-num";
+    } else {
+      menuBadge.classList.add('hidden');
+    }
+  }
+
+  const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
+  if (mobileBadge) {
+    if (urgentAlertCount > 0 || importantCount > 0) {
+      mobileBadge.classList.remove('hidden');
+    } else {
+      mobileBadge.classList.add('hidden');
+    }
+  }
+}
+
+function openPersonalWorkspaceModal() {
+  if (!currentUser) {
+    showToast("Vui lòng đăng nhập để xem việc riêng và kế hoạch cá nhân!", true);
+    return;
+  }
+
+  const modal = document.getElementById('personalWorkspaceModal');
+  if (!modal) return;
+
+  const fn = document.getElementById('pwUserFullName');
+  if (fn) fn.innerText = currentUser.fullName || currentUser.username || "Nhân sự";
+  const dp = document.getElementById('pwUserDept');
+  if (dp) dp.innerText = currentUser.department || "Ban DVKH";
+  const rl = document.getElementById('pwUserRole');
+  if (rl) rl.innerText = currentUser.role || "Nhân viên";
+
+  modal.classList.remove('hidden');
+  renderPersonalWorkspaceUI();
+}
+
+function closePersonalWorkspaceModal() {
+  const modal = document.getElementById('personalWorkspaceModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function switchPersonalWorkspaceTab(tab) {
+  pwCurrentTab = tab;
+  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`pwTabBtn_${t}`);
+    if (btn) {
+      if (t === tab) {
+        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-bold bg-slate-900 text-white shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer";
+      } else {
+        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer";
+      }
+    }
+  });
+  renderPersonalWorkspaceUI();
+}
+
+function togglePersonalWorkspaceFilter(filterType) {
+  if (filterType === 'important') {
+    pwFilterImportantOnly = !pwFilterImportantOnly;
+    const btn = document.getElementById('pwFilterBtn_important');
+    if (btn) {
+      if (pwFilterImportantOnly) {
+        btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-amber-400 bg-amber-50 text-amber-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+      } else {
+        btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+      }
+    }
+  } else if (filterType === 'due') {
+    pwFilterDueOrOverdue = !pwFilterDueOrOverdue;
+    const btn = document.getElementById('pwFilterBtn_due');
+    if (btn) {
+      if (pwFilterDueOrOverdue) {
+        btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-rose-400 bg-rose-50 text-rose-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+      } else {
+        btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+      }
+    }
+  }
+  renderPersonalWorkspaceUI();
+}
+
+function setPersonalWorkspaceQuickFilter(type) {
+  if (type === 'due') {
+    pwCurrentTab = 'plan';
+    pwFilterDueOrOverdue = true;
+    switchPersonalWorkspaceTab('plan');
+    const btn = document.getElementById('pwFilterBtn_due');
+    if (btn) btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-rose-400 bg-rose-50 text-rose-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+  }
+}
+
+function onPersonalWorkspaceSearchInput(val) {
+  pwSearchKeyword = (val || '').toLowerCase().trim();
+  renderPersonalWorkspaceUI();
+}
+
+function renderPersonalWorkspaceUI() {
+  if (!currentUser) return;
+  const container = document.getElementById('pwItemsList');
+  if (!container) return;
+
+  const data = getPersonalWorkspaceData(currentUser);
+  let items = data.items || [];
+
+  // Lọc theo Tab
+  if (pwCurrentTab !== 'all') {
+    items = items.filter(it => it.type === pwCurrentTab);
+  }
+
+  // Lọc theo mục quan trọng
+  if (pwFilterImportantOnly) {
+    items = items.filter(it => it.isImportant);
+  }
+
+  // Lọc theo việc đến hạn / quá hạn
+  if (pwFilterDueOrOverdue) {
+    items = items.filter(it => {
+      if (it.type !== 'plan') return false;
+      const t = calculatePlanTimelineStatus(it);
+      return t.code === 'overdue' || t.code === 'duetoday';
+    });
+  }
+
+  // Lọc theo từ khóa tìm kiếm
+  if (pwSearchKeyword) {
+    items = items.filter(it => {
+      const title = (it.title || '').toLowerCase();
+      const content = (it.content || '').toLowerCase();
+      return title.includes(pwSearchKeyword) || content.includes(pwSearchKeyword);
+    });
+  }
+
+  // Sắp xếp: Mục quan trọng lên đầu, sau đó đến việc quá hạn/đến hạn, rồi mới nhất
+  items.sort((a, b) => {
+    if (a.isImportant && !b.isImportant) return -1;
+    if (!a.isImportant && b.isImportant) return 1;
+
+    if (a.type === 'plan' && b.type === 'plan') {
+      const ta = calculatePlanTimelineStatus(a);
+      const tb = calculatePlanTimelineStatus(b);
+      const score = (t) => t.code === 'overdue' ? 3 : (t.code === 'duetoday' ? 2 : (t.code === 'upcoming' ? 1 : 0));
+      if (score(ta) !== score(tb)) return score(tb) - score(ta);
+    }
+
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
+
+  updatePersonalWorkspaceReminders();
+
+  // Đếm số lượng chọn đẩy báo cáo
+  const selectedCount = (data.items || []).filter(it => it.selectedForReport).length;
+  const totalCount = (data.items || []).length;
+  const selNumEl = document.getElementById('pwSelectedCountNum');
+  if (selNumEl) selNumEl.innerText = selectedCount;
+  const chkAll = document.getElementById('pwSelectAllCheckbox');
+  if (chkAll) chkAll.checked = (selectedCount > 0 && selectedCount === totalCount);
+
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="py-16 text-center space-y-3">
+        <div class="w-16 h-16 rounded-3xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-2xl mx-auto shadow-2xs">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 class="font-bold text-slate-700 text-sm">Chưa có mục công việc nào phù hợp</h4>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">Ghi lại công việc phát sinh, lập lịch làm việc, đề xuất ý kiến và đẩy báo cáo lãnh đạo khi cần.</p>
+        </div>
+        <div class="pt-2 flex items-center justify-center gap-2 flex-wrap">
+          <button type="button" onclick="seedSamplePersonalWorkspace()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+            <span>Nạp 4 mục ví dụ mẫu</span>
+          </button>
+          <button type="button" onclick="openPersonalItemEditModal('', 'adhoc')" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-plus text-amber-500 text-xs"></i>
+            <span>+ Việc phát sinh</span>
+          </button>
+          <button type="button" onclick="openPersonalItemEditModal('', 'plan')" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-plus text-sky-500 text-xs"></i>
+            <span>+ Kế hoạch làm việc</span>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  items.forEach(it => {
+    let typeBadge = '';
+    let statusBadge = '';
+    let dateInfo = '';
+
+    if (it.type === 'adhoc') {
+      typeBadge = `<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 shrink-0"><i class="fa-solid fa-bolt mr-1"></i>Phát sinh</span>`;
+      const isDone = (it.status === 'done');
+      statusBadge = `
+        <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Nhấp để đổi trạng thái Đã làm / Chưa làm" class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'}">
+          <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'} text-[11px]"></i>
+          <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
+        </button>
+      `;
+      dateInfo = it.date ? `Ngày: <b>${formatVNDate(it.date)}</b>` : '';
+    } else if (it.type === 'plan') {
+      typeBadge = `<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-sky-100 text-sky-900 border border-sky-300 shrink-0"><i class="fa-solid fa-calendar-days mr-1"></i>Kế hoạch</span>`;
+      const timeline = calculatePlanTimelineStatus(it);
+      statusBadge = `
+        <div class="flex items-center gap-1.5">
+          <span class="px-2.5 py-1 rounded-xl text-xs border flex items-center gap-1.5 ${timeline.badgeClass}">
+            <i class="${timeline.icon} text-[11px]"></i>
+            <span>${timeline.label}</span>
+          </span>
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Đánh dấu hoàn thành / chưa xong" class="w-7 h-7 rounded-xl ${it.isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400 hover:text-emerald-700'} border border-slate-200 flex items-center justify-center text-xs transition cursor-pointer">
+            <i class="fa-solid fa-check"></i>
+          </button>
+        </div>
+      `;
+      dateInfo = it.dueDate ? `Hạn: <b class="text-rose-700">${formatVNDate(it.dueDate)}</b>` : (it.date ? `Ngày: ${formatVNDate(it.date)}` : '');
+    } else if (it.type === 'proposal') {
+      typeBadge = `<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-purple-100 text-purple-900 border border-purple-300 shrink-0"><i class="fa-solid fa-lightbulb mr-1"></i>Đề xuất</span>`;
+      const isApproved = (it.status === 'approved_executed');
+      statusBadge = `
+        <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Nhấp để chuyển trạng thái xét duyệt & thực hiện" class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'}">
+          <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass text-slate-500'} text-[11px]"></i>
+          <span>${isApproved ? 'Được duyệt / Đã thực hiện' : 'Chưa duyệt / Chưa thực hiện'}</span>
+        </button>
+      `;
+      dateInfo = it.date ? `Ngày: <b>${formatVNDate(it.date)}</b>` : '';
+    } else if (it.type === 'feedback') {
+      typeBadge = `<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-teal-100 text-teal-900 border border-teal-300 shrink-0"><i class="fa-solid fa-comment-dots mr-1"></i>Phản ánh</span>`;
+      let fLabel = 'Chờ tiếp nhận', fClass = 'bg-amber-100 text-amber-900 border-amber-300';
+      if (it.status === 'acknowledged') {
+        fLabel = 'Đã tiếp nhận';
+        fClass = 'bg-sky-100 text-sky-900 border-sky-300';
+      } else if (it.status === 'resolved') {
+        fLabel = 'Đã giải quyết';
+        fClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+      }
+      statusBadge = `
+        <button type="button" onclick="togglePersonalItemStatus('${it.id}')" title="Đổi trạng thái phản ánh" class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${fClass} cursor-pointer">
+          <i class="fa-solid fa-check-double text-[11px]"></i>
+          <span>${fLabel}</span>
+        </button>
+      `;
+      dateInfo = it.date ? `Ngày: <b>${formatVNDate(it.date)}</b>` : '';
+    }
+
+    const starBtn = `
+      <button type="button" onclick="togglePersonalItemImportant('${it.id}')" title="${it.isImportant ? 'Bỏ đánh dấu quan trọng' : 'Đánh dấu quan trọng để nhắc nhở làm'}" class="w-8 h-8 rounded-xl flex items-center justify-center transition cursor-pointer ${it.isImportant ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-slate-100 text-slate-300 hover:text-amber-500 hover:bg-amber-50'}">
+        <i class="fa-solid fa-star text-sm"></i>
+      </button>
+    `;
+
+    const reportChk = `
+      <label class="flex items-center cursor-pointer select-none p-1" title="Tích chọn để đưa vào Báo cáo lãnh đạo">
+        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+      </label>
+    `;
+
+    html += `
+      <div class="bg-white border ${it.isImportant ? 'border-amber-300 shadow-amber-500/10' : 'border-slate-200'} hover:border-emerald-300 p-3.5 sm:p-4 rounded-2xl shadow-2xs hover:shadow-md transition space-y-2">
+        <div class="flex items-start justify-between gap-2.5">
+          <div class="flex items-start gap-2.5 min-w-0 flex-1">
+            <div class="pt-0.5 shrink-0">${reportChk}</div>
+            <div class="pt-0.5 shrink-0">${starBtn}</div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                ${typeBadge}
+                ${it.isImportant ? '<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase bg-amber-500 text-white shadow-2xs flex items-center gap-1 shrink-0"><i class="fa-solid fa-star text-[9px]"></i>Ưu tiên nhắc nhở</span>' : ''}
+                <span class="text-[11px] text-slate-400 font-medium">${dateInfo}</span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words">${escapeHtml(it.title || '')}</h4>
+              ${it.content ? `<p class="text-xs text-slate-600 mt-1 whitespace-pre-line leading-relaxed bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">${escapeHtml(it.content)}</p>` : ''}
+              ${it.feedbackResponse ? `
+                <div class="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs space-y-0.5">
+                  <span class="font-black flex items-center gap-1 text-[11px] text-emerald-800"><i class="fa-solid fa-reply"></i>Phản hồi từ Lãnh đạo:</span>
+                  <p class="italic text-emerald-900">${escapeHtml(it.feedbackResponse)}</p>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
+            ${statusBadge}
+            <div class="flex items-center gap-1 pt-1 sm:pt-0">
+              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" title="Chỉnh sửa mục này" class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs transition cursor-pointer">
+                <i class="fa-solid fa-pen text-[11px]"></i>
+              </button>
+              <button type="button" onclick="deletePersonalItem('${it.id}')" title="Xóa mục này" class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs transition cursor-pointer">
+                <i class="fa-solid fa-trash-can text-[11px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function formatVNDate(isoDateStr) {
+  if (!isoDateStr) return '';
+  const parts = isoDateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return isoDateStr;
+}
+
+function togglePersonalItemImportant(id) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (item) {
+    item.isImportant = !item.isImportant;
+    savePersonalWorkspaceData(data, currentUser);
+    renderPersonalWorkspaceUI();
+    showToast(item.isImportant ? "⭐ Đã đánh dấu mục quan trọng để nhắc nhở làm!" : "Đã bỏ đánh dấu quan trọng.");
+  }
+}
+
+function togglePersonalItemStatus(id) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (!item) return;
+
+  if (item.type === 'adhoc') {
+    item.status = (item.status === 'done') ? 'pending' : 'done';
+    showToast(item.status === 'done' ? "✅ Đã chuyển thành: Đã làm" : "⏳ Đã chuyển thành: Chưa làm");
+  } else if (item.type === 'plan') {
+    item.isCompleted = !item.isCompleted;
+    item.status = item.isCompleted ? 'completed' : 'pending';
+    showToast(item.isCompleted ? "✅ Đã hoàn thành kế hoạch công việc!" : "Đã đặt lại trạng thái kế hoạch.");
+  } else if (item.type === 'proposal') {
+    item.status = (item.status === 'approved_executed') ? 'rejected_pending' : 'approved_executed';
+    showToast(item.status === 'approved_executed' ? "✅ Đã chuyển: Được duyệt / Đã thực hiện" : "⏳ Đã chuyển: Không duyệt / Chưa thực hiện");
+  } else if (item.type === 'feedback') {
+    if (item.status === 'pending') item.status = 'acknowledged';
+    else if (item.status === 'acknowledged') item.status = 'resolved';
+    else item.status = 'pending';
+    showToast("Đã cập nhật trạng thái ý kiến phản ánh.");
+  }
+
+  savePersonalWorkspaceData(data, currentUser);
+  renderPersonalWorkspaceUI();
+}
+
+function togglePersonalItemReportSelect(id, checked) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (item) {
+    item.selectedForReport = checked;
+    savePersonalWorkspaceData(data, currentUser);
+    const selCount = (data.items || []).filter(it => it.selectedForReport).length;
+    const selNumEl = document.getElementById('pwSelectedCountNum');
+    if (selNumEl) selNumEl.innerText = selCount;
+  }
+}
+
+function toggleSelectAllPersonalItemsForReport(checked) {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  (data.items || []).forEach(it => {
+    it.selectedForReport = checked;
+  });
+  savePersonalWorkspaceData(data, currentUser);
+  renderPersonalWorkspaceUI();
+  showToast(checked ? "Đã chọn tất cả các mục để đẩy báo cáo" : "Đã bỏ chọn tất cả");
+}
+
+function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc') {
+  const modal = document.getElementById('personalItemEditModal');
+  if (!modal) return;
+
+  const idInput = document.getElementById('pwEditItemId');
+  const titleInput = document.getElementById('pwEditTitle');
+  const contentInput = document.getElementById('pwEditContent');
+  const dateInput = document.getElementById('pwEditDate');
+  const dueDateInput = document.getElementById('pwEditDueDate');
+  const impChk = document.getElementById('pwEditImportant');
+  const selChk = document.getElementById('pwEditSelectedForReport');
+  const modalTitle = document.getElementById('pwEditModalTitle');
+
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  if (itemId) {
+    const data = getPersonalWorkspaceData(currentUser);
+    const item = (data.items || []).find(it => it.id === itemId);
+    if (!item) return;
+
+    if (idInput) idInput.value = item.id;
+    if (titleInput) titleInput.value = item.title || '';
+    if (contentInput) contentInput.value = item.content || '';
+    if (dateInput) dateInput.value = item.date || todayStr;
+    if (dueDateInput) dueDateInput.value = item.dueDate || '';
+    if (impChk) impChk.checked = !!item.isImportant;
+    if (selChk) selChk.checked = (item.selectedForReport !== false);
+    if (modalTitle) modalTitle.innerText = "Chỉnh Sửa Mục Công Việc";
+
+    const typeRadios = document.getElementsByName('pwItemTypeRadio');
+    for (let r of typeRadios) {
+      if (r.value === item.type) {
+        r.checked = true;
+        break;
+      }
+    }
+    onPersonalItemTypeChange(item.type);
+
+    if (item.type === 'adhoc') {
+      const rad = document.querySelector(`input[name="pwStatusAdhoc"][value="${item.status || 'pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'plan') {
+      const rad = document.querySelector(`input[name="pwStatusPlan"][value="${item.isCompleted ? 'completed' : 'pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'proposal') {
+      const rad = document.querySelector(`input[name="pwStatusProposal"][value="${item.status || 'rejected_pending'}"]`);
+      if (rad) rad.checked = true;
+    } else if (item.type === 'feedback') {
+      const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${item.status || 'pending'}"]`);
+      if (rad) rad.checked = true;
+    }
+  } else {
+    if (idInput) idInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (contentInput) contentInput.value = '';
+    if (dateInput) dateInput.value = todayStr;
+    if (dueDateInput) dueDateInput.value = todayStr;
+    if (impChk) impChk.checked = false;
+    if (selChk) selChk.checked = true;
+    if (modalTitle) modalTitle.innerText = "Thêm Mục Công Việc / Kế Hoạch";
+
+    const typeRadios = document.getElementsByName('pwItemTypeRadio');
+    for (let r of typeRadios) {
+      if (r.value === defaultType) {
+        r.checked = true;
+        break;
+      }
+    }
+    onPersonalItemTypeChange(defaultType);
+  }
+
+  modal.classList.remove('hidden');
+  setTimeout(() => { if (titleInput) titleInput.focus(); }, 80);
+}
+
+function closePersonalItemEditModal() {
+  const modal = document.getElementById('personalItemEditModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onPersonalItemTypeChange(type) {
+  const dueBox = document.getElementById('pwEditDueDateContainer');
+  const dateLabel = document.getElementById('pwEditDateLabel');
+
+  const cAdhoc = document.getElementById('pwStatusAdhocControls');
+  const cPlan = document.getElementById('pwStatusPlanControls');
+  const cProp = document.getElementById('pwStatusProposalControls');
+  const cFeed = document.getElementById('pwStatusFeedbackControls');
+
+  if (cAdhoc) cAdhoc.classList.add('hidden');
+  if (cPlan) cPlan.classList.add('hidden');
+  if (cProp) cProp.classList.add('hidden');
+  if (cFeed) cFeed.classList.add('hidden');
+
+  if (type === 'plan') {
+    if (dueBox) dueBox.classList.remove('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày bắt đầu:";
+    if (cPlan) cPlan.classList.remove('hidden');
+  } else if (type === 'adhoc') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày phát sinh:";
+    if (cAdhoc) cAdhoc.classList.remove('hidden');
+  } else if (type === 'proposal') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày đề xuất:";
+    if (cProp) cProp.classList.remove('hidden');
+  } else if (type === 'feedback') {
+    if (dueBox) dueBox.classList.add('hidden');
+    if (dateLabel) dateLabel.innerText = "Ngày ghi nhận:";
+    if (cFeed) cFeed.classList.remove('hidden');
+  }
+}
+
+function savePersonalItem() {
+  if (!currentUser) return;
+  const title = (document.getElementById('pwEditTitle')?.value || '').trim();
+  if (!title) {
+    showToast("Vui lòng nhập tiêu đề hoặc tên công việc!", true);
+    return;
+  }
+
+  const itemId = document.getElementById('pwEditItemId')?.value || '';
+  const content = (document.getElementById('pwEditContent')?.value || '').trim();
+  const dateVal = document.getElementById('pwEditDate')?.value || '';
+  const dueDateVal = document.getElementById('pwEditDueDate')?.value || '';
+  const isImportant = !!document.getElementById('pwEditImportant')?.checked;
+  const selectedForReport = !!document.getElementById('pwEditSelectedForReport')?.checked;
+
+  let selectedType = 'adhoc';
+  const typeRadios = document.getElementsByName('pwItemTypeRadio');
+  for (let r of typeRadios) {
+    if (r.checked) {
+      selectedType = r.value;
+      break;
+    }
+  }
+
+  let statusVal = 'pending';
+  let isCompletedVal = false;
+
+  if (selectedType === 'adhoc') {
+    const rad = document.querySelector('input[name="pwStatusAdhoc"]:checked');
+    statusVal = rad ? rad.value : 'pending';
+  } else if (selectedType === 'plan') {
+    const rad = document.querySelector('input[name="pwStatusPlan"]:checked');
+    isCompletedVal = (rad && rad.value === 'completed');
+    statusVal = isCompletedVal ? 'completed' : 'pending';
+  } else if (selectedType === 'proposal') {
+    const rad = document.querySelector('input[name="pwStatusProposal"]:checked');
+    statusVal = rad ? rad.value : 'rejected_pending';
+  } else if (selectedType === 'feedback') {
+    const rad = document.querySelector('input[name="pwStatusFeedback"]:checked');
+    statusVal = rad ? rad.value : 'pending';
+  }
+
+  const data = getPersonalWorkspaceData(currentUser);
+  if (!data.items) data.items = [];
+
+  const nowIso = new Date().toISOString();
+
+  if (itemId) {
+    const existing = data.items.find(it => it.id === itemId);
+    if (existing) {
+      existing.type = selectedType;
+      existing.title = title;
+      existing.content = content;
+      existing.date = dateVal;
+      existing.dueDate = (selectedType === 'plan') ? dueDateVal : '';
+      existing.isImportant = isImportant;
+      existing.status = statusVal;
+      existing.isCompleted = isCompletedVal;
+      existing.selectedForReport = selectedForReport;
+      existing.updatedAt = nowIso;
+    }
+  } else {
+    const newItem = {
+      id: 'pw_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: selectedType,
+      title: title,
+      content: content,
+      date: dateVal,
+      dueDate: (selectedType === 'plan') ? dueDateVal : '',
+      isImportant: isImportant,
+      status: statusVal,
+      isCompleted: isCompletedVal,
+      selectedForReport: selectedForReport,
+      createdAt: nowIso,
+      updatedAt: nowIso
+    };
+    data.items.unshift(newItem);
+  }
+
+  savePersonalWorkspaceData(data, currentUser);
+  closePersonalItemEditModal();
+  renderPersonalWorkspaceUI();
+  showToast("Đã lưu mục công việc cá nhân thành công!");
+}
+
+function deletePersonalItem(id) {
+  if (!confirm("Bạn có chắc chắn muốn xóa mục này khỏi sổ tay công việc?")) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  data.items = (data.items || []).filter(it => it.id !== id);
+  savePersonalWorkspaceData(data, currentUser);
+  renderPersonalWorkspaceUI();
+  showToast("Đã xóa mục công việc.");
+}
+
+// ================= BÁO CÁO LÃNH ĐẠO (PREVIEW, SUBMISSION & EXPORT) =================
+let currentReportSelectedItems = [];
+
+function openLeadershipReportPreviewModal() {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  currentReportSelectedItems = (data.items || []).filter(it => it.selectedForReport);
+
+  if (currentReportSelectedItems.length === 0) {
+    showToast("Vui lòng tích chọn ít nhất 1 mục để đưa vào báo cáo lãnh đạo!", true);
+    return;
+  }
+
+  const modal = document.getElementById('leadershipReportPreviewModal');
+  if (!modal) return;
+
+  const fn = document.getElementById('rpFullName');
+  if (fn) fn.innerText = currentUser.fullName || currentUser.username || "Nhân sự";
+  const dp = document.getElementById('rpDept');
+  if (dp) dp.innerText = currentUser.department || "Ban DVKH";
+  const rl = document.getElementById('rpRole');
+  if (rl) rl.innerText = currentUser.role || "Nhân viên";
+
+  const periodText = document.getElementById('rpPeriodText');
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  if (periodText) periodText.innerText = `Tháng ${m}/${y}`;
+
+  const dateText = document.getElementById('rpDateText');
+  const now = new Date();
+  if (dateText) dateText.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const adhocItems = currentReportSelectedItems.filter(it => it.type === 'adhoc');
+  const planItems = currentReportSelectedItems.filter(it => it.type === 'plan');
+  const propItems = currentReportSelectedItems.filter(it => it.type === 'proposal');
+  const feedItems = currentReportSelectedItems.filter(it => it.type === 'feedback');
+
+  const secAdhoc = document.getElementById('rpSectionAdhoc');
+  const listAdhoc = document.getElementById('rpAdhocList');
+  if (secAdhoc && listAdhoc) {
+    if (adhocItems.length > 0) {
+      secAdhoc.classList.remove('hidden');
+      listAdhoc.innerHTML = adhocItems.map((it, idx) => {
+        const isDone = (it.status === 'done');
+        return `
+          <div class="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+            <div class="min-w-0">
+              <span class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)}</span>
+              ${it.content ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(it.content)}</p>` : ''}
+            </div>
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black shrink-0 ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">
+              ${isDone ? 'ĐÃ LÀM' : 'CHƯA LÀM'}
+            </span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      secAdhoc.classList.add('hidden');
+    }
+  }
+
+  const secPlan = document.getElementById('rpSectionPlan');
+  const listPlan = document.getElementById('rpPlanList');
+  if (secPlan && listPlan) {
+    if (planItems.length > 0) {
+      secPlan.classList.remove('hidden');
+      listPlan.innerHTML = planItems.map((it, idx) => {
+        const timeline = calculatePlanTimelineStatus(it);
+        return `
+          <div class="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+            <div class="min-w-0">
+              <span class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)}</span>
+              ${it.dueDate ? `<span class="text-[10px] text-slate-400 block mt-0.5">Hạn chót: ${formatVNDate(it.dueDate)}</span>` : ''}
+              ${it.content ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(it.content)}</p>` : ''}
+            </div>
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black shrink-0 border ${timeline.badgeClass}">
+              ${timeline.label.toUpperCase()}
+            </span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      secPlan.classList.add('hidden');
+    }
+  }
+
+  const secProp = document.getElementById('rpSectionProposal');
+  const listProp = document.getElementById('rpProposalList');
+  if (secProp && listProp) {
+    if (propItems.length > 0) {
+      secProp.classList.remove('hidden');
+      listProp.innerHTML = propItems.map((it, idx) => {
+        const isApproved = (it.status === 'approved_executed');
+        return `
+          <div class="flex items-start justify-between gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+            <div class="min-w-0">
+              <span class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)}</span>
+              ${it.content ? `<p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(it.content)}</p>` : ''}
+            </div>
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black shrink-0 ${isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}">
+              ${isApproved ? 'ĐƯỢC DUYỆT / ĐÃ THỰC HIỆN' : 'CHƯA DUYỆT / CHƯA THỰC HIỆN'}
+            </span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      secProp.classList.add('hidden');
+    }
+  }
+
+  const secFeed = document.getElementById('rpSectionFeedback');
+  const listFeed = document.getElementById('rpFeedbackList');
+  if (secFeed && listFeed) {
+    if (feedItems.length > 0) {
+      secFeed.classList.remove('hidden');
+      listFeed.innerHTML = feedItems.map((it, idx) => {
+        return `
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)}</span>
+            ${it.content ? `<p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+    } else {
+      secFeed.classList.add('hidden');
+    }
+  }
+
+  const noteInput = document.getElementById('rpLeaderNoteInput');
+  if (noteInput) noteInput.value = '';
+
+  modal.classList.remove('hidden');
+}
+
+function closeLeadershipReportPreviewModal() {
+  const modal = document.getElementById('leadershipReportPreviewModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitLeadershipReport() {
+  if (!currentUser || currentReportSelectedItems.length === 0) return;
+
+  const noteInput = document.getElementById('rpLeaderNoteInput');
+  const leaderNote = noteInput ? noteInput.value.trim() : '';
+
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  const now = new Date();
+
+  const reportId = 'lr_' + Date.now();
+  const reportPayload = {
+    id: reportId,
+    senderId: currentUser.id,
+    senderUsername: currentUser.username,
+    senderFullName: currentUser.fullName,
+    senderDepartment: currentUser.department,
+    senderRole: currentUser.role,
+    submissionDate: now.toISOString(),
+    displayDate: `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    periodMonth: m,
+    periodYear: y,
+    notes: leaderNote,
+    items: JSON.parse(JSON.stringify(currentReportSelectedItems)),
+    status: 'submitted',
+    leaderFeedback: ''
+  };
+
+  const sharedReports = getLeadershipReportsShared();
+  sharedReports.unshift(reportPayload);
+  saveLeadershipReportsShared(sharedReports);
+
+  closeLeadershipReportPreviewModal();
+  showToast("🎉 Đã đẩy báo cáo lên lãnh đạo thành công!");
+  openLeadershipReportsBoxModal();
+}
+
+function copyLeadershipReportToClipboard() {
+  if (!currentUser || currentReportSelectedItems.length === 0) return;
+
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  const now = new Date();
+  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+
+  let txt = `===============================\n`;
+  txt += `BÁO CÁO CÔNG VIỆC CÁ NHÂN & ĐỀ XUẤT KIẾN NGHỊ\n`;
+  txt += `Kỳ: Tháng ${m}/${y} • Ngày gửi: ${dateFormatted}\n`;
+  txt += `Người báo cáo: ${currentUser.fullName}\n`;
+  txt += `Bộ phận: ${currentUser.department || 'Ban DVKH'} • Chức vụ: ${currentUser.role}\n`;
+  txt += `===============================\n\n`;
+
+  const adhocItems = currentReportSelectedItems.filter(it => it.type === 'adhoc');
+  if (adhocItems.length > 0) {
+    txt += `I. CÔNG VIỆC PHÁT SINH TRONG THÁNG:\n`;
+    adhocItems.forEach((it, i) => {
+      const st = (it.status === 'done') ? '[ĐÃ LÀM]' : '[CHƯA LÀM]';
+      txt += `  ${i+1}. ${st} ${it.title}${it.content ? ` (${it.content})` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const planItems = currentReportSelectedItems.filter(it => it.type === 'plan');
+  if (planItems.length > 0) {
+    txt += `II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC (LỊCH LÀM VIỆC):\n`;
+    planItems.forEach((it, i) => {
+      const tl = calculatePlanTimelineStatus(it);
+      txt += `  ${i+1}. [${tl.label.toUpperCase()}] ${it.title}${it.dueDate ? ` - Hạn: ${formatVNDate(it.dueDate)}` : ''}${it.content ? ` (${it.content})` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const propItems = currentReportSelectedItems.filter(it => it.type === 'proposal');
+  if (propItems.length > 0) {
+    txt += `III. ĐỀ XUẤT, SÁNG KIẾN KIẾN NGHỊ:\n`;
+    propItems.forEach((it, i) => {
+      const st = (it.status === 'approved_executed') ? '[ĐƯỢC DUYỆT / ĐÃ THỰC HIỆN]' : '[CHƯA DUYỆT / CHƯA THỰC HIỆN]';
+      txt += `  ${i+1}. ${st} ${it.title}${it.content ? `: ${it.content}` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const feedItems = currentReportSelectedItems.filter(it => it.type === 'feedback');
+  if (feedItems.length > 0) {
+    txt += `IV. Ý KIẾN ĐÓNG GÓP & PHẢN ÁNH:\n`;
+    feedItems.forEach((it, i) => {
+      txt += `  ${i+1}. ${it.title}${it.content ? `: ${it.content}` : ''}\n`;
+    });
+    txt += `\n`;
+  }
+
+  const noteInput = document.getElementById('rpLeaderNoteInput');
+  if (noteInput && noteInput.value.trim()) {
+    txt += `V. LỜI NHẮN GỬI BAN LÃNH ĐẠO:\n`;
+    txt += `  ${noteInput.value.trim()}\n\n`;
+  }
+
+  txt += `(Báo cáo xuất từ Hệ thống Quản trị Báo cáo NTP)`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast("📋 Đã sao chép nội dung báo cáo! Bạn có thể dán vào Zalo hoặc Email ngay.");
+    }).catch(() => {
+      fallbackCopyText(txt);
+    });
+  } else {
+    fallbackCopyText(txt);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast("📋 Đã sao chép nội dung báo cáo!");
+}
+
+function printLeadershipReport() {
+  const printArea = document.getElementById('leadershipReportPrintArea');
+  if (!printArea) return;
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    window.print();
+    return;
+  }
+  const htmlContent = '<!DOCTYPE html><html><head><title>Báo cáo lãnh đạo - Nhựa Tiền Phong</title>' +
+    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">' +
+    '<style>body { font-family: sans-serif; padding: 25px; } @media print { body { padding: 0; } }</style>' +
+    '</head><body>' + printArea.innerHTML +
+    '<' + 'script>window.onload = function() { window.print(); };<' + '/script>' +
+    '</body></html>';
+  printWin.document.write(htmlContent);
+  printWin.document.close();
+}
+
+function openLeadershipReportsBoxModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById('leadershipReportsBoxModal');
+  if (!modal) return;
+
+  const isDirOrMgr = isAdminOrManager(currentUser.role, currentUser.username) || isBoardOfDirectors(currentUser);
+  const filterBar = document.getElementById('rpBoxManagerFilterBar');
+  const title = document.getElementById('rpBoxModalTitle');
+  const subtitle = document.getElementById('rpBoxModalSubtitle');
+
+  if (isDirOrMgr) {
+    if (filterBar) filterBar.classList.remove('hidden');
+    if (title) title.innerText = "Hộp Thư Tiếp Nhận Báo Cáo Nhân Sự";
+    if (subtitle) subtitle.innerText = "Duyệt đề xuất, xem phản ánh & kế hoạch của nhân viên các bộ phận";
+
+    const deptSelect = document.getElementById('rpBoxFilterDept');
+    if (deptSelect) {
+      const depts = (globalInitData?.departments || []).map(d => d.name).filter(Boolean);
+      let optHtml = `<option value="ALL">Tất cả bộ phận</option>`;
+      depts.forEach(d => {
+        optHtml += `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`;
+      });
+      deptSelect.innerHTML = optHtml;
+    }
+  } else {
+    if (filterBar) filterBar.classList.add('hidden');
+    if (title) title.innerText = "Lịch Sử Báo Cáo Đã Gửi Lãnh Đạo";
+    if (subtitle) subtitle.innerText = "Theo dõi các lần đẩy báo cáo và phản hồi của ban lãnh đạo";
+  }
+
+  modal.classList.remove('hidden');
+  renderLeadershipReportsBoxUI();
+}
+
+function closeLeadershipReportsBoxModal() {
+  const modal = document.getElementById('leadershipReportsBoxModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderLeadershipReportsBoxUI() {
+  if (!currentUser) return;
+  const container = document.getElementById('rpBoxReportsList');
+  if (!container) return;
+
+  const isDirOrMgr = isAdminOrManager(currentUser.role, currentUser.username) || isBoardOfDirectors(currentUser);
+  let reports = getLeadershipReportsShared();
+
+  if (!isDirOrMgr) {
+    reports = reports.filter(r => r.senderId === currentUser.id || r.senderUsername === currentUser.username);
+  } else {
+    const deptSelect = document.getElementById('rpBoxFilterDept');
+    const selectedDept = deptSelect ? deptSelect.value : 'ALL';
+    if (selectedDept && selectedDept !== 'ALL') {
+      reports = reports.filter(r => r.senderDepartment === selectedDept);
+    }
+  }
+
+  const countBadge = document.getElementById('rpBoxReportsCountBadge');
+  if (countBadge) countBadge.innerText = `${reports.length} báo cáo`;
+
+  if (reports.length === 0) {
+    container.innerHTML = `
+      <div class="py-16 text-center space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto">
+          <i class="fa-solid fa-inbox"></i>
+        </div>
+        <p class="text-xs font-bold text-slate-500">Chưa có báo cáo nào được ghi nhận</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  reports.forEach(r => {
+    const isApproved = (r.status === 'approved');
+    html += `
+      <div class="bg-white border border-slate-200 hover:border-emerald-300 p-4 rounded-2xl shadow-2xs space-y-3 transition">
+        <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-black text-slate-900 text-xs sm:text-sm">${escapeHtml(r.senderFullName || 'Nhân sự')}</span>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(r.senderDepartment || 'Ban DVKH')}</span>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(r.senderRole || 'Nhân viên')}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              Thời gian gửi: <b class="text-slate-600 font-num">${escapeHtml(r.displayDate || '')}</b> • Kỳ: <b class="text-emerald-700">Tháng ${r.periodMonth}/${r.periodYear}</b>
+            </p>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300'}">
+              ${isApproved ? 'Đã duyệt' : 'Đã tiếp nhận'}
+            </span>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 text-xs">
+          ${(r.items || []).map(it => {
+            let label = it.title;
+            let icon = 'fa-solid fa-check text-emerald-600';
+            if (it.type === 'adhoc') icon = 'fa-solid fa-bolt text-amber-500';
+            else if (it.type === 'plan') icon = 'fa-solid fa-calendar text-sky-500';
+            else if (it.type === 'proposal') icon = 'fa-solid fa-lightbulb text-purple-500';
+            else if (it.type === 'feedback') icon = 'fa-solid fa-comment text-teal-500';
+            return `
+              <div class="flex items-center gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-100">
+                <i class="${icon} text-[10px] shrink-0"></i>
+                <span class="font-medium text-slate-800 truncate">${escapeHtml(label)}</span>
+                ${it.status === 'done' || it.status === 'approved_executed' ? '<span class="text-[9px] text-emerald-700 font-bold ml-auto shrink-0">✅ Đã xong/Duyệt</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        ${r.notes ? `
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+            <span class="text-[10px] text-slate-400 font-bold block uppercase">Lời nhắn của người gửi:</span>
+            <p class="text-slate-700 italic">${escapeHtml(r.notes)}</p>
+          </div>
+        ` : ''}
+
+        ${r.leaderFeedback ? `
+          <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950">
+            <span class="text-[10px] text-emerald-800 font-bold block uppercase"><i class="fa-solid fa-reply mr-1"></i>Phản hồi từ Lãnh đạo:</span>
+            <p class="italic font-medium">${escapeHtml(r.leaderFeedback)}</p>
+          </div>
+        ` : ''}
+
+        ${isDirOrMgr ? `
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button type="button" onclick="promptLeaderFeedback('${r.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-comment-dots text-xs"></i>
+              <span>Phản hồi cho nhân viên</span>
+            </button>
+            <button type="button" onclick="approveReportProposals('${r.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs">
+              <i class="fa-solid fa-check text-xs"></i>
+              <span>Duyệt đề xuất</span>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function promptLeaderFeedback(reportId) {
+  const fb = prompt("Nhập ý kiến chỉ đạo / phản hồi gửi cho nhân sự:");
+  if (fb === null || !fb.trim()) return;
+
+  const sharedReports = getLeadershipReportsShared();
+  const rep = sharedReports.find(r => r.id === reportId);
+  if (rep) {
+    rep.leaderFeedback = fb.trim();
+    saveLeadershipReportsShared(sharedReports);
+
+    // Đồng bộ về sổ tay của nhân viên đó nếu đang trên cùng máy
+    try {
+      const uKey = `ops_personal_workspace_final_v1_${rep.senderId || rep.senderUsername}`;
+      const raw = localStorage.getItem(uKey);
+      if (raw) {
+        const uData = JSON.parse(raw);
+        if (uData && Array.isArray(uData.items)) {
+          (rep.items || []).forEach(repIt => {
+            const m = uData.items.find(x => x.id === repIt.id);
+            if (m) m.feedbackResponse = fb.trim();
+          });
+          localStorage.setItem(uKey, JSON.stringify(uData));
+        }
+      }
+    } catch(e) {}
+
+    renderLeadershipReportsBoxUI();
+    showToast("Đã gửi phản hồi cho nhân sự thành công!");
+  }
+}
+
+function approveReportProposals(reportId) {
+  const sharedReports = getLeadershipReportsShared();
+  const rep = sharedReports.find(r => r.id === reportId);
+  if (rep) {
+    rep.status = 'approved';
+    (rep.items || []).forEach(it => {
+      if (it.type === 'proposal') it.status = 'approved_executed';
+    });
+    saveLeadershipReportsShared(sharedReports);
+
+    // Đồng bộ về sổ tay của nhân viên
+    try {
+      const uKey = `ops_personal_workspace_final_v1_${rep.senderId || rep.senderUsername}`;
+      const raw = localStorage.getItem(uKey);
+      if (raw) {
+        const uData = JSON.parse(raw);
+        if (uData && Array.isArray(uData.items)) {
+          (rep.items || []).forEach(repIt => {
+            const m = uData.items.find(x => x.id === repIt.id);
+            if (m && m.type === 'proposal') m.status = 'approved_executed';
+          });
+          localStorage.setItem(uKey, JSON.stringify(uData));
+        }
+      }
+    } catch(e) {}
+
+    renderLeadershipReportsBoxUI();
+    showToast("✅ Đã phê duyệt đề xuất trong báo cáo!");
+  }
+}
+
+function seedSamplePersonalWorkspace() {
+  if (!currentUser) return;
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tY = tomorrow.getFullYear();
+  const tM = String(tomorrow.getMonth() + 1).padStart(2, '0');
+  const tD = String(tomorrow.getDate()).padStart(2, '0');
+  const tomorrowStr = `${tY}-${tM}-${tD}`;
+
+  const sampleItems = [
+    {
+      id: 'pw_sample_1_' + Date.now(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: 'adhoc',
+      title: 'Hỗ trợ kiểm tra gấp lô hàng ống UPVC phát sinh ngoài kế hoạch',
+      content: 'Đã phối hợp kiểm đếm, xác nhận đạt chất lượng xuất xưởng theo yêu cầu đại lý.',
+      date: todayStr,
+      dueDate: '',
+      isImportant: true,
+      status: 'done',
+      isCompleted: true,
+      selectedForReport: true,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    },
+    {
+      id: 'pw_sample_2_' + Date.now(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: 'plan',
+      title: 'Tổng hợp số liệu tiến độ tuần và lập lịch giao hàng tuần tới',
+      content: 'Đối chiếu số liệu thực xuất từ phần mềm kho và hoàn thiện báo cáo trước 16h30.',
+      date: todayStr,
+      dueDate: tomorrowStr,
+      isImportant: true,
+      status: 'pending',
+      isCompleted: false,
+      selectedForReport: true,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    },
+    {
+      id: 'pw_sample_3_' + Date.now(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: 'proposal',
+      title: 'Đề xuất trang bị máy quét mã vạch không dây cầm tay cho tổ kho',
+      content: 'Tăng tốc độ kiểm kê ống và phụ kiện lên 30%, hạn chế tối đa sai sót ghi chép.',
+      date: todayStr,
+      dueDate: '',
+      isImportant: false,
+      status: 'rejected_pending',
+      isCompleted: false,
+      selectedForReport: true,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    },
+    {
+      id: 'pw_sample_4_' + Date.now(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      type: 'feedback',
+      title: 'Ý kiến góp ý tối ưu thời gian bàn giao ca giữa tổ kho và tổ tiếp liệu',
+      content: 'Quy định khung giờ bàn giao cố định 15 phút trước giờ đổi ca để ký biên bản đầy đủ.',
+      date: todayStr,
+      dueDate: '',
+      isImportant: false,
+      status: 'acknowledged',
+      isCompleted: false,
+      selectedForReport: true,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    }
+  ];
+
+  const data = getPersonalWorkspaceData(currentUser);
+  if (!data.items) data.items = [];
+  data.items.unshift(...sampleItems);
+  savePersonalWorkspaceData(data, currentUser);
+  renderPersonalWorkspaceUI();
+  showToast("⭐ Đã nạp 4 mục ví dụ mẫu để bạn trải nghiệm tính năng!");
+}
+
+function checkPersonalWorkspaceRemindersOnLogin() {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const items = data.items || [];
+  let overdue = 0, dueToday = 0;
+  items.forEach(it => {
+    if (it.type === 'plan' && !it.isCompleted) {
+      const t = calculatePlanTimelineStatus(it);
+      if (t.code === 'overdue') overdue++;
+      else if (t.code === 'duetoday') dueToday++;
+    }
+  });
+
+  if (overdue > 0 || dueToday > 0) {
+    setTimeout(() => {
+      let msg = "💡 Nhắc nhở: Bạn có ";
+      if (overdue > 0) msg += `${overdue} việc quá hạn `;
+      if (overdue > 0 && dueToday > 0) msg += "và ";
+      if (dueToday > 0) msg += `${dueToday} việc đến hạn hôm nay `;
+      msg += "trong Sổ tay việc riêng!";
+      showToast(msg, overdue > 0);
+    }, 1500);
+  }
+}
+
+
     // ================= TỰ ĐỘNG ĐÓNG CỬA SỔ / BẢNG LÀM VIỆC BẰNG PHÍM ESC =================
     function closeTopmostModal() {
       // Danh sách tất cả các bảng modal theo thứ tự ưu tiên z-index (từ lớp nổi cao nhất xuống lớp nền)
@@ -20060,7 +22084,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         { id: 'transferModal', fn: closeTransferModal },
         { id: 'loginHistoryModal', fn: closeLoginHistoryModal },
         { id: 'changePasswordModal', fn: closeChangePasswordModal },
-        { id: 'userProfileModal', fn: closeUserProfileModal }
+        { id: 'userProfileModal', fn: closeUserProfileModal },
+        { id: 'personalItemEditModal', fn: closePersonalItemEditModal },
+        { id: 'leadershipReportPreviewModal', fn: closeLeadershipReportPreviewModal },
+        { id: 'leadershipReportsBoxModal', fn: closeLeadershipReportsBoxModal },
+        { id: 'personalWorkspaceModal', fn: closePersonalWorkspaceModal }
       ];
 
       for (let i = 0; i < modalCloseSpecs.length; i++) {
@@ -20102,7 +22130,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     // Lắng nghe phím tắt toàn hệ thống: Ctrl + K (Menu lệnh nhanh), ESC (Đóng mọi cửa sổ làm việc)
     window.addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        const pwModal = document.getElementById('personalWorkspaceModal');
+        if (pwModal && !pwModal.classList.contains('hidden')) {
+          closePersonalWorkspaceModal();
+        } else {
+          openPersonalWorkspaceModal();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const modal = document.getElementById('commandPaletteModal');
         if (modal && !modal.classList.contains('hidden')) {
