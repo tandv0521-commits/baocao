@@ -23247,11 +23247,163 @@ function generateSingleReportExcelHtml(rep) {
   const feedList = items.filter(it => it.type === 'feedback');
 
   let statusText = 'Chờ Quản lý duyệt';
-  if (rep.status === 'manager_reviewed') statusText = 'Quản lý đã nhận xét';
-  else if (rep.status === 'forwarded_to_leadership') statusText = 'Đã chuyển Ban Lãnh đạo';
-  else if (rep.status === 'approved' || rep.status === 'leadership_approved') statusText = 'Ban Giám Đốc đã phê duyệt';
+  let statusColor = '#b45309';
+  if (rep.status === 'manager_reviewed') { statusText = 'Quản lý đã nhận xét'; statusColor = '#0369a1'; }
+  else if (rep.status === 'forwarded_to_leadership') { statusText = 'Đã chuyển Ban Lãnh đạo'; statusColor = '#4338ca'; }
+  else if (rep.status === 'approved' || rep.status === 'leadership_approved') { statusText = 'Ban Giám Đốc đã phê duyệt'; statusColor = '#047857'; }
 
-  let tableHtml = `
+  // Build unified table rows
+  let rowsHtml = '';
+  let counter = 0;
+
+  // Category 1: Việc phát sinh
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="8" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${adhocList.length} việc)
+      </td>
+    </tr>
+  `;
+  if (adhocList.length === 0) {
+    rowsHtml += `
+      <tr style="height:26px;">
+        <td style="text-align:center;color:#94a3b8;font-size:10pt;">-</td>
+        <td style="color:#64748b;font-style:italic;" colspan="7">Không có công việc phát sinh trong kỳ báo cáo</td>
+      </tr>
+    `;
+  } else {
+    adhocList.forEach(it => {
+      counter++;
+      const isDone = it.status === 'done';
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Việc phát sinh</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${formatVNDate(it.date)}</td>
+          <td style="text-align:center;font-weight:bold;color:${isDone ? '#047857' : '#b45309'};background:${isDone ? '#f0fdf4' : '#fffbeb'};">${isDone ? 'Đã làm' : 'Chưa làm'}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // Category 2: Kế hoạch
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="8" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${planList.length} việc)
+      </td>
+    </tr>
+  `;
+  if (planList.length === 0) {
+    rowsHtml += `
+      <tr style="height:26px;">
+        <td style="text-align:center;color:#94a3b8;font-size:10pt;">-</td>
+        <td style="color:#64748b;font-style:italic;" colspan="7">Không có kế hoạch công việc nào trong danh mục</td>
+      </tr>
+    `;
+  } else {
+    planList.forEach(it => {
+      counter++;
+      let tlStatus = 'Đang thực hiện';
+      let tlColor = '#b45309';
+      let tlBg = '#fffbeb';
+      if (it.isCompleted || it.status === 'done') {
+        tlStatus = 'Đã hoàn thành'; tlColor = '#047857'; tlBg = '#f0fdf4';
+      } else if (it.dueDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (it.dueDate < today) {
+          tlStatus = 'Quá hạn'; tlColor = '#b91c1c'; tlBg = '#fef2f2';
+        } else if (it.dueDate === today) {
+          tlStatus = 'Đến hạn hôm nay'; tlColor = '#c2410c'; tlBg = '#fff7ed';
+        }
+      }
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Kế hoạch</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${formatVNDate(it.dueDate)}</td>
+          <td style="text-align:center;font-weight:bold;color:${tlColor};background:${tlBg};">${tlStatus}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // Category 3: Đề xuất
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="8" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${propList.length} mục)
+      </td>
+    </tr>
+  `;
+  if (propList.length === 0) {
+    rowsHtml += `
+      <tr style="height:26px;">
+        <td style="text-align:center;color:#94a3b8;font-size:10pt;">-</td>
+        <td style="color:#64748b;font-style:italic;" colspan="7">Không có đề xuất kiến nghị nào trong kỳ</td>
+      </tr>
+    `;
+  } else {
+    propList.forEach(it => {
+      counter++;
+      const isApp = it.status === 'approved_executed';
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Sáng kiến / Đề xuất</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${formatVNDate(it.date)}</td>
+          <td style="text-align:center;font-weight:bold;color:${isApp ? '#047857' : '#b45309'};background:${isApp ? '#f0fdf4' : '#fffbeb'};">${isApp ? 'Đã duyệt' : 'Chờ duyệt'}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // Category 4: Phản ánh
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="8" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH (${feedList.length} mục)
+      </td>
+    </tr>
+  `;
+  if (feedList.length === 0) {
+    rowsHtml += `
+      <tr style="height:26px;">
+        <td style="text-align:center;color:#94a3b8;font-size:10pt;">-</td>
+        <td style="color:#64748b;font-style:italic;" colspan="7">Không có ý kiến phản ánh nào trong kỳ</td>
+      </tr>
+    `;
+  } else {
+    feedList.forEach(it => {
+      counter++;
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Ý kiến / Phản ánh</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${formatVNDate(it.date)}</td>
+          <td style="text-align:center;font-weight:bold;color:#047857;background:#f0fdf4;">Đã ghi nhận</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  return `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head>
       <meta charset="utf-8"/>
@@ -23261,260 +23413,149 @@ function generateSingleReportExcelHtml(rep) {
           <x:ExcelWorksheets>
             <x:ExcelWorksheet>
               <x:Name>Báo cáo ${m}-${y}</x:Name>
-              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+              <x:WorksheetOptions>
+                <x:DisplayGridlines/>
+                <x:Print><x:ValidPrinterInfo/><x:FitWidth>1</x:FitWidth><x:FitHeight>99</x:FitHeight></x:Print>
+              </x:WorksheetOptions>
             </x:ExcelWorksheet>
           </x:ExcelWorksheets>
         </x:ExcelWorkbook>
       </xml>
       <![endif]-->
       <style>
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
-        .head-left { font-weight: bold; text-align: left; }
-        .head-right { font-weight: bold; text-align: right; }
-        .motto { font-size: 10pt; text-decoration: underline; }
-        .title-main { font-size: 16pt; font-weight: bold; text-align: center; background: #047857; color: #ffffff; height: 42px; }
-        .subtitle { font-size: 11pt; font-style: italic; text-align: center; background: #f8fafc; height: 26px; }
-        .meta-box { background: #f1f5f9; font-size: 11pt; font-weight: normal; }
-        .sec-header { font-size: 12pt; font-weight: bold; background: #0284c7; color: #ffffff; height: 30px; text-transform: uppercase; }
-        .sec-sub { font-size: 11pt; font-weight: bold; background: #e2e8f0; color: #0f172a; height: 26px; }
-        .th-col { background: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 28px; font-size: 10.5pt; }
-        .center { text-align: center; }
-        .done { color: #047857; font-weight: bold; }
-        .pending { color: #b45309; font-weight: bold; }
-        .overdue { color: #b91c1c; font-weight: bold; }
-        .important { color: #d97706; font-weight: bold; }
-        .feedback-title { font-weight: bold; background: #e0f2fe; color: #0369a1; }
-        .feedback-body { background: #f8fafc; }
-        .sig-col { text-align: center; font-weight: bold; vertical-align: top; height: 28px; }
-        .sig-sub { text-align: center; font-style: italic; font-size: 10pt; color: #475569; }
+        body, table, td, th { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10.5pt; color: #1e293b; }
+        table { border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 0.5pt solid #cbd5e1; padding: 6px 10px; vertical-align: middle; }
+        .head-corp { font-size: 11pt; font-weight: bold; color: #0f172a; }
+        .head-sub { font-size: 10pt; color: #475569; font-weight: 600; }
+        .head-nation { font-size: 11pt; font-weight: bold; color: #0f172a; text-align: center; }
+        .head-motto { font-size: 10pt; font-weight: bold; color: #0f172a; text-align: center; text-decoration: underline; }
+        .title-main { font-size: 15pt; font-weight: bold; text-align: center; background-color: #047857; color: #ffffff; height: 38px; vertical-align: middle; letter-spacing: 0.5px; }
+        .title-period { font-size: 10.5pt; font-style: italic; text-align: center; color: #475569; height: 24px; }
+        .th-main { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 32px; font-size: 10.5pt; border: 0.5pt solid #0f172a; }
+        .sig-head { font-weight: bold; text-align: center; height: 26px; color: #0f172a; font-size: 10.5pt; }
+        .sig-sub { font-style: italic; font-size: 9.5pt; text-align: center; color: #64748b; }
+        .sig-name { font-weight: bold; text-align: center; color: #0f172a; font-size: 11pt; }
       </style>
     </head>
     <body>
-      <table border="1">
+      <table border="1" cellpadding="0" cellspacing="0">
+        <col width="45" style="width:45pt;" />
+        <col width="125" style="width:125pt;" />
+        <col width="220" style="width:220pt;" />
+        <col width="280" style="width:280pt;" />
+        <col width="95" style="width:95pt;" />
+        <col width="105" style="width:105pt;" />
+        <col width="125" style="width:125pt;" />
+        <col width="160" style="width:160pt;" />
+
+        <!-- 1. QUỐC HIỆU & TIÊU ĐỀ DOANH NGHIỆP -->
+        <tr style="height:24px;">
+          <td colspan="4" class="head-corp" style="border:none;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
+          <td colspan="4" class="head-nation" style="border:none;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
+        </tr>
+        <tr style="height:22px;">
+          <td colspan="4" class="head-sub" style="border:none;">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(rep.senderDepartment || 'Bộ phận')}</td>
+          <td colspan="4" class="head-motto" style="border:none;">Độc lập - Tự do - Hạnh phúc</td>
+        </tr>
+        <tr style="height:12px;"><td colspan="8" style="border:none;"></td></tr>
+
+        <!-- 2. TIÊU ĐỀ BÁO CÁO -->
         <tr>
-          <td colspan="4" class="head-left" style="font-size:11pt;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
-          <td colspan="3" class="head-right" style="font-size:11pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
+          <td colspan="8" class="title-main">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; KẾ HOẠCH THỰC HIỆN</td>
         </tr>
         <tr>
-          <td colspan="4" class="head-left" style="font-size:10.5pt;color:#334155;">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(rep.senderDepartment || 'Bộ phận')}</td>
-          <td colspan="3" class="head-right motto">Độc lập - Tự do - Hạnh phúc</td>
-        </tr>
-        <tr><td colspan="7" style="border:none;height:12px;"></td></tr>
-        <tr>
-          <th colspan="7" class="title-main">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; KẾ HOẠCH CÔNG TÁC</th>
-        </tr>
-        <tr>
-          <td colspan="7" class="subtitle">Kỳ báo cáo: Tháng ${m}/${y} — Thời điểm gửi: ${escapeHtml(rep.displayDate || '')}</td>
-        </tr>
-        <tr class="meta-box">
-          <td colspan="7" style="padding:10px;">
-            <b>Họ và tên nhân sự:</b> ${escapeHtml(rep.senderFullName || rep.senderUsername)} &nbsp;&nbsp;|&nbsp;&nbsp;
-            <b>Bộ phận:</b> ${escapeHtml(rep.senderDepartment || 'Ban DVKH')} &nbsp;&nbsp;|&nbsp;&nbsp;
-            <b>Chức danh:</b> ${escapeHtml(rep.senderRole || 'Nhân viên')} &nbsp;&nbsp;|&nbsp;&nbsp;
-            <b>Trạng thái:</b> <b>${escapeHtml(statusText)}</b>
+          <td colspan="8" class="title-period" style="background:#f8fafc;">
+            Kỳ báo cáo: Tháng ${m}/${y} &nbsp;•&nbsp; Thời điểm gửi: ${escapeHtml(rep.displayDate || '')}
           </td>
         </tr>
-        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
+        <tr style="height:10px;"><td colspan="8" style="border:none;"></td></tr>
 
-        <!-- PHẦN I: VIỆC PHÁT SINH -->
-        <tr>
-          <th colspan="7" class="sec-header" style="background:#d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${adhocList.length} việc)</th>
+        <!-- 3. BẢNG THÔNG TIN NHÂN SỰ GỌN GÀNG, ĐỐI XỨNG -->
+        <tr style="background:#f8fafc;height:26px;">
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Nhân sự:</td>
+          <td colspan="2" style="font-weight:bold;color:#0f172a;font-size:11pt;">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Bộ phận:</td>
+          <td colspan="2" style="font-weight:600;color:#0f172a;">${escapeHtml(rep.senderDepartment || 'Bộ phận')}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Chức danh:</td>
+          <td style="font-weight:600;color:#0f172a;">${escapeHtml(rep.senderRole || 'Nhân viên')}</td>
         </tr>
-        <tr class="th-col">
-          <th style="width:40px;">STT</th>
-          <th style="width:260px;">Tên công việc / Nhiệm vụ phát sinh</th>
-          <th style="width:340px;">Nội dung chi tiết &amp; Căn cứ</th>
-          <th style="width:100px;">Ưu tiên</th>
-          <th style="width:110px;">Ngày ghi nhận</th>
-          <th style="width:120px;">Trạng thái</th>
-          <th style="width:140px;">Ghi chú</th>
+        <tr style="background:#f8fafc;height:26px;">
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Mã NV / TK:</td>
+          <td colspan="2" style="color:#0f172a;mso-number-format:'\\@';">${escapeHtml(rep.senderUsername || rep.senderId || '')}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Ngày gửi:</td>
+          <td colspan="2" style="color:#0f172a;">${escapeHtml(rep.displayDate || '')}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Trạng thái:</td>
+          <td style="font-weight:bold;color:${statusColor};">${escapeHtml(statusText)}</td>
         </tr>
-  `;
+        <tr style="height:12px;"><td colspan="8" style="border:none;"></td></tr>
 
-  if (adhocList.length === 0) {
-    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có công việc phát sinh trong kỳ báo cáo</td></tr>`;
-  } else {
-    adhocList.forEach((it, idx) => {
-      const isDone = it.status === 'done';
-      tableHtml += `
-        <tr>
-          <td class="center">${idx + 1}</td>
-          <td><b>${escapeHtml(it.title || '')}</b></td>
-          <td>${escapeHtml(it.content || '')}</td>
-          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
-          <td class="center">${formatVNDate(it.date)}</td>
-          <td class="center ${isDone ? 'done' : 'pending'}">${isDone ? 'Đã làm' : 'Chưa làm'}</td>
-          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        <!-- 4. DÒNG HEADER BẢNG CHÍNH (DUY NHẤT 1 DÒNG CHUẨN ĐẲNG CẤP) -->
+        <tr class="th-main">
+          <th>STT</th>
+          <th>Phân loại</th>
+          <th>Tên công việc / Nhiệm vụ</th>
+          <th>Nội dung chi tiết &amp; Căn cứ / Giải pháp</th>
+          <th>Ưu tiên</th>
+          <th>Thời hạn / Ngày</th>
+          <th>Tiến độ &amp; Trạng thái</th>
+          <th>Ghi chú / Phản hồi</th>
         </tr>
-      `;
-    });
-  }
 
-  // PHẦN II: KẾ HOẠCH
-  tableHtml += `
-        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
-        <tr>
-          <th colspan="7" class="sec-header" style="background:#0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${planList.length} việc)</th>
-        </tr>
-        <tr class="th-col">
-          <th style="width:40px;">STT</th>
-          <th style="width:260px;">Kế hoạch / Nhiệm vụ thực hiện</th>
-          <th style="width:340px;">Nội dung công việc &amp; Mục tiêu</th>
-          <th style="width:100px;">Ưu tiên</th>
-          <th style="width:110px;">Hạn chót</th>
-          <th style="width:120px;">Tiến độ</th>
-          <th style="width:140px;">Ghi chú</th>
-        </tr>
-  `;
+        <!-- DỮ LIỆU CÔNG VIỆC PHÂN THEO NHÓM -->
+        ${rowsHtml}
 
-  if (planList.length === 0) {
-    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có kế hoạch công việc nào trong danh mục</td></tr>`;
-  } else {
-    planList.forEach((it, idx) => {
-      let tlStatus = 'Đang thực hiện';
-      let tlClass = 'pending';
-      if (it.isCompleted || it.status === 'done') {
-        tlStatus = 'Đã hoàn thành';
-        tlClass = 'done';
-      } else if (it.dueDate) {
-        const today = new Date().toISOString().split('T')[0];
-        if (it.dueDate < today) {
-          tlStatus = 'Quá hạn';
-          tlClass = 'overdue';
-        } else if (it.dueDate === today) {
-          tlStatus = 'Đến hạn hôm nay';
-          tlClass = 'overdue';
-        } else {
-          tlStatus = 'Trong hạn';
-          tlClass = 'pending';
-        }
-      }
-      tableHtml += `
-        <tr>
-          <td class="center">${idx + 1}</td>
-          <td><b>${escapeHtml(it.title || '')}</b></td>
-          <td>${escapeHtml(it.content || '')}</td>
-          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
-          <td class="center">${formatVNDate(it.dueDate)}</td>
-          <td class="center ${tlClass}">${tlStatus}</td>
-          <td>${escapeHtml(it.feedbackResponse || '')}</td>
-        </tr>
-      `;
-    });
-  }
+        <tr style="height:14px;"><td colspan="8" style="border:none;"></td></tr>
 
-  // PHẦN III: ĐỀ XUẤT
-  tableHtml += `
-        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
-        <tr>
-          <th colspan="7" class="sec-header" style="background:#7c3aed;">III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${propList.length} mục)</th>
-        </tr>
-        <tr class="th-col">
-          <th style="width:40px;">STT</th>
-          <th style="width:260px;">Tên sáng kiến / Đề xuất cải tiến</th>
-          <th style="width:340px;">Nội dung giải pháp &amp; Hiệu quả dự kiến</th>
-          <th style="width:100px;">Ưu tiên</th>
-          <th style="width:110px;">Ngày đề xuất</th>
-          <th style="width:120px;">Tình trạng duyệt</th>
-          <th style="width:140px;">Ý kiến phê duyệt</th>
-        </tr>
-  `;
-
-  if (propList.length === 0) {
-    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có đề xuất kiến nghị nào trong kỳ</td></tr>`;
-  } else {
-    propList.forEach((it, idx) => {
-      const isApp = it.status === 'approved_executed';
-      tableHtml += `
-        <tr>
-          <td class="center">${idx + 1}</td>
-          <td><b>${escapeHtml(it.title || '')}</b></td>
-          <td>${escapeHtml(it.content || '')}</td>
-          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
-          <td class="center">${formatVNDate(it.date)}</td>
-          <td class="center ${isApp ? 'done' : 'pending'}">${isApp ? 'Được duyệt' : 'Chờ duyệt'}</td>
-          <td>${escapeHtml(it.feedbackResponse || '')}</td>
-        </tr>
-      `;
-    });
-  }
-
-  // PHẦN IV: Ý KIẾN / PHẢN ÁNH
-  tableHtml += `
-        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
-        <tr>
-          <th colspan="7" class="sec-header" style="background:#0d9488;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH (${feedList.length} mục)</th>
-        </tr>
-        <tr class="th-col">
-          <th style="width:40px;">STT</th>
-          <th style="width:260px;">Vấn đề phản ánh / Góp ý</th>
-          <th style="width:340px;">Nội dung chi tiết &amp; Đề xuất xử lý</th>
-          <th style="width:100px;">Ưu tiên</th>
-          <th style="width:110px;">Ngày phản ánh</th>
-          <th style="width:120px;">Tiếp nhận</th>
-          <th style="width:140px;">Phản hồi</th>
-        </tr>
-  `;
-
-  if (feedList.length === 0) {
-    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có ý kiến phản ánh nào trong kỳ</td></tr>`;
-  } else {
-    feedList.forEach((it, idx) => {
-      tableHtml += `
-        <tr>
-          <td class="center">${idx + 1}</td>
-          <td><b>${escapeHtml(it.title || '')}</b></td>
-          <td>${escapeHtml(it.content || '')}</td>
-          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
-          <td class="center">${formatVNDate(it.date)}</td>
-          <td class="center done">Đã ghi nhận</td>
-          <td>${escapeHtml(it.feedbackResponse || '')}</td>
-        </tr>
-      `;
-    });
-  }
-
-  // PHẦN V: NHẬN XÉT & PHÊ DUYỆT
-  tableHtml += `
-        <tr><td colspan="7" style="border:none;height:12px;"></td></tr>
-        <tr class="feedback-title"><td colspan="7"><b>V. Ý KIẾN NHẬN XÉT, ĐÁNH GIÁ &amp; PHÊ DUYỆT</b></td></tr>
-        <tr class="feedback-body">
-          <td colspan="7" style="padding:8px 12px;">
-            <p><b>1. Lời nhắn của người gửi:</b> ${escapeHtml(rep.notes || 'Không có')}</p>
-            <p><b>2. Ý kiến nhận xét của Quản lý bộ phận:</b> ${escapeHtml(rep.managerFeedback || 'Chưa có ý kiến nhận xét')}</p>
-            <p><b>3. Ý kiến chỉ đạo của Ban Giám Đốc:</b> ${escapeHtml(rep.leaderFeedback || 'Chưa có ý kiến chỉ đạo')}</p>
+        <!-- 5. PHẦN ĐÁNH GIÁ & Ý KIẾN CHỈ ĐẠO -->
+        <tr style="background:#f1f5f9;height:28px;">
+          <td colspan="8" style="font-weight:bold;color:#0f172a;font-size:11pt;border-top:1.5pt solid #cbd5e1;">
+            V. ĐÁNH GIÁ, NHẬN XÉT &amp; Ý KIẾN CHỈ ĐẠO
           </td>
         </tr>
+        <tr style="height:32px;">
+          <td colspan="2" style="background:#f8fafc;font-weight:bold;color:#475569;vertical-align:top;">1. Lời nhắn người gửi:</td>
+          <td colspan="6" style="vertical-align:top;mso-number-format:'\\@';">${escapeHtml(rep.notes || 'Không có')}</td>
+        </tr>
+        <tr style="height:36px;">
+          <td colspan="2" style="background:#f8fafc;font-weight:bold;color:#475569;vertical-align:top;">
+            2. Ý kiến Quản lý:
+            ${rep.forwardedBy ? `<br/><span style="font-size:9pt;font-weight:normal;color:#64748b;">(Duyệt bởi: ${escapeHtml(rep.forwardedBy)})</span>` : ''}
+          </td>
+          <td colspan="6" style="vertical-align:top;mso-number-format:'\\@';color:#0f172a;font-weight:500;">${escapeHtml(rep.managerFeedback || 'Chưa có ý kiến nhận xét')}</td>
+        </tr>
+        <tr style="height:36px;">
+          <td colspan="2" style="background:#f8fafc;font-weight:bold;color:#475569;vertical-align:top;">3. Chỉ đạo Ban Giám Đốc:</td>
+          <td colspan="6" style="vertical-align:top;mso-number-format:'\\@';color:#047857;font-weight:bold;">${escapeHtml(rep.leaderFeedback || 'Chưa có ý kiến chỉ đạo')}</td>
+        </tr>
 
-        <!-- CHỮ KÝ 3 BÊN -->
-        <tr><td colspan="7" style="border:none;height:16px;"></td></tr>
-        <tr>
-          <td colspan="7" style="border:none;text-align:right;font-style:italic;padding-bottom:8px;">Hải Phòng, ngày ..... tháng ..... năm 2026</td>
+        <!-- 6. CHỮ KÝ 3 BÊN -->
+        <tr style="height:18px;"><td colspan="8" style="border:none;"></td></tr>
+        <tr style="height:22px;">
+          <td colspan="8" style="border:none;text-align:right;font-style:italic;color:#475569;padding-right:20px;">
+            Hải Phòng, ngày ${new Date().getDate()} tháng ${new Date().getMonth()+1} năm ${new Date().getFullYear()}
+          </td>
         </tr>
         <tr>
-          <td colspan="2" class="sig-col">NGƯỜI LẬP BÁO CÁO</td>
-          <td colspan="3" class="sig-col">QUẢN LÝ BỘ PHẬN</td>
-          <td colspan="2" class="sig-col">BAN GIÁM ĐỐC</td>
+          <td colspan="3" class="sig-head" style="border:none;">NGƯỜI LẬP BÁO CÁO</td>
+          <td colspan="2" class="sig-head" style="border:none;">QUẢN LÝ BỘ PHẬN</td>
+          <td colspan="3" class="sig-head" style="border:none;">BAN GIÁM ĐỐC / LÃNH ĐẠO</td>
         </tr>
         <tr>
-          <td colspan="2" class="sig-sub">(Ký, ghi rõ họ tên)</td>
-          <td colspan="3" class="sig-sub">(Ký, ghi rõ họ tên)</td>
-          <td colspan="2" class="sig-sub">(Ký duyệt)</td>
+          <td colspan="3" class="sig-sub" style="border:none;">(Ký, ghi rõ họ tên)</td>
+          <td colspan="2" class="sig-sub" style="border:none;">(Ký, ghi rõ họ tên)</td>
+          <td colspan="3" class="sig-sub" style="border:none;">(Ký duyệt)</td>
         </tr>
-        <tr><td colspan="7" style="border:none;height:65px;"></td></tr>
+        <tr style="height:65px;"><td colspan="8" style="border:none;"></td></tr>
         <tr>
-          <td colspan="2" class="center"><b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b></td>
-          <td colspan="3" class="center"><b>${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</b></td>
-          <td colspan="2" class="center"><b>Ban Giám Đốc</b></td>
+          <td colspan="3" class="sig-name" style="border:none;">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
+          <td colspan="2" class="sig-name" style="border:none;">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
+          <td colspan="3" class="sig-name" style="border:none;">Ban Giám Đốc</td>
         </tr>
       </table>
     </body>
     </html>
   `;
-
-  return tableHtml;
 }
 
 // 3. In hoặc lưu file PDF báo cáo của 1 cá nhân
@@ -23873,35 +23914,45 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       counter++;
       let catName = 'Việc phát sinh';
       let statusStr = it.status === 'done' ? 'Đã làm' : 'Chưa làm';
+      let statusBg = it.status === 'done' ? '#f0fdf4' : '#fffbeb';
+      let statusColor = it.status === 'done' ? '#047857' : '#b45309';
       let dateDisplay = it.date ? formatVNDate(it.date) : '';
 
       if (it.type === 'plan') {
         catName = 'Kế hoạch';
         dateDisplay = it.dueDate ? `Hạn: ${formatVNDate(it.dueDate)}` : '';
-        if (it.isCompleted || it.status === 'done') statusStr = 'Hoàn thành';
-        else if (it.dueDate && it.dueDate < today) statusStr = 'Quá hạn';
-        else statusStr = 'Đang làm';
+        if (it.isCompleted || it.status === 'done') {
+          statusStr = 'Hoàn thành'; statusBg = '#f0fdf4'; statusColor = '#047857';
+        } else if (it.dueDate && it.dueDate < today) {
+          statusStr = 'Quá hạn'; statusBg = '#fef2f2'; statusColor = '#b91c1c';
+        } else {
+          statusStr = 'Đang làm'; statusBg = '#fffbeb'; statusColor = '#b45309';
+        }
       } else if (it.type === 'proposal') {
-        catName = 'Đề xuất';
+        catName = 'Sáng kiến / Đề xuất';
         statusStr = it.status === 'approved_executed' ? 'Đã duyệt' : 'Chờ duyệt';
+        statusBg = it.status === 'approved_executed' ? '#f0fdf4' : '#fffbeb';
+        statusColor = it.status === 'approved_executed' ? '#047857' : '#b45309';
       } else if (it.type === 'feedback') {
         catName = 'Ý kiến / Phản ánh';
         statusStr = 'Đã ghi nhận';
+        statusBg = '#f0fdf4';
+        statusColor = '#047857';
       }
 
       rows += `
-        <tr>
-          <td style="text-align:center;">${counter}</td>
-          <td><b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b></td>
-          <td>${escapeHtml(rep.senderDepartment || '')}</td>
-          <td>${escapeHtml(rep.senderRole || 'Nhân viên')}</td>
-          <td style="text-align:center;">${catName}</td>
-          <td style="text-align:center;">${it.isImportant ? '⭐ Quan trọng' : 'Bình thường'}</td>
-          <td><b>${escapeHtml(it.title || '')}</b></td>
-          <td>${escapeHtml(it.content || '')}</td>
-          <td style="text-align:center;">${dateDisplay}</td>
-          <td style="text-align:center;">${statusStr}</td>
-          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="font-weight:bold;color:#0f172a;mso-number-format:'\\@';">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(rep.senderDepartment || '')}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(rep.senderRole || 'Nhân viên')}</td>
+          <td style="text-align:center;color:#0f172a;background:#fafafa;">${catName}</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${dateDisplay}</td>
+          <td style="text-align:center;font-weight:bold;color:${statusColor};background:${statusBg};">${statusStr}</td>
+          <td style="color:#475569;mso-number-format:'\\@';">${escapeHtml(it.feedbackResponse || '')}</td>
         </tr>
       `;
     });
@@ -23924,60 +23975,88 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       </xml>
       <![endif]-->
       <style>
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
-        table { border-collapse: collapse; width: 100%; }
+        body, table, td, th { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10pt; color: #1e293b; }
+        table { border-collapse: collapse; table-layout: fixed; }
         th, td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
-        .title-main { font-size: 16pt; font-weight: bold; text-align: center; background: #047857; color: #ffffff; height: 40px; }
-        .th-col { background: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 28px; }
-        .sig-col { text-align: center; font-weight: bold; vertical-align: top; height: 28px; }
+        .head-corp { font-size: 11pt; font-weight: bold; color: #0f172a; }
+        .head-nation { font-size: 11pt; font-weight: bold; color: #0f172a; text-align: center; }
+        .title-main { font-size: 15pt; font-weight: bold; text-align: center; background-color: #047857; color: #ffffff; height: 38px; vertical-align: middle; }
+        .th-main { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 32px; font-size: 10pt; }
+        .sig-head { font-weight: bold; text-align: center; height: 26px; color: #0f172a; }
       </style>
     </head>
     <body>
-      <table border="1">
-        <tr>
-          <td colspan="6" style="font-weight:bold;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
-          <td colspan="5" style="text-align:right;font-weight:bold;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM - Độc lập - Tự do - Hạnh phúc</td>
+      <table border="1" cellpadding="0" cellspacing="0">
+        <col width="40" style="width:40pt;" />
+        <col width="130" style="width:130pt;" />
+        <col width="120" style="width:120pt;" />
+        <col width="90" style="width:90pt;" />
+        <col width="110" style="width:110pt;" />
+        <col width="220" style="width:220pt;" />
+        <col width="260" style="width:260pt;" />
+        <col width="90" style="width:90pt;" />
+        <col width="105" style="width:105pt;" />
+        <col width="115" style="width:115pt;" />
+        <col width="140" style="width:140pt;" />
+
+        <tr style="height:24px;">
+          <td colspan="6" class="head-corp" style="border:none;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
+          <td colspan="5" class="head-nation" style="border:none;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
         </tr>
-        <tr><td colspan="11" style="border:none;height:10px;"></td></tr>
+        <tr style="height:20px;">
+          <td colspan="6" style="color:#475569;font-weight:600;border:none;">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(deptName)}</td>
+          <td colspan="5" style="text-align:center;font-weight:bold;text-decoration:underline;border:none;">Độc lập - Tự do - Hạnh phúc</td>
+        </tr>
+        <tr style="height:12px;"><td colspan="11" style="border:none;"></td></tr>
+
         <tr>
           <th colspan="11" class="title-main">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN: ${escapeHtml(deptName).toUpperCase()}</th>
         </tr>
-        <tr>
-          <td colspan="11" style="text-align:center;font-style:italic;background:#f8fafc;padding:6px;">
-            Kỳ báo cáo: Tháng ${m}/${y} — Tổng hợp từ ${reportsList.length} báo cáo (${staffSet.size} nhân sự)
+        <tr style="height:24px;background:#f8fafc;">
+          <td colspan="11" style="text-align:center;font-style:italic;color:#475569;">
+            Kỳ báo cáo: Tháng ${m}/${y} &nbsp;•&nbsp; Tổng hợp từ ${reportsList.length} báo cáo (${staffSet.size} nhân sự)
           </td>
         </tr>
-        <tr style="background:#f1f5f9;font-weight:bold;">
-          <td colspan="11" style="padding:10px;">
-            📊 <b>THỐNG KÊ TỔNG QUAN:</b> &nbsp;
-            • Nhân sự báo cáo: <b>${staffSet.size}</b> &nbsp;|&nbsp;
-            • Việc phát sinh: <b>${totalAdhoc}</b> (${adhocDone} đã xong) &nbsp;|&nbsp;
-            • Kế hoạch: <b>${totalPlan}</b> (${planDone} hoàn thành, ${planOverdue} quá hạn) &nbsp;|&nbsp;
-            • Sáng kiến/Đề xuất: <b>${totalProp}</b> (${propApproved} được duyệt) &nbsp;|&nbsp;
+        <tr style="height:10px;"><td colspan="11" style="border:none;"></td></tr>
+
+        <!-- THỐNG KÊ TỔNG QUAN -->
+        <tr style="background:#f1f5f9;height:32px;">
+          <td colspan="11" style="font-weight:600;color:#0f172a;padding:8px 12px;font-size:10.5pt;border:1pt solid #cbd5e1;">
+            📊 <b>TỔNG QUAN TIẾN ĐỘ:</b> &nbsp;&nbsp;
+            • Nhân sự gửi báo cáo: <b style="color:#047857;">${staffSet.size}</b> &nbsp;|&nbsp;
+            • Việc phát sinh: <b>${totalAdhoc}</b> (<span style="color:#047857;font-weight:bold;">${adhocDone}</span> đã xong) &nbsp;|&nbsp;
+            • Kế hoạch: <b>${totalPlan}</b> (<span style="color:#047857;font-weight:bold;">${planDone}</span> hoàn thành, <span style="color:#b91c1c;font-weight:bold;">${planOverdue}</span> quá hạn) &nbsp;|&nbsp;
+            • Sáng kiến/Đề xuất: <b>${totalProp}</b> (<span style="color:#047857;font-weight:bold;">${propApproved}</span> được duyệt) &nbsp;|&nbsp;
             • Ý kiến/Phản ánh: <b>${totalFeed}</b>
           </td>
         </tr>
-        <tr><td colspan="11" style="border:none;height:10px;"></td></tr>
-        <tr class="th-col">
-          <th style="width:40px;">STT</th>
-          <th style="width:160px;">Nhân sự</th>
-          <th style="width:140px;">Bộ phận</th>
-          <th style="width:100px;">Chức danh</th>
-          <th style="width:110px;">Danh mục</th>
-          <th style="width:90px;">Mức độ</th>
-          <th style="width:240px;">Tiêu đề công việc</th>
-          <th style="width:300px;">Chi tiết &amp; Căn cứ</th>
-          <th style="width:110px;">Thời hạn / Ngày</th>
-          <th style="width:110px;">Tiến độ</th>
-          <th style="width:140px;">Ghi chú / Kết quả</th>
+        <tr style="height:10px;"><td colspan="11" style="border:none;"></td></tr>
+
+        <tr class="th-main">
+          <th>STT</th>
+          <th>Nhân sự</th>
+          <th>Bộ phận</th>
+          <th>Chức danh</th>
+          <th>Phân loại</th>
+          <th>Tên công việc / Nhiệm vụ</th>
+          <th>Chi tiết &amp; Căn cứ</th>
+          <th>Ưu tiên</th>
+          <th>Thời hạn / Ngày</th>
+          <th>Tiến độ</th>
+          <th>Ghi chú / Kết quả</th>
         </tr>
         ${rows}
-        <tr><td colspan="11" style="border:none;height:15px;"></td></tr>
-        <tr>
-          <td colspan="6" class="sig-col">QUẢN LÝ BỘ PHẬN TỔNG HỢP<br/><span style="font-style:italic;font-weight:normal;font-size:10pt;">(Ký, ghi rõ họ tên)</span></td>
-          <td colspan="5" class="sig-col">BAN GIÁM ĐỐC PHÊ DUYỆT<br/><span style="font-style:italic;font-weight:normal;font-size:10pt;">(Ký duyệt)</span></td>
+        <tr style="height:15px;"><td colspan="11" style="border:none;"></td></tr>
+        <tr style="height:22px;">
+          <td colspan="11" style="border:none;text-align:right;font-style:italic;color:#475569;padding-right:20px;">
+            Hải Phòng, ngày ${new Date().getDate()} tháng ${new Date().getMonth()+1} năm ${new Date().getFullYear()}
+          </td>
         </tr>
-        <tr><td colspan="11" style="border:none;height:65px;"></td></tr>
+        <tr>
+          <td colspan="6" class="sig-head" style="border:none;">QUẢN LÝ BỘ PHẬN TỔNG HỢP<br/><span style="font-style:italic;font-weight:normal;font-size:9.5pt;color:#64748b;">(Ký, ghi rõ họ tên)</span></td>
+          <td colspan="5" class="sig-head" style="border:none;">BAN GIÁM ĐỐC PHÊ DUYỆT<br/><span style="font-style:italic;font-weight:normal;font-size:9.5pt;color:#64748b;">(Ký duyệt)</span></td>
+        </tr>
+        <tr style="height:65px;"><td colspan="11" style="border:none;"></td></tr>
       </table>
     </body>
     </html>
@@ -24319,58 +24398,206 @@ function exportPersonalWorkspaceToExcel() {
   const m = currentSelectedMonth || (new Date().getMonth() + 1);
   const y = currentSelectedYear || new Date().getFullYear();
 
+  const adhocList = items.filter(it => it.type === 'adhoc');
+  const planList = items.filter(it => it.type === 'plan');
+  const propList = items.filter(it => it.type === 'proposal');
+  const feedList = items.filter(it => it.type === 'feedback');
+
+  let rowsHtml = '';
+  let counter = 0;
+
+  // I. Việc phát sinh
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="7" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${adhocList.length} việc)
+      </td>
+    </tr>
+  `;
+  if (adhocList.length === 0) {
+    rowsHtml += `<tr><td style="text-align:center;color:#94a3b8;">-</td><td style="color:#64748b;font-style:italic;" colspan="6">Không có công việc phát sinh</td></tr>`;
+  } else {
+    adhocList.forEach(it => {
+      counter++;
+      const isDone = (it.status === 'done');
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Việc phát sinh</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${it.date ? formatVNDate(it.date) : ''}</td>
+          <td style="text-align:center;font-weight:bold;color:${isDone ? '#047857' : '#b45309'};background:${isDone ? '#f0fdf4' : '#fffbeb'};">${isDone ? 'Đã làm' : 'Chưa làm'}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // II. Kế hoạch
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="7" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${planList.length} việc)
+      </td>
+    </tr>
+  `;
+  if (planList.length === 0) {
+    rowsHtml += `<tr><td style="text-align:center;color:#94a3b8;">-</td><td style="color:#64748b;font-style:italic;" colspan="6">Không có kế hoạch công việc</td></tr>`;
+  } else {
+    planList.forEach(it => {
+      counter++;
+      const tl = calculatePlanTimelineStatus(it);
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Kế hoạch</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${it.dueDate ? formatVNDate(it.dueDate) : ''}</td>
+          <td style="text-align:center;font-weight:bold;color:${tl.color || '#0f172a'};">${tl.label}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // III. Đề xuất
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="7" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${propList.length} mục)
+      </td>
+    </tr>
+  `;
+  if (propList.length === 0) {
+    rowsHtml += `<tr><td style="text-align:center;color:#94a3b8;">-</td><td style="color:#64748b;font-style:italic;" colspan="6">Không có đề xuất kiến nghị</td></tr>`;
+  } else {
+    propList.forEach(it => {
+      counter++;
+      const isApp = (it.status === 'approved_executed');
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Sáng kiến / Đề xuất</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${it.date ? formatVNDate(it.date) : ''}</td>
+          <td style="text-align:center;font-weight:bold;color:${isApp ? '#047857' : '#b45309'};background:${isApp ? '#f0fdf4' : '#fffbeb'};">${isApp ? 'Được duyệt' : 'Chưa duyệt'}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // IV. Phản ánh
+  rowsHtml += `
+    <tr style="background:#f8fafc;height:30px;">
+      <td colspan="7" style="font-weight:bold;color:#0f172a;background:#f1f5f9;border-top:1.5pt solid #cbd5e1;border-bottom:1pt solid #cbd5e1;font-size:11pt;padding-left:10px;">
+        IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH (${feedList.length} mục)
+      </td>
+    </tr>
+  `;
+  if (feedList.length === 0) {
+    rowsHtml += `<tr><td style="text-align:center;color:#94a3b8;">-</td><td style="color:#64748b;font-style:italic;" colspan="6">Không có ý kiến phản ánh</td></tr>`;
+  } else {
+    feedList.forEach(it => {
+      counter++;
+      rowsHtml += `
+        <tr style="height:28px;">
+          <td style="text-align:center;font-weight:bold;color:#475569;">${counter}</td>
+          <td style="text-align:center;font-weight:600;color:#0f172a;background:#fafafa;">Ý kiến / Phản ánh</td>
+          <td style="font-weight:bold;color:#1e293b;mso-number-format:'\\@';">${escapeHtml(it.title || '')}</td>
+          <td style="color:#334155;mso-number-format:'\\@';">${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${it.isImportant ? '<span style="color:#d97706;font-weight:bold;">⭐ Quan trọng</span>' : '<span style="color:#64748b;">Bình thường</span>'}</td>
+          <td style="text-align:center;color:#475569;">${it.date ? formatVNDate(it.date) : ''}</td>
+          <td style="text-align:center;font-weight:bold;color:#047857;background:#f0fdf4;">Đã tiếp nhận</td>
+        </tr>
+      `;
+    });
+  }
+
   let tableHtml = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-    <head><meta charset="utf-8"/></head>
+    <head>
+      <meta charset="utf-8"/>
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>Sổ tay công việc</x:Name>
+              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        body, table, td, th { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10.5pt; color: #1e293b; }
+        table { border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 0.5pt solid #cbd5e1; padding: 6px 10px; vertical-align: middle; }
+        .title-main { font-size: 15pt; font-weight: bold; text-align: center; background-color: #047857; color: #ffffff; height: 38px; vertical-align: middle; }
+        .th-main { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 32px; font-size: 10.5pt; }
+      </style>
+    </head>
     <body>
-      <table border="1">
-        <tr><th colspan="7" style="font-size:16px;font-weight:bold;text-align:center;background:#059669;color:white;height:40px;">SỔ TAY CÔNG VIỆC CÁ NHÂN & KẾ HOẠCH - THÁNG ${m}/${y}</th></tr>
-        <tr><th colspan="7" style="text-align:left;height:30px;">Họ và tên: ${escapeHtml(currentUser.fullName)} - Bộ phận: ${escapeHtml(currentUser.department || 'Ban DVKH')} - Chức danh: ${escapeHtml(currentUser.role)}</th></tr>
-        <tr style="background:#f1f5f9;font-weight:bold;height:30px;">
-          <th>TT</th>
-          <th>Phân loại</th>
-          <th>Quan trọng</th>
-          <th>Nội dung / Tiêu đề công việc</th>
-          <th>Chi tiết / Kế hoạch / Căn cứ</th>
-          <th>Thời hạn / Ngày</th>
-          <th>Tiến độ & Trạng thái</th>
+      <table border="1" cellpadding="0" cellspacing="0">
+        <col width="45" style="width:45pt;" />
+        <col width="130" style="width:130pt;" />
+        <col width="230" style="width:230pt;" />
+        <col width="300" style="width:300pt;" />
+        <col width="95" style="width:95pt;" />
+        <col width="115" style="width:115pt;" />
+        <col width="140" style="width:140pt;" />
+
+        <tr style="height:24px;">
+          <td colspan="4" style="font-weight:bold;color:#0f172a;border:none;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
+          <td colspan="3" style="font-weight:bold;text-align:center;border:none;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
         </tr>
+        <tr style="height:20px;">
+          <td colspan="4" style="color:#475569;font-weight:600;border:none;">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(currentUser.department || 'Ban DVKH')}</td>
+          <td colspan="3" style="text-align:center;font-weight:bold;text-decoration:underline;border:none;">Độc lập - Tự do - Hạnh phúc</td>
+        </tr>
+        <tr style="height:12px;"><td colspan="7" style="border:none;"></td></tr>
+
+        <tr>
+          <th colspan="7" class="title-main">SỔ TAY THEO DÕI CÔNG VIỆC CÁ NHÂN &amp; KẾ HOẠCH THỰC HIỆN</th>
+        </tr>
+        <tr style="height:24px;background:#f8fafc;">
+          <td colspan="7" style="text-align:center;font-style:italic;color:#475569;">
+            Kỳ theo dõi: Tháng ${m}/${y} &nbsp;•&nbsp; Xuất ngày: ${new Date().toLocaleDateString('vi-VN')}
+          </td>
+        </tr>
+        <tr style="height:10px;"><td colspan="7" style="border:none;"></td></tr>
+
+        <!-- THÔNG TIN NHÂN SỰ -->
+        <tr style="background:#f8fafc;height:26px;">
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Nhân sự:</td>
+          <td colspan="2" style="font-weight:bold;color:#0f172a;font-size:11pt;">${escapeHtml(currentUser.fullName)}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Bộ phận:</td>
+          <td style="font-weight:600;color:#0f172a;">${escapeHtml(currentUser.department || 'Ban DVKH')}</td>
+          <td style="font-weight:bold;color:#475569;background:#f1f5f9;">Chức danh:</td>
+          <td style="font-weight:600;color:#0f172a;">${escapeHtml(currentUser.role)}</td>
+        </tr>
+        <tr style="height:12px;"><td colspan="7" style="border:none;"></td></tr>
+
+        <tr class="th-main">
+          <th>STT</th>
+          <th>Phân loại</th>
+          <th>Tên công việc / Nhiệm vụ</th>
+          <th>Nội dung chi tiết &amp; Căn cứ</th>
+          <th>Ưu tiên</th>
+          <th>Thời hạn / Ngày</th>
+          <th>Tiến độ &amp; Trạng thái</th>
+        </tr>
+
+        ${rowsHtml}
+        <tr style="height:15px;"><td colspan="7" style="border:none;"></td></tr>
+      </table>
+    </body>
+    </html>
   `;
-
-  items.forEach((it, idx) => {
-    let typeStr = 'Việc phát sinh';
-    if (it.type === 'plan') typeStr = 'Kế hoạch làm việc';
-    else if (it.type === 'proposal') typeStr = 'Đề xuất sáng kiến';
-    else if (it.type === 'feedback') typeStr = 'Ý kiến phản ánh';
-
-    let statusStr = '';
-    if (it.type === 'adhoc') {
-      statusStr = (it.status === 'done') ? 'Đã làm' : 'Chưa làm';
-    } else if (it.type === 'plan') {
-      const tl = calculatePlanTimelineStatus(it);
-      statusStr = tl.label;
-    } else if (it.type === 'proposal') {
-      statusStr = (it.status === 'approved_executed') ? 'Được duyệt / Đã thực hiện' : 'Chưa duyệt / Chưa thực hiện';
-    } else if (it.type === 'feedback') {
-      statusStr = (it.status === 'resolved') ? 'Đã giải quyết' : (it.status === 'acknowledged' ? 'Đã tiếp nhận' : 'Chờ tiếp nhận');
-    }
-
-    const dateStr = (it.type === 'plan' && it.dueDate) ? `Hạn: ${formatVNDate(it.dueDate)}` : (it.date ? formatVNDate(it.date) : '');
-
-    tableHtml += `
-      <tr>
-        <td style="text-align:center;">${idx + 1}</td>
-        <td>${typeStr}</td>
-        <td style="text-align:center;">${it.isImportant ? '⭐ Quan trọng' : ''}</td>
-        <td>${escapeHtml(it.title || '')}</td>
-        <td>${escapeHtml(it.content || '')}</td>
-        <td style="text-align:center;">${dateStr}</td>
-        <td style="text-align:center;">${statusStr}</td>
-      </tr>
-    `;
-  });
-
-  tableHtml += `</table></body></html>`;
 
   const blob = new Blob(['\uFEFF' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -24384,7 +24611,6 @@ function exportPersonalWorkspaceToExcel() {
   URL.revokeObjectURL(url);
   showToast("📊 Đã xuất file Excel sổ tay công việc thành công!");
 }
-
 
     // ================= TỰ ĐỘNG ĐÓNG CỬA SỔ / BẢNG LÀM VIỆC BẰNG PHÍM ESC =================
     function closeTopmostModal() {
