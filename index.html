@@ -1900,39 +1900,48 @@
         </button>
       </div>
 
-      <div class="px-3.5 sm:px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 flex-shrink-0">
-        <!-- Hàng 1: Hai tab chuyển chế độ dàn đều 50/50 trên điện thoại -->
-        <div class="flex items-center p-1 bg-slate-200/70 rounded-xl shadow-2xs w-full sm:w-auto">
-          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer">
-            <i class="fa-regular fa-calendar-days text-xs"></i>
+      <!-- THANH ĐIỀU HƯỚNG & BỘ LỌC ĐIỀN BÁO CÁO (THIẾT KẾ CHUYÊN NGHIỆP, CÂN ĐỐI, THẨM MỸ) -->
+      <div class="px-4 sm:px-6 py-2.5 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 flex-shrink-0">
+        
+        <!-- Hàng 1: Hai tab chuyển chế độ dạng Segmented Switcher chuẩn UI chuyên nghiệp -->
+        <div class="grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl shadow-inner border border-slate-300/40">
+          <button type="button" id="tabModeDayBtn" onclick="switchReportInputMode('day')" class="w-full py-1.5 px-3 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 bg-white text-emerald-700 shadow-xs cursor-pointer select-none">
+            <i class="fa-regular fa-calendar-days text-xs text-emerald-600"></i>
             <span>Điền theo ngày</span>
           </button>
-          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer">
+          <button type="button" id="tabModeTaskBtn" onclick="switchReportInputMode('task')" class="w-full py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 hover:text-emerald-700 cursor-pointer select-none">
             <i class="fa-solid fa-list-check text-xs"></i>
             <span>Điền theo công việc</span>
           </button>
         </div>
 
-        <!-- Hàng 2: Bộ chọn Kỳ/Tháng nhỏ gọn + Ô chọn Ngày hoặc Chọn Đầu việc trên cùng 1 hàng duy nhất -->
-        <div class="flex items-center gap-1.5 w-full sm:w-auto">
-          <!-- Dropdown Chọn Tháng / Kỳ báo cáo (nhỏ gọn ~105px trên điện thoại để dành không gian cho Đầu việc) -->
-          <div class="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1.5 rounded-xl shadow-2xs shrink-0 max-w-[110px] sm:max-w-none">
-            <i class="fa-solid fa-calendar-week text-emerald-700 text-xs shrink-0"></i>
-            <select id="modalEntryPeriodSelect" onchange="onModalEntryPeriodChange()" class="bg-transparent text-xs font-bold text-emerald-900 focus:outline-none cursor-pointer w-full truncate pr-0.5">
+        <!-- Hàng 2: Bộ lọc Kỳ báo cáo & Chọn Ngày / Đầu việc (cân đối, rộng rãi, hiển thị trọn vẹn) -->
+        <div class="flex items-center gap-2">
+          
+          <!-- Dropdown Chọn Tháng / Kỳ báo cáo -->
+          <div class="flex items-center gap-1.5 bg-white border border-slate-200/90 hover:border-emerald-300 px-3 py-1.5 rounded-xl shadow-2xs shrink-0 transition">
+            <i class="fa-regular fa-calendar text-emerald-700 text-xs shrink-0"></i>
+            <span class="text-[11px] font-medium text-slate-400 shrink-0">Kỳ:</span>
+            <select id="modalEntryPeriodSelect" onchange="onModalEntryPeriodChange()" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer pr-1">
             </select>
           </div>
 
-          <!-- Ô chọn Ngày (chế độ Điền theo ngày - chiếm trọn không gian còn lại trên cùng dòng) -->
-          <div id="controlsModeDay" class="flex-1 min-w-0 flex items-center justify-between gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-2xs">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Ngày:</span>
-            <input type="date" id="modalEntryDate" onchange="onModalEntryDateChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer w-full text-right sm:text-left" />
+          <!-- Ô chọn Ngày (chế độ Điền theo ngày - đầy đủ khoảng trống, không bị tràn hay cắt góc) -->
+          <div id="controlsModeDay" class="flex-1 min-w-0 flex items-center justify-between gap-1.5 bg-white border border-slate-200/90 hover:border-emerald-300 px-3 py-1.5 rounded-xl shadow-2xs transition">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-calendar-day text-emerald-600 text-xs"></i>
+              <span class="text-[11px] font-medium text-slate-400">Ngày điền:</span>
+            </div>
+            <input type="date" id="modalEntryDate" onchange="onModalEntryDateChange()" class="bg-transparent text-xs font-bold text-emerald-700 focus:outline-none cursor-pointer text-right w-36" />
           </div>
 
-          <!-- Dropdown Chọn Đầu việc (chế độ Điền theo công việc - chiếm toàn bộ phần còn lại trên dòng) -->
+          <!-- Dropdown Chọn Đầu việc (chế độ Điền theo công việc) -->
           <div id="controlsModeTask" class="hidden flex-1 min-w-0">
-            <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs"></select>
+            <select id="modalTaskSelect" onchange="onModalTaskSelectChange()" class="w-full bg-white border border-slate-200/90 hover:border-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer truncate shadow-2xs transition"></select>
           </div>
+
         </div>
+
       </div>
 
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll">
@@ -1941,40 +1950,33 @@
           <span><b>Chế độ chỉ xem:</b> Bộ phận có <b>Kho chính / Trưởng nhóm</b> đại diện làm báo cáo chung.</span>
         </div>
 
-        <!-- BANNER TRẠNG THÁI BÁO CÁO CỦA NGÀY (THIẾT KẾ NHỎ GỌN TIẾT KIỆM KHÔNG GIAN) -->
-        <div id="dayReportStatusAlert" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs border transition-all duration-200 bg-emerald-50/90 border-emerald-300 text-emerald-950">
+        <!-- BANNER TRẠNG THÁI BÁO CÁO CỦA NGÀY (CHỮ NGHIÊNG, VỪA ĐỦ NHÌN, KHÔNG IN ĐẬM) -->
+        <div id="dayReportStatusAlert" class="px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 border bg-amber-50/70 border-amber-200 text-amber-950 transition-all duration-200">
           <div class="flex items-center gap-2 min-w-0">
-            <div id="dayReportStatusAlertIconBox" class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs text-xs">
-              <i id="dayReportStatusAlertIcon" class="fa-solid fa-circle-check"></i>
+            <div id="dayReportStatusAlertIconBox" class="w-5 h-5 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0 text-[10px]">
+              <i id="dayReportStatusAlertIcon" class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <div class="min-w-0 flex items-center gap-1.5 flex-wrap truncate">
-              <span id="dayReportStatusAlertTitle" class="text-xs font-bold leading-none truncate">ĐÃ CÓ BÁO CÁO SỐ LIỆU</span>
+            <div class="min-w-0 flex items-center gap-1 truncate">
+              <span id="dayReportStatusAlertTitle" class="text-xs font-normal italic text-amber-900 leading-snug truncate">Ngày 03/11/2026: Chưa có báo cáo số liệu</span>
               <span id="dayReportStatusAlertBadge" class="hidden"></span>
-              <span id="dayReportStatusAlertDesc" class="text-[10.5px] text-slate-500 font-normal hidden lg:inline truncate">— Đã ghi nhận số liệu</span>
+              <span id="dayReportStatusAlertDesc" class="text-[11px] font-normal italic text-slate-500 hidden lg:inline truncate"></span>
             </div>
           </div>
           <div id="dayReportStatusCountBadge" class="flex items-center gap-1 shrink-0 pl-1">
-            <span class="text-[9px] uppercase font-bold text-slate-400 hidden sm:inline">Tiến độ:</span>
-            <span id="dayReportStatusCountText" class="text-[11px] sm:text-xs font-black font-num px-1.5 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-700 shadow-2xs">4/4 việc</span>
+            <span id="dayReportStatusCountText" class="text-[11px] font-normal italic text-amber-800 font-num px-1.5 py-0.5 rounded bg-white/80 border border-amber-200">Tiến độ: 0/4</span>
           </div>
         </div>
 
-        <!-- DÒNG NGÀY NGHỈ / KHÔNG CÓ SỐ LIỆU (THIẾT KẾ GỌN GÀNG, ĐỦ KHÔNG GIAN ĐIỀN BÁO CÁO) -->
-        <div id="noReportDayCard" class="bg-amber-50/80 hover:bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-2xs transition">
+        <!-- DÒNG NGÀY NGHỈ: TÍCH CHỌN NGÀY NGHỈ/KHÔNG CÓ DỮ LIỆU (CHỮ NGHIÊNG, VỪA ĐỦ NHÌN, KHÔNG IN ĐẬM) -->
+        <div id="noReportDayCard" class="bg-amber-50/60 hover:bg-amber-50/90 border border-amber-200/90 rounded-xl px-3 py-1.5 transition">
           <div class="flex items-center justify-between gap-2">
             <label class="flex items-center gap-2 cursor-pointer select-none flex-1 min-w-0">
               <input type="checkbox" id="chkNoReportReason" onchange="toggleNoReportReason(this.checked)" class="w-4 h-4 text-amber-600 rounded border-amber-400 focus:ring-amber-500 cursor-pointer accent-amber-600 transition shrink-0">
-              <div class="min-w-0 flex items-center gap-1.5 flex-wrap truncate">
-                <span class="text-xs font-bold text-amber-950 flex items-center gap-1 shrink-0">
-                  <i class="fa-solid fa-calendar-xmark text-amber-600 text-xs"></i>
-                  <span>Ngày nghỉ / Không có số liệu</span>
-                </span>
-                <span class="text-[10px] text-amber-700/80 font-normal hidden md:inline truncate">(Nghỉ phép, ốm, công tác, việc riêng, tuần...)</span>
-              </div>
+              <i class="fa-solid fa-calendar-xmark text-amber-600 text-xs shrink-0"></i>
+              <span class="text-xs font-normal italic text-amber-950 truncate">Tích chọn ngày nghỉ/không có dữ liệu</span>
             </label>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-200/80 text-amber-900 border border-amber-300/80 shrink-0 hidden sm:inline">Điền nhanh</span>
-            <span id="noReportBadge" class="hidden text-[9px] font-black px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs shrink-0 flex items-center gap-1">
-              <i class="fa-solid fa-check text-[8px]"></i>
+            <span id="noReportBadge" class="hidden text-[10px] font-normal italic px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs shrink-0 flex items-center gap-1">
+              <i class="fa-solid fa-check text-[9px]"></i>
               <span id="noReportBadgeText">Đã chọn</span>
             </span>
           </div>
@@ -13967,34 +13969,43 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const dateLabel = `${dStr}/${mStr}/${targetYear}`;
 
       if (isLeave && leaveSym) {
-        alertBox.className = "px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs border bg-teal-50/90 border-teal-300 text-teal-950 transition-all duration-200";
-        if (iconBox) iconBox.className = "w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-2xs text-xs";
-        if (icon) icon.className = "fa-solid fa-calendar-check text-xs";
-        if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ BÁO CÁO NGHỈ / CÔNG TÁC`;
-        if (desc) desc.innerText = `— ${leaveSym.title}`;
+        alertBox.className = "px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 border bg-teal-50/70 border-teal-200 text-teal-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-5 h-5 rounded-md bg-teal-600 text-white flex items-center justify-center shrink-0 text-[10px]";
+        if (icon) icon.className = "fa-solid fa-calendar-check text-[10px]";
+        if (title) {
+          title.className = "text-xs font-normal italic text-teal-900 leading-snug truncate";
+          title.innerText = `Ngày ${dateLabel}: Đã báo cáo nghỉ / công tác`;
+        }
+        if (desc) desc.innerText = `(${leaveSym.title})`;
         if (countText) {
-          countText.className = "text-[11px] sm:text-xs font-black text-teal-800 font-num px-1.5 py-0.5 rounded-md bg-white border border-teal-200 shadow-2xs";
+          countText.className = "text-[11px] font-normal italic text-teal-800 font-num px-1.5 py-0.5 rounded bg-white/80 border border-teal-200";
           countText.innerText = `Nghỉ ${leaveSym.code}`;
         }
       } else if (isReported) {
-        alertBox.className = "px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs border bg-emerald-50/90 border-emerald-300 text-emerald-950 transition-all duration-200";
-        if (iconBox) iconBox.className = "w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs text-xs";
-        if (icon) icon.className = "fa-solid fa-circle-check text-xs";
-        if (title) title.innerText = `NGÀY ${dateLabel}: ĐÃ CÓ BÁO CÁO SỐ LIỆU`;
-        if (desc) desc.innerText = `— ${filledCount}/${totalCount} việc đã điền`;
+        alertBox.className = "px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 border bg-emerald-50/70 border-emerald-200 text-emerald-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-5 h-5 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 text-[10px]";
+        if (icon) icon.className = "fa-solid fa-circle-check text-[10px]";
+        if (title) {
+          title.className = "text-xs font-normal italic text-emerald-900 leading-snug truncate";
+          title.innerText = `Ngày ${dateLabel}: Đã có báo cáo số liệu`;
+        }
+        if (desc) desc.innerText = `(${filledCount}/${totalCount} việc)`;
         if (countText) {
-          countText.className = "text-[11px] sm:text-xs font-black text-emerald-700 font-num px-1.5 py-0.5 rounded-md bg-white border border-emerald-200 shadow-2xs";
-          countText.innerText = `${filledCount}/${totalCount} việc`;
+          countText.className = "text-[11px] font-normal italic text-emerald-700 font-num px-1.5 py-0.5 rounded bg-white/80 border border-emerald-200";
+          countText.innerText = `Tiến độ: ${filledCount}/${totalCount}`;
         }
       } else {
-        alertBox.className = "px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl flex items-center justify-between gap-2 shadow-2xs border bg-amber-50/90 border-amber-300 text-amber-950 transition-all duration-200";
-        if (iconBox) iconBox.className = "w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs text-xs";
-        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-xs";
-        if (title) title.innerText = `NGÀY ${dateLabel}: CHƯA CÓ BÁO CÁO`;
-        if (desc) desc.innerText = `— Chưa có dữ liệu`;
+        alertBox.className = "px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 border bg-amber-50/70 border-amber-200 text-amber-950 transition-all duration-200";
+        if (iconBox) iconBox.className = "w-5 h-5 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0 text-[10px]";
+        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-[10px]";
+        if (title) {
+          title.className = "text-xs font-normal italic text-amber-900 leading-snug truncate";
+          title.innerText = `Ngày ${dateLabel}: Chưa có báo cáo số liệu`;
+        }
+        if (desc) desc.innerText = '';
         if (countText) {
-          countText.className = "text-[11px] sm:text-xs font-black text-amber-700 font-num px-1.5 py-0.5 rounded-md bg-white border border-amber-200 shadow-2xs";
-          countText.innerText = `0/${totalCount} việc`;
+          countText.className = "text-[11px] font-normal italic text-amber-800 font-num px-1.5 py-0.5 rounded bg-white/80 border border-amber-200";
+          countText.innerText = `Tiến độ: 0/${totalCount}`;
         }
       }
     }
@@ -14051,8 +14062,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const btnCopyYesterday = document.getElementById('btnCopyYesterday');
 
       if (mode === 'day') {
-        if (btnDay) btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
-        if (btnTask) btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
+        if (btnDay) btnDay.className = "w-full py-1.5 px-3 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 bg-white text-emerald-700 shadow-xs cursor-pointer select-none";
+        if (btnTask) btnTask.className = "w-full py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 hover:text-emerald-700 cursor-pointer select-none";
         if (controlsDay) controlsDay.classList.remove('hidden');
         if (controlsTask) controlsTask.classList.add('hidden');
         if (noReportCard) noReportCard.classList.remove('hidden');
@@ -14060,8 +14071,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (btnCopyYesterday) btnCopyYesterday.classList.remove('hidden');
         await fetchDayEntryTasks();
       } else {
-        if (btnDay) btnDay.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-500 hover:text-emerald-700 cursor-pointer";
-        if (btnTask) btnTask.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-emerald-700 shadow-2xs cursor-pointer";
+        if (btnDay) btnDay.className = "w-full py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 text-slate-600 hover:text-emerald-700 cursor-pointer select-none";
+        if (btnTask) btnTask.className = "w-full py-1.5 px-3 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 bg-white text-emerald-700 shadow-xs cursor-pointer select-none";
         if (controlsDay) controlsDay.classList.add('hidden');
         if (controlsTask) controlsTask.classList.remove('hidden');
         if (noReportCard) noReportCard.classList.add('hidden');
