@@ -3778,6 +3778,14 @@
         
         <!-- Trạng thái 1: Sẵn sàng cài đặt với nút bấm nổi bật (Chrome, Edge, Android có Prompt) -->
         <div id="installPromptReadyBox">
+          <div class="mb-2.5 px-3 py-2 rounded-2xl bg-emerald-950/50 border border-emerald-400/30 flex items-center gap-2.5 text-[11px] text-emerald-100">
+            <div class="w-6 h-6 rounded-xl bg-emerald-500/25 border border-emerald-300/40 flex items-center justify-center shrink-0 text-emerald-300 text-xs">
+              <i class="fa-solid fa-arrow-pointer"></i>
+            </div>
+            <div class="leading-snug">
+              Sau khi bấm, trình duyệt sẽ hiện hộp thoại xác nhận ở góc trên: Bạn chỉ cần chọn <strong class="text-white bg-white/20 px-1.5 py-0.5 rounded font-bold">Install</strong> (Cài đặt) để đưa App ra màn hình Desktop.
+            </div>
+          </div>
           <button type="button" id="btnConfirmInstallPWA" onclick="confirmPWAInstall()" class="relative overflow-hidden w-full py-3 sm:py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:via-teal-400 hover:to-emerald-500 active:scale-[0.98] text-white font-black text-xs sm:text-sm shadow-xl shadow-emerald-950/60 border border-emerald-300/50 flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-200 group">
             <span class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center text-xs group-hover:scale-110 transition-transform">
               <i class="fa-solid fa-download"></i>
@@ -20029,20 +20037,25 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     }
 
     async function confirmPWAInstall() {
-      // 1. Nếu có prompt native từ trình duyệt (Edge / Chrome / Android)
+      // 1. Đóng modal cài đặt ngay lập tức để tránh chồng chéo giao diện với trình duyệt
+      closeAppInstallModal();
+
+      // 2. Nếu có prompt native từ trình duyệt (Edge / Chrome / Android)
       if (window._deferredInstallPrompt) {
         try {
           const promptEvent = window._deferredInstallPrompt;
           window._deferredInstallPrompt = null;
+
+          if (typeof showToast === 'function') {
+            showToast('👉 Vui lòng nhấn "Install" trên bảng ở góc trên để hoàn tất!', false);
+          }
+
           promptEvent.prompt();
           const choice = await promptEvent.userChoice;
           if (choice && choice.outcome === 'accepted') {
             if (typeof showToast === 'function') {
-              showToast('Ứng dụng Báo Cáo DVKH đã được cài đặt thành công!', false);
+              showToast('🎉 Cài đặt App Báo Cáo DVKH thành công!', false);
             }
-            closeAppInstallModal();
-          } else {
-            closeAppInstallModal();
           }
           if (typeof updateInstallButtonState === 'function') updateInstallButtonState();
           return;
@@ -20051,18 +20064,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         }
       }
 
-      // 2. Nếu là iOS (Safari)
+      // 3. Nếu là iOS (Safari)
       if (isIOSDevice()) {
         const iosBox = document.getElementById('installIOSGuideBox');
         if (iosBox) iosBox.classList.remove('hidden');
+        openAppInstallModal();
         return;
       }
 
-      // 3. Nếu trên máy tính mà prompt chưa nạp kịp hoặc đã bị ẩn
-      const manualBox = document.getElementById('installDesktopManualGuide');
-      const readyBox = document.getElementById('installPromptReadyBox');
-      if (readyBox) readyBox.classList.add('hidden');
-      if (manualBox) manualBox.classList.remove('hidden');
+      // 4. Nếu trên máy tính mà prompt chưa nạp kịp hoặc đã bị ẩn
       if (typeof showToast === 'function') {
         showToast('Nhấn biểu tượng Cài đặt (+) trên thanh địa chỉ trình duyệt!', false);
       }
