@@ -5,14 +5,19 @@
   <title>Báo Cáo Công Việc - Ban DVKH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <script>
-    // CHỐNG NHÁY CHỚP MÀN HÌNH ĐĂNG NHẬP:
-    // Kiểm tra tức thì (0ms) trước khi trình duyệt vẽ pixel. Nếu đã lưu phiên hoặc mật khẩu thì ẩn màn hình đăng nhập ngay lập tức.
+    // VÀO THẲNG CHƯƠNG TRÌNH KHI ĐÃ LƯU PHIÊN VÀ CHƯA ĐĂNG XUẤT (0ms):
+    // Chỉ vào thẳng chương trình khi:
+    // 1. Chưa từng bấm Đăng Xuất (không có cờ ops_portal_is_logged_out / ops_portal_manual_logout)
+    // 2. Có phiên đăng nhập hợp lệ (ops_portal_session_final_v48) với isRemembered = true
     try {
-      var _manualLogout = sessionStorage.getItem('ops_portal_manual_logout');
+      var _isLoggedOut = localStorage.getItem('ops_portal_is_logged_out') === 'true' || sessionStorage.getItem('ops_portal_manual_logout') === 'true';
       var _savedSession = localStorage.getItem('ops_portal_session_final_v48');
-      var _remembered = localStorage.getItem('ops_portal_remembered_auth_v49');
-      if (_manualLogout !== 'true' && (_savedSession || _remembered)) {
-        document.documentElement.classList.add('app-auto-login-pending');
+      if (!_isLoggedOut && _savedSession) {
+        var _u = JSON.parse(_savedSession);
+        if (_u && _u.isRemembered) {
+          document.documentElement.classList.add('app-auto-login-pending');
+          window._earlySavedUser = _u;
+        }
       }
     } catch(e) {}
   </script>
@@ -4818,7 +4823,9 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
      */
     async function tryAutoLoginForMobileDevice(depts, users, todayKey) {
       if (currentUser) return;
-      if (sessionStorage.getItem('ops_portal_manual_logout') === 'true') {
+      // NẾU NGƯỜI DÙNG ĐÃ BẤM ĐĂNG XUẤT: TUYỆT ĐỐI KHÔNG TỰ ĐỘNG ĐĂNG NHẬP LẠI
+      const isLoggedOut = localStorage.getItem('ops_portal_is_logged_out') === 'true' || sessionStorage.getItem('ops_portal_manual_logout') === 'true';
+      if (isLoggedOut) {
         document.documentElement.classList.remove('app-auto-login-pending');
         return;
       }
@@ -6264,7 +6271,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       const todayKey = getSystemDateKey(new Date());
       const isMobileTablet = isMobileOrTabletClient();
       const hasSavedAuth = hasSavedAuthOnDevice();
-      const cached = localStorage.getItem('ops_portal_session_final_v48');
+      const isLoggedOut = localStorage.getItem('ops_portal_is_logged_out') === 'true' || sessionStorage.getItem('ops_portal_manual_logout') === 'true';
+      const cached = isLoggedOut ? null : localStorage.getItem('ops_portal_session_final_v48');
 
       if (cached) {
         try {
@@ -6329,7 +6337,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       // 4. NẾU CHƯA CÓ PHIÊN (HOẶC VỪA TẮT MỞ LẠI PWA/TRÌNH DUYỆT): TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO DI ĐỘNG/TABLET CÓ LƯU MẬT KHẨU
       // TỰ ĐỘNG ĐĂNG NHẬP VÀO THẲNG CHO CẢ PC VÀ DI ĐỘNG NẾU ĐÃ LƯU TRÌNH DUYỆT
-      if (!currentUser && hasSavedAuth && sessionStorage.getItem('ops_portal_manual_logout') !== 'true') {
+      if (!currentUser && hasSavedAuth && !isLoggedOut && cached) {
         tryAutoLoginForMobileDevice(depts, users, todayKey);
       }
 
@@ -8332,6 +8340,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         clearFailedLoginAttempts(username);
 
         sessionStorage.removeItem('ops_portal_manual_logout');
+        localStorage.removeItem('ops_portal_is_logged_out');
         const rememberChk = document.getElementById('rememberPasswordChk');
         const isRememberChecked = !!(rememberChk && rememberChk.checked);
         if (isRememberChecked) {
@@ -19984,10 +19993,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         clearInterval(_securityHeartbeatInterval);
         _securityHeartbeatInterval = null;
       }
+      // Ghi nhớ trạng thái đã đăng xuất vào cả localStorage và sessionStorage để chống tự động vào lại khi tải lại trang
+      localStorage.setItem('ops_portal_is_logged_out', 'true');
       sessionStorage.setItem('ops_portal_manual_logout', 'true');
-      document.documentElement.classList.remove('app-auto-login-pending');
-      sessionStorage.removeItem('ops_session_device_logged');
       localStorage.removeItem('ops_portal_session_final_v48');
+      sessionStorage.removeItem('ops_session_device_logged');
+      
+      document.documentElement.classList.remove('app-auto-login-pending');
+      window._earlySavedUser = null;
       currentUser = null;
       fullPeriodMatrixCache = null;
       cachedPreloadMatrix = null;
@@ -19995,8 +20008,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       adminManageUsersCache = null;
       resetLoginButton();
       updateInstallButtonState();
-      document.getElementById('mainDashboard').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
+      
+      const dash = document.getElementById('mainDashboard');
+      const login = document.getElementById('loginScreen');
+      if (dash) dash.classList.add('hidden');
+      if (login) login.classList.remove('hidden');
+
+      // Điền lại tài khoản / mật khẩu đã lưu vào form đăng nhập để người dùng sẵn sàng bấm đăng nhập khi cần
+      checkAndFillRememberedPassword();
     }
 
     // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG TRÊN ANDROID, IOS & PC =================
