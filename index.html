@@ -20024,7 +20024,83 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       }
     }
 
-    // Lắng nghe phím tắt toàn hệ thống: Ctrl + K, Cmd + K, ESC
+    // ================= TỰ ĐỘNG ĐÓNG CỬA SỔ / BẢNG LÀM VIỆC BẰNG PHÍM ESC =================
+    function closeTopmostModal() {
+      // Danh sách tất cả các bảng modal theo thứ tự ưu tiên z-index (từ lớp nổi cao nhất xuống lớp nền)
+      const modalCloseSpecs = [
+        // z-110 & z-100: Cài đặt app & thông báo nổi
+        { id: 'appInstallModal', fn: closeAppInstallModal },
+        { id: 'iosInstallPrompt', fn: closeIOSInstallPrompt },
+        { id: 'unassignedStaffModal', fn: closeUnassignedStaffModal },
+
+        // z-70: Cửa sổ xác nhận con & phân quyền cấp cao
+        { id: 'cleanupLoginHistoryModal', fn: closeCleanupLoginHistoryModal },
+        { id: 'transferAdminModal', fn: closeTransferAdminModal },
+        { id: 'transferTaskModal', fn: closeTransferTaskModal },
+        { id: 'novemberThematicModal', fn: closeNovemberThematicModal },
+
+        // z-65: Các bảng xác nhận xóa / chỉnh sửa con
+        { id: 'taskDeleteConfirmModal', fn: closeTaskDeleteConfirmModal },
+        { id: 'deptDeleteModal', fn: closeDeptDeleteModal },
+        { id: 'deptEditModal', fn: closeDeptEditModal },
+        { id: 'accountEditModal', fn: closeAccountEditModal },
+
+        // z-60: Xác nhận khóa & thêm nhân viên
+        { id: 'lockConfirmModal', fn: closeLockConfirmModal },
+        { id: 'addUserModal', fn: closeAddUserModal },
+
+        // z-50: Các bảng làm việc chính (Điền báo cáo, Khóa kỳ, Phân công, Quản lý...)
+        { id: 'commandPaletteModal', fn: closeCommandPalette },
+        { id: 'dayEntryModal', fn: closeDayEntryModal },
+        { id: 'periodLockModal', fn: closePeriodLockModal },
+        { id: 'assignModal', fn: closeAssignModal },
+        { id: 'deptManagerModal', fn: closeDeptManagerModal },
+        { id: 'renameDeptModal', fn: closeRenameDeptModal },
+        { id: 'userManagerModal', fn: closeUserManagerModal },
+        { id: 'transferModal', fn: closeTransferModal },
+        { id: 'loginHistoryModal', fn: closeLoginHistoryModal },
+        { id: 'changePasswordModal', fn: closeChangePasswordModal },
+        { id: 'userProfileModal', fn: closeUserProfileModal }
+      ];
+
+      for (let i = 0; i < modalCloseSpecs.length; i++) {
+        const spec = modalCloseSpecs[i];
+        const el = document.getElementById(spec.id);
+        if (el && !el.classList.contains('hidden') && el.style.display !== 'none') {
+          if (typeof spec.fn === 'function') {
+            spec.fn();
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+              document.activeElement.blur();
+            }
+            return true;
+          }
+        }
+      }
+
+      // Đóng các menu thả xuống nếu đang mở
+      const headerMenu = document.getElementById('headerActionsMenu');
+      if (headerMenu && !headerMenu.classList.contains('hidden')) {
+        if (typeof closeHeaderActionsMenu === 'function') closeHeaderActionsMenu();
+        else headerMenu.classList.add('hidden');
+        return true;
+      }
+
+      const deptDropdown = document.getElementById('filterDeptPickerDropdown');
+      if (deptDropdown && !deptDropdown.classList.contains('hidden')) {
+        deptDropdown.classList.add('hidden');
+        return true;
+      }
+
+      const staffDropdown = document.getElementById('filterStaffPickerDropdown');
+      if (staffDropdown && !staffDropdown.classList.contains('hidden')) {
+        staffDropdown.classList.add('hidden');
+        return true;
+      }
+
+      return false;
+    }
+
+    // Lắng nghe phím tắt toàn hệ thống: Ctrl + K (Menu lệnh nhanh), ESC (Đóng mọi cửa sổ làm việc)
     window.addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -20034,21 +20110,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         } else {
           openCommandPalette();
         }
-      } else if (e.key === 'Escape') {
-        const modal = document.getElementById('commandPaletteModal');
-        if (modal && !modal.classList.contains('hidden')) {
-          closeCommandPalette();
-        }
-        const iosPrompt = document.getElementById('iosInstallPrompt');
-        if (iosPrompt && !iosPrompt.classList.contains('hidden')) {
-          closeIOSInstallPrompt();
-        }
-        const novModal = document.getElementById('novemberThematicModal');
-        if (novModal && !novModal.classList.contains('hidden')) {
-          closeNovemberThematicModal();
+      } else if (e.key === 'Escape' || e.key === 'Esc') {
+        const closed = closeTopmostModal();
+        if (closed) {
+          e.preventDefault();
+          e.stopPropagation();
         }
       }
-    });
+    }, true);
 
     // ================= ĐĂNG XUẤT =================
     function handleLogout() {
