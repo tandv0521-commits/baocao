@@ -4800,7 +4800,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
   <!-- ================= 4. MODAL HỘP THƯ BÁO CÁO LÃNH ĐẠO & LỊCH SỬ GỬI ================= -->
   <div id="leadershipReportsBoxModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-4xl w-full max-h-[96vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div id="leadershipReportsBoxDialog" class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-6xl xl:max-w-7xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
       
       <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-2.5">
@@ -4812,9 +4812,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <p id="rpBoxModalSubtitle" class="text-[11px] text-slate-500">Xem lại các lần đẩy báo cáo, tình trạng duyệt đề xuất &amp; phản hồi</p>
           </div>
         </div>
-        <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <!-- Nút Phóng to / Thu nhỏ toàn màn hình -->
+          <button type="button" id="btnToggleRpBoxFullscreen" onclick="toggleLeadershipReportsBoxFullscreen()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition duration-200 cursor-pointer border border-slate-200/60 shadow-2xs" title="Phóng to toàn màn hình / Thu nhỏ">
+            <i id="rpBoxFullscreenIcon" class="fa-solid fa-expand text-xs"></i>
+          </button>
+          <!-- Nút Đóng -->
+          <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG & LỌC THEO PHÂN CẤP QUẢN LÝ / LÃNH ĐẠO -->
@@ -4843,6 +4850,18 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <button type="button" id="rpBoxManagerConsolidateBtn" onclick="openManagerConsolidatedReportModal()" class="hidden px-3 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-layer-group text-xs"></i>
             <span>Tổng Hợp Báo Cáo Bộ Phận</span>
+          </button>
+
+          <!-- Nút Xuất Excel Tổng Hợp (Dành cho Quản lý & Ban Lãnh Đạo) -->
+          <button type="button" id="rpBoxExportConsolidatedExcelBtn" onclick="exportConsolidatedReportsToExcel()" class="hidden px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Tải báo cáo tổng hợp dạng file Excel (.xls) chuẩn doanh nghiệp">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+            <span class="hidden sm:inline">Xuất Excel Tổng Hợp</span>
+          </button>
+
+          <!-- Nút In / PDF Tổng Hợp (Dành cho Quản lý & Ban Lãnh Đạo) -->
+          <button type="button" id="rpBoxPrintConsolidatedPdfBtn" onclick="printConsolidatedReportsPDF()" class="hidden px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="In hoặc Lưu báo cáo tổng hợp dạng file PDF chuẩn báo cáo A4">
+            <i class="fa-solid fa-file-pdf text-rose-600 text-xs"></i>
+            <span class="hidden sm:inline">In PDF Tổng Hợp</span>
           </button>
 
           <!-- Nút Làm mới & Đồng bộ Cloud -->
@@ -22752,22 +22771,31 @@ function openLeadershipReportsBoxModal() {
   const consolidateBtn = document.getElementById('rpBoxManagerConsolidateBtn');
   const leaderDeptWrapper = document.getElementById('rpBoxLeaderDeptFilterWrapper');
 
+  const expConsExcelBtn = document.getElementById('rpBoxExportConsolidatedExcelBtn');
+  const printConsPdfBtn = document.getElementById('rpBoxPrintConsolidatedPdfBtn');
+
   if (roleInfo.isStaff) {
     if (titleEl) titleEl.innerText = "Lịch Sử Gửi Báo Cáo & Ý Kiến Phản Hồi";
     if (subTitleEl) subTitleEl.innerText = "Theo dõi tiến độ duyệt của Quản lý bộ phận và Ban Lãnh đạo";
     if (consolidateBtn) consolidateBtn.classList.add('hidden');
     if (leaderDeptWrapper) leaderDeptWrapper.classList.add('hidden');
+    if (expConsExcelBtn) expConsExcelBtn.classList.add('hidden');
+    if (printConsPdfBtn) printConsPdfBtn.classList.add('hidden');
   } else if (roleInfo.isManager) {
     if (titleEl) titleEl.innerText = `Hộp Thư Tiếp Nhận Báo Cáo: ${currentUser.department || 'Bộ phận'}`;
-    if (subTitleEl) subTitleEl.innerText = "Xem xét báo cáo của nhân viên các bộ phận, duyệt đề xuất và chuyển Ban Lãnh đạo";
+    if (subTitleEl) subTitleEl.innerText = "Xem xét báo cáo của nhân viên các bộ phận, duyệt đề xuất, xuất Excel / PDF và chuyển Ban Lãnh đạo";
     if (consolidateBtn) consolidateBtn.classList.remove('hidden');
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
+    if (expConsExcelBtn) expConsExcelBtn.classList.remove('hidden');
+    if (printConsPdfBtn) printConsPdfBtn.classList.remove('hidden');
     populateRpBoxDeptFilter();
   } else {
     if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
     if (subTitleEl) subTitleEl.innerText = "Tiếp nhận các báo cáo đã được Quản lý các bộ phận thẩm định và chuyển lên";
     if (consolidateBtn) consolidateBtn.classList.add('hidden');
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
+    if (expConsExcelBtn) expConsExcelBtn.classList.remove('hidden');
+    if (printConsPdfBtn) printConsPdfBtn.classList.remove('hidden');
     populateRpBoxDeptFilter();
   }
 
@@ -22779,6 +22807,22 @@ function openLeadershipReportsBoxModal() {
 function closeLeadershipReportsBoxModal() {
   const modal = document.getElementById('leadershipReportsBoxModal');
   if (modal) modal.classList.add('hidden');
+}
+
+let rpBoxIsFullscreen = false;
+function toggleLeadershipReportsBoxFullscreen() {
+  rpBoxIsFullscreen = !rpBoxIsFullscreen;
+  const dialog = document.getElementById('leadershipReportsBoxDialog');
+  const icon = document.getElementById('rpBoxFullscreenIcon');
+  if (!dialog) return;
+
+  if (rpBoxIsFullscreen) {
+    dialog.className = "bg-white w-screen h-screen max-w-none max-h-none rounded-none flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in";
+    if (icon) icon.className = "fa-solid fa-compress text-xs";
+  } else {
+    dialog.className = "bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-6xl xl:max-w-7xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95";
+    if (icon) icon.className = "fa-solid fa-expand text-xs";
+  }
 }
 
 function renderLeadershipReportsBoxUI() {
@@ -22903,7 +22947,19 @@ function renderLeadershipReportsBoxUI() {
               <span>Gửi lúc: ${escapeHtml(r.displayDate || '')}</span>
             </p>
           </div>
-          <div class="shrink-0">${statusBadge}</div>
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <!-- Nút Tải Excel của cá nhân này -->
+            <button type="button" onclick="exportSingleReportToExcel('${r.id}')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Tải báo cáo của nhân sự này dạng Excel (.xls) chuẩn doanh nghiệp">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>
+              <span class="hidden sm:inline">Tải Excel</span>
+            </button>
+            <!-- Nút In / Xuất PDF của cá nhân này -->
+            <button type="button" onclick="printSingleReportPDF('${r.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem trước và In hoặc Lưu dạng file PDF chuẩn báo cáo A4">
+              <i class="fa-solid fa-file-pdf text-rose-600"></i>
+              <span class="hidden sm:inline">Chọn PDF / In</span>
+            </button>
+            <div>${statusBadge}</div>
+          </div>
         </div>
 
         ${r.notes ? `
@@ -23152,6 +23208,988 @@ function approveLeadershipReport(reportId) {
 function approveReportProposals(reportId) {
   approveLeadershipReport(reportId);
 }
+
+// =========================================================================
+// CÔNG CỤ XUẤT BÁO CÁO EXCEL & IN PDF CHUẨN DOANH NGHIỆP TIỀN PHONG
+// =========================================================================
+
+// 1. Xuất file Excel báo cáo của 1 cá nhân
+function exportSingleReportToExcel(reportId) {
+  const sharedReports = getLeadershipReportsShared();
+  const rep = sharedReports.find(r => r.id === reportId);
+  if (!rep) {
+    showToast("Không tìm thấy dữ liệu báo cáo!", true);
+    return;
+  }
+
+  const excelHtml = generateSingleReportExcelHtml(rep);
+  const blob = new Blob(['\uFEFF' + excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = removeAccents(rep.senderFullName || rep.senderUsername || 'Ca_nhan').replace(/\s+/g, '_');
+  a.download = `Bao_cao_cong_viec_${safeName}_Thang_${rep.periodMonth}_${rep.periodYear}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`📊 Đã tải file Excel báo cáo của ${rep.senderFullName || rep.senderUsername} thành công!`);
+}
+
+// 2. Tạo nội dung HTML file Excel chuẩn cho 1 cá nhân
+function generateSingleReportExcelHtml(rep) {
+  const m = rep.periodMonth || (new Date().getMonth() + 1);
+  const y = rep.periodYear || new Date().getFullYear();
+  const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+  const adhocList = items.filter(it => it.type === 'adhoc');
+  const planList = items.filter(it => it.type === 'plan');
+  const propList = items.filter(it => it.type === 'proposal');
+  const feedList = items.filter(it => it.type === 'feedback');
+
+  let statusText = 'Chờ Quản lý duyệt';
+  if (rep.status === 'manager_reviewed') statusText = 'Quản lý đã nhận xét';
+  else if (rep.status === 'forwarded_to_leadership') statusText = 'Đã chuyển Ban Lãnh đạo';
+  else if (rep.status === 'approved' || rep.status === 'leadership_approved') statusText = 'Ban Giám Đốc đã phê duyệt';
+
+  let tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8"/>
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>Báo cáo ${m}-${y}</x:Name>
+              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
+        .head-left { font-weight: bold; text-align: left; }
+        .head-right { font-weight: bold; text-align: right; }
+        .motto { font-size: 10pt; text-decoration: underline; }
+        .title-main { font-size: 16pt; font-weight: bold; text-align: center; background: #047857; color: #ffffff; height: 42px; }
+        .subtitle { font-size: 11pt; font-style: italic; text-align: center; background: #f8fafc; height: 26px; }
+        .meta-box { background: #f1f5f9; font-size: 11pt; font-weight: normal; }
+        .sec-header { font-size: 12pt; font-weight: bold; background: #0284c7; color: #ffffff; height: 30px; text-transform: uppercase; }
+        .sec-sub { font-size: 11pt; font-weight: bold; background: #e2e8f0; color: #0f172a; height: 26px; }
+        .th-col { background: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 28px; font-size: 10.5pt; }
+        .center { text-align: center; }
+        .done { color: #047857; font-weight: bold; }
+        .pending { color: #b45309; font-weight: bold; }
+        .overdue { color: #b91c1c; font-weight: bold; }
+        .important { color: #d97706; font-weight: bold; }
+        .feedback-title { font-weight: bold; background: #e0f2fe; color: #0369a1; }
+        .feedback-body { background: #f8fafc; }
+        .sig-col { text-align: center; font-weight: bold; vertical-align: top; height: 28px; }
+        .sig-sub { text-align: center; font-style: italic; font-size: 10pt; color: #475569; }
+      </style>
+    </head>
+    <body>
+      <table border="1">
+        <tr>
+          <td colspan="4" class="head-left" style="font-size:11pt;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
+          <td colspan="3" class="head-right" style="font-size:11pt;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
+        </tr>
+        <tr>
+          <td colspan="4" class="head-left" style="font-size:10.5pt;color:#334155;">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(rep.senderDepartment || 'Bộ phận')}</td>
+          <td colspan="3" class="head-right motto">Độc lập - Tự do - Hạnh phúc</td>
+        </tr>
+        <tr><td colspan="7" style="border:none;height:12px;"></td></tr>
+        <tr>
+          <th colspan="7" class="title-main">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; KẾ HOẠCH CÔNG TÁC</th>
+        </tr>
+        <tr>
+          <td colspan="7" class="subtitle">Kỳ báo cáo: Tháng ${m}/${y} — Thời điểm gửi: ${escapeHtml(rep.displayDate || '')}</td>
+        </tr>
+        <tr class="meta-box">
+          <td colspan="7" style="padding:10px;">
+            <b>Họ và tên nhân sự:</b> ${escapeHtml(rep.senderFullName || rep.senderUsername)} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <b>Bộ phận:</b> ${escapeHtml(rep.senderDepartment || 'Ban DVKH')} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <b>Chức danh:</b> ${escapeHtml(rep.senderRole || 'Nhân viên')} &nbsp;&nbsp;|&nbsp;&nbsp;
+            <b>Trạng thái:</b> <b>${escapeHtml(statusText)}</b>
+          </td>
+        </tr>
+        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
+
+        <!-- PHẦN I: VIỆC PHÁT SINH -->
+        <tr>
+          <th colspan="7" class="sec-header" style="background:#d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${adhocList.length} việc)</th>
+        </tr>
+        <tr class="th-col">
+          <th style="width:40px;">STT</th>
+          <th style="width:260px;">Tên công việc / Nhiệm vụ phát sinh</th>
+          <th style="width:340px;">Nội dung chi tiết &amp; Căn cứ</th>
+          <th style="width:100px;">Ưu tiên</th>
+          <th style="width:110px;">Ngày ghi nhận</th>
+          <th style="width:120px;">Trạng thái</th>
+          <th style="width:140px;">Ghi chú</th>
+        </tr>
+  `;
+
+  if (adhocList.length === 0) {
+    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có công việc phát sinh trong kỳ báo cáo</td></tr>`;
+  } else {
+    adhocList.forEach((it, idx) => {
+      const isDone = it.status === 'done';
+      tableHtml += `
+        <tr>
+          <td class="center">${idx + 1}</td>
+          <td><b>${escapeHtml(it.title || '')}</b></td>
+          <td>${escapeHtml(it.content || '')}</td>
+          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
+          <td class="center">${formatVNDate(it.date)}</td>
+          <td class="center ${isDone ? 'done' : 'pending'}">${isDone ? 'Đã làm' : 'Chưa làm'}</td>
+          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // PHẦN II: KẾ HOẠCH
+  tableHtml += `
+        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
+        <tr>
+          <th colspan="7" class="sec-header" style="background:#0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${planList.length} việc)</th>
+        </tr>
+        <tr class="th-col">
+          <th style="width:40px;">STT</th>
+          <th style="width:260px;">Kế hoạch / Nhiệm vụ thực hiện</th>
+          <th style="width:340px;">Nội dung công việc &amp; Mục tiêu</th>
+          <th style="width:100px;">Ưu tiên</th>
+          <th style="width:110px;">Hạn chót</th>
+          <th style="width:120px;">Tiến độ</th>
+          <th style="width:140px;">Ghi chú</th>
+        </tr>
+  `;
+
+  if (planList.length === 0) {
+    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có kế hoạch công việc nào trong danh mục</td></tr>`;
+  } else {
+    planList.forEach((it, idx) => {
+      let tlStatus = 'Đang thực hiện';
+      let tlClass = 'pending';
+      if (it.isCompleted || it.status === 'done') {
+        tlStatus = 'Đã hoàn thành';
+        tlClass = 'done';
+      } else if (it.dueDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (it.dueDate < today) {
+          tlStatus = 'Quá hạn';
+          tlClass = 'overdue';
+        } else if (it.dueDate === today) {
+          tlStatus = 'Đến hạn hôm nay';
+          tlClass = 'overdue';
+        } else {
+          tlStatus = 'Trong hạn';
+          tlClass = 'pending';
+        }
+      }
+      tableHtml += `
+        <tr>
+          <td class="center">${idx + 1}</td>
+          <td><b>${escapeHtml(it.title || '')}</b></td>
+          <td>${escapeHtml(it.content || '')}</td>
+          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
+          <td class="center">${formatVNDate(it.dueDate)}</td>
+          <td class="center ${tlClass}">${tlStatus}</td>
+          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // PHẦN III: ĐỀ XUẤT
+  tableHtml += `
+        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
+        <tr>
+          <th colspan="7" class="sec-header" style="background:#7c3aed;">III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${propList.length} mục)</th>
+        </tr>
+        <tr class="th-col">
+          <th style="width:40px;">STT</th>
+          <th style="width:260px;">Tên sáng kiến / Đề xuất cải tiến</th>
+          <th style="width:340px;">Nội dung giải pháp &amp; Hiệu quả dự kiến</th>
+          <th style="width:100px;">Ưu tiên</th>
+          <th style="width:110px;">Ngày đề xuất</th>
+          <th style="width:120px;">Tình trạng duyệt</th>
+          <th style="width:140px;">Ý kiến phê duyệt</th>
+        </tr>
+  `;
+
+  if (propList.length === 0) {
+    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có đề xuất kiến nghị nào trong kỳ</td></tr>`;
+  } else {
+    propList.forEach((it, idx) => {
+      const isApp = it.status === 'approved_executed';
+      tableHtml += `
+        <tr>
+          <td class="center">${idx + 1}</td>
+          <td><b>${escapeHtml(it.title || '')}</b></td>
+          <td>${escapeHtml(it.content || '')}</td>
+          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
+          <td class="center">${formatVNDate(it.date)}</td>
+          <td class="center ${isApp ? 'done' : 'pending'}">${isApp ? 'Được duyệt' : 'Chờ duyệt'}</td>
+          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // PHẦN IV: Ý KIẾN / PHẢN ÁNH
+  tableHtml += `
+        <tr><td colspan="7" style="border:none;height:10px;"></td></tr>
+        <tr>
+          <th colspan="7" class="sec-header" style="background:#0d9488;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH (${feedList.length} mục)</th>
+        </tr>
+        <tr class="th-col">
+          <th style="width:40px;">STT</th>
+          <th style="width:260px;">Vấn đề phản ánh / Góp ý</th>
+          <th style="width:340px;">Nội dung chi tiết &amp; Đề xuất xử lý</th>
+          <th style="width:100px;">Ưu tiên</th>
+          <th style="width:110px;">Ngày phản ánh</th>
+          <th style="width:120px;">Tiếp nhận</th>
+          <th style="width:140px;">Phản hồi</th>
+        </tr>
+  `;
+
+  if (feedList.length === 0) {
+    tableHtml += `<tr><td colspan="7" class="center" style="font-style:italic;color:#64748b;height:30px;">Không có ý kiến phản ánh nào trong kỳ</td></tr>`;
+  } else {
+    feedList.forEach((it, idx) => {
+      tableHtml += `
+        <tr>
+          <td class="center">${idx + 1}</td>
+          <td><b>${escapeHtml(it.title || '')}</b></td>
+          <td>${escapeHtml(it.content || '')}</td>
+          <td class="center">${it.isImportant ? '<span class="important">⭐ Quan trọng</span>' : 'Bình thường'}</td>
+          <td class="center">${formatVNDate(it.date)}</td>
+          <td class="center done">Đã ghi nhận</td>
+          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // PHẦN V: NHẬN XÉT & PHÊ DUYỆT
+  tableHtml += `
+        <tr><td colspan="7" style="border:none;height:12px;"></td></tr>
+        <tr class="feedback-title"><td colspan="7"><b>V. Ý KIẾN NHẬN XÉT, ĐÁNH GIÁ &amp; PHÊ DUYỆT</b></td></tr>
+        <tr class="feedback-body">
+          <td colspan="7" style="padding:8px 12px;">
+            <p><b>1. Lời nhắn của người gửi:</b> ${escapeHtml(rep.notes || 'Không có')}</p>
+            <p><b>2. Ý kiến nhận xét của Quản lý bộ phận:</b> ${escapeHtml(rep.managerFeedback || 'Chưa có ý kiến nhận xét')}</p>
+            <p><b>3. Ý kiến chỉ đạo của Ban Giám Đốc:</b> ${escapeHtml(rep.leaderFeedback || 'Chưa có ý kiến chỉ đạo')}</p>
+          </td>
+        </tr>
+
+        <!-- CHỮ KÝ 3 BÊN -->
+        <tr><td colspan="7" style="border:none;height:16px;"></td></tr>
+        <tr>
+          <td colspan="7" style="border:none;text-align:right;font-style:italic;padding-bottom:8px;">Hải Phòng, ngày ..... tháng ..... năm 2026</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="sig-col">NGƯỜI LẬP BÁO CÁO</td>
+          <td colspan="3" class="sig-col">QUẢN LÝ BỘ PHẬN</td>
+          <td colspan="2" class="sig-col">BAN GIÁM ĐỐC</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="sig-sub">(Ký, ghi rõ họ tên)</td>
+          <td colspan="3" class="sig-sub">(Ký, ghi rõ họ tên)</td>
+          <td colspan="2" class="sig-sub">(Ký duyệt)</td>
+        </tr>
+        <tr><td colspan="7" style="border:none;height:65px;"></td></tr>
+        <tr>
+          <td colspan="2" class="center"><b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b></td>
+          <td colspan="3" class="center"><b>${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</b></td>
+          <td colspan="2" class="center"><b>Ban Giám Đốc</b></td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  return tableHtml;
+}
+
+// 3. In hoặc lưu file PDF báo cáo của 1 cá nhân
+function printSingleReportPDF(reportId) {
+  const sharedReports = getLeadershipReportsShared();
+  const rep = sharedReports.find(r => r.id === reportId);
+  if (!rep) {
+    showToast("Không tìm thấy dữ liệu báo cáo!", true);
+    return;
+  }
+
+  const printHtml = generateSingleReportPrintHtml(rep);
+  const printWindow = window.open('', '_blank', 'width=1050,height=850,menubar=no,toolbar=no,location=no,status=no');
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+    }, 250);
+  } else {
+    showToast("Trình duyệt đã chặn cửa sổ bật lên. Vui lòng cho phép popup để xem và in PDF!", true);
+  }
+}
+
+// 4. Tạo giao diện HTML in PDF A4 chuẩn doanh nghiệp cho 1 cá nhân
+function generateSingleReportPrintHtml(rep) {
+  const m = rep.periodMonth || (new Date().getMonth() + 1);
+  const y = rep.periodYear || new Date().getFullYear();
+  const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+  const adhocList = items.filter(it => it.type === 'adhoc');
+  const planList = items.filter(it => it.type === 'plan');
+  const propList = items.filter(it => it.type === 'proposal');
+  const feedList = items.filter(it => it.type === 'feedback');
+
+  let statusBadge = '<span style="color:#b45309;font-weight:bold;">Chờ Quản lý duyệt</span>';
+  if (rep.status === 'manager_reviewed') statusBadge = '<span style="color:#0369a1;font-weight:bold;">Quản lý đã nhận xét</span>';
+  else if (rep.status === 'forwarded_to_leadership') statusBadge = '<span style="color:#4338ca;font-weight:bold;">Đã chuyển Ban Lãnh đạo</span>';
+  else if (rep.status === 'approved' || rep.status === 'leadership_approved') statusBadge = '<span style="color:#047857;font-weight:bold;">Ban Giám Đốc đã phê duyệt</span>';
+
+  return `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="utf-8"/>
+      <title>Báo cáo công việc - ${escapeHtml(rep.senderFullName || rep.senderUsername)}</title>
+      <style>
+        @page { size: A4 portrait; margin: 15mm 15mm 15mm 15mm; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.4; color: #111827; margin: 0; padding: 20px; background: #f8fafc; }
+        .page-container { max-width: 860px; margin: 0 auto; background: #fff; padding: 30px 35px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 8px; }
+        @media print {
+          body { background: #fff; padding: 0; }
+          .page-container { max-width: none; width: 100%; box-shadow: none; padding: 0; }
+          .no-print { display: none !important; }
+        }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: none; }
+        .header-table td { border: none; padding: 2px 0; vertical-align: top; }
+        .company-name { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
+        .company-dept { font-size: 10.5pt; font-weight: bold; color: #374151; }
+        .nation-title { font-size: 11pt; font-weight: bold; text-align: right; text-transform: uppercase; }
+        .motto { font-size: 11pt; font-weight: bold; text-align: right; }
+        .motto-line { width: 160px; height: 1px; background: #111827; margin-left: auto; margin-top: 3px; }
+        .report-title { text-align: center; font-size: 17pt; font-weight: bold; margin-top: 15px; margin-bottom: 4px; text-transform: uppercase; color: #064e3b; }
+        .report-period { text-align: center; font-size: 11.5pt; font-style: italic; margin-bottom: 18px; color: #4b5563; }
+        .info-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 11pt; display: flex; flex-wrap: wrap; gap: 15px; }
+        .sec-title { font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-top: 22px; margin-bottom: 8px; color: #1e3a8a; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11pt; }
+        table.data-table th, table.data-table td { border: 1px solid #94a3b8; padding: 6px 8px; }
+        table.data-table th { background: #f1f5f9; font-weight: bold; text-align: center; }
+        .center { text-align: center; }
+        .text-done { color: #047857; font-weight: bold; }
+        .text-pending { color: #b45309; font-weight: bold; }
+        .text-overdue { color: #b91c1c; font-weight: bold; }
+        .feedback-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-top: 15px; font-size: 11.5pt; }
+        .feedback-box p { margin: 6px 0; }
+        .sig-table { width: 100%; border-collapse: collapse; margin-top: 30px; border: none; page-break-inside: avoid; }
+        .sig-table td { border: none; text-align: center; vertical-align: top; width: 33.33%; padding: 4px 6px; }
+        .sig-date { text-align: right; font-style: italic; margin-bottom: 12px; font-size: 11pt; }
+        .sig-title { font-weight: bold; font-size: 11.5pt; }
+        .sig-sub { font-style: italic; font-size: 10pt; color: #64748b; margin-top: 2px; }
+        .sig-space { height: 75px; }
+        .sig-name { font-weight: bold; font-size: 11.5pt; }
+        .top-toolbar { position: sticky; top: 0; z-index: 100; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .btn-action { background: #059669; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-action:hover { background: #047857; }
+        .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #334155; }
+        .btn-close { background: #e11d48; }
+        .btn-close:hover { background: #be123c; }
+      </style>
+    </head>
+    <body>
+      <div class="top-toolbar no-print">
+        <div>
+          <b>Xem trước bản in / Lưu PDF:</b> Báo cáo công việc ${escapeHtml(rep.senderFullName || rep.senderUsername)}
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-action" onclick="window.print()">🖨️ In Báo Cáo / Lưu PDF</button>
+          <button class="btn-action btn-secondary" onclick="window.opener ? window.opener.exportSingleReportToExcel('${rep.id}') : alert('Vui lòng tải từ giao diện chính!')">📊 Tải Bản Excel</button>
+          <button class="btn-action btn-close" onclick="window.close()">✕ Đóng</button>
+        </div>
+      </div>
+
+      <div class="page-container">
+        <table class="header-table">
+          <tr>
+            <td style="width:55%;">
+              <div class="company-name">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</div>
+              <div class="company-dept">BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(rep.senderDepartment || 'Bộ phận')}</div>
+            </td>
+            <td style="width:45%;">
+              <div class="nation-title">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div class="motto">Độc lập - Tự do - Hạnh phúc</div>
+              <div class="motto-line"></div>
+            </td>
+          </tr>
+        </table>
+
+        <div class="report-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; KẾ HOẠCH CÔNG TÁC</div>
+        <div class="report-period">Kỳ báo cáo: Tháng ${m}/${y} — Thời điểm gửi: ${escapeHtml(rep.displayDate || '')}</div>
+
+        <div class="info-card">
+          <div><b>Họ và tên:</b> ${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
+          <div><b>Bộ phận:</b> ${escapeHtml(rep.senderDepartment || 'Ban DVKH')}</div>
+          <div><b>Chức vụ:</b> ${escapeHtml(rep.senderRole || 'Nhân viên')}</div>
+          <div><b>Trạng thái:</b> ${statusBadge}</div>
+        </div>
+
+        <!-- PHẦN I -->
+        <div class="sec-title">I. Công việc phát sinh trong tháng (${adhocList.length})</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">STT</th>
+              <th style="width:230px;">Tên công việc phát sinh</th>
+              <th>Nội dung chi tiết &amp; Căn cứ</th>
+              <th style="width:105px;">Ngày</th>
+              <th style="width:115px;">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${adhocList.length === 0 ? '<tr><td colspan="5" class="center" style="font-style:italic;color:#64748b;">Không có công việc phát sinh</td></tr>' :
+              adhocList.map((it, idx) => `
+                <tr>
+                  <td class="center">${idx + 1}</td>
+                  <td><b>${escapeHtml(it.title)}</b> ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}</td>
+                  <td>${escapeHtml(it.content || '')}</td>
+                  <td class="center">${formatVNDate(it.date)}</td>
+                  <td class="center ${it.status === 'done' ? 'text-done' : 'text-pending'}">${it.status === 'done' ? 'Đã làm' : 'Chưa làm'}</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+
+        <!-- PHẦN II -->
+        <div class="sec-title">II. Kế hoạch thực hiện công việc &amp; Lịch công tác (${planList.length})</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">STT</th>
+              <th style="width:230px;">Kế hoạch / Nhiệm vụ</th>
+              <th>Mục tiêu &amp; Nội dung thực hiện</th>
+              <th style="width:105px;">Hạn chót</th>
+              <th style="width:115px;">Tiến độ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${planList.length === 0 ? '<tr><td colspan="5" class="center" style="font-style:italic;color:#64748b;">Không có kế hoạch công việc</td></tr>' :
+              planList.map((it, idx) => {
+                let st = 'Đang làm';
+                let cls = 'text-pending';
+                if (it.isCompleted || it.status === 'done') { st = 'Hoàn thành'; cls = 'text-done'; }
+                else if (it.dueDate) {
+                  const today = new Date().toISOString().split('T')[0];
+                  if (it.dueDate < today) { st = 'Quá hạn'; cls = 'text-overdue'; }
+                }
+                return `
+                  <tr>
+                    <td class="center">${idx + 1}</td>
+                    <td><b>${escapeHtml(it.title)}</b> ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}</td>
+                    <td>${escapeHtml(it.content || '')}</td>
+                    <td class="center">${formatVNDate(it.dueDate)}</td>
+                    <td class="center ${cls}">${st}</td>
+                  </tr>
+                `;
+              }).join('')}
+          </tbody>
+        </table>
+
+        <!-- PHẦN III -->
+        <div class="sec-title">III. Sáng kiến, Đề xuất &amp; Kiến nghị (${propList.length})</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">STT</th>
+              <th style="width:230px;">Sáng kiến / Đề xuất</th>
+              <th>Nội dung giải pháp &amp; Hiệu quả dự kiến</th>
+              <th style="width:105px;">Ngày gửi</th>
+              <th style="width:115px;">Duyệt</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${propList.length === 0 ? '<tr><td colspan="5" class="center" style="font-style:italic;color:#64748b;">Không có đề xuất kiến nghị</td></tr>' :
+              propList.map((it, idx) => `
+                <tr>
+                  <td class="center">${idx + 1}</td>
+                  <td><b>${escapeHtml(it.title)}</b></td>
+                  <td>${escapeHtml(it.content || '')}</td>
+                  <td class="center">${formatVNDate(it.date)}</td>
+                  <td class="center ${it.status === 'approved_executed' ? 'text-done' : 'text-pending'}">${it.status === 'approved_executed' ? 'Đã duyệt' : 'Chờ duyệt'}</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+
+        <!-- PHẦN IV -->
+        <div class="sec-title">IV. Ý kiến đóng góp &amp; Phản ánh (${feedList.length})</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">STT</th>
+              <th style="width:230px;">Vấn đề phản ánh</th>
+              <th>Nội dung chi tiết &amp; Đề xuất khắc phục</th>
+              <th style="width:105px;">Ngày gửi</th>
+              <th style="width:115px;">Tiếp nhận</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${feedList.length === 0 ? '<tr><td colspan="5" class="center" style="font-style:italic;color:#64748b;">Không có ý kiến phản ánh</td></tr>' :
+              feedList.map((it, idx) => `
+                <tr>
+                  <td class="center">${idx + 1}</td>
+                  <td><b>${escapeHtml(it.title)}</b></td>
+                  <td>${escapeHtml(it.content || '')}</td>
+                  <td class="center">${formatVNDate(it.date)}</td>
+                  <td class="center text-done">Đã ghi nhận</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+
+        <!-- PHẦN V: NHẬN XÉT & PHÊ DUYỆT -->
+        <div class="sec-title">V. Nhận xét &amp; Ý kiến chỉ đạo</div>
+        <div class="feedback-box">
+          <p><b>1. Lời nhắn nhân sự gửi:</b> ${escapeHtml(rep.notes || 'Không có')}</p>
+          <p><b>2. Nhận xét của Quản lý bộ phận:</b> ${escapeHtml(rep.managerFeedback || 'Chưa có ý kiến nhận xét')}</p>
+          <p><b>3. Ý kiến chỉ đạo Ban Giám Đốc:</b> ${escapeHtml(rep.leaderFeedback || 'Chưa có ý kiến chỉ đạo')}</p>
+        </div>
+
+        <!-- CHỮ KÝ 3 BÊN -->
+        <div class="sig-date">Hải Phòng, ngày ..... tháng ..... năm 2026</div>
+        <table class="sig-table">
+          <tr>
+            <td>
+              <div class="sig-title">NGƯỜI LẬP BÁO CÁO</div>
+              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+              <div class="sig-space"></div>
+              <div class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
+            </td>
+            <td>
+              <div class="sig-title">QUẢN LÝ BỘ PHẬN</div>
+              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+              <div class="sig-space"></div>
+              <div class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</div>
+            </td>
+            <td>
+              <div class="sig-title">BAN GIÁM ĐỐC</div>
+              <div class="sig-sub">(Ký duyệt)</div>
+              <div class="sig-space"></div>
+              <div class="sig-name">Ban Giám Đốc</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// 5. Xuất file Excel tổng hợp các báo cáo bộ phận / toàn ban
+function exportConsolidatedReportsToExcel() {
+  if (!currentUser) return;
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  const deptSelect = document.getElementById('rpBoxFilterDept');
+  const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
+  const sharedReports = getLeadershipReportsShared();
+
+  let reports = sharedReports.filter(r => 
+    (deptSelect && deptSelect.value === 'ALL' ? true : isSameDept(r.senderDepartment, targetDept)) &&
+    (r.periodMonth === m && r.periodYear === y)
+  );
+
+  // Nếu không có báo cáo theo tháng lọc, lấy tất cả báo cáo của bộ phận đó
+  if (reports.length === 0) {
+    reports = sharedReports.filter(r => 
+      (deptSelect && deptSelect.value === 'ALL' ? true : isSameDept(r.senderDepartment, targetDept))
+    );
+  }
+
+  if (reports.length === 0) {
+    showToast(`Không có báo cáo nào để xuất Excel tổng hợp!`, true);
+    return;
+  }
+
+  const deptLabel = (deptSelect && deptSelect.value === 'ALL') ? 'Toàn bộ các bộ phận' : targetDept;
+  const excelHtml = generateConsolidatedReportsExcelHtml(reports, deptLabel, m, y);
+  const blob = new Blob(['\uFEFF' + excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeDept = removeAccents(deptLabel).replace(/\s+/g, '_');
+  a.download = `Bao_cao_tong_hop_${safeDept}_Thang_${m}_${y}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`📊 Đã xuất file Excel tổng hợp (${reports.length} báo cáo) thành công!`);
+}
+
+// 6. Tạo nội dung HTML file Excel tổng hợp
+function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
+  let totalAdhoc = 0, adhocDone = 0;
+  let totalPlan = 0, planDone = 0, planOverdue = 0;
+  let totalProp = 0, propApproved = 0;
+  let totalFeed = 0;
+  const staffSet = new Set();
+  const today = new Date().toISOString().split('T')[0];
+
+  reportsList.forEach(rep => {
+    staffSet.add(rep.senderFullName || rep.senderUsername);
+    const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+    its.forEach(it => {
+      if (it.type === 'adhoc') {
+        totalAdhoc++;
+        if (it.status === 'done') adhocDone++;
+      } else if (it.type === 'plan') {
+        totalPlan++;
+        if (it.isCompleted || it.status === 'done') planDone++;
+        else if (it.dueDate && it.dueDate < today) planOverdue++;
+      } else if (it.type === 'proposal') {
+        totalProp++;
+        if (it.status === 'approved_executed') propApproved++;
+      } else if (it.type === 'feedback') {
+        totalFeed++;
+      }
+    });
+  });
+
+  let rows = '';
+  let counter = 0;
+  reportsList.forEach(rep => {
+    const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+    its.forEach(it => {
+      counter++;
+      let catName = 'Việc phát sinh';
+      let statusStr = it.status === 'done' ? 'Đã làm' : 'Chưa làm';
+      let dateDisplay = it.date ? formatVNDate(it.date) : '';
+
+      if (it.type === 'plan') {
+        catName = 'Kế hoạch';
+        dateDisplay = it.dueDate ? `Hạn: ${formatVNDate(it.dueDate)}` : '';
+        if (it.isCompleted || it.status === 'done') statusStr = 'Hoàn thành';
+        else if (it.dueDate && it.dueDate < today) statusStr = 'Quá hạn';
+        else statusStr = 'Đang làm';
+      } else if (it.type === 'proposal') {
+        catName = 'Đề xuất';
+        statusStr = it.status === 'approved_executed' ? 'Đã duyệt' : 'Chờ duyệt';
+      } else if (it.type === 'feedback') {
+        catName = 'Ý kiến / Phản ánh';
+        statusStr = 'Đã ghi nhận';
+      }
+
+      rows += `
+        <tr>
+          <td style="text-align:center;">${counter}</td>
+          <td><b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b></td>
+          <td>${escapeHtml(rep.senderDepartment || '')}</td>
+          <td>${escapeHtml(rep.senderRole || 'Nhân viên')}</td>
+          <td style="text-align:center;">${catName}</td>
+          <td style="text-align:center;">${it.isImportant ? '⭐ Quan trọng' : 'Bình thường'}</td>
+          <td><b>${escapeHtml(it.title || '')}</b></td>
+          <td>${escapeHtml(it.content || '')}</td>
+          <td style="text-align:center;">${dateDisplay}</td>
+          <td style="text-align:center;">${statusStr}</td>
+          <td>${escapeHtml(it.feedbackResponse || '')}</td>
+        </tr>
+      `;
+    });
+  });
+
+  return `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8"/>
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>Tổng hợp ${escapeHtml(deptName)}</x:Name>
+              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
+        .title-main { font-size: 16pt; font-weight: bold; text-align: center; background: #047857; color: #ffffff; height: 40px; }
+        .th-col { background: #1e293b; color: #ffffff; font-weight: bold; text-align: center; height: 28px; }
+        .sig-col { text-align: center; font-weight: bold; vertical-align: top; height: 28px; }
+      </style>
+    </head>
+    <body>
+      <table border="1">
+        <tr>
+          <td colspan="6" style="font-weight:bold;">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</td>
+          <td colspan="5" style="text-align:right;font-weight:bold;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM - Độc lập - Tự do - Hạnh phúc</td>
+        </tr>
+        <tr><td colspan="11" style="border:none;height:10px;"></td></tr>
+        <tr>
+          <th colspan="11" class="title-main">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN: ${escapeHtml(deptName).toUpperCase()}</th>
+        </tr>
+        <tr>
+          <td colspan="11" style="text-align:center;font-style:italic;background:#f8fafc;padding:6px;">
+            Kỳ báo cáo: Tháng ${m}/${y} — Tổng hợp từ ${reportsList.length} báo cáo (${staffSet.size} nhân sự)
+          </td>
+        </tr>
+        <tr style="background:#f1f5f9;font-weight:bold;">
+          <td colspan="11" style="padding:10px;">
+            📊 <b>THỐNG KÊ TỔNG QUAN:</b> &nbsp;
+            • Nhân sự báo cáo: <b>${staffSet.size}</b> &nbsp;|&nbsp;
+            • Việc phát sinh: <b>${totalAdhoc}</b> (${adhocDone} đã xong) &nbsp;|&nbsp;
+            • Kế hoạch: <b>${totalPlan}</b> (${planDone} hoàn thành, ${planOverdue} quá hạn) &nbsp;|&nbsp;
+            • Sáng kiến/Đề xuất: <b>${totalProp}</b> (${propApproved} được duyệt) &nbsp;|&nbsp;
+            • Ý kiến/Phản ánh: <b>${totalFeed}</b>
+          </td>
+        </tr>
+        <tr><td colspan="11" style="border:none;height:10px;"></td></tr>
+        <tr class="th-col">
+          <th style="width:40px;">STT</th>
+          <th style="width:160px;">Nhân sự</th>
+          <th style="width:140px;">Bộ phận</th>
+          <th style="width:100px;">Chức danh</th>
+          <th style="width:110px;">Danh mục</th>
+          <th style="width:90px;">Mức độ</th>
+          <th style="width:240px;">Tiêu đề công việc</th>
+          <th style="width:300px;">Chi tiết &amp; Căn cứ</th>
+          <th style="width:110px;">Thời hạn / Ngày</th>
+          <th style="width:110px;">Tiến độ</th>
+          <th style="width:140px;">Ghi chú / Kết quả</th>
+        </tr>
+        ${rows}
+        <tr><td colspan="11" style="border:none;height:15px;"></td></tr>
+        <tr>
+          <td colspan="6" class="sig-col">QUẢN LÝ BỘ PHẬN TỔNG HỢP<br/><span style="font-style:italic;font-weight:normal;font-size:10pt;">(Ký, ghi rõ họ tên)</span></td>
+          <td colspan="5" class="sig-col">BAN GIÁM ĐỐC PHÊ DUYỆT<br/><span style="font-style:italic;font-weight:normal;font-size:10pt;">(Ký duyệt)</span></td>
+        </tr>
+        <tr><td colspan="11" style="border:none;height:65px;"></td></tr>
+      </table>
+    </body>
+    </html>
+  `;
+}
+
+// 7. In hoặc lưu file PDF tổng hợp các báo cáo bộ phận / toàn ban
+function printConsolidatedReportsPDF() {
+  if (!currentUser) return;
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+  const deptSelect = document.getElementById('rpBoxFilterDept');
+  const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
+  const sharedReports = getLeadershipReportsShared();
+
+  let reports = sharedReports.filter(r => 
+    (deptSelect && deptSelect.value === 'ALL' ? true : isSameDept(r.senderDepartment, targetDept)) &&
+    (r.periodMonth === m && r.periodYear === y)
+  );
+
+  if (reports.length === 0) {
+    reports = sharedReports.filter(r => 
+      (deptSelect && deptSelect.value === 'ALL' ? true : isSameDept(r.senderDepartment, targetDept))
+    );
+  }
+
+  if (reports.length === 0) {
+    showToast(`Không có báo cáo nào để in tổng hợp!`, true);
+    return;
+  }
+
+  const deptLabel = (deptSelect && deptSelect.value === 'ALL') ? 'Toàn bộ các bộ phận' : targetDept;
+  const printHtml = generateConsolidatedReportsPrintHtml(reports, deptLabel, m, y);
+  const printWindow = window.open('', '_blank', 'width=1150,height=850,menubar=no,toolbar=no,location=no,status=no');
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+    }, 250);
+  } else {
+    showToast("Trình duyệt đã chặn cửa sổ bật lên. Vui lòng cho phép popup để xem và in PDF tổng hợp!", true);
+  }
+}
+
+// 8. Tạo giao diện HTML in PDF A4 ngang cho báo cáo tổng hợp
+function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
+  let totalAdhoc = 0, adhocDone = 0;
+  let totalPlan = 0, planDone = 0, planOverdue = 0;
+  let totalProp = 0, propApproved = 0;
+  let totalFeed = 0;
+  const staffSet = new Set();
+  const today = new Date().toISOString().split('T')[0];
+
+  reportsList.forEach(rep => {
+    staffSet.add(rep.senderFullName || rep.senderUsername);
+    const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+    its.forEach(it => {
+      if (it.type === 'adhoc') {
+        totalAdhoc++;
+        if (it.status === 'done') adhocDone++;
+      } else if (it.type === 'plan') {
+        totalPlan++;
+        if (it.isCompleted || it.status === 'done') planDone++;
+        else if (it.dueDate && it.dueDate < today) planOverdue++;
+      } else if (it.type === 'proposal') {
+        totalProp++;
+        if (it.status === 'approved_executed') propApproved++;
+      } else if (it.type === 'feedback') {
+        totalFeed++;
+      }
+    });
+  });
+
+  return `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="utf-8"/>
+      <title>Báo cáo tổng hợp bộ phận - ${escapeHtml(deptName)}</title>
+      <style>
+        @page { size: A4 landscape; margin: 12mm; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111827; margin: 0; padding: 20px; background: #f8fafc; }
+        .page-container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 25px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 8px; }
+        @media print {
+          body { background: #fff; padding: 0; }
+          .page-container { max-width: none; width: 100%; box-shadow: none; padding: 0; }
+          .no-print { display: none !important; }
+        }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: none; }
+        .header-table td { border: none; padding: 2px 0; }
+        .company-name { font-size: 10.5pt; font-weight: bold; text-transform: uppercase; }
+        .nation-title { font-size: 10.5pt; font-weight: bold; text-align: right; text-transform: uppercase; }
+        .report-title { text-align: center; font-size: 15pt; font-weight: bold; text-transform: uppercase; color: #064e3b; margin: 12px 0 4px 0; }
+        .report-period { text-align: center; font-size: 10.5pt; font-style: italic; color: #4b5563; margin-bottom: 15px; }
+        .kpi-row { display: flex; gap: 12px; margin-bottom: 15px; }
+        .kpi-card { flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 10pt; }
+        .kpi-num { font-size: 14pt; font-weight: bold; color: #047857; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10pt; }
+        table.data-table th, table.data-table td { border: 1px solid #94a3b8; padding: 5px 6px; }
+        table.data-table th { background: #f1f5f9; font-weight: bold; text-align: center; }
+        .center { text-align: center; }
+        .sig-table { width: 100%; border-collapse: collapse; margin-top: 20px; page-break-inside: avoid; }
+        .sig-table td { border: none; text-align: center; vertical-align: top; width: 50%; padding: 4px; }
+        .sig-space { height: 60px; }
+        .top-toolbar { position: sticky; top: 0; z-index: 100; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .btn-action { background: #059669; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+      </style>
+    </head>
+    <body>
+      <div class="top-toolbar no-print">
+        <div><b>Bản in Tổng Hợp Bộ Phận:</b> ${escapeHtml(deptName)} (Tháng ${m}/${y})</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-action" onclick="window.print()">🖨️ In Báo Cáo / Lưu PDF</button>
+          <button class="btn-action" style="background:#e11d48;" onclick="window.close()">✕ Đóng</button>
+        </div>
+      </div>
+      <div class="page-container">
+        <table class="header-table">
+          <tr>
+            <td style="width:50%;">
+              <div class="company-name">CÔNG TY CỔ PHẦN NHỰA THIẾU NIÊN TIỀN PHONG</div>
+              <div>BAN DỊCH VỤ KHÁCH HÀNG — ${escapeHtml(deptName)}</div>
+            </td>
+            <td style="width:50%;text-align:right;">
+              <div class="nation-title">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div style="font-weight:bold;text-decoration:underline;">Độc lập - Tự do - Hạnh phúc</div>
+            </td>
+          </tr>
+        </table>
+        <div class="report-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN: ${escapeHtml(deptName).toUpperCase()}</div>
+        <div class="report-period">Kỳ báo cáo: Tháng ${m}/${y} — Tổng hợp lúc: ${new Date().toLocaleDateString('vi-VN')}</div>
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-num">${staffSet.size}</div>Nhân sự gửi báo cáo</div>
+          <div class="kpi-card"><div class="kpi-num">${totalAdhoc}</div>Việc phát sinh (${adhocDone} xong)</div>
+          <div class="kpi-card"><div class="kpi-num">${totalPlan}</div>Kế hoạch (${planDone} xong, ${planOverdue} quá hạn)</div>
+          <div class="kpi-card"><div class="kpi-num">${totalProp}</div>Đề xuất (${propApproved} được duyệt)</div>
+          <div class="kpi-card"><div class="kpi-num">${totalFeed}</div>Ý kiến đóng góp</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:30px;">STT</th>
+              <th style="width:130px;">Nhân sự</th>
+              <th style="width:90px;">Phân loại</th>
+              <th>Tiêu đề công việc</th>
+              <th>Nội dung chi tiết / Căn cứ</th>
+              <th style="width:85px;">Thời hạn / Ngày</th>
+              <th style="width:85px;">Tiến độ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(() => {
+              let html = '';
+              let count = 0;
+              reportsList.forEach(rep => {
+                const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+                its.forEach(it => {
+                  count++;
+                  let cat = 'Phát sinh';
+                  let st = it.status === 'done' ? 'Đã làm' : 'Chưa làm';
+                  let dt = it.date ? formatVNDate(it.date) : '';
+                  if (it.type === 'plan') {
+                    cat = 'Kế hoạch';
+                    dt = it.dueDate ? formatVNDate(it.dueDate) : '';
+                    st = (it.isCompleted || it.status === 'done') ? 'Hoàn thành' : 'Đang làm';
+                  } else if (it.type === 'proposal') {
+                    cat = 'Đề xuất';
+                    st = it.status === 'approved_executed' ? 'Đã duyệt' : 'Chờ duyệt';
+                  } else if (it.type === 'feedback') {
+                    cat = 'Ý kiến';
+                    st = 'Ghi nhận';
+                  }
+                  html += `
+                    <tr>
+                      <td class="center">${count}</td>
+                      <td><b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b></td>
+                      <td class="center">${cat}</td>
+                      <td><b>${escapeHtml(it.title)}</b> ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}</td>
+                      <td>${escapeHtml(it.content || '')}</td>
+                      <td class="center">${dt}</td>
+                      <td class="center">${st}</td>
+                    </tr>
+                  `;
+                });
+              });
+              return html;
+            })()}
+          </tbody>
+        </table>
+        <table class="sig-table">
+          <tr>
+            <td>
+              <div style="font-weight:bold;">QUẢN LÝ BỘ PHẬN TỔNG HỢP</div>
+              <div style="font-style:italic;font-size:9.5pt;color:#64748b;">(Ký, ghi rõ họ tên)</div>
+              <div class="sig-space"></div>
+            </td>
+            <td>
+              <div style="font-weight:bold;">BAN GIÁM ĐỐC PHÊ DUYỆT</div>
+              <div style="font-style:italic;font-size:9.5pt;color:#64748b;">(Ký duyệt)</div>
+              <div class="sig-space"></div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 
 
 function seedSamplePersonalWorkspace() {
