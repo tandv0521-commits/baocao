@@ -1300,7 +1300,7 @@
           <i class="fa-solid fa-book-bookmark text-xs"></i>
           <span class="hidden sm:inline">Sổ tay công việc</span>
           <span class="sm:hidden">Sổ tay</span>
-          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse">0</span>
+          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num">0</span>
         </button>
 
         <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
@@ -1905,7 +1905,7 @@
             <!-- Nút quay lại công việc ban đầu -->
             <button type="button" onclick="closePersonalWorkspacePage()" class="px-3 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 hover:border-slate-400 font-bold text-xs flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-95 shrink-0" title="Quay lại bảng công việc ban đầu">
               <i class="fa-solid fa-arrow-left text-emerald-700 text-xs"></i>
-              <span class="hidden sm:inline">Quay lại công việc ban đầu</span>
+              <span class="hidden sm:inline">Quay lại Trang công việc</span>
               <span class="sm:hidden">Quay lại</span>
             </button>
 
@@ -1931,23 +1931,11 @@
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 flex-wrap">
-            <!-- Nút Tạo Báo Cáo Theo Mục Đã Tích Chọn -->
-            <button type="button" id="pwBtnPushReportHeader" onclick="openLeadershipReportPreviewModal()" class="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer" title="Tạo báo cáo theo các mục đã tích chọn">
-              <i class="fa-solid fa-file-circle-check text-xs"></i>
-              <span id="pwBtnPushReportHeaderText">Tạo báo cáo theo những mục đã tích chọn</span>
-            </button>
-
             <!-- Nút Hộp thư báo cáo -->
-            <button type="button" onclick="openLeadershipReportsBoxModal()" class="relative px-2.5 sm:px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem lịch sử các lần đẩy báo cáo & hộp thư tiếp nhận">
+            <button type="button" onclick="openLeadershipReportsBoxModal()" class="relative px-3 sm:px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem lịch sử các lần đẩy báo cáo & hộp thư tiếp nhận">
               <i class="fa-solid fa-inbox text-slate-600 text-xs"></i>
-              <span id="pwInboxBtnText" class="hidden md:inline">Hộp thư báo cáo</span>
+              <span id="pwInboxBtnText">Hộp thư báo cáo</span>
               <span id="pwInboxUnreadBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white font-num animate-pulse">0</span>
-            </button>
-
-            <!-- Nút Tải File Word -->
-            <button type="button" onclick="exportPersonalWorkspaceToWord()" class="px-2.5 sm:px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 hover:border-blue-300 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Tải sổ tay công việc dạng file Word (.doc) chuẩn mẫu">
-              <i class="fa-solid fa-file-word text-blue-600 text-xs"></i>
-              <span class="hidden md:inline">Tải File Word</span>
             </button>
           </div>
         </div>
@@ -2108,7 +2096,8 @@
 
         <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO CỐ ĐỊNH CHÂN MÀN HÌNH (FIXED FOOTER) -->
         <div id="pwBottomStickyToolbar" class="fixed bottom-0 left-0 right-0 z-40 px-4 sm:px-6 py-2.5 border-t border-slate-200/95 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-          <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div class="w-full flex flex-wrap items-center justify-between gap-3">
+            <!-- Vùng trái: Chọn tất cả và Đã chọn 0 mục để tạo báo cáo (sát góc trái) -->
             <div class="flex items-center gap-3">
               <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
                 <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
@@ -2120,16 +2109,17 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+            <!-- Vùng phải: Nút Quay lại Trang công việc và Tạo báo cáo (sát góc phải) -->
+            <div class="flex items-center gap-2.5">
+              <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
                 <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
-                <span>Quay lại công việc ban đầu</span>
+                <span>Quay lại Trang công việc</span>
               </button>
 
-              <!-- Nút Tạo Báo Cáo Theo Những Mục Đã Tích Chọn -->
+              <!-- Nút Tạo Báo Cáo -->
               <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-file-circle-check text-xs"></i>
-                <span id="pwBtnPushReportBottomText">Tạo báo cáo theo những mục đã tích chọn</span>
+                <span id="pwBtnPushReportBottomText">Tạo báo cáo</span>
               </button>
             </div>
           </div>
@@ -21569,6 +21559,39 @@ function updatePersonalWorkspaceEntryCardStats() {
       statPending.className = "px-2.5 py-1 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px]";
     }
   }
+
+  // Đồng bộ số lượng việc chưa làm lên biểu tượng Sổ tay trên thanh tiêu đề và menu
+  const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
+  if (headerBadge) {
+    if (pendingCount > 0) {
+      headerBadge.innerText = pendingCount;
+      headerBadge.classList.remove('hidden');
+      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num";
+      headerBadge.title = `${pendingCount} công việc chưa làm / chưa hoàn thiện`;
+    } else {
+      headerBadge.classList.add('hidden');
+    }
+  }
+
+  const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
+  if (menuBadge) {
+    if (pendingCount > 0) {
+      menuBadge.innerText = `${pendingCount} chưa làm`;
+      menuBadge.classList.remove('hidden');
+      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
+    } else {
+      menuBadge.classList.add('hidden');
+    }
+  }
+
+  const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
+  if (mobileBadge) {
+    if (pendingCount > 0) {
+      mobileBadge.classList.remove('hidden');
+    } else {
+      mobileBadge.classList.add('hidden');
+    }
+  }
 }
 
 // 4. Modal Nhắc Nhở Công Việc Chưa Làm / Đến Hạn Khi Đăng Nhập Hoặc Khởi Động
@@ -22581,16 +22604,14 @@ function updatePersonalWorkspaceReminders(dataArg) {
     const cFeed = document.getElementById('pwTabCount_feedback');
     if (cFeed) cFeed.innerText = feedbackCount;
 
+    // BIỂU TƯỢNG SỔ TAY: CHỈ ĐẾM SỐ LƯỢNG VIỆC CHƯA LÀM - CHƯA HOÀN THIỆN
     const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
     if (headerBadge) {
-      if (urgentAlertCount > 0) {
-        headerBadge.innerText = urgentAlertCount;
+      if (totalPending > 0) {
+        headerBadge.innerText = totalPending;
         headerBadge.classList.remove('hidden');
-        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse";
-      } else if (importantCount > 0) {
-        headerBadge.innerText = importantCount;
-        headerBadge.classList.remove('hidden');
-        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white border border-white shadow-2xs font-num";
+        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num";
+        headerBadge.title = `${totalPending} công việc chưa làm / chưa hoàn thiện`;
       } else {
         headerBadge.classList.add('hidden');
       }
@@ -22598,14 +22619,10 @@ function updatePersonalWorkspaceReminders(dataArg) {
 
     const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
     if (menuBadge) {
-      if (urgentAlertCount > 0) {
-        menuBadge.innerText = `${urgentAlertCount} cần làm`;
+      if (totalPending > 0) {
+        menuBadge.innerText = `${totalPending} chưa làm`;
         menuBadge.classList.remove('hidden');
         menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
-      } else if (importantCount > 0) {
-        menuBadge.innerText = `${importantCount} quan trọng`;
-        menuBadge.classList.remove('hidden');
-        menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-num";
       } else {
         menuBadge.classList.add('hidden');
       }
@@ -22613,7 +22630,7 @@ function updatePersonalWorkspaceReminders(dataArg) {
 
     const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
     if (mobileBadge) {
-      if (urgentAlertCount > 0 || importantCount > 0) {
+      if (totalPending > 0) {
         mobileBadge.classList.remove('hidden');
       } else {
         mobileBadge.classList.add('hidden');
@@ -22968,9 +22985,9 @@ function updatePersonalWorkspaceReportButtonsUI() {
   const inboxBtnText = document.getElementById('pwInboxBtnText');
 
   if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-  if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+  if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo";
   if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-  if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+  if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo";
 
   if (roleInfo.isStaff) {
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư & Lịch sử gửi";
