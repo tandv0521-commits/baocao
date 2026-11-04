@@ -1289,7 +1289,7 @@
         </button>
 
         <!-- Nút Xuất bảng Excel: Đặt cạnh nút Điền báo cáo theo thứ tự Điền báo cáo -> Xuất bảng Excel -> Menu -->
-        <!-- Nút Sổ tay việc riêng & Kế hoạch cá nhân: MỌI TÀI KHOẢN -->
+        <!-- Nút Sổ tay công việc & Kế hoạch cá nhân: MỌI TÀI KHOẢN -->
         <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspaceModal()" class="relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Theo dõi việc riêng, lịch kế hoạch, đề xuất & đẩy báo cáo lãnh đạo">
           <i class="fa-solid fa-calendar-check text-xs"></i>
           <span class="hidden sm:inline">Việc riêng & Kế hoạch</span>
@@ -1497,7 +1497,7 @@
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-slate-900 font-black text-sm sm:text-base group-hover:text-amber-800 transition-colors">Sổ Tay Việc Riêng &amp; Kế Hoạch Cá Nhân</h3>
+                <h3 class="text-slate-900 font-black text-sm sm:text-base group-hover:text-amber-800 transition-colors">Sổ Tay Công Việc &amp; Kế Hoạch Cá Nhân</h3>
                 <span class="px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">Không gian riêng</span>
                 <span id="pwCardCloudStatus" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full"><i class="fa-solid fa-cloud"></i> Supabase</span>
               </div>
@@ -1914,7 +1914,7 @@
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Việc Riêng &amp; Kế Hoạch Cá Nhân</h3>
+                <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Công Việc &amp; Kế Hoạch Cá Nhân</h3>
                 <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Trang theo dõi riêng</span>
                 <!-- Trạng thái Supabase Cloud -->
                 <button type="button" id="pwSyncCloudBadge" onclick="showSupabaseTableSetupGuide()" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs hover:bg-emerald-100 transition" title="Xem trạng thái kết nối & hướng dẫn Supabase">
@@ -1960,7 +1960,7 @@
               <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-bolt"></i></span>
               <div class="min-w-0">
                 <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Phát sinh</span>
-                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatAdhocCount">0</span> việc (<span id="pwStatAdhocDone" class="text-emerald-600">0</span> xong)</span>
+                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatAdhocCount">0</span> việc (<span id="pwStatAdhocPending" class="text-amber-600 font-bold">0</span> chưa xong)</span>
               </div>
             </div>
 
@@ -1969,7 +1969,7 @@
               <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-calendar-days"></i></span>
               <div class="min-w-0">
                 <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Lịch kế hoạch</span>
-                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatPlanCount">0</span> việc (<span id="pwStatPlanDue" class="text-rose-600 font-bold">0</span> gấp)</span>
+                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatPlanCount">0</span> việc (<span id="pwStatPlanPending" class="text-rose-600 font-bold">0</span> chưa xong)</span>
               </div>
             </div>
 
@@ -1978,7 +1978,7 @@
               <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-lightbulb"></i></span>
               <div class="min-w-0">
                 <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Đề xuất</span>
-                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatProposalCount">0</span> mục (<span id="pwStatProposalApproved" class="text-emerald-600">0</span> duyệt)</span>
+                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatProposalCount">0</span> mục (<span id="pwStatProposalPending" class="text-purple-600 font-bold">0</span> chưa xong)</span>
               </div>
             </div>
 
@@ -1987,7 +1987,7 @@
               <span class="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition"><i class="fa-solid fa-comment-dots"></i></span>
               <div class="min-w-0">
                 <span class="text-[9.5px] text-slate-400 font-bold block uppercase tracking-wider truncate">Ý kiến / Phản ánh</span>
-                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatFeedbackCount">0</span> ý kiến</span>
+                <span class="font-black text-slate-800 text-xs truncate block"><span id="pwStatFeedbackCount">0</span> ý kiến (<span id="pwStatFeedbackPending" class="text-teal-600 font-bold">0</span> chưa xong)</span>
               </div>
             </div>
 
@@ -1996,7 +1996,7 @@
               <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition"><i class="fa-solid fa-star"></i></span>
               <div class="min-w-0">
                 <span class="text-[9.5px] text-amber-800 font-bold block uppercase tracking-wider truncate">Quan trọng</span>
-                <span class="font-black text-amber-950 text-xs truncate block"><span id="pwStatImportantCount">0</span> mục ưu tiên ⭐</span>
+                <span class="font-black text-amber-950 text-xs truncate block"><span id="pwStatImportantCount">0</span> việc (<span id="pwStatImportantPending" class="text-rose-700 font-bold">0</span> chưa xong)</span>
               </div>
             </div>
           </div>
@@ -2131,7 +2131,7 @@
         <i class="fa-solid fa-table-cells text-base"></i>
         <span class="text-[10px] font-bold mt-0.5">Ma trận</span>
       </button>
-      <!-- Nút Sổ tay việc riêng trên Mobile Bottom Nav -->
+      <!-- Nút Sổ tay công việc trên Mobile Bottom Nav -->
       <button type="button" onclick="openPersonalWorkspaceModal()" class="relative flex flex-col items-center justify-center p-1 text-slate-500 hover:text-amber-600 active:scale-95 transition cursor-pointer">
         <i class="fa-solid fa-calendar-check text-base text-amber-600"></i>
         <span class="text-[10px] font-bold mt-0.5">Việc riêng</span>
@@ -4725,7 +4725,27 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <div class="text-center pb-3 border-b-2 border-slate-200">
             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</p>
             <p class="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">BAN DỊCH VỤ KHÁCH HÀNG</p>
-            <h2 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wide mt-2">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
+            
+          <!-- KHỐI CHỌN NGƯỜI TIẾP NHẬN BÁO CÁO: QUẢN LÝ / PHÓ GIÁM ĐỐC -->
+          <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200/90 rounded-2xl p-3 sm:p-3.5 mb-2 shadow-2xs space-y-2 text-left">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <label for="rpRecipientSelect" class="text-xs font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
+                <i class="fa-solid fa-user-check text-emerald-600 text-sm"></i>
+                <span>Chỉ định người tiếp nhận báo cáo:</span>
+              </label>
+              <span class="text-[10px] text-emerald-800 font-bold bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                Quản lý &amp; Phó Giám Đốc
+              </span>
+            </div>
+            <div class="relative">
+              <select id="rpRecipientSelect" onchange="onReportRecipientSelectChange(this.value)" class="w-full bg-white border border-emerald-300 text-xs font-bold text-slate-800 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs cursor-pointer">
+                <!-- Nạp tự động các tài khoản Quản lý & Phó Giám Đốc -->
+              </select>
+            </div>
+            <p class="text-[11px] text-slate-500 italic">Báo cáo sẽ được chuyển thẳng tới tài khoản được chọn để xem xét, tổng hợp và xử lý.</p>
+          </div>
+
+          <h2 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wide mt-2">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
             <p id="rpPreviewRecipientText" class="text-xs font-bold text-slate-700 mt-1">Kính gửi: Quản lý bộ phận</p>
             <p class="text-xs text-slate-500 italic mt-0.5">Kỳ báo cáo: <span id="rpPeriodText" class="font-bold text-slate-700">Tháng 11/2026</span> • Ngày lập: <span id="rpDateText" class="font-bold text-slate-700">--/--/----</span></p>
           </div>
@@ -5612,7 +5632,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (guideEl) guideEl.innerHTML = `Vui lòng liên hệ <b>Quản trị viên</b> hoặc <b>Trưởng bộ phận</b> để được thiết lập danh mục công việc trước khi thực hiện báo cáo hàng ngày.`;
       }
 
-      modal.classList.remove('hidden');
+      loadReportRecipientsOptions();
+  modal.classList.remove('hidden');
     }
 
     function closeUnassignedStaffModal() {
@@ -20456,7 +20477,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             },
             {
               type: 'action',
-              title: 'Sổ tay việc riêng & Kế hoạch cá nhân',
+              title: 'Sổ tay công việc & Kế hoạch cá nhân',
               subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
               icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
               badge: 'Việc riêng',
@@ -20571,7 +20592,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             },
             {
               type: 'action',
-              title: 'Sổ tay việc riêng & Kế hoạch cá nhân',
+              title: 'Sổ tay công việc & Kế hoạch cá nhân',
               subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
               icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
               badge: 'Việc riêng',
@@ -21377,7 +21398,7 @@ function isPersonalTaskFinished(it) {
 // 2. Chuyển đổi giữa Chế độ View Ban Đầu và Trang Sổ Tay Mới
 function openPersonalWorkspacePage() {
   if (!currentUser) {
-    if (typeof showToast === 'function') showToast("Vui lòng đăng nhập để mở Sổ tay việc riêng!", true);
+    if (typeof showToast === 'function') showToast("Vui lòng đăng nhập để mở Sổ tay công việc!", true);
     return;
   }
 
@@ -21564,34 +21585,33 @@ function generateSingleReportWordHtml(rep) {
   const propList = items.filter(it => it.type === 'proposal');
   const feedList = items.filter(it => it.type === 'feedback');
 
-  const isMgr = (rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary');
-  const recipientText = isMgr ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty" : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`;
+  const recipientText = rep.recipientFullName 
+    ? `Kính gửi: ${escapeHtml(rep.recipientFullName)} - ${escapeHtml(rep.recipientRole || 'Quản lý')} (${escapeHtml(rep.recipientDepartment || 'Ban DVKH')})`
+    : ((rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary')
+        ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
+        : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
 
   let sectionsHtml = '';
 
   // 1. Việc phát sinh
   if (adhocList.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #92400e; text-transform: uppercase; border-bottom: 2pt solid #fde68a; padding-bottom: 4px;">
-          ⚡ I. CÔNG VIỆC PHÁT SINH TRONG THÁNG
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
+          I. CÔNG VIỆC PHÁT SINH TRONG THÁNG
         </div>
         <div style="margin-top: 8px;">
           ${adhocList.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21601,29 +21621,22 @@ function generateSingleReportWordHtml(rep) {
   // 2. Kế hoạch
   if (planList.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #0369a1; text-transform: uppercase; border-bottom: 2pt solid #bae6fd; padding-bottom: 4px;">
-          📅 II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
+          II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC
         </div>
         <div style="margin-top: 8px;">
           ${planList.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-                </td>
-                <td style="padding: 8px 12px 2px 12px; text-align: right; width: 140px;">
-                  ${it.dueDate ? `<span style="background-color: #e0f2fe; color: #0284c7; border: 1pt solid #bae6fd; padding: 2px 8px; font-size: 9.5pt; font-weight: bold;">Hạn: ${formatVNDate(it.dueDate)}</span>` : ''}
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''} ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
+              </div>
               ${it.content ? `
-                <tr>
-                  <td colspan="2" style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21633,26 +21646,22 @@ function generateSingleReportWordHtml(rep) {
   // 3. Đề xuất
   if (propList.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #6b21a8; text-transform: uppercase; border-bottom: 2pt solid #e9d5ff; padding-bottom: 4px;">
-          💡 III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
+          III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ
         </div>
         <div style="margin-top: 8px;">
           ${propList.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21662,26 +21671,22 @@ function generateSingleReportWordHtml(rep) {
   // 4. Ý kiến phản ánh
   if (feedList.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #115e59; text-transform: uppercase; border-bottom: 2pt solid #99f6e4; padding-bottom: 4px;">
-          💬 IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
+          IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN
         </div>
         <div style="margin-top: 8px;">
           ${feedList.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21714,28 +21719,28 @@ function generateSingleReportWordHtml(rep) {
         }
         div.Section1 { page: Section1; }
         body {
-          font-family: 'Segoe UI', 'Times New Roman', Arial, sans-serif;
-          font-size: 11pt;
+          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
+          font-size: 11.5pt;
           line-height: 1.45;
-          color: #0f172a;
+          color: #000000;
         }
-        .header-box { text-align: center; margin-bottom: 20px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10pt; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .corp-main { font-size: 11.5pt; font-weight: 800; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11pt; font-weight: bold; color: #334155; margin-top: 5px; }
-        .period-date { font-size: 10pt; font-style: italic; color: #64748b; margin-top: 3px; }
+        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
+        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
+        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
+        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
 
         .info-card {
           width: 100%;
           border-collapse: collapse;
-          background-color: #f8fafc;
-          border: 1pt solid #cbd5e1;
-          margin-bottom: 20px;
+          background-color: transparent;
+          border: none;
+          margin-bottom: 18px;
         }
-        .info-card td { padding: 8px 12px; vertical-align: top; }
-        .info-label { font-size: 9.5pt; color: #64748b; }
-        .info-val { font-size: 11.5pt; font-weight: bold; color: #0f172a; }
+        .info-card td { padding: 4px 6px; vertical-align: top; border: none; background-color: transparent; }
+        .info-label { font-size: 10pt; color: #475569; }
+        .info-val { font-size: 11.5pt; font-weight: bold; color: #000000; margin-top: 2px; }
 
         .sig-table {
           width: 100%;
@@ -21743,11 +21748,11 @@ function generateSingleReportWordHtml(rep) {
           margin-top: 35px;
           page-break-inside: avoid;
         }
-        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; }
-        .sig-title { font-size: 10.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; }
-        .sig-sub { font-size: 9pt; font-style: italic; color: #64748b; }
+        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
+        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
+        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
         .sig-space { height: 60px; }
-        .sig-name { font-size: 11pt; font-weight: bold; color: #0f172a; }
+        .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
       </style>
     </head>
     <body>
@@ -21761,7 +21766,7 @@ function generateSingleReportWordHtml(rep) {
           <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
         </div>
 
-        <!-- THẺ THÔNG TIN NHÂN SỰ 3 CỘT -->
+        <!-- THÔNG TIN NHÂN SỰ SẠCH SẼ (KHÔNG VIỀN, KHÔNG NỀN) -->
         <table class="info-card">
           <tr>
             <td style="width: 35%;">
@@ -21779,38 +21784,38 @@ function generateSingleReportWordHtml(rep) {
           </tr>
         </table>
 
-        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC DẠNG THẺ -->
+        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
         ${sectionsHtml}
 
         <!-- LỜI NHẮN / Ý KIẾN THÊM -->
         ${rep.notes ? `
-          <div style="margin-top: 18px;">
-            <div style="font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; margin-bottom: 4px;">
-              💬 Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:
+          <div style="margin-top: 18px; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-bottom: 4px;">
+              Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:
             </div>
-            <div style="background-color: #f8fafc; border: 1pt solid #cbd5e1; padding: 10px 14px; font-size: 10pt; color: #0f172a; line-height: 1.45;">
+            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
               ${escapeHtml(rep.notes)}
             </div>
           </div>
         ` : ''}
 
         ${rep.managerFeedback ? `
-          <div style="margin-top: 14px;">
-            <div style="font-size: 10.5pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 4px;">
+          <div style="margin-top: 14px; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 4px;">
               Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(rep.forwardedBy || 'Quản lý')}):
             </div>
-            <div style="background-color: #f0f9ff; border: 1pt solid #bae6fd; padding: 10px 14px; font-size: 10pt; color: #0f172a; line-height: 1.45;">
+            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
               ${escapeHtml(rep.managerFeedback)}
             </div>
           </div>
         ` : ''}
 
         ${rep.leaderFeedback ? `
-          <div style="margin-top: 14px;">
-            <div style="font-size: 10.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 4px;">
+          <div style="margin-top: 14px; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 4px;">
               Ý KIẾN CHỈ ĐẠO CỦA BAN GIÁM ĐỐC:
             </div>
-            <div style="background-color: #f0fdf4; border: 1pt solid #bbf7d0; padding: 10px 14px; font-size: 10pt; color: #047857; font-weight: bold; line-height: 1.45;">
+            <div style="font-size: 10.5pt; color: #047857; font-weight: bold; line-height: 1.45; padding-left: 20px;">
               ${escapeHtml(rep.leaderFeedback)}
             </div>
           </div>
@@ -21850,7 +21855,6 @@ function generateSingleReportWordHtml(rep) {
   `;
 }
 
-// 7. XUẤT FILE WORD BÁO CÁO TỔNG HỢP GỘP CỦA QUẢN LÝ
 function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   let allAdhoc = [];
   let allPlan = [];
@@ -21879,26 +21883,22 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   // 1. Việc phát sinh
   if (allAdhoc.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #92400e; text-transform: uppercase; border-bottom: 2pt solid #fde68a; padding-bottom: 4px;">
-          ⚡ I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${allAdhoc.length} việc)
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
+          I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${allAdhoc.length} việc)
         </div>
         <div style="margin-top: 8px;">
           ${allAdhoc.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21908,29 +21908,22 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   // 2. Kế hoạch
   if (allPlan.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #0369a1; text-transform: uppercase; border-bottom: 2pt solid #bae6fd; padding-bottom: 4px;">
-          📅 II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${allPlan.length} kế hoạch)
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
+          II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${allPlan.length} kế hoạch)
         </div>
         <div style="margin-top: 8px;">
           ${allPlan.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-                </td>
-                <td style="padding: 8px 12px 2px 12px; text-align: right; width: 140px;">
-                  ${it.dueDate ? `<span style="background-color: #e0f2fe; color: #0284c7; border: 1pt solid #bae6fd; padding: 2px 8px; font-size: 9.5pt; font-weight: bold;">Hạn: ${formatVNDate(it.dueDate)}</span>` : ''}
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span> ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
+              </div>
               ${it.content ? `
-                <tr>
-                  <td colspan="2" style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21940,26 +21933,22 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   // 3. Đề xuất
   if (allProp.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #6b21a8; text-transform: uppercase; border-bottom: 2pt solid #e9d5ff; padding-bottom: 4px;">
-          💡 III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${allProp.length} đề xuất)
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
+          III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${allProp.length} đề xuất)
         </div>
         <div style="margin-top: 8px;">
           ${allProp.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -21969,26 +21958,22 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   // 4. Ý kiến phản ánh
   if (allFeed.length > 0) {
     sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 6px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #115e59; text-transform: uppercase; border-bottom: 2pt solid #99f6e4; padding-bottom: 4px;">
-          💬 IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN (${allFeed.length} ý kiến)
+      <div style="margin-top: 18px; margin-bottom: 8px;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
+          IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN (${allFeed.length} ý kiến)
         </div>
         <div style="margin-top: 8px;">
           ${allFeed.map((it, idx) => `
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background-color: #f8fafc; border: 1pt solid #e2e8f0;">
-              <tr>
-                <td style="padding: 8px 12px 2px 12px; font-size: 11pt; font-weight: bold; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-                </td>
-              </tr>
+            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
+              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              </div>
               ${it.content ? `
-                <tr>
-                  <td style="padding: 2px 12px 8px 12px; font-size: 10pt; color: #475569; line-height: 1.45;">
-                    ${escapeHtml(it.content)}
-                  </td>
-                </tr>
+                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
+                  ${escapeHtml(it.content)}
+                </div>
               ` : ''}
-            </table>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -22002,7 +21987,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset='utf-8'>
-      <title>Báo cáo tổng hợp bộ phận - ${escapeHtml(deptName)}</title>
+      <title>Báo cáo tổng hợp - ${escapeHtml(deptName)}</title>
       <!--[if gte mso 9]>
       <xml>
         <w:WordDocument>
@@ -22021,30 +22006,17 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         }
         div.Section1 { page: Section1; }
         body {
-          font-family: 'Segoe UI', 'Times New Roman', Arial, sans-serif;
-          font-size: 11pt;
+          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
+          font-size: 11.5pt;
           line-height: 1.45;
-          color: #0f172a;
+          color: #000000;
         }
-        .header-box { text-align: center; margin-bottom: 20px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10pt; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .corp-main { font-size: 11.5pt; font-weight: 800; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11pt; font-weight: bold; color: #334155; margin-top: 5px; }
-        .period-date { font-size: 10pt; font-style: italic; color: #64748b; margin-top: 3px; }
-
-        .kpi-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-        }
-        .kpi-table td {
-          width: 25%;
-          text-align: center;
-          background-color: #f8fafc;
-          border: 1pt solid #cbd5e1;
-          padding: 8px 10px;
-        }
+        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
+        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
+        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
+        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
 
         .sig-table {
           width: 100%;
@@ -22052,71 +22024,53 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
           margin-top: 35px;
           page-break-inside: avoid;
         }
-        .sig-table td { text-align: center; vertical-align: top; width: 50%; border: none; }
-        .sig-title { font-size: 10.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; }
-        .sig-sub { font-size: 9pt; font-style: italic; color: #64748b; }
+        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
+        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
+        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
         .sig-space { height: 60px; }
-        .sig-name { font-size: 11pt; font-weight: bold; color: #0f172a; }
+        .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
       </style>
     </head>
     <body>
       <div class="Section1">
-        <!-- HEADER TỔNG HỢP -->
+        <!-- HEADER DOANH NGHIỆP TRANG TRỌNG -->
         <div class="header-box">
           <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG &mdash; ${escapeHtml(deptName).toUpperCase()}</div>
-          <div class="doc-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC VÀ ĐỀ XUẤT KIẾN NGHỊ BỘ PHẬN</div>
+          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
+          <div class="doc-title">BÁO CÁO CÔNG VIỆC TỔNG HỢP &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
+          <div class="period-date">Bộ phận: ${escapeHtml(deptName)} &bull; Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
         </div>
 
-        <!-- THẺ THỐNG KÊ TỔNG QUAN -->
-        <table class="kpi-table">
-          <tr>
-            <td>
-              <div style="font-size: 9pt; color: #64748b;">Tổng số báo cáo</div>
-              <div style="font-size: 14pt; font-weight: bold; color: #047857;">${reportsList.length}</div>
-            </td>
-            <td>
-              <div style="font-size: 9pt; color: #64748b;">Số nhân sự</div>
-              <div style="font-size: 14pt; font-weight: bold; color: #0f172a;">${staffSet.size}</div>
-            </td>
-            <td>
-              <div style="font-size: 9pt; color: #64748b;">Việc phát sinh</div>
-              <div style="font-size: 14pt; font-weight: bold; color: #92400e;">${allAdhoc.length}</div>
-            </td>
-            <td>
-              <div style="font-size: 9pt; color: #64748b;">Kế hoạch &amp; Đề xuất</div>
-              <div style="font-size: 14pt; font-weight: bold; color: #0284c7;">${allPlan.length + allProp.length + allFeed.length}</div>
-            </td>
-          </tr>
-        </table>
+        <div style="font-size: 11pt; color: #334155; margin-bottom: 16px; font-style: italic;">
+          Tổng hợp từ <b>${reportsList.length}</b> báo cáo của <b>${staffSet.size}</b> nhân sự bộ phận ${escapeHtml(deptName)}.
+        </div>
 
-        <!-- DANH MỤC CÔNG VIỆC TỔNG HỢP DẠNG THẺ THÔNG MINH -->
+        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
         ${sectionsHtml}
 
         <!-- CHỮ KÝ 2 BÊN -->
         <table class="sig-table">
           <tr>
-            <td colspan="2" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
+            <td colspan="3" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
               Hải Phòng, ngày ${now.getDate()} tháng ${now.getMonth()+1} năm ${now.getFullYear()}
             </td>
           </tr>
           <tr>
-            <td class="sig-title">QUẢN LÝ BỘ PHẬN TỔNG HỢP</td>
-            <td class="sig-title">BAN GIÁM ĐỐC / BAN LÃNH ĐẠO CÔNG TY</td>
+            <td style="width: 50%; text-align: center;" class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</td>
+            <td style="width: 50%; text-align: center;" class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</td>
           </tr>
           <tr>
-            <td class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td class="sig-sub">(Ký duyệt)</td>
+            <td style="text-align: center;" class="sig-sub">(Ký, ghi rõ họ tên)</td>
+            <td style="text-align: center;" class="sig-sub">(Ký duyệt)</td>
           </tr>
           <tr>
             <td class="sig-space"></td>
             <td class="sig-space"></td>
           </tr>
           <tr>
-            <td class="sig-name">Quản lý: ${escapeHtml(deptName)}</td>
-            <td class="sig-name">Ban Giám Đốc</td>
+            <td style="text-align: center;" class="sig-name">${escapeHtml(currentUser?.fullName || 'Quản lý bộ phận')}</td>
+            <td style="text-align: center;" class="sig-name">Ban Giám Đốc</td>
           </tr>
         </table>
       </div>
@@ -22125,7 +22079,6 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   `;
 }
 
-// 8. TẢI FILE WORD BÁO CÁO CÁ NHÂN VÀ TỔNG HỢP
 function exportPreviewReportToWord() {
   if (!currentUser || currentReportSelectedItems.length === 0) {
     showToast("Không có mục nào được chọn để xuất Word!", true);
@@ -22400,60 +22353,67 @@ function updatePersonalWorkspaceReminders() {
   const data = getPersonalWorkspaceData(currentUser);
   const items = data.items || [];
 
-  let adhocCount = 0, adhocDone = 0;
-  let planCount = 0, planDue = 0, planOverdue = 0;
-  let proposalCount = 0, proposalApproved = 0;
-  let feedbackCount = 0;
-  let importantCount = 0;
+  let adhocTotal = 0, adhocPending = 0;
+  let planTotal = 0, planPending = 0;
+  let proposalTotal = 0, proposalPending = 0;
+  let feedbackTotal = 0, feedbackPending = 0;
+  let importantTotal = 0, importantPending = 0;
   let urgentAlertCount = 0;
 
   items.forEach(it => {
-    if (it.isImportant) importantCount++;
+    const isDone = isPersonalTaskFinished(it);
+    if (it.isImportant) {
+      importantTotal++;
+      if (!isDone) importantPending++;
+    }
 
     if (it.type === 'adhoc') {
-      adhocCount++;
-      if (it.status === 'done') adhocDone++;
-      else if (it.isImportant) urgentAlertCount++;
+      adhocTotal++;
+      if (!isDone) {
+        adhocPending++;
+        if (it.isImportant) urgentAlertCount++;
+      }
     } else if (it.type === 'plan') {
-      planCount++;
-      const timeline = calculatePlanTimelineStatus(it);
-      if (timeline.code === 'overdue') {
-        planOverdue++;
-        urgentAlertCount++;
-      } else if (timeline.code === 'duetoday') {
-        planDue++;
-        urgentAlertCount++;
-      } else if (it.isImportant && timeline.code !== 'completed') {
-        urgentAlertCount++;
+      planTotal++;
+      if (!isDone) {
+        planPending++;
+        const timeline = calculatePlanTimelineStatus(it);
+        if (timeline.code === 'overdue' || timeline.code === 'duetoday') urgentAlertCount++;
       }
     } else if (it.type === 'proposal') {
-      proposalCount++;
-      if (it.status === 'approved_executed') proposalApproved++;
+      proposalTotal++;
+      if (!isDone) proposalPending++;
     } else if (it.type === 'feedback') {
-      feedbackCount++;
+      feedbackTotal++;
+      if (!isDone) feedbackPending++;
     }
   });
 
+  // Cập nhật số liệu hiển thị: Tổng đầu việc & (số việc chưa xong)
   const elAdhocCount = document.getElementById('pwStatAdhocCount');
-  if (elAdhocCount) elAdhocCount.innerText = adhocCount;
-  const elAdhocDone = document.getElementById('pwStatAdhocDone');
-  if (elAdhocDone) elAdhocDone.innerText = adhocDone;
+  if (elAdhocCount) elAdhocCount.innerText = adhocTotal;
+  const elAdhocPending = document.getElementById('pwStatAdhocPending') || document.getElementById('pwStatAdhocDone');
+  if (elAdhocPending) elAdhocPending.innerText = adhocPending;
 
   const elPlanCount = document.getElementById('pwStatPlanCount');
-  if (elPlanCount) elPlanCount.innerText = planCount;
-  const elPlanDue = document.getElementById('pwStatPlanDue');
-  if (elPlanDue) elPlanDue.innerText = (planDue + planOverdue);
+  if (elPlanCount) elPlanCount.innerText = planTotal;
+  const elPlanPending = document.getElementById('pwStatPlanPending') || document.getElementById('pwStatPlanDue');
+  if (elPlanPending) elPlanPending.innerText = planPending;
 
   const elProposalCount = document.getElementById('pwStatProposalCount');
-  if (elProposalCount) elProposalCount.innerText = proposalCount;
-  const elProposalApproved = document.getElementById('pwStatProposalApproved');
-  if (elProposalApproved) elProposalApproved.innerText = proposalApproved;
+  if (elProposalCount) elProposalCount.innerText = proposalTotal;
+  const elProposalPending = document.getElementById('pwStatProposalPending') || document.getElementById('pwStatProposalApproved');
+  if (elProposalPending) elProposalPending.innerText = proposalPending;
 
   const elFeedbackCount = document.getElementById('pwStatFeedbackCount');
-  if (elFeedbackCount) elFeedbackCount.innerText = feedbackCount;
+  if (elFeedbackCount) elFeedbackCount.innerText = feedbackTotal;
+  const elFeedbackPending = document.getElementById('pwStatFeedbackPending');
+  if (elFeedbackPending) elFeedbackPending.innerText = feedbackPending;
 
   const elImportantCount = document.getElementById('pwStatImportantCount');
-  if (elImportantCount) elImportantCount.innerText = importantCount;
+  if (elImportantCount) elImportantCount.innerText = importantTotal;
+  const elImportantPending = document.getElementById('pwStatImportantPending');
+  if (elImportantPending) elImportantPending.innerText = importantPending;
 
   const banner = document.getElementById('pwReminderAlertBanner');
   const bannerText = document.getElementById('pwReminderAlertText');
@@ -23000,48 +22960,56 @@ function renderPersonalWorkspaceUI() {
       // 1. Phân loại & Icon
       let typeBadge = '';
       if (it.type === 'adhoc') {
-        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-200"><i class="fa-solid fa-bolt text-amber-500 text-[9px]"></i><span>Phát sinh</span></span>`;
+        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
       } else if (it.type === 'plan') {
-        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-sky-50 text-sky-900 border border-sky-200"><i class="fa-solid fa-calendar text-sky-500 text-[9px]"></i><span>Kế hoạch</span></span>`;
+        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
       } else if (it.type === 'proposal') {
-        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-purple-50 text-purple-900 border border-purple-200"><i class="fa-solid fa-lightbulb text-purple-500 text-[9px]"></i><span>Đề xuất</span></span>`;
+        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
       } else if (it.type === 'feedback') {
-        typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-teal-50 text-teal-900 border border-teal-200"><i class="fa-solid fa-comment text-teal-500 text-[9px]"></i><span>Ý kiến</span></span>`;
+        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
       }
 
       // 2. Trạng thái & Nút chuyển nhanh 1 chạm
       let statusHtml = '';
+      let dueDateBadge = '';
+
       if (it.type === 'adhoc') {
         const isDone = (it.status === 'done');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition shadow-2xs ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Nhấp để đổi trạng thái: Đã làm / Chưa làm">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Nhấp để đổi trạng thái: Đã làm / Chưa làm">
             <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
             <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
           </button>
         `;
       } else if (it.type === 'plan') {
+        const isCompleted = !!it.isCompleted;
         const t = calculatePlanTimelineStatus(it);
         statusHtml = `
-          <div class="inline-flex flex-col gap-1 items-start">
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border shadow-2xs ${t.badgeClass}">
-              <i class="fa-solid ${t.icon}"></i>
-              <span>${t.label}</span>
-            </span>
-            ${it.dueDate ? `<span class="text-[10px] text-slate-500 font-num">Hạn: ${formatVNDate(it.dueDate)}</span>` : ''}
-          </div>
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isCompleted ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300'}" title="Nhấp để đổi trạng thái hoàn thành kế hoạch">
+            <i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-600' : 'fa-clock text-sky-600'}"></i>
+            <span>${isCompleted ? 'Hoàn thành' : 'Chưa xong'}</span>
+          </button>
         `;
+        if (it.dueDate) {
+          dueDateBadge = `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border shadow-2xs ${t.badgeClass}">
+              <i class="fa-solid ${t.icon}"></i>
+              <span>${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+            </span>
+          `;
+        }
       } else if (it.type === 'proposal') {
         const isApproved = (it.status === 'approved_executed');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition shadow-2xs ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}" title="Nhấp để đổi trạng thái: Đã duyệt / Chưa duyệt">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}" title="Nhấp để đổi trạng thái: Đã duyệt / Chưa duyệt">
             <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-slate-500'}"></i>
-            <span>${isApproved ? 'Đã duyệt / Thực hiện' : 'Chưa duyệt / Chưa thực hiện'}</span>
+            <span>${isApproved ? 'Đã duyệt' : 'Chờ duyệt'}</span>
           </button>
         `;
       } else if (it.type === 'feedback') {
         const isProcessed = (it.status === 'processed');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition shadow-2xs ${isProcessed ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300'}" title="Nhấp để đổi trạng thái phản ánh">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isProcessed ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300'}" title="Nhấp để đổi trạng thái phản ánh">
             <i class="fa-solid ${isProcessed ? 'fa-circle-check text-emerald-600' : 'fa-inbox text-teal-600'}"></i>
             <span>${isProcessed ? 'Đã phản hồi' : 'Đã tiếp nhận'}</span>
           </button>
@@ -23050,80 +23018,82 @@ function renderPersonalWorkspaceUI() {
 
       // 3. Ngôi sao quan trọng
       const starBtn = `
-        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer p-1 rounded-lg hover:bg-amber-100 text-base transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu là mục quan trọng để nhắc nhở làm'}">
+        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer p-1.5 rounded-xl hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}">
           <i class="fa-solid fa-star"></i>
         </button>
       `;
 
       // 4. Checkbox chọn đẩy báo cáo
       const checkBtn = `
-        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Chọn mục này để đưa vào báo cáo" />
+        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Tích chọn mục này để tạo báo cáo" />
       `;
 
       // 5. Nội dung phản hồi (nếu có)
       let fbSnippet = '';
       if (it.feedbackResponse) {
-        fbSnippet = `<div class="mt-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg p-1.5 font-medium"><i class="fa-solid fa-reply mr-1"></i>${escapeHtml(it.feedbackResponse)}</div>`;
+        fbSnippet = `<div class="mt-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-2 font-medium"><i class="fa-solid fa-reply mr-1"></i><b>Phản hồi:</b> ${escapeHtml(it.feedbackResponse)}</div>`;
       }
 
+      const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
+
       rowsHtml += `
-        <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 ${it.isImportant ? 'bg-amber-50/20' : ''}">
-          <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1.5">
+        <div class="group relative bg-white border ${it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/70 bg-gradient-to-r from-amber-50/20 via-white to-white shadow-xs' : 'border-slate-200 hover:border-slate-300'} hover:shadow-md rounded-2xl p-3.5 sm:p-4 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+          <!-- VÙNG TRÁI: CHECKBOX + STAR + PHÂN LOẠI + TIÊU ĐỀ & NỘI DUNG -->
+          <div class="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <div class="flex items-center gap-1 pt-0.5 shrink-0">
               ${checkBtn}
               ${starBtn}
             </div>
-          </td>
-          <td class="px-3 py-3 align-middle whitespace-nowrap">
-            ${typeBadge}
-          </td>
-          <td class="px-3 py-3 align-middle">
-            <div class="min-w-[240px] max-w-xl">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-slate-800 text-xs sm:text-sm leading-snug cursor-pointer hover:text-amber-700" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</span>
-                ${(it.isReported || it.reportedAt) ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Công việc này đã gửi báo cáo"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>` : ''}
+
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                ${typeBadge}
+                <span class="font-bold text-slate-900 text-xs sm:text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
+                  ${escapeHtml(it.title)}
+                </span>
+                ${(it.isReported || it.reportedAt) ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0" title="Công việc này đã gửi báo cáo"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>` : ''}
               </div>
-              ${it.content ? `<p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+
+              ${it.content ? `<p class="text-xs text-slate-500 leading-relaxed break-words pl-0.5 font-normal">${escapeHtml(it.content)}</p>` : ''}
               ${fbSnippet}
             </div>
-          </td>
-          <td class="px-3 py-3 align-middle whitespace-nowrap text-xs text-slate-600">
-            <span class="font-num">${it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '---')}</span>
-          </td>
-          <td class="px-3 py-3 align-middle whitespace-nowrap">
-            ${statusHtml}
-          </td>
-          <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1">
-              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs transition cursor-pointer" title="Chỉnh sửa chi tiết">
+          </div>
+
+          <!-- VÙNG PHẢI: NGÀY THÁNG / HẠN CHÓT + NÚT TRẠNG THÁI + NÚT THAO TÁC -->
+          <div class="flex items-center justify-between md:justify-end gap-2.5 sm:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <!-- Ngày ghi nhận / Hạn chót -->
+            <div class="flex flex-col items-start md:items-end text-[11px] text-slate-500 shrink-0 space-y-0.5">
+              ${dateStr ? `
+                <span class="inline-flex items-center gap-1 font-medium font-num text-slate-500">
+                  <i class="fa-regular fa-calendar text-[10.5px] text-slate-400"></i>
+                  <span>${dateStr}</span>
+                </span>
+              ` : ''}
+              ${dueDateBadge}
+            </div>
+
+            <!-- Nút trạng thái 1-chạm -->
+            <div class="shrink-0">
+              ${statusHtml}
+            </div>
+
+            <!-- Nút Sửa & Xóa -->
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
                 <i class="fa-regular fa-pen-to-square"></i>
               </button>
-              <button type="button" onclick="deletePersonalItem('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 text-xs transition cursor-pointer" title="Xóa mục này">
+              <button type="button" onclick="deletePersonalItem('${it.id}')" class="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
                 <i class="fa-regular fa-trash-can"></i>
               </button>
             </div>
-          </td>
-        </tr>
+          </div>
+        </div>
       `;
     });
 
     container.innerHTML = `
-      <div class="overflow-x-auto w-full custom-scroll rounded-2xl border border-slate-200 bg-white shadow-2xs">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-100/90 text-[11px] font-black uppercase tracking-wider text-slate-600 border-b border-slate-200 sticky top-0 z-10 backdrop-blur-xs">
-              <th class="px-3 py-2.5 text-center w-16">Báo cáo / ⭐</th>
-              <th class="px-3 py-2.5 w-28">Phân loại</th>
-              <th class="px-3 py-2.5">Tiêu đề & Nội dung chi tiết</th>
-              <th class="px-3 py-2.5 w-32">Ngày ghi nhận</th>
-              <th class="px-3 py-2.5 w-44">Trạng thái / Hạn chót</th>
-              <th class="px-3 py-2.5 text-center w-20">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 text-xs">
-            ${rowsHtml}
-          </tbody>
-        </table>
+      <div class="flex flex-col space-y-2.5 w-full">
+        ${rowsHtml}
       </div>
     `;
     return;
@@ -23252,6 +23222,12 @@ function toggleSelectAllPersonalItemsForReport(checked) {
   });
   savePersonalWorkspaceData(data, currentUser);
   renderPersonalWorkspaceUI();
+}
+
+
+function openAddPersonalItemModal(defaultType) {
+  const type = defaultType || (typeof pwCurrentTab !== 'undefined' && pwCurrentTab !== 'all' ? pwCurrentTab : 'adhoc');
+  openPersonalItemEditModal('', type);
 }
 
 function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc') {
@@ -23477,6 +23453,73 @@ function deletePersonalItem(id) {
 let currentReportSelectedItems = [];
 
 // ================= BÁO CÁO: QUẢN LÝ TỔNG HỢP VÀ CHUYỂN BAN LÃNH ĐẠO =================
+
+let currentReportRecipientsList = [];
+let currentSelectedRecipient = null;
+
+function loadReportRecipientsOptions() {
+  const select = document.getElementById('rpRecipientSelect');
+  if (!select) return;
+
+  let userList = (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers)) ? globalInitData.allUsers :
+                 (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : [];
+
+  currentReportRecipientsList = userList.filter(u => {
+    const r = removeAccents(u.role || '').toLowerCase();
+    const isMgr = r.includes('quan ly') || r.includes('truong phong') || r.includes('to truong') || r.includes('leader');
+    const isDeputy = r.includes('pho giam doc') || r.includes('pho');
+    const isDir = r.includes('giam doc') && !r.includes('pho') || r.includes('admin');
+    return isMgr || isDeputy || isDir;
+  });
+
+  if (currentReportRecipientsList.length === 0) {
+    currentReportRecipientsList = [
+      { id: 1141, username: 'thuytm', fullName: 'Trần Minh Thùy', role: 'Quản lý', department: 'Bộ phận tính giá' },
+      { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
+      { id: 1145, username: 'hoangdh', fullName: 'Đinh Huy Hoàng', role: 'Quản lý', department: 'Bộ phận phân xe 10m + xuất khẩu' },
+      { id: 1140, username: 'oanhgd', fullName: 'Ms Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
+    ];
+  }
+
+  const userDept = currentUser?.department || '';
+  currentReportRecipientsList.sort((a, b) => {
+    const aDeptMatch = isDeptEquivalent(a.department || a.dept || '', userDept) ? 1 : 0;
+    const bDeptMatch = isDeptEquivalent(b.department || b.dept || '', userDept) ? 1 : 0;
+    if (aDeptMatch !== bDeptMatch) return bDeptMatch - aDeptMatch;
+
+    const isDeputyA = removeAccents(a.role || '').toLowerCase().includes('pho giam doc');
+    const isDeputyB = removeAccents(b.role || '').toLowerCase().includes('pho giam doc');
+    if (isDeputyA !== isDeputyB) return isDeputyA ? 1 : -1;
+
+    return (a.full_name || a.fullName || a.username || '').localeCompare(b.full_name || b.fullName || b.username || '', 'vi');
+  });
+
+  select.innerHTML = currentReportRecipientsList.map(u => {
+    const fName = u.full_name || u.fullName || u.username;
+    const deptName = u.department || u.dept || (u.departments ? u.departments.name : 'Ban DVKH');
+    const roleName = u.role || 'Quản lý';
+    return `<option value="${u.id}">${fName} - ${roleName} (${deptName})</option>`;
+  }).join('');
+
+  if (currentReportRecipientsList.length > 0) {
+    onReportRecipientSelectChange(currentReportRecipientsList[0].id);
+  }
+}
+
+function onReportRecipientSelectChange(userId) {
+  const u = currentReportRecipientsList.find(x => String(x.id) === String(userId));
+  if (!u) return;
+  currentSelectedRecipient = u;
+  const fName = u.full_name || u.fullName || u.username;
+  const deptName = u.department || u.dept || (u.departments ? u.departments.name : 'Ban DVKH');
+  const roleName = u.role || 'Quản lý';
+
+  const recipientText = document.getElementById('rpPreviewRecipientText');
+  if (recipientText) {
+    recipientText.innerText = `Kính gửi: ${fName} - ${roleName} (${deptName})`;
+  }
+}
+
 function openLeadershipReportPreviewModal() {
   if (!currentUser) return;
   const data = getPersonalWorkspaceData(currentUser);
@@ -23633,7 +23676,14 @@ function submitLeadershipReport() {
   }
 
   const reportId = 'lr_' + Date.now();
+  
   const reportPayload = {
+    recipientId: currentSelectedRecipient ? currentSelectedRecipient.id : null,
+    recipientUsername: currentSelectedRecipient ? (currentSelectedRecipient.username || '') : '',
+    recipientFullName: currentSelectedRecipient ? (currentSelectedRecipient.full_name || currentSelectedRecipient.fullName || '') : '',
+    recipientRole: currentSelectedRecipient ? (currentSelectedRecipient.role || '') : '',
+    recipientDepartment: currentSelectedRecipient ? (currentSelectedRecipient.department || currentSelectedRecipient.dept || '') : '',
+
     id: reportId,
     senderId: currentUser.id,
     senderUsername: currentUser.username,
@@ -25549,7 +25599,7 @@ function checkPersonalWorkspaceRemindersOnLogin() {
       if (overdue > 0) msg += `${overdue} việc quá hạn `;
       if (overdue > 0 && dueToday > 0) msg += "và ";
       if (dueToday > 0) msg += `${dueToday} việc đến hạn hôm nay `;
-      msg += "trong Sổ tay việc riêng!";
+      msg += "trong Sổ tay công việc!";
       showToast(msg, overdue > 0);
     }, 1500);
   }
