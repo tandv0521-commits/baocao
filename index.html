@@ -2001,13 +2001,13 @@
             </div>
           </div>
 
-          <!-- DÒNG CẢNH BÁO VIỆC ĐẾN HẠN / QUÁ HẠN -->
-          <div id="pwReminderAlertBanner" class="hidden mt-2 p-2 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between text-xs text-rose-900 animate-in fade-in">
+          <!-- DÒNG CẢNH BÁO VIỆC ĐẾN HẠN / QUÁ HẠN / VIỆC QUAN TRỌNG CHƯA LÀM -->
+          <div id="pwReminderAlertBanner" class="hidden mt-2 p-2.5 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-between text-xs text-amber-950 animate-in fade-in shadow-2xs">
             <div class="flex items-center gap-2 min-w-0">
-              <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm shrink-0"></i>
-              <span id="pwReminderAlertText" class="font-bold truncate text-[11.5px]">Bạn có công việc cần xử lý ngay!</span>
+              <span id="pwReminderAlertIcon" class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-star"></i></span>
+              <span id="pwReminderAlertText" class="font-bold truncate text-xs">Bạn có công việc cần xử lý ngay!</span>
             </div>
-            <button type="button" onclick="filterPersonalWorkspaceDueToday()" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-bold hover:bg-rose-700 transition cursor-pointer shrink-0">
+            <button type="button" id="pwReminderAlertBtn" onclick="onViewReminderAlertItems()" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-black transition shadow-2xs cursor-pointer shrink-0">
               Xem ngay
             </button>
           </div>
@@ -2015,36 +2015,41 @@
 
         <!-- BỘ LỌC THEO TAB VÀ TÌM KIẾM -->
         <div class="px-4 sm:px-6 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 bg-white">
-          <!-- 5 Tab lọc -->
-          <div class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-0.5 flex-1 min-w-[280px]">
+          <!-- 5 Tab lọc với thống kê tổng việc & số việc chưa xong -->
+          <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-1 flex-1 min-w-[280px]">
             <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 bg-emerald-600 text-white border border-emerald-600 shadow-sm">
               <i class="fa-solid fa-layer-group text-xs"></i>
               <span>Tất cả</span>
-              <span id="pwTabCount_all" class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-800 text-emerald-100 font-num font-bold">0</span>
+              <span id="pwTabCount_all" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-800 text-emerald-100" title="Tổng số việc">0</span>
+              <span id="pwTabPending_all" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs inline-flex items-center gap-1" title="Số việc chưa hoàn thành"><span id="pwTabPendingNum_all">0</span> chưa xong</span>
             </button>
 
-            <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-600 hover:bg-slate-100">
+            <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
               <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
               <span>Việc phát sinh</span>
-              <span id="pwTabCount_adhoc" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-200 text-slate-700 font-num font-bold">0</span>
+              <span id="pwTabCount_adhoc" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng việc phát sinh">0</span>
+              <span id="pwTabPending_adhoc" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs inline-flex items-center gap-1" title="Số việc chưa làm"><span id="pwTabPendingNum_adhoc">0</span> chưa làm</span>
             </button>
 
-            <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-600 hover:bg-slate-100">
+            <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
               <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
               <span>Lịch &amp; Kế hoạch</span>
-              <span id="pwTabCount_plan" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-200 text-slate-700 font-num font-bold">0</span>
+              <span id="pwTabCount_plan" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng kế hoạch">0</span>
+              <span id="pwTabPending_plan" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-sky-100 text-sky-900 border border-sky-200 shadow-2xs inline-flex items-center gap-1" title="Số kế hoạch chưa xong"><span id="pwTabPendingNum_plan">0</span> chưa xong</span>
             </button>
 
-            <button type="button" id="pwTabBtn_proposal" onclick="switchPersonalWorkspaceTab('proposal')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-600 hover:bg-slate-100">
+            <button type="button" id="pwTabBtn_proposal" onclick="switchPersonalWorkspaceTab('proposal')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
               <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
               <span>Đề xuất</span>
-              <span id="pwTabCount_proposal" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-200 text-slate-700 font-num font-bold">0</span>
+              <span id="pwTabCount_proposal" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng đề xuất">0</span>
+              <span id="pwTabPending_proposal" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs inline-flex items-center gap-1" title="Số đề xuất chờ duyệt"><span id="pwTabPendingNum_proposal">0</span> chờ duyệt</span>
             </button>
 
-            <button type="button" id="pwTabBtn_feedback" onclick="switchPersonalWorkspaceTab('feedback')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-600 hover:bg-slate-100">
+            <button type="button" id="pwTabBtn_feedback" onclick="switchPersonalWorkspaceTab('feedback')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
               <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
               <span>Ý kiến / Phản ánh</span>
-              <span id="pwTabCount_feedback" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-200 text-slate-700 font-num font-bold">0</span>
+              <span id="pwTabCount_feedback" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng ý kiến">0</span>
+              <span id="pwTabPending_feedback" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-teal-100 text-teal-900 border border-teal-200 shadow-2xs inline-flex items-center gap-1" title="Số ý kiến tiếp nhận chưa xử lý"><span id="pwTabPendingNum_feedback">0</span> tiếp nhận</span>
             </button>
           </div>
 
@@ -2087,37 +2092,39 @@
           </div>
         </div>
 
-        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH -->
-        <div id="pwItemsScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-5 custom-scrollbar bg-slate-50/50 min-h-[500px]">
+        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH (Đệm đáy pb-28 để thanh công cụ cố định không che nội dung) -->
+        <div id="pwItemsScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-5 pb-28 sm:pb-32 custom-scrollbar bg-slate-50/50 min-h-[500px]">
           <div id="pwItemsList" class="flex-1 flex flex-col min-h-0 space-y-2">
             <!-- Render các mục công việc ở đây -->
           </div>
         </div>
 
-        <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO Ở CUỐI TRANG (LUÔN GHIM CỐ ĐỊNH Ở CHÂN TRANG) -->
-        <div id="pwBottomStickyToolbar" class="sticky bottom-0 z-30 px-4 sm:px-6 py-3 border-t border-slate-200/90 bg-white/95 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 flex-shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] rounded-b-3xl">
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
-              <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
-              <span>Chọn tất cả</span>
-            </label>
-            <span class="text-xs text-slate-300 font-bold">|</span>
-            <div id="pwSelectedSummaryText" class="text-xs text-slate-700 font-medium">
-              Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục để tạo báo cáo
+        <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO CỐ ĐỊNH CHÂN MÀN HÌNH (FIXED FOOTER) -->
+        <div id="pwBottomStickyToolbar" class="fixed bottom-0 left-0 right-0 z-40 px-4 sm:px-6 py-2.5 border-t border-slate-200/95 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+          <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
+                <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
+                <span>Chọn tất cả</span>
+              </label>
+              <span class="text-xs text-slate-300 font-bold">|</span>
+              <div id="pwSelectedSummaryText" class="text-xs text-slate-700 font-medium">
+                Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục để tạo báo cáo
+              </div>
             </div>
-          </div>
 
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
-              <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
-              <span>Quay lại công việc ban đầu</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
+                <span>Quay lại công việc ban đầu</span>
+              </button>
 
-            <!-- Nút Tạo Báo Cáo Theo Những Mục Đã Tích Chọn -->
-            <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-file-circle-check text-xs"></i>
-              <span id="pwBtnPushReportBottomText">Tạo báo cáo theo những mục đã tích chọn</span>
-            </button>
+              <!-- Nút Tạo Báo Cáo Theo Những Mục Đã Tích Chọn -->
+              <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-file-circle-check text-xs"></i>
+                <span id="pwBtnPushReportBottomText">Tạo báo cáo theo những mục đã tích chọn</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -22482,8 +22489,9 @@ function updatePersonalWorkspaceReminders(dataArg) {
     const planCount = planTotal;
     const proposalCount = proposalTotal;
     const feedbackCount = feedbackTotal;
+    const totalPending = adhocPending + planPending + proposalPending + feedbackPending;
 
-    // Cập nhật số liệu hiển thị: Tổng đầu việc & (số việc chưa xong)
+    // Cập nhật số liệu hiển thị trên 5 Thẻ tổng quan đầu trang
     const elAdhocCount = document.getElementById('pwStatAdhocCount');
     if (elAdhocCount) elAdhocCount.innerText = adhocTotal;
     const elAdhocPending = document.getElementById('pwStatAdhocPending') || document.getElementById('pwStatAdhocDone');
@@ -22509,37 +22517,119 @@ function updatePersonalWorkspaceReminders(dataArg) {
     const elImportantPending = document.getElementById('pwStatImportantPending');
     if (elImportantPending) elImportantPending.innerText = importantPending;
 
+    // DÒNG THÔNG BÁO NHẮC NHỞ CÔNG VIỆC ƯU TIÊN (ĐẶC BIỆT LÀ VIỆC QUAN TRỌNG CHƯA LÀM)
     const banner = document.getElementById('pwReminderAlertBanner');
     const bannerText = document.getElementById('pwReminderAlertText');
+    const bannerBtn = document.getElementById('pwReminderAlertBtn') || (banner ? banner.querySelector('button') : null);
+    const bannerIcon = document.getElementById('pwReminderAlertIcon');
+
     if (banner && bannerText) {
       if (planOverdue > 0 || planDue > 0) {
         banner.classList.remove('hidden');
-        banner.className = "mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200";
+        banner.className = "mt-2 p-2.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-950 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 shadow-2xs";
+        if (bannerIcon) bannerIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
         let msg = "🚨 <b>Nhắc nhở công việc:</b> Bạn có ";
         if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline'>${planOverdue} việc quá hạn</span> `;
         if (planOverdue > 0 && planDue > 0) msg += "và ";
         if (planDue > 0) msg += `<span class='font-black text-amber-700 underline'>${planDue} việc đến hạn hôm nay</span> `;
-        msg += "cần ưu tiên giải quyết!";
+        if (importantPending > 0) msg += ` (kèm <span class='font-black text-amber-800 underline'>${importantPending} việc quan trọng chưa làm</span>)`;
+        msg += " cần ưu tiên giải quyết!";
         bannerText.innerHTML = msg;
-      } else if (importantCount > 0) {
+        if (bannerBtn) {
+          bannerBtn.onclick = () => filterPersonalWorkspaceDueToday();
+          bannerBtn.className = "px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition shadow-2xs cursor-pointer shrink-0";
+          bannerBtn.innerText = "Xem ngay";
+        }
+      } else if (importantPending > 0) {
         banner.classList.remove('hidden');
-        banner.className = "mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2";
-        bannerText.innerHTML = `⭐ Bạn có <b>${importantCount} mục quan trọng</b> được đánh dấu để theo dõi và nhắc nhở làm.`;
+        banner.className = "mt-2 p-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-2xs animate-in fade-in duration-200";
+        if (bannerIcon) bannerIcon.innerHTML = '<i class="fa-solid fa-star text-amber-600"></i>';
+        bannerText.innerHTML = `⭐ <b>Nhắc nhở ưu tiên:</b> Bạn có <b class="text-amber-900 underline font-black">${importantPending} công việc quan trọng chưa làm</b> cần ưu tiên xử lý và hoàn thành.`;
+        if (bannerBtn) {
+          bannerBtn.onclick = () => viewPendingImportantTasks();
+          bannerBtn.className = "px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs transition shadow-2xs cursor-pointer shrink-0";
+          bannerBtn.innerText = "Xem ngay";
+        }
       } else {
         banner.classList.add('hidden');
       }
     }
 
+    // Cập nhật dòng Tab: Tổng số đầu việc & Số việc chưa xong tương ứng
     const cAll = document.getElementById('pwTabCount_all');
     if (cAll) cAll.innerText = items.length;
+    const pAll = document.getElementById('pwTabPendingNum_all');
+    const pAllBadge = document.getElementById('pwTabPending_all');
+    if (pAll) pAll.innerText = totalPending;
+    if (pAllBadge) {
+      if (totalPending > 0) {
+        pAllBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs inline-flex items-center gap-1";
+        pAllBadge.innerHTML = `<i class="fa-regular fa-clock text-[9px]"></i><span>${totalPending}</span> chưa xong`;
+      } else {
+        pAllBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
+        pAllBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã xong hết`;
+      }
+    }
+
     const cAdhoc = document.getElementById('pwTabCount_adhoc');
     if (cAdhoc) cAdhoc.innerText = adhocCount;
+    const pAdhoc = document.getElementById('pwTabPendingNum_adhoc');
+    const pAdhocBadge = document.getElementById('pwTabPending_adhoc');
+    if (pAdhoc) pAdhoc.innerText = adhocPending;
+    if (pAdhocBadge) {
+      if (adhocPending > 0) {
+        pAdhocBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs inline-flex items-center gap-1";
+        pAdhocBadge.innerHTML = `<span>${adhocPending}</span> chưa làm`;
+      } else {
+        pAdhocBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
+        pAdhocBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã làm hết`;
+      }
+    }
+
     const cPlan = document.getElementById('pwTabCount_plan');
     if (cPlan) cPlan.innerText = planCount;
+    const pPlan = document.getElementById('pwTabPendingNum_plan');
+    const pPlanBadge = document.getElementById('pwTabPending_plan');
+    if (pPlan) pPlan.innerText = planPending;
+    if (pPlanBadge) {
+      if (planPending > 0) {
+        pPlanBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-sky-100 text-sky-900 border border-sky-200 shadow-2xs inline-flex items-center gap-1";
+        pPlanBadge.innerHTML = `<span>${planPending}</span> chưa xong`;
+      } else {
+        pPlanBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
+        pPlanBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Hoàn thành`;
+      }
+    }
+
     const cProp = document.getElementById('pwTabCount_proposal');
     if (cProp) cProp.innerText = proposalCount;
+    const pProp = document.getElementById('pwTabPendingNum_proposal');
+    const pPropBadge = document.getElementById('pwTabPending_proposal');
+    if (pProp) pProp.innerText = proposalPending;
+    if (pPropBadge) {
+      if (proposalPending > 0) {
+        pPropBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs inline-flex items-center gap-1";
+        pPropBadge.innerHTML = `<span>${proposalPending}</span> chờ duyệt`;
+      } else {
+        pPropBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
+        pPropBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã duyệt`;
+      }
+    }
+
     const cFeed = document.getElementById('pwTabCount_feedback');
     if (cFeed) cFeed.innerText = feedbackCount;
+    const pFeed = document.getElementById('pwTabPendingNum_feedback');
+    const pFeedBadge = document.getElementById('pwTabPending_feedback');
+    if (pFeed) pFeed.innerText = feedbackPending;
+    if (pFeedBadge) {
+      if (feedbackPending > 0) {
+        pFeedBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-teal-100 text-teal-900 border border-teal-200 shadow-2xs inline-flex items-center gap-1";
+        pFeedBadge.innerHTML = `<span>${feedbackPending}</span> tiếp nhận`;
+      } else {
+        pFeedBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
+        pFeedBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã xử lý`;
+      }
+    }
 
     const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
     if (headerBadge) {
@@ -22645,6 +22735,7 @@ function getPersonalWorkspaceReportingRole(user = currentUser) {
 
 // ================= TƯƠNG TÁC THẺ TÓM TẮT TRÊN ĐẦU: BẤM LÀ HIỆN NGAY CÔNG VIỆC =================
 function clickPersonalSummaryCard(cardType) {
+  pwFilterImportantPendingOnly = false;
   // 1. Luôn xóa từ khóa tìm kiếm để công việc của thẻ này hiện ra ngay lập tức
   pwSearchKeyword = '';
   const searchInput = document.getElementById('pwSearchInput');
@@ -22725,7 +22816,7 @@ function updatePersonalWorkspaceTabButtonsUI(activeTab) {
     const badge = document.getElementById(`pwTabCount_${t}`);
     const cfg = PW_TAB_STYLE_MAP[t] || PW_TAB_STYLE_MAP.all;
     if (btn) {
-      if (t === activeTab && !pwFilterImportantOnly && !pwFilterDueOrOverdue) {
+      if (t === activeTab && !pwFilterImportantOnly && !pwFilterDueOrOverdue && !pwFilterImportantPendingOnly) {
         btn.className = `pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer ${cfg.activeBtn}`;
         if (badge) badge.className = `px-1.5 py-0.2 rounded-full text-[9px] font-num ${cfg.activeBadge}`;
       } else {
@@ -22736,9 +22827,80 @@ function updatePersonalWorkspaceTabButtonsUI(activeTab) {
   });
 }
 
+let pwFilterImportantPendingOnly = false;
+
+function viewPendingImportantTasks() {
+  pwSearchKeyword = '';
+  const searchInput = document.getElementById('pwSearchInput');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('pwSearchClearBtn');
+  if (clearBtn) clearBtn.classList.add('hidden');
+
+  pwFilterDueOrOverdue = false;
+  pwFilterImportantOnly = false;
+  pwFilterImportantPendingOnly = true;
+  pwCurrentTab = 'all';
+
+  updatePersonalWorkspaceTabButtonsUI('all');
+  updateSummaryCardsActiveState('important');
+  renderPersonalWorkspaceUI();
+
+  const container = document.getElementById('pwItemsScrollContainer');
+  if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearPersonalWorkspaceImportantPendingFilter() {
+  pwFilterImportantPendingOnly = false;
+  renderPersonalWorkspaceUI();
+}
+
+function filterPersonalWorkspaceDueToday() {
+  pwSearchKeyword = '';
+  const searchInput = document.getElementById('pwSearchInput');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('pwSearchClearBtn');
+  if (clearBtn) clearBtn.classList.add('hidden');
+
+  pwFilterImportantPendingOnly = false;
+  pwFilterImportantOnly = false;
+  pwFilterDueOrOverdue = true;
+  pwCurrentTab = 'plan';
+
+  updatePersonalWorkspaceTabButtonsUI('plan');
+  updateSummaryCardsActiveState('plan');
+  renderPersonalWorkspaceUI();
+
+  const container = document.getElementById('pwItemsScrollContainer');
+  if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function onViewReminderAlertItems() {
+  const data = getPersonalWorkspaceData(currentUser);
+  const items = data.items || [];
+  let planOverdue = 0, planDue = 0, importantPending = 0;
+  items.forEach(it => {
+    const isDone = isPersonalTaskFinished(it);
+    if (it.isImportant && !isDone) importantPending++;
+    if (it.type === 'plan' && !isDone) {
+      const t = calculatePlanTimelineStatus(it);
+      if (t.code === 'overdue') planOverdue++;
+      if (t.code === 'duetoday') planDue++;
+    }
+  });
+
+  if (planOverdue > 0 || planDue > 0) {
+    filterPersonalWorkspaceDueToday();
+  } else if (importantPending > 0) {
+    viewPendingImportantTasks();
+  } else {
+    switchPersonalWorkspaceTab('all');
+  }
+}
+
 function switchPersonalWorkspaceTab(tab) {
   pwCurrentTab = tab;
   pwFilterImportantOnly = false;
+  pwFilterImportantPendingOnly = false;
   pwFilterDueOrOverdue = false;
 
   const impBtn = document.getElementById('pwFilterBtn_important');
@@ -22867,14 +23029,16 @@ function renderPersonalWorkspaceUI() {
   const data = getPersonalWorkspaceData(currentUser);
   let items = data.items || [];
 
-  // Lọc theo Tab
-  if (pwCurrentTab !== 'all') {
-    items = items.filter(it => it.type === pwCurrentTab);
+  // Lọc theo mục quan trọng chưa hoàn thiện (khi bấm Xem ngay trên thông báo)
+  if (pwFilterImportantPendingOnly) {
+    items = items.filter(it => it.isImportant && !isPersonalTaskFinished(it));
+  } else if (pwFilterImportantOnly) {
+    items = items.filter(it => it.isImportant);
   }
 
-  // Lọc theo mục quan trọng
-  if (pwFilterImportantOnly) {
-    items = items.filter(it => it.isImportant);
+  // Lọc theo Tab (nếu không ở chế độ xem riêng mục quan trọng chưa làm)
+  if (!pwFilterImportantPendingOnly && pwCurrentTab !== 'all') {
+    items = items.filter(it => it.type === pwCurrentTab);
   }
 
   // Lọc theo việc đến hạn / quá hạn
@@ -22950,6 +23114,27 @@ function renderPersonalWorkspaceUI() {
             <button type="button" onclick="clearPersonalWorkspaceSearch()" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 mx-auto cursor-pointer">
               <i class="fa-solid fa-rotate-left text-xs"></i>
               <span>Xóa tìm kiếm để hiện tất cả</span>
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // 1b. Trường hợp lọc việc quan trọng chưa xong mà không có
+    if (pwFilterImportantPendingOnly) {
+      container.innerHTML = `
+        <div class="py-16 text-center max-w-md mx-auto space-y-3">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-xl mx-auto shadow-2xs">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div class="space-y-1">
+            <h4 class="font-bold text-slate-800 text-sm">Tuyệt vời! Không còn công việc quan trọng nào chưa làm</h4>
+            <p class="text-xs text-slate-500">Tất cả các mục quan trọng đều đã được xử lý hoặc hoàn thành.</p>
+          </div>
+          <div class="pt-1">
+            <button type="button" onclick="clearPersonalWorkspaceImportantPendingFilter()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 mx-auto cursor-pointer">
+              <span>Xem toàn bộ công việc</span>
             </button>
           </div>
         </div>
@@ -23191,7 +23376,19 @@ function renderPersonalWorkspaceUI() {
       `;
     });
 
-    container.innerHTML = `
+    const activeFilterBannerHtml = pwFilterImportantPendingOnly ? `
+      <div class="mb-3 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-2xs animate-in fade-in">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shrink-0 shadow-xs"><i class="fa-solid fa-star"></i></span>
+          <span class="font-bold">Đang lọc danh sách: <b class="text-amber-900 underline font-black">${items.length} công việc quan trọng chưa làm / chưa xong</b></span>
+        </div>
+        <button type="button" onclick="clearPersonalWorkspaceImportantPendingFilter()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black transition cursor-pointer shadow-2xs shrink-0 flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate-left text-xs"></i>
+          <span>Xem tất cả công việc</span>
+        </button>
+      </div>
+    ` : '';
+    container.innerHTML = activeFilterBannerHtml + `
       <div class="flex flex-col space-y-2.5 w-full">
         ${rowsHtml}
       </div>
@@ -23246,7 +23443,19 @@ function renderPersonalWorkspaceUI() {
     `;
   });
 
-  container.innerHTML = `
+  const activeFilterBannerCardHtml = pwFilterImportantPendingOnly ? `
+      <div class="mb-3 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-2xs animate-in fade-in">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shrink-0 shadow-xs"><i class="fa-solid fa-star"></i></span>
+          <span class="font-bold">Đang lọc danh sách: <b class="text-amber-900 underline font-black">${items.length} công việc quan trọng chưa làm / chưa xong</b></span>
+        </div>
+        <button type="button" onclick="clearPersonalWorkspaceImportantPendingFilter()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black transition cursor-pointer shadow-2xs shrink-0 flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate-left text-xs"></i>
+          <span>Xem tất cả công việc</span>
+        </button>
+      </div>
+    ` : '';
+    container.innerHTML = activeFilterBannerCardHtml + `
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       ${cardsHtml}
     </div>
