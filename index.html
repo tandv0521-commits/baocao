@@ -4553,172 +4553,165 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   </div>
 
 
-  <!-- ================= 2. MODAL THÊM / SỬA CÔNG VIỆC RIÊNG (THIẾT KẾ RỘNG RÃI, CHUYÊN NGHIỆP, THOÁNG MẮT) ================= -->
-  <div id="personalItemEditModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+  <!-- ================= 2. MODAL THÊM / SỬA CÔNG VIỆC RIÊNG (THIẾT KẾ RỘNG RÃI, THOÁNG MẮT, HIỂN THỊ TRỌN VẸN TOÀN BỘ BẢNG) ================= -->
+  <div id="personalItemEditModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl w-full max-h-[96vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
       
-      <!-- HEADER THIẾT KẾ RỘNG RÃI, HIỆN ĐẠI -->
-      <div class="px-6 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-amber-50/70 via-white to-slate-50/50">
-        <div class="flex items-center gap-3.5">
-          <div id="pwEditModalIconBox" class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-300/80 flex items-center justify-center font-bold text-xl shadow-2xs shrink-0">
+      <!-- HEADER THIẾT KẾ GỌN GÀNG, TRANG TRỌNG -->
+      <div class="px-5 sm:px-6 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-amber-50/70 via-white to-slate-50/50">
+        <div class="flex items-center gap-2.5">
+          <div id="pwEditModalIconBox" class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-300/80 flex items-center justify-center font-bold text-base shadow-2xs shrink-0">
             <i class="fa-solid fa-pen-to-square"></i>
           </div>
           <div>
-            <h3 id="pwEditModalTitle" class="text-slate-900 font-black text-lg sm:text-xl leading-tight tracking-tight">Thêm Mục Công Việc / Kế Hoạch</h3>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Quản lý theo dõi việc riêng, nhắc nhở tiến độ &amp; tích hợp xuất báo cáo lãnh đạo</p>
+            <h3 id="pwEditModalTitle" class="text-slate-900 font-black text-base sm:text-lg leading-tight tracking-tight">Thêm Mục Công Việc / Kế Hoạch</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500">Theo dõi việc riêng, nhắc nhở tiến độ &amp; xuất báo cáo lãnh đạo</p>
           </div>
         </div>
-        <button type="button" onclick="closePersonalItemEditModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer shadow-2xs shrink-0">
-          <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
+        <button type="button" onclick="closePersonalItemEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer shadow-2xs shrink-0">
+          <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <!-- VÙNG NỘI DUNG CUỘN THOÁNG MẮT, RỘNG RÃI -->
-      <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-5 sm:py-6 space-y-6 custom-scroll">
+      <!-- VÙNG NỘI DUNG THOÁNG MẮT, VỪA VẶN KHÔNG BỊ TRÀN CUỘN -->
+      <div class="flex-1 overflow-y-auto px-5 sm:px-6 py-3.5 space-y-3 custom-scroll">
         <input type="hidden" id="pwEditItemId" value="" />
 
-        <!-- 1. CHỌN LOẠI MỤC THEO DÕI (CARD TO, RÕ, PHÂN BIỆT MÀU SẮC) -->
+        <!-- 1. CHỌN LOẠI MỤC THEO DÕI (4 CỘT CÂN ĐỐI, 1 DÒNG DUY NHẤT) -->
         <div>
-          <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Loại mục theo dõi:</span>
-            <span class="text-[11px] font-normal text-slate-400">Chọn đúng phân loại để quản lý và phân nhóm báo cáo</span>
+          <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+            Loại mục theo dõi:
           </label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
-            <label class="flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border border-slate-200 hover:border-amber-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-amber-50 has-[:checked]:border-amber-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-amber-950">
-              <input type="radio" name="pwItemTypeRadio" value="adhoc" checked onchange="onPersonalItemTypeChange(this.value)" class="text-amber-600 focus:ring-amber-500 cursor-pointer w-4 h-4" />
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-500 text-sm"></i> Phát sinh</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-amber-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-amber-50 has-[:checked]:border-amber-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-amber-950">
+              <input type="radio" name="pwItemTypeRadio" value="adhoc" checked onchange="onPersonalItemTypeChange(this.value)" class="text-amber-600 focus:ring-amber-500 cursor-pointer" />
+              <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-bolt text-amber-500 text-xs"></i> Phát sinh</span>
             </label>
 
-            <label class="flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border border-slate-200 hover:border-sky-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-sky-50 has-[:checked]:border-sky-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-sky-950">
-              <input type="radio" name="pwItemTypeRadio" value="plan" onchange="onPersonalItemTypeChange(this.value)" class="text-sky-600 focus:ring-sky-500 cursor-pointer w-4 h-4" />
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-calendar-days text-sky-500 text-sm"></i> Kế hoạch</span>
+            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-sky-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-sky-50 has-[:checked]:border-sky-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-sky-950">
+              <input type="radio" name="pwItemTypeRadio" value="plan" onchange="onPersonalItemTypeChange(this.value)" class="text-sky-600 focus:ring-sky-500 cursor-pointer" />
+              <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i> Kế hoạch</span>
             </label>
 
-            <label class="flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border border-slate-200 hover:border-purple-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-purple-50 has-[:checked]:border-purple-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-purple-950">
-              <input type="radio" name="pwItemTypeRadio" value="proposal" onchange="onPersonalItemTypeChange(this.value)" class="text-purple-600 focus:ring-purple-500 cursor-pointer w-4 h-4" />
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-lightbulb text-purple-500 text-sm"></i> Đề xuất</span>
+            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-purple-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-purple-50 has-[:checked]:border-purple-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-purple-950">
+              <input type="radio" name="pwItemTypeRadio" value="proposal" onchange="onPersonalItemTypeChange(this.value)" class="text-purple-600 focus:ring-purple-500 cursor-pointer" />
+              <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i> Đề xuất</span>
             </label>
 
-            <label class="flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border border-slate-200 hover:border-teal-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-teal-950">
-              <input type="radio" name="pwItemTypeRadio" value="feedback" onchange="onPersonalItemTypeChange(this.value)" class="text-teal-600 focus:ring-teal-500 cursor-pointer w-4 h-4" />
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-comment-dots text-teal-500 text-sm"></i> Phản ánh</span>
+            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-teal-400 cursor-pointer transition-all select-none bg-slate-50/60 hover:bg-white has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500 has-[:checked]:shadow-xs font-bold text-slate-700 has-[:checked]:text-teal-950">
+              <input type="radio" name="pwItemTypeRadio" value="feedback" onchange="onPersonalItemTypeChange(this.value)" class="text-teal-600 focus:ring-teal-500 cursor-pointer" />
+              <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i> Phản ánh</span>
             </label>
           </div>
         </div>
 
         <!-- 2. TIÊU ĐỀ CÔNG VIỆC -->
         <div>
-          <label for="pwEditTitle" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Tiêu đề / Tên công việc ngắn gọn <span class="text-rose-500">*</span>:</span>
-            <span class="text-[11px] font-normal text-slate-400">Hiển thị nổi bật trên danh sách sổ tay và văn bản báo cáo</span>
+          <label for="pwEditTitle" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
+            Tiêu đề / Tên công việc ngắn gọn <span class="text-rose-500">*</span>:
           </label>
-          <input type="text" id="pwEditTitle" placeholder="Nhập tên việc phát sinh, kế hoạch hoặc sáng kiến đề xuất..." class="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 focus:outline-none transition shadow-2xs" />
+          <input type="text" id="pwEditTitle" placeholder="Nhập tên việc phát sinh, kế hoạch hoặc sáng kiến đề xuất..." class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none transition shadow-2xs" />
         </div>
 
-        <!-- 3. NỘI DUNG CHI TIẾT & GHI CHÚ (MỞ RỘNG RÃI THOÁNG MẮT, KHÔNG CHỒNG CHÉO) -->
+        <!-- 3. NỘI DUNG CHI TIẾT & GHI CHÚ (TIÊU ĐỀ 1 DÒNG DUY NHẤT, PLACEHOLDER GỌN GÀNG) -->
         <div>
-          <label for="pwEditContent" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Chi tiết công việc / Kế hoạch thực hiện / Nội dung đề xuất:</span>
-            <span class="text-[11px] font-normal text-slate-400">Ghi chú cụ thể các bước thực hiện, giải pháp, số liệu hoặc kết quả</span>
+          <label for="pwEditContent" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
+            Nội dung chi tiết &amp; Ghi chú thực hiện:
           </label>
-          <textarea id="pwEditContent" rows="5" placeholder="Mô tả cụ thể các bước triển khai, biện pháp thực hiện, đơn vị/cá nhân phối hợp, số liệu thực tế hoặc kết quả đạt được..." class="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 focus:outline-none leading-relaxed transition shadow-2xs custom-scroll min-h-[140px]"></textarea>
+          <textarea id="pwEditContent" rows="3" placeholder="Ghi chú cụ thể các bước thực hiện, giải pháp xử lý, số liệu hoặc kết quả đạt được..." class="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none leading-relaxed transition shadow-2xs custom-scroll h-[78px] min-h-[65px] resize-y"></textarea>
         </div>
 
-        <!-- 4. NGÀY THỰC HIỆN & HẠN HOÀN THÀNH (BỐ TRÍ 2 CỘT RỘNG RÃI) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+        <!-- 4. NGÀY THỰC HIỆN & HẠN HOÀN THÀNH (BỐ TRÍ 2 CỘT GỌN GÀNG) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="pwEditDate" id="pwEditDateLabel" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
+            <label for="pwEditDate" id="pwEditDateLabel" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1 truncate">
               Ngày phát sinh / Bắt đầu:
             </label>
-            <input type="date" id="pwEditDate" class="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-300 rounded-2xl px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 focus:outline-none cursor-pointer transition shadow-2xs" />
+            <input type="date" id="pwEditDate" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none cursor-pointer transition shadow-2xs" />
           </div>
 
           <div id="pwEditDueDateContainer">
-            <label for="pwEditDueDate" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
-              <span>Hạn hoàn thành (Deadline):</span>
-              <span class="text-[11px] text-amber-700 font-bold">⭐ Nhắc nhở lịch làm</span>
+            <label for="pwEditDueDate" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1 truncate">
+              Hạn hoàn thành (Deadline):
             </label>
-            <input type="date" id="pwEditDueDate" class="w-full bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-300 rounded-2xl px-4 py-2.5 text-xs sm:text-sm font-bold text-rose-700 focus:ring-4 focus:ring-rose-500/15 focus:border-rose-500 focus:outline-none cursor-pointer transition shadow-2xs" />
+            <input type="date" id="pwEditDueDate" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-rose-700 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none cursor-pointer transition shadow-2xs" />
           </div>
         </div>
 
-        <!-- 5. TRẠNG THÁI HIỆN TẠI (ĐỒNG BỘ 1:1 VỚI BẢNG CÔNG VIỆC, PILL RỘNG RÃI) -->
-        <div id="pwEditStatusGroup" class="p-4 sm:p-5 bg-slate-50/80 rounded-2xl border border-slate-200/90 space-y-3">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider">
-              Trạng thái hiện tại:
-            </label>
-            <span class="text-[11px] text-slate-400">Chọn trạng thái để đồng bộ tiến độ</span>
-          </div>
+        <!-- 5. TRẠNG THÁI HIỆN TẠI (GỌN GÀNG, KHÔNG BỊ TRÀN) -->
+        <div id="pwEditStatusGroup" class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/90 space-y-1.5">
+          <label class="block text-[11px] font-black text-slate-600 uppercase tracking-wider">
+            Trạng thái hiện tại:
+          </label>
 
           <!-- Status cho Phát sinh -->
-          <div id="pwStatusAdhocControls" class="flex items-center gap-3 flex-wrap">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-amber-900 bg-white border border-amber-200 hover:border-amber-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusAdhoc" value="pending" checked class="text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer" />
+          <div id="pwStatusAdhocControls" class="flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-amber-900 bg-white border border-amber-200 hover:border-amber-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusAdhoc" value="pending" checked class="text-amber-600 focus:ring-amber-500 cursor-pointer" />
               <span>⏳ Chưa làm</span>
             </label>
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusAdhoc" value="done" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusAdhoc" value="done" class="text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
               <span>✅ Đã làm</span>
             </label>
           </div>
 
           <!-- Status cho Kế hoạch -->
-          <div id="pwStatusPlanControls" class="hidden flex items-center gap-3 flex-wrap">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-sky-900 bg-white border border-sky-200 hover:border-sky-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusPlan" value="pending" checked class="text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer" />
+          <div id="pwStatusPlanControls" class="hidden flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-sky-900 bg-white border border-sky-200 hover:border-sky-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusPlan" value="pending" checked class="text-sky-600 focus:ring-sky-500 cursor-pointer" />
               <span>📅 Đang tiến hành / Sẽ làm</span>
             </label>
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusPlan" value="completed" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusPlan" value="completed" class="text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
               <span>✅ Đã hoàn thành</span>
             </label>
           </div>
 
           <!-- Status cho Đề xuất -->
-          <div id="pwStatusProposalControls" class="hidden flex items-center gap-3 flex-wrap">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-purple-900 bg-white border border-purple-200 hover:border-purple-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusProposal" value="rejected_pending" checked class="text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer" />
+          <div id="pwStatusProposalControls" class="hidden flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-purple-900 bg-white border border-purple-200 hover:border-purple-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusProposal" value="rejected_pending" checked class="text-purple-600 focus:ring-purple-500 cursor-pointer" />
               <span>⏳ Chưa duyệt / Đang chờ duyệt</span>
             </label>
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusProposal" value="approved_executed" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusProposal" value="approved_executed" class="text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
               <span>✅ Được duyệt / Đã thực hiện</span>
             </label>
           </div>
 
           <!-- Status cho Phản ánh -->
-          <div id="pwStatusFeedbackControls" class="hidden flex items-center gap-3 flex-wrap">
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-amber-900 bg-white border border-amber-200 hover:border-amber-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusFeedback" value="pending" checked class="text-amber-600 w-4 h-4 cursor-pointer" />
+          <div id="pwStatusFeedbackControls" class="hidden flex items-center gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-amber-900 bg-white border border-amber-200 hover:border-amber-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusFeedback" value="pending" checked class="text-amber-600 cursor-pointer" />
               <span>⏳ Chờ tiếp nhận</span>
             </label>
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-sky-900 bg-white border border-sky-200 hover:border-sky-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusFeedback" value="acknowledged" class="text-sky-600 w-4 h-4 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-sky-900 bg-white border border-sky-200 hover:border-sky-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusFeedback" value="acknowledged" class="text-sky-600 cursor-pointer" />
               <span>📥 Đã tiếp nhận</span>
             </label>
-            <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-4 py-2.5 rounded-xl shadow-2xs transition">
-              <input type="radio" name="pwStatusFeedback" value="resolved" class="text-emerald-600 w-4 h-4 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-400 px-3 py-1.5 rounded-lg shadow-2xs transition">
+              <input type="radio" name="pwStatusFeedback" value="resolved" class="text-emerald-600 cursor-pointer" />
               <span>✅ Đã giải quyết</span>
             </label>
           </div>
         </div>
 
-        <!-- 6. ĐÁNH DẤU QUAN TRỌNG & TÍCH CHỌN ĐẨY BÁO CÁO (BỐ TRÍ 2 CỘT RỘNG RÃI CÂN ĐỐI) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+        <!-- 6. ĐÁNH DẤU QUAN TRỌNG & TÍCH CHỌN ĐẨY BÁO CÁO (2 CỘT CÂN ĐỐI) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
           <!-- Đánh dấu quan trọng để nhắc nhở làm -->
-          <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-amber-200/90 bg-amber-50/70 hover:bg-amber-100/70 cursor-pointer transition select-none shadow-2xs">
+          <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-amber-200/90 bg-amber-50/70 hover:bg-amber-100/70 cursor-pointer transition select-none shadow-2xs">
             <input type="checkbox" id="pwEditImportant" class="w-4 h-4 text-amber-600 rounded border-amber-400 focus:ring-amber-500 cursor-pointer accent-amber-600 shrink-0" />
-            <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-950">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950 truncate">
               <i class="fa-solid fa-star text-amber-500"></i>
               <span>Mục quan trọng (Nhắc nhở làm) ⭐</span>
             </div>
           </label>
 
           <!-- Tích chọn sẵn để đẩy vào báo cáo lãnh đạo -->
-          <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/70 hover:bg-emerald-100/70 cursor-pointer transition select-none shadow-2xs">
+          <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/70 hover:bg-emerald-100/70 cursor-pointer transition select-none shadow-2xs">
             <input type="checkbox" id="pwEditSelectedForReport" checked class="w-4 h-4 text-emerald-600 rounded border-emerald-400 focus:ring-emerald-500 cursor-pointer accent-emerald-600 shrink-0" />
-            <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-950">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-950 truncate">
               <i class="fa-solid fa-paper-plane text-emerald-600"></i>
               <span>Đưa mục này vào báo cáo gửi cấp trên</span>
             </div>
@@ -4727,13 +4720,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       </div>
 
-      <!-- FOOTER THIẾT KẾ HIỆN ĐẠI, THOÁNG MẮT -->
-      <div class="px-6 sm:px-8 py-4 sm:py-5 border-t border-slate-100 flex items-center justify-end gap-3 flex-shrink-0 bg-slate-50/60">
-        <button type="button" onclick="closePersonalItemEditModal()" class="px-5 sm:px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs">
+      <!-- FOOTER THIẾT KẾ GỌN GÀNG, NẰM NGAY CHÂN BẢNG KHÔNG CẦN CUỘN -->
+      <div class="px-5 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-2.5 flex-shrink-0 bg-slate-50/60">
+        <button type="button" onclick="closePersonalItemEditModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs">
           Hủy bỏ
         </button>
-        <button type="button" onclick="savePersonalItem()" class="px-6 sm:px-7 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-2xl shadow-sm shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-check text-sm"></i>
+        <button type="button" onclick="savePersonalItem()" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-xs shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs sm:text-sm"></i>
           <span>Lưu công việc</span>
         </button>
       </div>
@@ -21659,6 +21652,8 @@ function showPersonalTaskReminderOnLogin() {
     }
   });
 
+  const importantPendingItems = pendingItems.filter(it => it.isImportant);
+
   // Luôn cập nhật số liệu trên thẻ chính
   updatePersonalWorkspaceEntryCardStats();
 
@@ -21672,35 +21667,57 @@ function showPersonalTaskReminderOnLogin() {
 
     const countP = document.getElementById('pwReminderCountPending');
     const countD = document.getElementById('pwReminderCountDue');
+    const countImp = document.getElementById('pwReminderCountImportant');
     if (countP) countP.innerText = pendingItems.length;
     if (countD) countD.innerText = overdueOrDueItems.length;
+    if (countImp) countImp.innerText = importantPendingItems.length;
 
     const listEl = document.getElementById('pwReminderItemsList');
     if (listEl) {
-      listEl.innerHTML = pendingItems.slice(0, 6).map((it, idx) => {
-        let tag = '';
-        if (it.type === 'adhoc') tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Phát sinh</span>';
-        else if (it.type === 'plan') {
-          tag = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-900">${it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch'}</span>`;
-        } else if (it.type === 'proposal') {
-          tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900">Đề xuất</span>';
-        } else {
-          tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-900">Ý kiến</span>';
+      const displayItems = pendingItems.slice(0, 12);
+      if (displayItems.length === 0) {
+        listEl.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-slate-400 italic">Hiện không có công việc nào tồn đọng. Chúc bạn một ngày làm việc hiệu quả!</div>';
+      } else {
+        listEl.innerHTML = displayItems.map((it, idx) => {
+          let tag = '';
+          if (it.type === 'adhoc') {
+            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80 shrink-0">⚡ Phát sinh</span>';
+          } else if (it.type === 'plan') {
+            const tl = it.dueDate ? calculatePlanTimelineStatus(it) : null;
+            let dueText = it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch';
+            let dueStyle = 'bg-sky-100/90 text-sky-900 border-sky-200/80';
+            if (tl && (tl.code === 'overdue' || tl.code === 'duetoday')) {
+              dueStyle = 'bg-rose-100/90 text-rose-900 border-rose-200/80 animate-pulse';
+            }
+            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ' + dueStyle + ' border shrink-0">📅 ' + dueText + '</span>';
+          } else if (it.type === 'proposal') {
+            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200/80 shrink-0">💡 Đề xuất</span>';
+          } else {
+            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-100/90 text-teal-900 border border-teal-200/80 shrink-0">💬 Phản ánh</span>';
+          }
+
+          return (
+            '<div class="p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/60 border border-slate-200/90 hover:border-amber-400 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between gap-2 cursor-pointer group select-none" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);" title="Bấm vào để xem và cập nhật mục này trong Sổ tay">' +
+              '<div class="flex items-start justify-between gap-2">' +
+                '<div class="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-amber-950 transition flex items-start gap-1.5 min-w-0">' +
+                  '<span class="text-slate-400 group-hover:text-amber-600 font-black shrink-0">' + (idx + 1) + '.</span>' +
+                  '<span class="truncate font-bold">' + escapeHtml(it.title) + '</span>' +
+                  (it.isImportant ? '<span class="text-amber-500 shrink-0 text-xs" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
+                '</div>' +
+                '<div class="shrink-0">' + tag + '</div>' +
+              '</div>' +
+              (it.content ? '<div class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed pl-4">' + escapeHtml(it.content) + '</div>' : '') +
+              '<div class="flex items-center justify-between pt-1.5 border-t border-slate-200/70 text-[10px] text-slate-400 pl-4 mt-auto">' +
+                '<span class="flex items-center gap-1"><i class="fa-regular fa-calendar-days text-[10px]"></i> ' + (it.date ? formatVNDate(it.date) : 'Đang theo dõi') + '</span>' +
+                '<span class="text-amber-600 font-bold group-hover:underline flex items-center gap-1">Xem &amp; Cập nhật <i class="fa-solid fa-angle-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i></span>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        if (pendingItems.length > 12) {
+          listEl.innerHTML += '<div class="col-span-full text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl">Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...</div>';
         }
-
-        return `
-          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <div class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-              ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">${escapeHtml(it.content)}</div>` : ''}
-            </div>
-            <div class="shrink-0">${tag}</div>
-          </div>
-        `;
-      }).join('');
-
-      if (pendingItems.length > 6) {
-        listEl.innerHTML += `<div class="text-center text-[11px] text-slate-400 italic pt-1">Và còn ${pendingItems.length - 6} công việc khác trong sổ tay...</div>`;
       }
     }
 
@@ -27821,54 +27838,89 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     }
   </script>
 
-  <!-- ================= MODAL NHẮC NHỞ CÔNG VIỆC CHƯA LÀM / ĐẾN HẠN ĐẦU NGÀY ================= -->
-  <div id="personalTaskReminderModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
-      <div class="px-5 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
+  <!-- ================= MODAL NHẮC NHỞ CÔNG VIỆC CHƯA LÀM / ĐẾN HẠN ĐẦU NGÀY (THIẾT KẾ RỘNG RÃI, 2 CỘT THOÁNG MẮT, KHÔNG PHẢI CUỘN NHIỀU) ================= -->
+  <div id="personalTaskReminderModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in duration-200">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full max-h-[92vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER THIẾT KẾ RỘNG RÃI, TRANG TRỌNG -->
+      <div class="px-5 sm:px-6 py-3.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white flex items-center justify-between flex-shrink-0 shadow-xs">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-lg text-white font-bold shadow-inner">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-lg text-white font-bold shadow-inner shrink-0">
             <i class="fa-solid fa-bell"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm sm:text-base leading-tight">Nhắc Nhở Công Việc Cần Làm</h3>
-            <p class="text-[11px] text-amber-100 mt-0.5">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn</p>
+            <h3 class="font-black text-sm sm:text-base leading-tight tracking-tight">Nhắc Nhở Công Việc Cần Làm</h3>
+            <p class="text-[11px] sm:text-xs text-amber-100 mt-0.5">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn cần ưu tiên xử lý</p>
           </div>
         </div>
-        <button type="button" onclick="closePersonalTaskReminderModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-xs cursor-pointer transition">
-          <i class="fa-solid fa-xmark"></i>
+        <button type="button" onclick="closePersonalTaskReminderModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-xs cursor-pointer transition shadow-2xs shrink-0" title="Đóng thông báo">
+          <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <div class="p-5 space-y-3.5 max-h-[65vh] overflow-y-auto custom-scrollbar">
-        <div class="text-xs text-slate-600 leading-relaxed">
-          Xin chào <b id="pwReminderUserGreeting" class="text-slate-900">Nhân sự</b>! Dưới đây là các đầu việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:
+      <!-- BODY MỞ RỘNG DIỆN TÍCH, KHÔNG GIAN THOÁNG ĐÃNG -->
+      <div class="p-4 sm:p-6 space-y-3.5 overflow-y-auto custom-scroll flex-1">
+        
+        <!-- DÒNG LỜI CHÀO & HƯỚNG DẪN -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-slate-600">
+          <div>Xin chào <b id="pwReminderUserGreeting" class="text-slate-900 font-bold">Nhân sự</b>! Dưới đây là các đầu việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:</div>
+          <div class="text-[11px] text-amber-700 font-semibold flex items-center gap-1 shrink-0"><i class="fa-solid fa-hand-pointer text-[10px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
-            <span class="text-[10px] font-bold text-amber-600 uppercase block">Chưa làm</span>
-            <span class="text-sm font-black"><span id="pwReminderCountPending">0</span> công việc</span>
+        <!-- 3 KHỐI THỐNG KÊ RÕ RÀNG, NỔI BẬT -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <!-- 1. CHƯA LÀM / CHƯA XONG -->
+          <div class="p-2.5 sm:p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 shadow-2xs flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-200/70 text-amber-700 flex items-center justify-center text-sm font-bold shrink-0">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">Chưa làm / Chưa xong</span>
+              <span class="text-sm sm:text-base font-black text-amber-950 truncate"><span id="pwReminderCountPending">0</span> công việc</span>
+            </div>
           </div>
-          <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900">
-            <span class="text-[10px] font-bold text-rose-600 uppercase block">Đến hạn / Quá hạn</span>
-            <span class="text-sm font-black"><span id="pwReminderCountDue">0</span> kế hoạch</span>
+
+          <!-- 2. ĐẾN HẠN / QUÁ HẠN -->
+          <div class="p-2.5 sm:p-3 rounded-2xl bg-rose-50/90 border border-rose-200/90 text-rose-900 shadow-2xs flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-rose-200/70 text-rose-700 flex items-center justify-center text-sm font-bold shrink-0">
+              <i class="fa-solid fa-calendar-xmark"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Đến hạn / Quá hạn</span>
+              <span class="text-sm sm:text-base font-black text-rose-950 truncate"><span id="pwReminderCountDue">0</span> kế hoạch</span>
+            </div>
+          </div>
+
+          <!-- 3. MỤC QUAN TRỌNG ƯU TIÊN -->
+          <div class="p-2.5 sm:p-3 rounded-2xl bg-orange-50/90 border border-orange-200/90 text-orange-950 shadow-2xs flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-orange-200/70 text-orange-600 flex items-center justify-center text-sm font-bold shrink-0">
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">Mục quan trọng ⭐</span>
+              <span class="text-sm sm:text-base font-black text-orange-950 truncate"><span id="pwReminderCountImportant">0</span> mục ưu tiên</span>
+            </div>
           </div>
         </div>
 
-        <div id="pwReminderItemsList" class="space-y-2 pt-1 text-xs">
-          <!-- Render danh sách việc cần làm -->
+        <!-- DANH SÁCH CÔNG VIỆC BỐ TRÍ DẠNG LƯỚI 2 CỘT RỘNG RÃI (XEM NHIỀU HƠN, KHÔNG PHẢI CUỘN NHIỀU) -->
+        <div id="pwReminderItemsList" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1 text-xs">
+          <!-- Render danh sách việc cần làm linh hoạt -->
         </div>
+
       </div>
 
-      <div class="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
-        <button type="button" onclick="closePersonalTaskReminderModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition cursor-pointer">
+      <!-- FOOTER THIẾT KẾ GỌN GÀNG, ĐỦ NÚT ĐIỀU HƯỚNG -->
+      <div class="px-5 sm:px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
+        <button type="button" onclick="closePersonalTaskReminderModal()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs">
           Đóng &amp; Bắt đầu làm việc
         </button>
-        <button type="button" onclick="openPersonalWorkspaceFromReminder()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-          <i class="fa-solid fa-book-bookmark text-xs"></i>
+        <button type="button" onclick="openPersonalWorkspaceFromReminder()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs sm:text-sm font-black shadow-xs transition flex items-center gap-2 cursor-pointer active:scale-95">
+          <i class="fa-solid fa-book-bookmark text-xs sm:text-sm"></i>
           <span>Vào Sổ Tay Công Việc</span>
         </button>
       </div>
+
     </div>
   </div>
 
