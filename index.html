@@ -1255,7 +1255,7 @@
       })();
     </script>
     <!-- Header: Thẻ gợi ý bắt mắt, ngắn gọn khi rê chuột -->
-    <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
+    <header id="mainAppHeader" class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
       <!-- Thông tin nhân sự đăng nhập & Logo công ty: BẤM VÀO ĐỂ XEM BẢNG THÔNG TIN TÀI KHOẢN -->
       <div onclick="openUserProfileModal()" data-tooltip="Xem hồ sơ tài khoản" class="flex items-center gap-2.5 sm:gap-3 min-w-0 cursor-pointer group p-1 -m-1 rounded-2xl hover:bg-slate-50 transition">
         <!-- Logo chính thức của công ty Nhựa Tiền Phong thay thế cho logo tên -->
@@ -1486,7 +1486,7 @@
     </header>
 
     <!-- Thân điều khiển bảng ma trận & Thống kê -->
-    <main class="flex-1 p-2 sm:p-5 pb-20 md:pb-6 w-full mx-auto space-y-3.5 flex flex-col">
+    <main id="mainAppContent" class="flex-1 p-2 sm:p-5 pb-20 md:pb-6 w-full mx-auto space-y-3.5 flex flex-col">
       <!-- ================= 1. CHẾ ĐỘ VIEW CHÍNH: BẢNG THEO DÕI CÔNG VIỆC BAN ĐẦU ================= -->
       <div id="mainWorkspaceView" class="space-y-3.5 flex flex-col flex-1 w-full">
         <!-- THẺ TRUY CẬP SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (CLICK ĐỂ VÀO TRANG MỚI) -->
@@ -21505,6 +21505,15 @@ function openPersonalWorkspacePage() {
 
   const mainView = document.getElementById('mainWorkspaceView');
   const pwPage = document.getElementById('personalWorkspacePageView');
+  const appHeader = document.getElementById('mainAppHeader') || document.querySelector('header');
+  const mainContent = document.getElementById('mainAppContent') || document.querySelector('main');
+
+  // Ẩn thanh header ứng dụng trên cùng theo yêu cầu để đẩy dòng tiêu đề Sổ tay lên trên cùng
+  if (appHeader) appHeader.classList.add('hidden');
+  if (mainContent) {
+    mainContent.classList.remove('sm:p-5');
+    mainContent.classList.add('p-1.5', 'sm:p-3', 'sm:pt-2');
+  }
 
   if (mainView) mainView.classList.add('hidden');
   const mobileNav = document.getElementById('mobileBottomNav');
@@ -21545,19 +21554,28 @@ function openPersonalWorkspacePage() {
 function closePersonalWorkspacePage() {
   const mainView = document.getElementById('mainWorkspaceView');
   const pwPage = document.getElementById('personalWorkspacePageView');
+  const appHeader = document.getElementById('mainAppHeader') || document.querySelector('header');
+  const mainContent = document.getElementById('mainAppContent') || document.querySelector('main');
 
   if (pwPage) pwPage.classList.add('hidden');
   const mobileNav = document.getElementById('mobileBottomNav');
   if (mobileNav) mobileNav.classList.remove('hidden');
   if (mainView) {
     mainView.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+  // Khôi phục hiển thị thanh header ứng dụng trên cùng khi quay lại trang công việc ban đầu
+  if (appHeader) {
+    appHeader.classList.remove('hidden');
+  }
+  if (mainContent) {
+    mainContent.classList.remove('p-1.5', 'sm:p-3', 'sm:pt-2');
+    mainContent.classList.add('sm:p-5');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   updatePersonalWorkspaceEntryCardStats();
 }
 
-// Cung cấp alias tương thích ngược nếu ở đâu đó còn gọi openPersonalWorkspaceModal
 function openPersonalWorkspaceModal() {
   openPersonalWorkspacePage();
 }
