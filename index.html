@@ -2017,39 +2017,46 @@
         <div class="px-4 sm:px-6 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 bg-white">
           <!-- 5 Tab lọc với thống kê tổng việc & số việc chưa xong -->
           <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-1 flex-1 min-w-[280px]">
-            <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 bg-emerald-600 text-white border border-emerald-600 shadow-sm">
+            <!-- 1. Tất cả -->
+            <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold">
               <i class="fa-solid fa-layer-group text-xs"></i>
               <span>Tất cả</span>
-              <span id="pwTabCount_all" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-800 text-emerald-100" title="Tổng số việc">0</span>
-              <span id="pwTabPending_all" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs inline-flex items-center gap-1" title="Số việc chưa hoàn thành"><span id="pwTabPendingNum_all">0</span> chưa xong</span>
+              <span id="pwTabCount_all" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-emerald-800 text-emerald-100">0</span>
             </button>
 
-            <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
+            <!-- 2. Mục: Việc chưa làm (Tổng việc chưa làm và chưa hoàn thiện) -->
+            <button type="button" id="pwTabBtn_pending" onclick="switchPersonalWorkspaceTab('pending')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-rose-800 hover:bg-rose-50 border border-rose-200/90 transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs" title="Lọc xem tất cả các công việc chưa làm & chưa hoàn thành">
+              <i class="fa-solid fa-clock-rotate-left text-rose-600 text-xs"></i>
+              <span>Việc chưa làm</span>
+              <span id="pwTabCount_pending" class="px-2 py-0.5 rounded-full text-[10px] font-black font-num bg-rose-100 text-rose-800 border border-rose-200">0</span>
+            </button>
+
+            <!-- 3. Việc phát sinh -->
+            <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
               <span>Việc phát sinh</span>
-              <span id="pwTabCount_adhoc" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng việc phát sinh">0</span>
-              <span id="pwTabPending_adhoc" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs inline-flex items-center gap-1" title="Số việc chưa làm"><span id="pwTabPendingNum_adhoc">0</span> chưa làm</span>
+              <span id="pwTabCount_adhoc" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-amber-50 text-amber-800 border border-amber-200">0</span>
             </button>
 
-            <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
+            <!-- 4. Lịch & Kế hoạch -->
+            <button type="button" id="pwTabBtn_plan" onclick="switchPersonalWorkspaceTab('plan')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
               <span>Lịch &amp; Kế hoạch</span>
-              <span id="pwTabCount_plan" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng kế hoạch">0</span>
-              <span id="pwTabPending_plan" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-sky-100 text-sky-900 border border-sky-200 shadow-2xs inline-flex items-center gap-1" title="Số kế hoạch chưa xong"><span id="pwTabPendingNum_plan">0</span> chưa xong</span>
+              <span id="pwTabCount_plan" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
             </button>
 
-            <button type="button" id="pwTabBtn_proposal" onclick="switchPersonalWorkspaceTab('proposal')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
+            <!-- 5. Đề xuất -->
+            <button type="button" id="pwTabBtn_proposal" onclick="switchPersonalWorkspaceTab('proposal')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
               <span>Đề xuất</span>
-              <span id="pwTabCount_proposal" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng đề xuất">0</span>
-              <span id="pwTabPending_proposal" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs inline-flex items-center gap-1" title="Số đề xuất chờ duyệt"><span id="pwTabPendingNum_proposal">0</span> chờ duyệt</span>
+              <span id="pwTabCount_proposal" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-purple-50 text-purple-800 border border-purple-200">0</span>
             </button>
 
-            <button type="button" id="pwTabBtn_feedback" onclick="switchPersonalWorkspaceTab('feedback')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-700 hover:bg-slate-100 border border-transparent">
+            <!-- 6. Ý kiến / Phản ánh -->
+            <button type="button" id="pwTabBtn_feedback" onclick="switchPersonalWorkspaceTab('feedback')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
               <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
               <span>Ý kiến / Phản ánh</span>
-              <span id="pwTabCount_feedback" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-100 text-slate-700 border border-slate-200" title="Tổng ý kiến">0</span>
-              <span id="pwTabPending_feedback" class="px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-teal-100 text-teal-900 border border-teal-200 shadow-2xs inline-flex items-center gap-1" title="Số ý kiến tiếp nhận chưa xử lý"><span id="pwTabPendingNum_feedback">0</span> tiếp nhận</span>
+              <span id="pwTabCount_feedback" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-teal-50 text-teal-800 border border-teal-200">0</span>
             </button>
           </div>
 
@@ -22555,81 +22562,24 @@ function updatePersonalWorkspaceReminders(dataArg) {
       }
     }
 
-    // Cập nhật dòng Tab: Tổng số đầu việc & Số việc chưa xong tương ứng
+    // Cập nhật số liệu các Tab danh mục
     const cAll = document.getElementById('pwTabCount_all');
     if (cAll) cAll.innerText = items.length;
-    const pAll = document.getElementById('pwTabPendingNum_all');
-    const pAllBadge = document.getElementById('pwTabPending_all');
-    if (pAll) pAll.innerText = totalPending;
-    if (pAllBadge) {
-      if (totalPending > 0) {
-        pAllBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs inline-flex items-center gap-1";
-        pAllBadge.innerHTML = `<i class="fa-regular fa-clock text-[9px]"></i><span>${totalPending}</span> chưa xong`;
-      } else {
-        pAllBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
-        pAllBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã xong hết`;
-      }
-    }
+
+    const cPending = document.getElementById('pwTabCount_pending');
+    if (cPending) cPending.innerText = totalPending;
 
     const cAdhoc = document.getElementById('pwTabCount_adhoc');
     if (cAdhoc) cAdhoc.innerText = adhocCount;
-    const pAdhoc = document.getElementById('pwTabPendingNum_adhoc');
-    const pAdhocBadge = document.getElementById('pwTabPending_adhoc');
-    if (pAdhoc) pAdhoc.innerText = adhocPending;
-    if (pAdhocBadge) {
-      if (adhocPending > 0) {
-        pAdhocBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs inline-flex items-center gap-1";
-        pAdhocBadge.innerHTML = `<span>${adhocPending}</span> chưa làm`;
-      } else {
-        pAdhocBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
-        pAdhocBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã làm hết`;
-      }
-    }
 
     const cPlan = document.getElementById('pwTabCount_plan');
     if (cPlan) cPlan.innerText = planCount;
-    const pPlan = document.getElementById('pwTabPendingNum_plan');
-    const pPlanBadge = document.getElementById('pwTabPending_plan');
-    if (pPlan) pPlan.innerText = planPending;
-    if (pPlanBadge) {
-      if (planPending > 0) {
-        pPlanBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-sky-100 text-sky-900 border border-sky-200 shadow-2xs inline-flex items-center gap-1";
-        pPlanBadge.innerHTML = `<span>${planPending}</span> chưa xong`;
-      } else {
-        pPlanBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
-        pPlanBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Hoàn thành`;
-      }
-    }
 
     const cProp = document.getElementById('pwTabCount_proposal');
     if (cProp) cProp.innerText = proposalCount;
-    const pProp = document.getElementById('pwTabPendingNum_proposal');
-    const pPropBadge = document.getElementById('pwTabPending_proposal');
-    if (pProp) pProp.innerText = proposalPending;
-    if (pPropBadge) {
-      if (proposalPending > 0) {
-        pPropBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs inline-flex items-center gap-1";
-        pPropBadge.innerHTML = `<span>${proposalPending}</span> chờ duyệt`;
-      } else {
-        pPropBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
-        pPropBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã duyệt`;
-      }
-    }
 
     const cFeed = document.getElementById('pwTabCount_feedback');
     if (cFeed) cFeed.innerText = feedbackCount;
-    const pFeed = document.getElementById('pwTabPendingNum_feedback');
-    const pFeedBadge = document.getElementById('pwTabPending_feedback');
-    if (pFeed) pFeed.innerText = feedbackPending;
-    if (pFeedBadge) {
-      if (feedbackPending > 0) {
-        pFeedBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-black font-num bg-teal-100 text-teal-900 border border-teal-200 shadow-2xs inline-flex items-center gap-1";
-        pFeedBadge.innerHTML = `<span>${feedbackPending}</span> tiếp nhận`;
-      } else {
-        pFeedBadge.className = "px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1";
-        pFeedBadge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i>Đã xử lý`;
-      }
-    }
 
     const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
     if (headerBadge) {
@@ -22802,15 +22752,46 @@ function updateSummaryCardsActiveState(activeType) {
 }
 
 const PW_TAB_STYLE_MAP = {
-  all: { activeBtn: "bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold", activeBadge: "bg-emerald-800 text-emerald-100 font-bold" },
-  adhoc: { activeBtn: "bg-amber-500 text-white border border-amber-500 shadow-sm font-bold", activeBadge: "bg-amber-700 text-amber-100 font-bold" },
-  plan: { activeBtn: "bg-sky-600 text-white border border-sky-600 shadow-sm font-bold", activeBadge: "bg-sky-800 text-sky-100 font-bold" },
-  proposal: { activeBtn: "bg-purple-600 text-white border border-purple-600 shadow-sm font-bold", activeBadge: "bg-purple-800 text-purple-100 font-bold" },
-  feedback: { activeBtn: "bg-teal-600 text-white border border-teal-600 shadow-sm font-bold", activeBadge: "bg-teal-800 text-teal-100 font-bold" }
+  all: {
+    activeBtn: "bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-emerald-800 text-emerald-100 font-bold",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-700 border border-slate-200 font-num font-bold"
+  },
+  pending: {
+    activeBtn: "bg-gradient-to-r from-rose-600 to-amber-600 text-white border border-rose-600 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-rose-950 text-white font-black",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-rose-800 hover:bg-rose-50 border border-rose-200/90 transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-rose-100 text-rose-800 border border-rose-200 font-num font-black"
+  },
+  adhoc: {
+    activeBtn: "bg-amber-500 text-white border border-amber-500 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-amber-700 text-amber-100 font-bold",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-800 border border-amber-200 font-num font-bold"
+  },
+  plan: {
+    activeBtn: "bg-sky-600 text-white border border-sky-600 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-sky-800 text-sky-100 font-bold",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-sky-50 text-sky-800 border border-sky-200 font-num font-bold"
+  },
+  proposal: {
+    activeBtn: "bg-purple-600 text-white border border-purple-600 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-purple-800 text-purple-100 font-bold",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-purple-50 text-purple-800 border border-purple-200 font-num font-bold"
+  },
+  feedback: {
+    activeBtn: "bg-teal-600 text-white border border-teal-600 shadow-sm font-bold",
+    activeBadge: "px-2 py-0.5 rounded-full text-[10px] bg-teal-800 text-teal-100 font-bold",
+    inactiveBtn: "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer",
+    inactiveBadge: "px-2 py-0.5 rounded-full text-[10px] bg-teal-50 text-teal-800 border border-teal-200 font-num font-bold"
+  }
 };
 
 function updatePersonalWorkspaceTabButtonsUI(activeTab) {
-  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
+  const tabs = ['all', 'pending', 'adhoc', 'plan', 'proposal', 'feedback'];
   tabs.forEach(t => {
     const btn = document.getElementById(`pwTabBtn_${t}`);
     const badge = document.getElementById(`pwTabCount_${t}`);
@@ -22818,10 +22799,10 @@ function updatePersonalWorkspaceTabButtonsUI(activeTab) {
     if (btn) {
       if (t === activeTab && !pwFilterImportantOnly && !pwFilterDueOrOverdue && !pwFilterImportantPendingOnly) {
         btn.className = `pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer ${cfg.activeBtn}`;
-        if (badge) badge.className = `px-1.5 py-0.2 rounded-full text-[9px] font-num ${cfg.activeBadge}`;
+        if (badge) badge.className = cfg.activeBadge;
       } else {
-        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer";
-        if (badge) badge.className = "px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-700 border border-slate-200 font-num font-bold";
+        btn.className = cfg.inactiveBtn;
+        if (badge) badge.className = cfg.inactiveBadge;
       }
     }
   });
@@ -23037,8 +23018,12 @@ function renderPersonalWorkspaceUI() {
   }
 
   // Lọc theo Tab (nếu không ở chế độ xem riêng mục quan trọng chưa làm)
-  if (!pwFilterImportantPendingOnly && pwCurrentTab !== 'all') {
-    items = items.filter(it => it.type === pwCurrentTab);
+  if (!pwFilterImportantPendingOnly) {
+    if (pwCurrentTab === 'pending') {
+      items = items.filter(it => !isPersonalTaskFinished(it));
+    } else if (pwCurrentTab !== 'all') {
+      items = items.filter(it => it.type === pwCurrentTab);
+    }
   }
 
   // Lọc theo việc đến hạn / quá hạn
@@ -23187,6 +23172,10 @@ function renderPersonalWorkspaceUI() {
     // 4. Trường hợp chưa có công việc nào (Trình bày gọn gàng, KHÔNG trùng dấu +)
     let emptyTitle = "Chưa có mục công việc nào";
     let emptyDesc = "Theo dõi công việc phát sinh, kế hoạch làm việc, sáng kiến đề xuất và ý kiến phản ánh để quản lý gọn gàng và đẩy báo cáo.";
+    if (pwCurrentTab === 'pending') {
+      emptyTitle = "Tuyệt vời! Không còn công việc nào chưa hoàn thành";
+      emptyDesc = "Tất cả các công việc phát sinh, kế hoạch, đề xuất và phản ánh đều đã được giải quyết hoặc hoàn thành đầy đủ.";
+    } else
     if (pwCurrentTab === 'adhoc') {
       emptyTitle = "Chưa có công việc phát sinh trong tháng";
       emptyDesc = "Ghi nhanh các việc phát sinh ngoài kế hoạch để theo dõi tiến độ (đã làm / chưa làm).";
