@@ -6540,12 +6540,31 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function countTotalPeopleInDept(deptStaffGroups) {
       if (!deptStaffGroups || deptStaffGroups.length === 0) return 0;
-      let count = 0;
+      const uniqueNames = new Set();
       deptStaffGroups.forEach(grp => {
-        const staffList = parseStaffList(grp.staffName);
-        count += (staffList && staffList.length > 0) ? staffList.length : 1;
+        if (!grp) return;
+        if (grp.staffName) {
+          const staffList = parseStaffList(grp.staffName);
+          if (staffList && staffList.length > 0) {
+            staffList.forEach(st => {
+              const rawName = st.cleanName || st.name || "";
+              const clean = removeAccents(rawName).trim().toLowerCase();
+              if (clean) uniqueNames.add(clean);
+            });
+          } else {
+            const rawLines = String(grp.staffName).split('\n');
+            rawLines.forEach(l => {
+              let clean = l.replace(/^\d+[\.\,\-\)\:]*\s*/, '').trim();
+              clean = clean.replace(/\s*\([^\)]*\)\s*$/g, '').trim();
+              clean = removeAccents(clean).toLowerCase();
+              if (clean) uniqueNames.add(clean);
+            });
+          }
+        } else if (grp.userId) {
+          uniqueNames.add(`uid_${grp.userId}`);
+        }
       });
-      return count;
+      return uniqueNames.size || 1;
     }
 
     /**
@@ -14241,7 +14260,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const personRowBg = isEvenPerson ? 'FFFFFFFF' : 'FFF8FAFC';
             const personTotalBg = isEvenPerson ? 'FFF1F5F9' : 'FFE2E8F0';
 
-            const isSharedGroup = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+            const isSharedGroupDept = (grp.isShared !== undefined) ? grp.isShared : isSharedGroupDeptClient(grp.department);
+            const isPersonalInShared = !!grp.isPersonalInShared;
+            const isSharedGroup = isSharedGroupDept && !isPersonalInShared;
             let excelStaffName = grp.staffName || "";
             if (!isSharedGroup) {
               const parsed = parseStaffList(excelStaffName);
