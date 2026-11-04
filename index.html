@@ -9360,22 +9360,50 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       document.getElementById('userFullnameLabel').innerText = currentUser.fullName;
       document.getElementById('userAvatarChar').innerText = currentUser.fullName.charAt(0);
-      document.getElementById('userDeptLabel').innerText = currentUser.department || "Ban Điều Hành DVKH";
-      updatePersonalWorkspaceReminders();
-      checkPersonalWorkspaceRemindersOnLogin();
+      let displayDept = currentUser.department || "Ban Điều Hành DVKH";
+      if (isSystemAdmin(currentUser.role, currentUser.username)) {
+        displayDept = "Quản trị Ban Điều Hành";
+      } else if (isBoardOfDirectors(currentUser) && (!displayDept || displayDept === "Chưa phân bổ")) {
+        displayDept = "Ban Giám Đốc";
+      }
+      document.getElementById('userDeptLabel').innerText = displayDept;
 
-      // Xóa dữ liệu mẫu cũ trên localStorage để đồng bộ sạch sẽ với Supabase
-      if (!localStorage.getItem('pw_sample_v5_cleaned')) {
-        for (let k in localStorage) {
-          if (k.startsWith('pw_data_')) {
-            localStorage.removeItem(k);
-          }
-        }
-        localStorage.setItem('pw_sample_v5_cleaned', 'true');
+      // Cập nhật Sổ tay an toàn trong try...catch độc lập để tuyệt đối không ảnh hưởng đến giao diện chính
+      try {
+        updatePersonalWorkspaceReminders();
+      } catch (e) {
+        console.warn("Lỗi updatePersonalWorkspaceReminders:", e);
+      }
+      try {
+        checkPersonalWorkspaceRemindersOnLogin();
+      } catch (e) {
+        console.warn("Lỗi checkPersonalWorkspaceRemindersOnLogin:", e);
       }
 
-      updatePersonalWorkspaceEntryCardStats();
-      showPersonalTaskReminderOnLogin();
+      // Xóa dữ liệu mẫu cũ trên localStorage để đồng bộ sạch sẽ với Supabase
+      try {
+        if (!localStorage.getItem('pw_sample_v5_cleaned')) {
+          for (let k in localStorage) {
+            if (k.startsWith('pw_data_')) {
+              localStorage.removeItem(k);
+            }
+          }
+          localStorage.setItem('pw_sample_v5_cleaned', 'true');
+        }
+      } catch (e) {
+        console.warn("Lỗi dọn dẹp localStorage:", e);
+      }
+
+      try {
+        updatePersonalWorkspaceEntryCardStats();
+      } catch (e) {
+        console.warn("Lỗi updatePersonalWorkspaceEntryCardStats:", e);
+      }
+      try {
+        showPersonalTaskReminderOnLogin();
+      } catch (e) {
+        console.warn("Lỗi showPersonalTaskReminderOnLogin:", e);
+      }
 
       const roleBadgeEl = document.getElementById('userRoleBadge');
       if (roleBadgeEl) {
@@ -21041,8 +21069,8 @@ function toSupabaseTaskRow(it, user = currentUser) {
     type: it.type || 'adhoc',
     title: it.title || '',
     content: it.content || '',
-    date: it.date || null,
-    due_date: it.dueDate || null,
+    date: (it.date && String(it.date).trim() !== '') ? String(it.date).trim() : null,
+    due_date: (it.dueDate && String(it.dueDate).trim() !== '') ? String(it.dueDate).trim() : null,
     is_important: !!it.isImportant,
     status: it.status || 'pending',
     is_completed: isPersonalTaskFinished(it),
@@ -21426,6 +21454,14 @@ function openPersonalWorkspacePage() {
   if (nameEl) nameEl.innerText = currentUser.fullName || currentUser.username || "Nhân sự";
   if (deptEl) deptEl.innerText = currentUser.department || "Ban DVKH";
   if (roleEl) roleEl.innerText = currentUser.role || "Nhân sự";
+
+  // Đặt lại các bộ lọc mặc định để đảm bảo hiển thị đầy đủ công việc khi vào trang
+  pwCurrentTab = 'all';
+  pwFilterImportantOnly = false;
+  pwFilterDueOrOverdue = false;
+  pwSearchKeyword = '';
+  updatePersonalWorkspaceTabButtonsUI('all');
+  updateSummaryCardsActiveState('all');
 
   // Kiểm tra dữ liệu: nếu chưa có công việc nào (lần đầu hoặc sau khi xóa Supabase), tự động nạp 4 việc mẫu
   const curData = getPersonalWorkspaceData(currentUser);
@@ -22368,142 +22404,158 @@ function calculatePlanTimelineStatus(item) {
   }
 }
 
-function updatePersonalWorkspaceReminders() {
+function updatePersonalWorkspaceReminders(dataArg) {
   if (!currentUser) return;
-  const data = getPersonalWorkspaceData(currentUser);
-  const items = data.items || [];
+  try {
+    const data = dataArg || getPersonalWorkspaceData(currentUser);
+    const items = data.items || [];
 
-  let adhocTotal = 0, adhocPending = 0;
-  let planTotal = 0, planPending = 0;
-  let proposalTotal = 0, proposalPending = 0;
-  let feedbackTotal = 0, feedbackPending = 0;
-  let importantTotal = 0, importantPending = 0;
-  let urgentAlertCount = 0;
+    let adhocTotal = 0, adhocPending = 0;
+    let planTotal = 0, planPending = 0, planOverdue = 0, planDue = 0;
+    let proposalTotal = 0, proposalPending = 0;
+    let feedbackTotal = 0, feedbackPending = 0;
+    let importantTotal = 0, importantPending = 0;
+    let urgentAlertCount = 0;
 
-  items.forEach(it => {
-    const isDone = isPersonalTaskFinished(it);
-    if (it.isImportant) {
-      importantTotal++;
-      if (!isDone) importantPending++;
-    }
-
-    if (it.type === 'adhoc') {
-      adhocTotal++;
-      if (!isDone) {
-        adhocPending++;
-        if (it.isImportant) urgentAlertCount++;
+    items.forEach(it => {
+      const isDone = isPersonalTaskFinished(it);
+      if (it.isImportant) {
+        importantTotal++;
+        if (!isDone) importantPending++;
       }
-    } else if (it.type === 'plan') {
-      planTotal++;
-      if (!isDone) {
-        planPending++;
-        const timeline = calculatePlanTimelineStatus(it);
-        if (timeline.code === 'overdue' || timeline.code === 'duetoday') urgentAlertCount++;
+
+      if (it.type === 'adhoc') {
+        adhocTotal++;
+        if (!isDone) {
+          adhocPending++;
+          if (it.isImportant) urgentAlertCount++;
+        }
+      } else if (it.type === 'plan') {
+        planTotal++;
+        if (!isDone) {
+          planPending++;
+          const timeline = calculatePlanTimelineStatus(it);
+          if (timeline.code === 'overdue') {
+            planOverdue++;
+            urgentAlertCount++;
+          } else if (timeline.code === 'duetoday') {
+            planDue++;
+            urgentAlertCount++;
+          }
+        }
+      } else if (it.type === 'proposal') {
+        proposalTotal++;
+        if (!isDone) proposalPending++;
+      } else if (it.type === 'feedback') {
+        feedbackTotal++;
+        if (!isDone) feedbackPending++;
       }
-    } else if (it.type === 'proposal') {
-      proposalTotal++;
-      if (!isDone) proposalPending++;
-    } else if (it.type === 'feedback') {
-      feedbackTotal++;
-      if (!isDone) feedbackPending++;
+    });
+
+    const importantCount = importantTotal;
+    const adhocCount = adhocTotal;
+    const planCount = planTotal;
+    const proposalCount = proposalTotal;
+    const feedbackCount = feedbackTotal;
+
+    // Cập nhật số liệu hiển thị: Tổng đầu việc & (số việc chưa xong)
+    const elAdhocCount = document.getElementById('pwStatAdhocCount');
+    if (elAdhocCount) elAdhocCount.innerText = adhocTotal;
+    const elAdhocPending = document.getElementById('pwStatAdhocPending') || document.getElementById('pwStatAdhocDone');
+    if (elAdhocPending) elAdhocPending.innerText = adhocPending;
+
+    const elPlanCount = document.getElementById('pwStatPlanCount');
+    if (elPlanCount) elPlanCount.innerText = planTotal;
+    const elPlanPending = document.getElementById('pwStatPlanPending') || document.getElementById('pwStatPlanDue');
+    if (elPlanPending) elPlanPending.innerText = planPending;
+
+    const elProposalCount = document.getElementById('pwStatProposalCount');
+    if (elProposalCount) elProposalCount.innerText = proposalTotal;
+    const elProposalPending = document.getElementById('pwStatProposalPending') || document.getElementById('pwStatProposalApproved');
+    if (elProposalPending) elProposalPending.innerText = proposalPending;
+
+    const elFeedbackCount = document.getElementById('pwStatFeedbackCount');
+    if (elFeedbackCount) elFeedbackCount.innerText = feedbackTotal;
+    const elFeedbackPending = document.getElementById('pwStatFeedbackPending');
+    if (elFeedbackPending) elFeedbackPending.innerText = feedbackPending;
+
+    const elImportantCount = document.getElementById('pwStatImportantCount');
+    if (elImportantCount) elImportantCount.innerText = importantTotal;
+    const elImportantPending = document.getElementById('pwStatImportantPending');
+    if (elImportantPending) elImportantPending.innerText = importantPending;
+
+    const banner = document.getElementById('pwReminderAlertBanner');
+    const bannerText = document.getElementById('pwReminderAlertText');
+    if (banner && bannerText) {
+      if (planOverdue > 0 || planDue > 0) {
+        banner.classList.remove('hidden');
+        banner.className = "mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200";
+        let msg = "🚨 <b>Nhắc nhở công việc:</b> Bạn có ";
+        if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline'>${planOverdue} việc quá hạn</span> `;
+        if (planOverdue > 0 && planDue > 0) msg += "và ";
+        if (planDue > 0) msg += `<span class='font-black text-amber-700 underline'>${planDue} việc đến hạn hôm nay</span> `;
+        msg += "cần ưu tiên giải quyết!";
+        bannerText.innerHTML = msg;
+      } else if (importantCount > 0) {
+        banner.classList.remove('hidden');
+        banner.className = "mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2";
+        bannerText.innerHTML = `⭐ Bạn có <b>${importantCount} mục quan trọng</b> được đánh dấu để theo dõi và nhắc nhở làm.`;
+      } else {
+        banner.classList.add('hidden');
+      }
     }
-  });
 
-  // Cập nhật số liệu hiển thị: Tổng đầu việc & (số việc chưa xong)
-  const elAdhocCount = document.getElementById('pwStatAdhocCount');
-  if (elAdhocCount) elAdhocCount.innerText = adhocTotal;
-  const elAdhocPending = document.getElementById('pwStatAdhocPending') || document.getElementById('pwStatAdhocDone');
-  if (elAdhocPending) elAdhocPending.innerText = adhocPending;
+    const cAll = document.getElementById('pwTabCount_all');
+    if (cAll) cAll.innerText = items.length;
+    const cAdhoc = document.getElementById('pwTabCount_adhoc');
+    if (cAdhoc) cAdhoc.innerText = adhocCount;
+    const cPlan = document.getElementById('pwTabCount_plan');
+    if (cPlan) cPlan.innerText = planCount;
+    const cProp = document.getElementById('pwTabCount_proposal');
+    if (cProp) cProp.innerText = proposalCount;
+    const cFeed = document.getElementById('pwTabCount_feedback');
+    if (cFeed) cFeed.innerText = feedbackCount;
 
-  const elPlanCount = document.getElementById('pwStatPlanCount');
-  if (elPlanCount) elPlanCount.innerText = planTotal;
-  const elPlanPending = document.getElementById('pwStatPlanPending') || document.getElementById('pwStatPlanDue');
-  if (elPlanPending) elPlanPending.innerText = planPending;
-
-  const elProposalCount = document.getElementById('pwStatProposalCount');
-  if (elProposalCount) elProposalCount.innerText = proposalTotal;
-  const elProposalPending = document.getElementById('pwStatProposalPending') || document.getElementById('pwStatProposalApproved');
-  if (elProposalPending) elProposalPending.innerText = proposalPending;
-
-  const elFeedbackCount = document.getElementById('pwStatFeedbackCount');
-  if (elFeedbackCount) elFeedbackCount.innerText = feedbackTotal;
-  const elFeedbackPending = document.getElementById('pwStatFeedbackPending');
-  if (elFeedbackPending) elFeedbackPending.innerText = feedbackPending;
-
-  const elImportantCount = document.getElementById('pwStatImportantCount');
-  if (elImportantCount) elImportantCount.innerText = importantTotal;
-  const elImportantPending = document.getElementById('pwStatImportantPending');
-  if (elImportantPending) elImportantPending.innerText = importantPending;
-
-  const banner = document.getElementById('pwReminderAlertBanner');
-  const bannerText = document.getElementById('pwReminderAlertText');
-  if (banner && bannerText) {
-    if (planOverdue > 0 || planDue > 0) {
-      banner.classList.remove('hidden');
-      banner.className = "mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200";
-      let msg = "🚨 <b>Nhắc nhở công việc:</b> Bạn có ";
-      if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline'>${planOverdue} việc quá hạn</span> `;
-      if (planOverdue > 0 && planDue > 0) msg += "và ";
-      if (planDue > 0) msg += `<span class='font-black text-amber-700 underline'>${planDue} việc đến hạn hôm nay</span> `;
-      msg += "cần ưu tiên giải quyết!";
-      bannerText.innerHTML = msg;
-    } else if (importantCount > 0) {
-      banner.classList.remove('hidden');
-      banner.className = "mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2";
-      bannerText.innerHTML = `⭐ Bạn có <b>${importantCount} mục quan trọng</b> được đánh dấu để theo dõi và nhắc nhở làm.`;
-    } else {
-      banner.classList.add('hidden');
+    const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
+    if (headerBadge) {
+      if (urgentAlertCount > 0) {
+        headerBadge.innerText = urgentAlertCount;
+        headerBadge.classList.remove('hidden');
+        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse";
+      } else if (importantCount > 0) {
+        headerBadge.innerText = importantCount;
+        headerBadge.classList.remove('hidden');
+        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white border border-white shadow-2xs font-num";
+      } else {
+        headerBadge.classList.add('hidden');
+      }
     }
-  }
 
-  const cAll = document.getElementById('pwTabCount_all');
-  if (cAll) cAll.innerText = items.length;
-  const cAdhoc = document.getElementById('pwTabCount_adhoc');
-  if (cAdhoc) cAdhoc.innerText = adhocCount;
-  const cPlan = document.getElementById('pwTabCount_plan');
-  if (cPlan) cPlan.innerText = planCount;
-  const cProp = document.getElementById('pwTabCount_proposal');
-  if (cProp) cProp.innerText = proposalCount;
-  const cFeed = document.getElementById('pwTabCount_feedback');
-  if (cFeed) cFeed.innerText = feedbackCount;
-
-  const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
-  if (headerBadge) {
-    if (urgentAlertCount > 0) {
-      headerBadge.innerText = urgentAlertCount;
-      headerBadge.classList.remove('hidden');
-      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse";
-    } else if (importantCount > 0) {
-      headerBadge.innerText = importantCount;
-      headerBadge.classList.remove('hidden');
-      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white border border-white shadow-2xs font-num";
-    } else {
-      headerBadge.classList.add('hidden');
+    const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
+    if (menuBadge) {
+      if (urgentAlertCount > 0) {
+        menuBadge.innerText = `${urgentAlertCount} cần làm`;
+        menuBadge.classList.remove('hidden');
+        menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
+      } else if (importantCount > 0) {
+        menuBadge.innerText = `${importantCount} quan trọng`;
+        menuBadge.classList.remove('hidden');
+        menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-num";
+      } else {
+        menuBadge.classList.add('hidden');
+      }
     }
-  }
 
-  const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
-  if (menuBadge) {
-    if (urgentAlertCount > 0) {
-      menuBadge.innerText = `${urgentAlertCount} cần làm`;
-      menuBadge.classList.remove('hidden');
-      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
-    } else if (importantCount > 0) {
-      menuBadge.innerText = `${importantCount} quan trọng`;
-      menuBadge.classList.remove('hidden');
-      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-num";
-    } else {
-      menuBadge.classList.add('hidden');
+    const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
+    if (mobileBadge) {
+      if (urgentAlertCount > 0 || importantCount > 0) {
+        mobileBadge.classList.remove('hidden');
+      } else {
+        mobileBadge.classList.add('hidden');
+      }
     }
-  }
-
-  const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
-  if (mobileBadge) {
-    if (urgentAlertCount > 0 || importantCount > 0) {
-      mobileBadge.classList.remove('hidden');
-    } else {
-      mobileBadge.classList.add('hidden');
-    }
+  } catch (err) {
+    console.warn("Lỗi cập nhật số liệu nhắc việc:", err);
   }
 }
 
