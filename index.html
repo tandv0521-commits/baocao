@@ -1897,7 +1897,7 @@
       </div>
       <!-- HẾT CHẾ ĐỘ VIEW CHÍNH -->
       <!-- ================= 2. CHẾ ĐỘ VIEW SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (TRANG MỚI ĐỘC LẬP) ================= -->
-      <div id="personalWorkspacePageView" class="hidden flex-1 flex flex-col space-y-3 w-full bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-200">
+      <div id="personalWorkspacePageView" class="hidden flex-1 flex flex-col w-full bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in duration-200 relative">
         
         <!-- HEADER TRANG SỔ TAY -->
         <div class="px-4 sm:px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
@@ -2094,22 +2094,23 @@
           </div>
         </div>
 
-        <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO Ở CUỐI TRANG -->
-        <div class="px-4 sm:px-6 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO Ở CUỐI TRANG (LUÔN GHIM CỐ ĐỊNH Ở CHÂN TRANG) -->
+        <div id="pwBottomStickyToolbar" class="sticky bottom-0 z-30 px-4 sm:px-6 py-3 border-t border-slate-200/90 bg-white/95 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 flex-shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] rounded-b-3xl">
           <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-700 font-bold">
-              <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer" />
+            <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
+              <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
               <span>Chọn tất cả</span>
             </label>
-            <span class="text-xs text-slate-400">|</span>
-            <div id="pwSelectedSummaryText" class="text-xs text-slate-600">
+            <span class="text-xs text-slate-300 font-bold">|</span>
+            <div id="pwSelectedSummaryText" class="text-xs text-slate-700 font-medium">
               Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục để tạo báo cáo
             </div>
           </div>
 
           <div class="flex items-center gap-2">
-            <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
-              Quay lại công việc ban đầu
+            <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+              <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
+              <span>Quay lại công việc ban đầu</span>
             </button>
 
             <!-- Nút Tạo Báo Cáo Theo Những Mục Đã Tích Chọn -->
@@ -4734,7 +4735,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
                 <span>Chỉ định người tiếp nhận báo cáo:</span>
               </label>
               <span class="text-[10px] text-emerald-800 font-bold bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
-                Quản lý &amp; Phó Giám Đốc
+                Quản lý • Phó Giám Đốc • Giám Đốc
               </span>
             </div>
             <div class="relative">
@@ -21114,8 +21115,8 @@ function toSupabaseReportRow(r) {
     sender_fullname: r.senderFullName || '',
     sender_department: r.senderDepartment || '',
     sender_role: r.senderRole || '',
-    period_month: r.periodMonth || null,
-    period_year: r.periodYear || null,
+    period_month: r.periodMonth ? parseInt(r.periodMonth, 10) : null,
+    period_year: r.periodYear ? parseInt(r.periodYear, 10) : null,
     submission_date: r.submissionDate || new Date().toISOString(),
     display_date: r.displayDate || '',
     notes: r.notes || '',
@@ -21125,7 +21126,12 @@ function toSupabaseReportRow(r) {
       forwardedBy: r.forwardedBy || '',
       forwardedAt: r.forwardedAt || '',
       targetLevel: r.targetLevel || 'manager',
-      reportType: r.reportType || 'staff_report'
+      reportType: r.reportType || 'staff_report',
+      recipientId: r.recipientId || null,
+      recipientUsername: r.recipientUsername || '',
+      recipientFullName: r.recipientFullName || '',
+      recipientRole: r.recipientRole || '',
+      recipientDepartment: r.recipientDepartment || ''
     },
     status: r.status || 'submitted_to_manager',
     leader_feedback: r.leaderFeedback || '',
@@ -21140,6 +21146,11 @@ function fromSupabaseReportRow(r) {
   let forwardedAt = '';
   let targetLevel = 'manager';
   let reportType = 'staff_report';
+  let recipientId = null;
+  let recipientUsername = '';
+  let recipientFullName = '';
+  let recipientRole = '';
+  let recipientDepartment = '';
 
   if (Array.isArray(r.items)) {
     taskItems = r.items;
@@ -21150,6 +21161,11 @@ function fromSupabaseReportRow(r) {
     forwardedAt = r.items.forwardedAt || '';
     targetLevel = r.items.targetLevel || 'manager';
     reportType = r.items.reportType || 'staff_report';
+    recipientId = r.items.recipientId || null;
+    recipientUsername = r.items.recipientUsername || '';
+    recipientFullName = r.items.recipientFullName || '';
+    recipientRole = r.items.recipientRole || '';
+    recipientDepartment = r.items.recipientDepartment || '';
   }
 
   let st = r.status || 'submitted_to_manager';
@@ -21173,6 +21189,11 @@ function fromSupabaseReportRow(r) {
     forwardedAt: forwardedAt,
     targetLevel: targetLevel,
     reportType: reportType,
+    recipientId: recipientId,
+    recipientUsername: recipientUsername,
+    recipientFullName: recipientFullName,
+    recipientRole: recipientRole,
+    recipientDepartment: recipientDepartment,
     status: st,
     leaderFeedback: r.leader_feedback || ''
   };
@@ -21442,6 +21463,8 @@ function openPersonalWorkspacePage() {
   const pwPage = document.getElementById('personalWorkspacePageView');
 
   if (mainView) mainView.classList.add('hidden');
+  const mobileNav = document.getElementById('mobileBottomNav');
+  if (mobileNav) mobileNav.classList.add('hidden');
   if (pwPage) {
     pwPage.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -21480,6 +21503,8 @@ function closePersonalWorkspacePage() {
   const pwPage = document.getElementById('personalWorkspacePageView');
 
   if (pwPage) pwPage.classList.add('hidden');
+  const mobileNav = document.getElementById('mobileBottomNav');
+  if (mobileNav) mobileNav.classList.remove('hidden');
   if (mainView) {
     mainView.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -22800,22 +22825,22 @@ function updatePersonalWorkspaceReportButtonsUI() {
   const inboxBtnText = document.getElementById('pwInboxBtnText');
 
   if (roleInfo.isStaff) {
-    if (headerBtn) headerBtn.title = `Gửi các mục đã chọn cho Quản lý bộ phận ${currentUser.department || ''} xem và tổng hợp`;
-    if (headerBtnText) headerBtnText.innerText = "Gửi báo cáo Quản lý";
-    if (bottomBtn) bottomBtn.title = "Gửi các mục đã chọn lên Quản lý bộ phận";
-    if (bottomBtnText) bottomBtnText.innerText = "Gửi Báo Cáo Cho Quản Lý";
+    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư & Lịch sử gửi";
   } else if (roleInfo.isManager) {
-    if (headerBtn) headerBtn.title = "Chuyển các mục công việc lên Ban Lãnh đạo";
-    if (headerBtnText) headerBtnText.innerText = "Chuyển Ban Lãnh đạo";
-    if (bottomBtn) bottomBtn.title = "Chuyển các mục đã chọn lên Ban Lãnh đạo";
-    if (bottomBtnText) bottomBtnText.innerText = "Chuyển Báo Cáo Lên Ban Lãnh Đạo";
+    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư Báo cáo Bộ phận";
   } else {
-    if (headerBtn) headerBtn.title = "Lưu và ghi nhận báo cáo cấp Lãnh đạo";
-    if (headerBtnText) headerBtnText.innerText = "Lưu & Đẩy báo cáo";
-    if (bottomBtn) bottomBtn.title = "Lưu và ghi nhận báo cáo cấp Lãnh đạo";
-    if (bottomBtnText) bottomBtnText.innerText = "Lưu & Đẩy Báo Cáo Lãnh Đạo";
+    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư Báo cáo Toàn ban";
   }
 }
@@ -23516,52 +23541,112 @@ let currentReportSelectedItems = [];
 let currentReportRecipientsList = [];
 let currentSelectedRecipient = null;
 
-function loadReportRecipientsOptions() {
+function getRecipientDeptName(u) {
+  if (u.department) return u.department;
+  if (u.dept) return u.dept;
+  if (u.departments && u.departments.name) return u.departments.name;
+  if (globalInitData?.allDeptsDetailed && u.department_id) {
+    const d = globalInitData.allDeptsDetailed.find(x => x.id === u.department_id);
+    if (d && d.name) return d.name;
+  }
+  const r = (u.role || '').toLowerCase();
+  if (r.includes('pho giam doc') || r.includes('giam doc')) return 'Ban Giám Đốc';
+  if (r.includes('admin')) return 'Quản trị hệ thống';
+  return 'Ban DVKH';
+}
+
+function loadReportRecipientsOptions(customUserList) {
   const select = document.getElementById('rpRecipientSelect');
   if (!select) return;
 
-  let userList = (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers)) ? globalInitData.allUsers :
-                 (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : [];
+  let userList = customUserList || (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers) && globalInitData.allUsers.length > 0 ? globalInitData.allUsers :
+                 (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : []);
 
-  currentReportRecipientsList = userList.filter(u => {
-    const r = removeAccents(u.role || '').toLowerCase();
-    const isMgr = r.includes('quan ly') || r.includes('truong phong') || r.includes('to truong') || r.includes('leader');
-    const isDeputy = r.includes('pho giam doc') || r.includes('pho');
-    const isDir = r.includes('giam doc') && !r.includes('pho') || r.includes('admin');
-    return isMgr || isDeputy || isDir;
-  });
+  // CHỈ CHẤP NHẬN: Quản lý, Phó Giám Đốc, Giám Đốc (loại bỏ hoàn toàn Trưởng nhóm, Tổ trưởng, Admin, v.v.)
+  let filtered = (userList || []).filter(u => {
+    if (!u || !u.role) return false;
+    const r = removeAccents(u.role).toLowerCase().trim();
+    const isDeputy = r.includes('pho giam doc');
+    const isDir = r.includes('giam doc') && !r.includes('pho');
+    const isMgr = r.includes('quan ly');
+    return isDeputy || isDir || isMgr;
+  }).map(u => ({
+    id: u.id,
+    username: u.username,
+    fullName: u.full_name || u.fullName || u.username,
+    role: u.role || 'Quản lý',
+    department: getRecipientDeptName(u)
+  }));
 
-  if (currentReportRecipientsList.length === 0) {
-    currentReportRecipientsList = [
+  if (filtered.length === 0) {
+    filtered = [
       { id: 1141, username: 'thuytm', fullName: 'Trần Minh Thùy', role: 'Quản lý', department: 'Bộ phận tính giá' },
-      { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
       { id: 1145, username: 'hoangdh', fullName: 'Đinh Huy Hoàng', role: 'Quản lý', department: 'Bộ phận phân xe 10m + xuất khẩu' },
+      { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
       { id: 1140, username: 'oanhgd', fullName: 'Ms Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
     ];
   }
 
+  // Loại trừ chính mình nếu bản thân người gửi là Quản lý/Lãnh đạo
+  if (currentUser) {
+    const myId = String(currentUser.id || '');
+    const myUsername = String(currentUser.username || '').toLowerCase();
+    filtered = filtered.filter(u => String(u.id) !== myId && String(u.username || '').toLowerCase() !== myUsername);
+    if (filtered.length === 0) {
+      filtered = [
+        { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
+        { id: 1140, username: 'oanhgd', fullName: 'Ms Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
+      ];
+    }
+  }
+
   const userDept = currentUser?.department || '';
-  currentReportRecipientsList.sort((a, b) => {
-    const aDeptMatch = isDeptEquivalent(a.department || a.dept || '', userDept) ? 1 : 0;
-    const bDeptMatch = isDeptEquivalent(b.department || b.dept || '', userDept) ? 1 : 0;
+  filtered.sort((a, b) => {
+    // 1. Quản lý cùng bộ phận với người gửi (nếu có) lên đầu
+    const aDeptMatch = isDeptEquivalent(a.department, userDept) ? 1 : 0;
+    const bDeptMatch = isDeptEquivalent(b.department, userDept) ? 1 : 0;
     if (aDeptMatch !== bDeptMatch) return bDeptMatch - aDeptMatch;
 
-    const isDeputyA = removeAccents(a.role || '').toLowerCase().includes('pho giam doc');
-    const isDeputyB = removeAccents(b.role || '').toLowerCase().includes('pho giam doc');
-    if (isDeputyA !== isDeputyB) return isDeputyA ? 1 : -1;
+    // 2. Thứ tự chức vụ: Quản lý -> Phó Giám Đốc -> Giám Đốc
+    const getRoleRank = (rStr) => {
+      const r = removeAccents(rStr || '').toLowerCase();
+      if (r.includes('quan ly')) return 1;
+      if (r.includes('pho giam doc')) return 2;
+      if (r.includes('giam doc')) return 3;
+      return 99;
+    };
+    const rankA = getRoleRank(a.role);
+    const rankB = getRoleRank(b.role);
+    if (rankA !== rankB) return rankA - rankB;
 
-    return (a.full_name || a.fullName || a.username || '').localeCompare(b.full_name || b.fullName || b.username || '', 'vi');
+    return (a.fullName || '').localeCompare(b.fullName || '', 'vi');
   });
 
+  currentReportRecipientsList = filtered;
+
   select.innerHTML = currentReportRecipientsList.map(u => {
-    const fName = u.full_name || u.fullName || u.username;
-    const deptName = u.department || u.dept || (u.departments ? u.departments.name : 'Ban DVKH');
-    const roleName = u.role || 'Quản lý';
-    return `<option value="${u.id}">${fName} - ${roleName} (${deptName})</option>`;
+    return `<option value="${u.id}">${escapeHtml(u.fullName)} - ${escapeHtml(u.role)} (${escapeHtml(u.department)})</option>`;
   }).join('');
 
   if (currentReportRecipientsList.length > 0) {
-    onReportRecipientSelectChange(currentReportRecipientsList[0].id);
+    const selectedId = currentSelectedRecipient?.id && currentReportRecipientsList.some(x => String(x.id) === String(currentSelectedRecipient.id))
+      ? currentSelectedRecipient.id
+      : currentReportRecipientsList[0].id;
+    select.value = selectedId;
+    onReportRecipientSelectChange(selectedId);
+  }
+
+  // Truy vấn nền từ Supabase nếu có kết nối để luôn cập nhật danh sách mới nhất
+  if (typeof supabase !== 'undefined' && supabase && !window._recipientsFetchedFromCloud) {
+    supabase.from('users')
+      .select('id, username, full_name, role, department_id, status')
+      .eq('status', 'Hoạt động')
+      .then(({ data }) => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          window._recipientsFetchedFromCloud = true;
+          loadReportRecipientsOptions(data);
+        }
+      }).catch(() => {});
   }
 }
 
@@ -23569,8 +23654,8 @@ function onReportRecipientSelectChange(userId) {
   const u = currentReportRecipientsList.find(x => String(x.id) === String(userId));
   if (!u) return;
   currentSelectedRecipient = u;
-  const fName = u.full_name || u.fullName || u.username;
-  const deptName = u.department || u.dept || (u.departments ? u.departments.name : 'Ban DVKH');
+  const fName = u.fullName || u.full_name || u.username;
+  const deptName = u.department || 'Ban DVKH';
   const roleName = u.role || 'Quản lý';
 
   const recipientText = document.getElementById('rpPreviewRecipientText');
@@ -23639,6 +23724,9 @@ function openLeadershipReportPreviewModal() {
     if (noteLabelEl) noteLabelEl.innerHTML = `<i class="fa-solid fa-message text-emerald-600"></i><span>Ghi chú chỉ đạo (tùy chọn):</span>`;
     if (submitBtnTextEl) submitBtnTextEl.innerText = "Lưu Báo Cáo Lãnh Đạo";
   }
+
+  // TẢI VÀ NẠP DANH SÁCH NGƯỜI TIẾP NHẬN BÁO CÁO (QUẢN LÝ & PHÓ GIÁM ĐỐC)
+  loadReportRecipientsOptions();
 
   // Thông tin người gửi
   const fn = document.getElementById('rpFullName');
@@ -24192,6 +24280,7 @@ function renderLeadershipReportsBoxUI() {
             <p class="text-xs text-slate-400 font-num">
               <span>Kỳ: Tháng ${r.periodMonth}/${r.periodYear}</span> • 
               <span>Gửi lúc: ${escapeHtml(r.displayDate || '')}</span>
+              ${r.recipientFullName ? ` • <span class="text-emerald-700 font-medium">Gửi tới: <b>${escapeHtml(r.recipientFullName)}</b> (${escapeHtml(r.recipientRole || 'Quản lý')})</span>` : ''}
             </p>
           </div>
           <div class="flex items-center gap-2 shrink-0 flex-wrap">
