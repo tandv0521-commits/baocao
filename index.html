@@ -4929,7 +4929,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <div class="px-4 sm:px-6 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         
         <!-- 5 TAB LỌC CÔNG VIỆC (THAY THẾ TOÀN BỘ CÁC TAB CŨ THEO YÊU CẦU) -->
-        <div class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div id="rpBoxTabsContainer" class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <!-- 1. Tất cả -->
           <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
             <i class="fa-solid fa-layer-group text-xs"></i>
@@ -24693,6 +24693,25 @@ function saveConsolidatedTaskKeys(keysSet) {
   } catch(e) {}
 }
 
+// Định dạng tiêu đề báo cáo chuẩn, tránh lặp từ 'Bộ phận Bộ phận'
+function formatDeptReportTitle(deptName) {
+  let d = (deptName || 'BỘ PHẬN').trim();
+  if (/^bộ phận\s+/i.test(d)) {
+    return 'BÁO CÁO ' + d.toUpperCase();
+  }
+  if (/^(tổ|ban|phòng)\s+/i.test(d)) {
+    return 'BÁO CÁO ' + d.toUpperCase();
+  }
+  return 'BÁO CÁO BỘ PHẬN ' + d.toUpperCase();
+}
+
+function formatDeptName(deptName) {
+  let d = (deptName || 'Bộ phận').trim();
+  if (/^bộ phận\s+/i.test(d)) return d;
+  if (/^(tổ|ban|phòng)\s+/i.test(d)) return d;
+  return 'Bộ phận ' + d;
+}
+
 // Chế độ xem của Hộp thư: 'inbox' (Hộp thư tiếp nhận các việc chưa tạo báo cáo) hoặc 'history' (Lịch sử các báo cáo đã tạo)
 let rpBoxViewMode = 'inbox';
 
@@ -24992,6 +25011,8 @@ function renderLeadershipReportsBoxUI() {
   const histBtnText = document.getElementById('rpBoxHistoryBtnText');
   const multiBar = document.getElementById('rpBoxMultiSelectBar');
 
+  const tabsContainer = document.getElementById('rpBoxTabsContainer');
+
   // NẾU ĐANG Ở CHẾ ĐỘ XEM LỊCH SỬ BÁO CÁO ĐÃ TẠO:
   if (rpBoxViewMode === 'history') {
     if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo & Chi Tiết Các Đầu Việc";
@@ -24999,6 +25020,8 @@ function renderLeadershipReportsBoxUI() {
     if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
     if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
     if (multiBar) multiBar.classList.add('hidden');
+    // LOẠI BỎ THANH 5 TAB LỌC CÔNG VIỆC Ở LỊCH SỬ BÁO CÁO THEO YÊU CẦU:
+    if (tabsContainer) tabsContainer.classList.add('hidden');
     renderRpBoxHistoryUI(container, historyReports);
     return;
   }
@@ -25012,6 +25035,7 @@ function renderLeadershipReportsBoxUI() {
   if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
   if (histBtnText) histBtnText.innerText = "Lịch sử báo cáo";
   if (multiBar) multiBar.classList.remove('hidden');
+  if (tabsContainer) tabsContainer.classList.remove('hidden');
 
   const allEntries = getAllRpBoxTaskEntries();
 
@@ -25196,9 +25220,9 @@ function consolidateSelectedTasksFromInbox() {
   const staffNames = new Set(selectedEntries.map(e => e.senderFullName));
   const staffListStr = Array.from(staffNames).join(', ');
 
-  const defaultNote = "Báo cáo tổng hợp tình hình công việc Bộ phận " + targetDept + " (Tháng " + m + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").";
+  const defaultNote = "Báo cáo tổng hợp tình hình công việc " + formatDeptName(targetDept) + " (Tháng " + m + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").";
 
-  const mgrAssessment = prompt("📊 TẠO BÁO CÁO BỘ PHẬN " + targetDept + " (THÁNG " + m + "/" + y + ")\n\nBao gồm " + selectedEntries.length + " đầu việc đã chọn từ " + staffNames.size + " nhân sự.\nNhập ý kiến đánh giá tổng kết của Quản lý kính trình Ban Giám Đốc:", defaultNote);
+  const mgrAssessment = prompt("📊 " + formatDeptReportTitle(targetDept) + " (THÁNG " + m + "/" + y + ")\n\nBao gồm " + selectedEntries.length + " đầu việc đã chọn từ " + staffNames.size + " nhân sự.\nNhập ý kiến đánh giá tổng kết của Quản lý kính trình Ban Giám Đốc:", defaultNote);
   if (mgrAssessment === null) return;
 
   const now = new Date();
@@ -25317,7 +25341,7 @@ function renderRpBoxHistoryUI(container, historyReports) {
                 <i class="fa-solid fa-file-signature text-purple-600"></i> Báo cáo tổng hợp
               </span>
               <h4 class="font-black text-slate-900 text-sm sm:text-base leading-snug">
-                BÁO CÁO BỘ PHẬN ${escapeHtml(rep.senderDepartment || 'BỘ PHẬN').toUpperCase()} &bull; THÁNG ${rep.periodMonth}/${rep.periodYear}
+                ${formatDeptReportTitle(rep.senderDepartment)} &bull; THÁNG ${rep.periodMonth}/${rep.periodYear}
               </h4>
             </div>
             <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
@@ -25353,7 +25377,7 @@ function renderRpBoxHistoryUI(container, historyReports) {
             <i class="fa-solid fa-comment-dots text-indigo-600 mt-0.5 text-xs shrink-0"></i>
             <div>
               <b class="text-indigo-900">Ý kiến đánh giá của Quản lý:</b>
-              <p class="mt-0.5 leading-relaxed">${escapeHtml(rep.notes)}</p>
+              <p class="mt-0.5 leading-relaxed">${escapeHtml(rep.notes.replace(/bộ phận\s+bộ phận/gi, 'Bộ phận'))}</p>
             </div>
           </div>
         ` : ''}
