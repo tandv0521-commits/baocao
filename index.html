@@ -48,7 +48,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v29') {
+          if (key !== 'baocao-dvkh-pwa-v30') {
             caches.delete(key);
           }
         });
@@ -21508,19 +21508,30 @@ function openPersonalWorkspacePage() {
   const appHeader = document.getElementById('mainAppHeader') || document.querySelector('header');
   const mainContent = document.getElementById('mainAppContent') || document.querySelector('main');
 
-  // Ẩn thanh header ứng dụng trên cùng theo yêu cầu để đẩy dòng tiêu đề Sổ tay lên trên cùng
+  // 1. Ẩn thanh header ứng dụng trên cùng
   if (appHeader) appHeader.classList.add('hidden');
+
+  // 2. Triệt tiêu 100% khoảng trắng và padding ở đỉnh để đẩy Sổ tay lên sát mép trên cùng
   if (mainContent) {
-    mainContent.classList.remove('sm:p-5');
-    mainContent.classList.add('p-1.5', 'sm:p-3', 'sm:pt-2');
+    mainContent.classList.remove('sm:p-5', 'p-2', 'space-y-3.5');
+    mainContent.classList.add('pt-0', 'sm:pt-0', 'p-0', 'sm:px-3', 'sm:pb-3');
+    mainContent.style.paddingTop = '0px';
+    mainContent.style.marginTop = '0px';
   }
 
-  if (mainView) mainView.classList.add('hidden');
+  if (mainView) {
+    mainView.classList.add('hidden');
+    mainView.setAttribute('hidden', '');
+  }
+
   const mobileNav = document.getElementById('mobileBottomNav');
   if (mobileNav) mobileNav.classList.add('hidden');
+
   if (pwPage) {
     pwPage.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    pwPage.classList.add('mt-0', 'rounded-t-none', 'border-t-0');
+    pwPage.style.marginTop = '0px';
+    window.scrollTo(0, 0);
   }
 
   // Cập nhật thông tin người dùng lên trang sổ tay
@@ -21557,22 +21568,33 @@ function closePersonalWorkspacePage() {
   const appHeader = document.getElementById('mainAppHeader') || document.querySelector('header');
   const mainContent = document.getElementById('mainAppContent') || document.querySelector('main');
 
-  if (pwPage) pwPage.classList.add('hidden');
+  if (pwPage) {
+    pwPage.classList.add('hidden');
+    pwPage.classList.remove('mt-0', 'rounded-t-none', 'border-t-0');
+    pwPage.style.marginTop = '';
+  }
+
   const mobileNav = document.getElementById('mobileBottomNav');
   if (mobileNav) mobileNav.classList.remove('hidden');
+
   if (mainView) {
     mainView.classList.remove('hidden');
+    mainView.removeAttribute('hidden');
   }
-  // Khôi phục hiển thị thanh header ứng dụng trên cùng khi quay lại trang công việc ban đầu
+
+  // Khôi phục hiển thị thanh header ứng dụng & padding bình thường
   if (appHeader) {
     appHeader.classList.remove('hidden');
   }
-  if (mainContent) {
-    mainContent.classList.remove('p-1.5', 'sm:p-3', 'sm:pt-2');
-    mainContent.classList.add('sm:p-5');
-  }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  if (mainContent) {
+    mainContent.style.paddingTop = '';
+    mainContent.style.marginTop = '';
+    mainContent.classList.remove('pt-0', 'sm:pt-0', 'p-0', 'sm:px-3', 'sm:pb-3');
+    mainContent.classList.add('p-2', 'sm:p-5', 'space-y-3.5');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   updatePersonalWorkspaceEntryCardStats();
 }
 
