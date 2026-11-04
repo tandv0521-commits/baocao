@@ -23319,18 +23319,18 @@ function renderPersonalWorkspaceUI() {
       if (it.type === 'adhoc') {
         const isDone = (it.status === 'done');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Nhấp để đổi trạng thái: Đã làm / Chưa làm">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
             <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
             <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
           </button>
         `;
       } else if (it.type === 'plan') {
-        const isCompleted = !!it.isCompleted;
+        const isCompleted = (it.status === 'completed' || it.isCompleted === true);
         const t = calculatePlanTimelineStatus(it);
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isCompleted ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300'}" title="Nhấp để đổi trạng thái hoàn thành kế hoạch">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isCompleted ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300'}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
             <i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-600' : 'fa-clock text-sky-600'}"></i>
-            <span>${isCompleted ? 'Hoàn thành' : 'Chưa xong'}</span>
+            <span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span>
           </button>
         `;
         if (it.dueDate) {
@@ -23344,19 +23344,35 @@ function renderPersonalWorkspaceUI() {
       } else if (it.type === 'proposal') {
         const isApproved = (it.status === 'approved_executed');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Nhấp để đổi trạng thái: Đã duyệt / Chưa duyệt">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
             <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600'}"></i>
             <span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span>
           </button>
         `;
       } else if (it.type === 'feedback') {
-        const isProcessed = (it.status === 'processed');
-        statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isProcessed ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300'}" title="Nhấp để đổi trạng thái phản ánh">
-            <i class="fa-solid ${isProcessed ? 'fa-circle-check text-emerald-600' : 'fa-inbox text-teal-600'}"></i>
-            <span>${isProcessed ? 'Đã phản hồi' : 'Đã tiếp nhận'}</span>
-          </button>
-        `;
+        const st = it.status || 'pending';
+        if (st === 'resolved' || st === 'processed') {
+          statusHtml = `
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
+              <i class="fa-solid fa-circle-check text-emerald-600"></i>
+              <span>Đã giải quyết</span>
+            </button>
+          `;
+        } else if (st === 'acknowledged') {
+          statusHtml = `
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
+              <i class="fa-solid fa-inbox text-sky-600"></i>
+              <span>Đã tiếp nhận</span>
+            </button>
+          `;
+        } else {
+          statusHtml = `
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
+              <i class="fa-solid fa-clock text-amber-600"></i>
+              <span>Chờ tiếp nhận</span>
+            </button>
+          `;
+        }
       }
 
       // 3. Ngôi sao quan trọng
@@ -23552,26 +23568,73 @@ function togglePersonalItemStatus(id) {
   const item = (data.items || []).find(it => it.id === id);
   if (!item) return;
 
+  let newStatusLabel = '';
+
   if (item.type === 'adhoc') {
-    item.status = (item.status === 'done') ? 'pending' : 'done';
-    item.isCompleted = (item.status === 'done');
+    // 2 trạng thái: 'pending' (Chưa làm) <-> 'done' (Đã làm)
+    if (item.status === 'done') {
+      item.status = 'pending';
+      item.isCompleted = false;
+      item.is_completed = false;
+      newStatusLabel = 'Chưa làm';
+    } else {
+      item.status = 'done';
+      item.isCompleted = true;
+      item.is_completed = true;
+      newStatusLabel = 'Đã làm';
+    }
   } else if (item.type === 'plan') {
-    item.isCompleted = !item.isCompleted;
-    item.status = item.isCompleted ? 'completed' : 'pending';
+    // 2 trạng thái: 'pending' (Đang tiến hành) <-> 'completed' (Đã hoàn thành)
+    if (item.status === 'completed' || item.isCompleted === true) {
+      item.status = 'pending';
+      item.isCompleted = false;
+      item.is_completed = false;
+      newStatusLabel = 'Đang tiến hành';
+    } else {
+      item.status = 'completed';
+      item.isCompleted = true;
+      item.is_completed = true;
+      newStatusLabel = 'Đã hoàn thành';
+    }
   } else if (item.type === 'proposal') {
-    const nextApproved = (item.status !== 'approved_executed');
-    item.status = nextApproved ? 'approved_executed' : 'rejected_pending';
-    item.isCompleted = nextApproved;
-    item.is_completed = nextApproved;
+    // 2 trạng thái: 'rejected_pending' (Chưa duyệt) <-> 'approved_executed' (Đã duyệt)
+    if (item.status === 'approved_executed') {
+      item.status = 'rejected_pending';
+      item.isCompleted = false;
+      item.is_completed = false;
+      newStatusLabel = 'Chưa duyệt';
+    } else {
+      item.status = 'approved_executed';
+      item.isCompleted = true;
+      item.is_completed = true;
+      newStatusLabel = 'Đã duyệt';
+    }
   } else if (item.type === 'feedback') {
-    item.status = (item.status === 'processed') ? 'pending' : 'processed';
+    // 3 trạng thái lần lượt theo đúng thứ tự trong bảng "Mục công việc":
+    // 1. Chờ tiếp nhận ('pending') -> 2. Đã tiếp nhận ('acknowledged') -> 3. Đã giải quyết ('resolved') -> 1. Chờ tiếp nhận
+    if (item.status === 'acknowledged') {
+      item.status = 'resolved';
+      item.isCompleted = true;
+      item.is_completed = true;
+      newStatusLabel = 'Đã giải quyết';
+    } else if (item.status === 'resolved' || item.status === 'processed') {
+      item.status = 'pending';
+      item.isCompleted = false;
+      item.is_completed = false;
+      newStatusLabel = 'Chờ tiếp nhận';
+    } else {
+      item.status = 'acknowledged';
+      item.isCompleted = false;
+      item.is_completed = false;
+      newStatusLabel = 'Đã tiếp nhận';
+    }
   }
 
   item.updatedAt = new Date().toISOString();
   savePersonalWorkspaceData(data, currentUser);
   savePersonalTaskToSupabase(item);
   renderPersonalWorkspaceUI();
-  showToast("Đã cập nhật trạng thái mục công việc!");
+  showToast(`Đã chuyển trạng thái: ${newStatusLabel}`);
 }
 
 function togglePersonalItemReportSelect(id, checked) {
@@ -23657,7 +23720,8 @@ function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc') {
       const rad = document.querySelector(`input[name="pwStatusProposal"][value="${item.status || 'rejected_pending'}"]`);
       if (rad) rad.checked = true;
     } else if (item.type === 'feedback') {
-      const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${item.status || 'pending'}"]`);
+      const fbStatus = (item.status === 'processed') ? 'resolved' : (item.status || 'pending');
+      const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${fbStatus}"]`);
       if (rad) rad.checked = true;
     }
   } else {
@@ -23763,6 +23827,7 @@ function savePersonalItem() {
   } else if (selectedType === 'feedback') {
     const rad = document.querySelector('input[name="pwStatusFeedback"]:checked');
     statusVal = rad ? rad.value : 'pending';
+    isCompletedVal = (statusVal === 'resolved');
   }
 
   const data = getPersonalWorkspaceData(currentUser);
