@@ -21374,16 +21374,23 @@ function updateInboxUnreadBadgeCount(reportsList) {
   const badge = document.getElementById('pwInboxUnreadBadge');
   if (!badge) return;
 
-  const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
-  const reports = reportsList || getLeadershipReportsShared();
+  const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
+  const isSuper = isDirectorOrAdmin(currentUser.role, currentUser.username) || isDeputyDirector(currentUser.role, currentUser.username);
+  const allReports = (reportsList || getLeadershipReportsShared()).filter(r => canUserAccessReport(currentUser, r));
 
   let unreadCount = 0;
-  if (roleInfo.isStaff) {
-    unreadCount = reports.filter(r => (r.senderId === currentUser.id || r.senderUsername === currentUser.username) && (r.managerFeedback || r.leaderFeedback)).length;
-  } else if (roleInfo.isManager) {
-    unreadCount = reports.filter(r => r.status === 'submitted_to_manager' || r.status === 'submitted').length;
+  if (!isManagerOrAbove) {
+    // Người gửi (Nhân viên): Đếm các báo cáo của mình đã có phản hồi mới từ Quản lý / Lãnh đạo
+    unreadCount = allReports.filter(r => (r.senderId === currentUser.id || r.senderUsername === currentUser.username) && (r.managerFeedback || r.leaderFeedback)).length;
+  } else if (!isSuper) {
+    // Quản lý bộ phận: Đếm các báo cáo gửi đích danh cho mình hoặc thuộc bộ phận mình quản lý đang chờ duyệt
+    unreadCount = allReports.filter(r => 
+      (r.recipientId === currentUser.id || String(r.recipientUsername).toLowerCase() === String(currentUser.username).toLowerCase() || (!r.recipientId && isSameDept(r.senderDepartment, currentUser.department))) &&
+      (r.status === 'submitted_to_manager' || r.status === 'submitted')
+    ).length;
   } else {
-    unreadCount = reports.filter(r => r.status === 'forwarded_to_leadership').length;
+    // Ban Giám Đốc: Đếm các báo cáo đã chuyển Ban Lãnh đạo đang chờ duyệt
+    unreadCount = allReports.filter(r => r.status === 'forwarded_to_leadership').length;
   }
 
   if (unreadCount > 0) {
@@ -21396,8 +21403,21 @@ function updateInboxUnreadBadgeCount(reportsList) {
 
 function populateRpBoxDeptFilter() {
   const deptSelect = document.getElementById('rpBoxFilterDept');
-  if (!deptSelect) return;
+  if (!deptSelect || !currentUser) return;
 
+  const isSuper = isDirectorOrAdmin(currentUser.role, currentUser.username) || isDeputyDirector(currentUser.role, currentUser.username);
+
+  // QUẢN LÝ BỘ PHẬN: Khóa cố định bộ phận của mình, không cho phép xem bộ phận khác
+  if (!isSuper) {
+    const myDept = currentUser.department || 'Bộ phận';
+    deptSelect.innerHTML = '<option value="' + escapeHtml(myDept) + '">' + escapeHtml(myDept) + '</option>';
+    deptSelect.value = myDept;
+    deptSelect.disabled = true;
+    return;
+  }
+
+  // BAN GIÁM ĐỐC / ADMIN: Cho phép lọc tất cả các bộ phận
+  deptSelect.disabled = false;
   const prevVal = deptSelect.value || 'ALL';
   const deptSet = new Set();
 
@@ -24315,6 +24335,12 @@ function closeLeadershipReportPreviewModal() {
 function submitLeadershipReport() {
   if (!currentUser || currentReportSelectedItems.length === 0) return;
 
+  // Đảm bảo luôn xác định chính xác người nhận (Recipient)
+  const recipientSelect = document.getElementById('rpRecipientSelect');
+  if (!currentSelectedRecipient && recipientSelect && recipientSelect.value && Array.isArray(currentReportRecipientsList)) {
+    currentSelectedRecipient = currentReportRecipientsList.find(x => String(x.id) === String(recipientSelect.value));
+  }
+
   const noteInput = document.getElementById('rpLeaderNoteInput');
   const leaderNote = noteInput ? noteInput.value.trim() : '';
 
@@ -24629,26 +24655,38 @@ function openLeadershipReportsBoxModal() {
   const modal = document.getElementById('leadershipReportsBoxModal');
   if (!modal) return;
 
+  const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
   const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
 
-  // Cập nhật tiêu đề hộp thư
+  // Cập nhật tiêu đề hộp thư & hiển thị nút theo phân quyền bảo mật
   const titleEl = document.getElementById('rpBoxModalTitle');
   const subTitleEl = document.getElementById('rpBoxModalSubtitle');
   const leaderDeptWrapper = document.getElementById('rpBoxLeaderDeptFilterWrapper');
+  const btnHistory = document.getElementById('btnToggleRpBoxHistory');
+  const multiBar = document.getElementById('rpBoxMultiSelectBar');
 
-  if (roleInfo.isStaff) {
-    if (titleEl) titleEl.innerText = "Lịch Sử Gửi Báo Cáo & Ý Kiến Phản Hồi";
-    if (subTitleEl) subTitleEl.innerText = "Theo dõi các đầu việc đã gửi báo cáo và phản hồi từ Quản lý bộ phận";
+  if (!isManagerOrAbove) {
+    // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
+    // Chỉ có thông tin gửi đi, không có phần tích chọn và không hiển thị phần tạo báo cáo lịch sử
+    if (titleEl) titleEl.innerText = "Lịch Sử Gửi Báo Cáo Của Bạn";
+    if (subTitleEl) subTitleEl.innerText = "Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.add('hidden');
+    if (btnHistory) btnHistory.classList.add('hidden');
+    if (multiBar) multiBar.classList.add('hidden');
+    rpBoxViewMode = 'inbox';
   } else if (roleInfo.isManager) {
+    // QUẢN LÝ BỘ PHẬN:
     if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận');
     if (subTitleEl) subTitleEl.innerText = "Tiếp nhận các đầu việc do nhân viên gửi lên, tích chọn lọc để tổng hợp báo cáo chuyển Ban Lãnh đạo";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
+    if (btnHistory) btnHistory.classList.remove('hidden');
     populateRpBoxDeptFilter();
   } else {
+    // BAN GIÁM ĐỐC / ADMIN:
     if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
     if (subTitleEl) subTitleEl.innerText = "Tiếp nhận và tổng hợp các đầu việc từ các Quản lý bộ phận và nhân viên toàn ban";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
+    if (btnHistory) btnHistory.classList.remove('hidden');
     populateRpBoxDeptFilter();
   }
 
@@ -24693,6 +24731,73 @@ function saveConsolidatedTaskKeys(keysSet) {
   } catch(e) {}
 }
 
+// Phân quyền quản lý báo cáo: Quản lý bộ phận, Ban Giám Đốc, Admin
+function isUserReportManagerOrLeadership(user = currentUser) {
+  if (!user) return false;
+  const roleInfo = getPersonalWorkspaceReportingRole(user);
+  if (roleInfo.isLeader) return true;
+  if (roleInfo.isManager) return true;
+  if (isDirectorOrAdmin(user.role, user.username) || isDeputyDirector(user.role, user.username)) return true;
+  return false;
+}
+
+// Kiểm tra quyền riêng tư & bảo mật: "Gửi đến ai - tài khoản nào thì tài khoản đó mới nhận thông tin"
+function canUserAccessReport(user, r) {
+  if (!user || !r) return false;
+
+  const myId = String(user.id || '');
+  const myUsername = String(user.username || '').toLowerCase().trim();
+  const myDept = (user.department || '').trim();
+  const isManagerOrLeader = isUserReportManagerOrLeadership(user);
+  const isSuper = isDirectorOrAdmin(user.role, user.username) || isDeputyDirector(user.role, user.username);
+
+  const senderId = String(r.senderId || '');
+  const senderUsername = String(r.senderUsername || '').toLowerCase().trim();
+  const recipientId = String(r.recipientId || '');
+  const recipientUsername = String(r.recipientUsername || '').toLowerCase().trim();
+
+  // 1. NGƯỜI GỬI: Luôn thấy báo cáo do chính mình gửi đi (Lịch sử gửi)
+  if ((myId && senderId === myId) || (myUsername && senderUsername === myUsername)) {
+    return true;
+  }
+
+  // 2. NGƯỜI NHẬN ĐÍCH DANH: Được người gửi chọn đích danh để gửi đến
+  if ((myId && recipientId && recipientId === myId) ||
+      (myUsername && recipientUsername && recipientUsername === myUsername)) {
+    return true;
+  }
+
+  // 3. NẾU LÀ NGƯỜI GỬI / NHÂN VIÊN THÔNG THƯỜNG:
+  // TUYỆT ĐỐI KHÔNG XEM BÁO CÁO CỦA TÀI KHOẢN KHÁC (tránh lộ thông tin tràn lan)
+  if (!isManagerOrLeader) {
+    return false;
+  }
+
+  // 4. BAN GIÁM ĐỐC / ADMIN CẤP CAO:
+  // Nhận các báo cáo chuyển lên Ban Lãnh đạo hoặc báo cáo gửi đích danh cho Ban Giám Đốc
+  if (isSuper) {
+    if (r.targetLevel === 'leadership' || 
+        r.status === 'forwarded_to_leadership' || 
+        r.status === 'leadership_approved' ||
+        r.reportType === 'manager_summary') {
+      return true;
+    }
+  }
+
+  // 5. QUẢN LÝ BỘ PHẬN:
+  // - Nếu báo cáo có ghi nhận đích danh người nhận khác -> KHÔNG ĐƯỢC THẤY!
+  if (recipientId && recipientId !== myId && recipientUsername && recipientUsername !== myUsername) {
+    return false;
+  }
+  // - Tiếp nhận báo cáo gửi cấp Quản lý thuộc đúng bộ phận mình phụ trách
+  const roleInfo = getPersonalWorkspaceReportingRole(user);
+  if (roleInfo.isManager && isSameDept(r.senderDepartment, myDept) && (r.targetLevel === 'manager' || r.status === 'submitted_to_manager' || r.status === 'submitted')) {
+    return true;
+  }
+
+  return false;
+}
+
 // Định dạng tiêu đề báo cáo chuẩn, tránh lặp từ 'Bộ phận Bộ phận'
 function formatDeptReportTitle(deptName) {
   let d = (deptName || 'BỘ PHẬN').trim();
@@ -24716,32 +24821,41 @@ function formatDeptName(deptName) {
 let rpBoxViewMode = 'inbox';
 
 function toggleRpBoxHistoryView() {
+  // Người gửi thông thường không có quyền xem Lịch sử tạo báo cáo tổng hợp
+  if (!isUserReportManagerOrLeadership(currentUser)) {
+    rpBoxViewMode = 'inbox';
+    return;
+  }
   rpBoxViewMode = (rpBoxViewMode === 'history' ? 'inbox' : 'history');
   renderLeadershipReportsBoxUI();
 }
 
 function setRpBoxViewMode(mode) {
-  rpBoxViewMode = mode;
+  if (!isUserReportManagerOrLeadership(currentUser)) {
+    rpBoxViewMode = 'inbox';
+  } else {
+    rpBoxViewMode = mode;
+  }
   renderLeadershipReportsBoxUI();
 }
 
-// Lấy danh sách các báo cáo tổng hợp đã tạo trong Lịch sử
+// Lấy danh sách các báo cáo tổng hợp đã tạo trong Lịch sử (Chỉ dành cho Quản lý & Ban Lãnh đạo)
 function getConsolidatedReportsList() {
   if (!currentUser) return [];
+  // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN): TUYỆT ĐỐI KHÔNG CÓ BÁO CÁO LỊCH SỬ TỔNG HỢP (TRÁNH LỘ DỮ LIỆU)
+  if (!isUserReportManagerOrLeadership(currentUser)) return [];
+
   const allReports = getLeadershipReportsShared();
-  const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
+  const isSuper = isDirectorOrAdmin(currentUser.role, currentUser.username) || isDeputyDirector(currentUser.role, currentUser.username);
 
   // Báo cáo tổng hợp là các báo cáo do Quản lý tạo (manager_summary) hoặc đã chuyển Ban Lãnh đạo
-  let list = allReports.filter(r => r.reportType === 'manager_summary' || r.forwardedBy || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership'));
+  let list = allReports.filter(r => r.reportType === 'manager_summary' || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership'));
 
-  if (roleInfo.isStaff) {
-    // Nhân viên xem các báo cáo tổng hợp của bộ phận mình hoặc có chứa đầu việc của mình
-    list = list.filter(r => {
-      if (isSameDept(r.senderDepartment, currentUser.department)) return true;
-      const items = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
-      return items.some(it => it.staffName === currentUser.fullName || it.senderFullName === currentUser.fullName);
-    });
+  if (!isSuper) {
+    // Quản lý bộ phận: CHỈ xem các báo cáo tổng hợp thuộc đúng bộ phận mình quản lý hoặc do chính mình lập
+    list = list.filter(r => isSameDept(r.senderDepartment, currentUser.department) || r.senderId === currentUser.id || r.senderUsername === currentUser.username);
   } else {
+    // Ban Giám Đốc / Admin: Xem theo bộ phận được lọc trên dropdown
     const deptSelect = document.getElementById('rpBoxFilterDept');
     const selectedDept = deptSelect ? deptSelect.value : 'ALL';
     if (selectedDept && selectedDept !== 'ALL') {
@@ -24827,19 +24941,20 @@ function sendManagerSelectedTasksToInbox() {
   showToast(`📥 Đã gửi thành công ${selectedItems.length} đầu việc vào hộp thư để tổng hợp chung!`);
 }
 
-// Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin nhân sự gửi
+// Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin bảo mật và người nhận
 function getAllRpBoxTaskEntries() {
   if (!currentUser) return [];
-  const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
+  const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
   let reports = getLeadershipReportsShared();
 
   // Báo cáo tổng hợp của quản lý (manager_summary) không phải là đầu việc chờ tổng hợp, loại khỏi danh sách chờ
   reports = reports.filter(r => r.reportType !== 'manager_summary');
 
-  // Phân quyền xem báo cáo
-  if (roleInfo.isStaff) {
-    reports = reports.filter(r => r.senderId === currentUser.id || r.senderUsername === currentUser.username);
-  } else {
+  // LỌC CHẶT CHẼ: "Gửi đến ai - tài khoản nào thì tài khoản đó mới nhận thông tin"
+  reports = reports.filter(r => canUserAccessReport(currentUser, r));
+
+  // Nếu là Quản lý / Ban Giám Đốc có chọn lọc theo bộ phận trên dropdown
+  if (isManagerOrAbove) {
     const deptSelect = document.getElementById('rpBoxFilterDept');
     const selectedDept = deptSelect ? deptSelect.value : 'ALL';
     if (selectedDept && selectedDept !== 'ALL') {
@@ -24868,6 +24983,11 @@ function getAllRpBoxTaskEntries() {
         senderUsername: r.senderUsername || '',
         senderDepartment: it.staffDept || r.senderDepartment || 'Bộ phận',
         senderRole: it.staffRole || r.senderRole || 'Nhân viên',
+        recipientId: r.recipientId || null,
+        recipientUsername: r.recipientUsername || '',
+        recipientFullName: r.recipientFullName || (r.recipientRole ? (r.recipientRole + (r.recipientDepartment ? ' - ' + r.recipientDepartment : '')) : 'Quản lý bộ phận'),
+        recipientRole: r.recipientRole || '',
+        recipientDepartment: r.recipientDepartment || '',
         submissionDate: r.submissionDate || r.createdAt || '',
         displayDate: r.displayDate || '',
         periodMonth: r.periodMonth,
@@ -25011,31 +25131,44 @@ function renderLeadershipReportsBoxUI() {
   const histBtnText = document.getElementById('rpBoxHistoryBtnText');
   const multiBar = document.getElementById('rpBoxMultiSelectBar');
 
+  const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
   const tabsContainer = document.getElementById('rpBoxTabsContainer');
+  const btnHistory = document.getElementById('btnToggleRpBoxHistory');
 
-  // NẾU ĐANG Ở CHẾ ĐỘ XEM LỊCH SỬ BÁO CÁO ĐÃ TẠO:
-  if (rpBoxViewMode === 'history') {
-    if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo & Chi Tiết Các Đầu Việc";
-    if (boxSub) boxSub.innerText = "Danh sách các báo cáo tổng hợp đã lập gửi Lãnh đạo kèm chi tiết toàn bộ đầu việc bên trong";
-    if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
-    if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
+  // NẾU LÀ NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
+  if (!isManagerOrAbove) {
+    rpBoxViewMode = 'inbox'; // Luôn ở chế độ xem lịch sử gửi của mình
+    if (btnHistory) btnHistory.classList.add('hidden');
     if (multiBar) multiBar.classList.add('hidden');
-    // LOẠI BỎ THANH 5 TAB LỌC CÔNG VIỆC Ở LỊCH SỬ BÁO CÁO THEO YÊU CẦU:
-    if (tabsContainer) tabsContainer.classList.add('hidden');
-    renderRpBoxHistoryUI(container, historyReports);
-    return;
-  }
+    if (tabsContainer) tabsContainer.classList.remove('hidden');
+    if (boxTitle) boxTitle.innerText = "Lịch Sử Gửi Báo Cáo Của Bạn";
+    if (boxSub) boxSub.innerText = "Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo";
+  } else {
+    // NẾU LÀ QUẢN LÝ / BAN GIÁM ĐỐC:
+    if (btnHistory) btnHistory.classList.remove('hidden');
 
-  // CHẾ ĐỘ HỘP THƯ NHẬN VIỆC (MẶC ĐỊNH):
-  if (boxTitle) {
+    if (rpBoxViewMode === 'history') {
+      if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo & Chi Tiết Các Đầu Việc";
+      if (boxSub) boxSub.innerText = "Danh sách các báo cáo tổng hợp đã lập gửi Lãnh đạo kèm chi tiết toàn bộ đầu việc bên trong";
+      if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
+      if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
+      if (multiBar) multiBar.classList.add('hidden');
+      if (tabsContainer) tabsContainer.classList.add('hidden');
+      renderRpBoxHistoryUI(container, historyReports);
+      return;
+    }
+
+    // CHẾ ĐỘ HỘP THƯ NHẬN VIỆC (DÀNH CHO QUẢN LÝ & BAN GIÁM ĐỐC):
     const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
-    boxTitle.innerText = roleInfo.isStaff ? "Lịch Sử Gửi Báo Cáo & Ý Kiến Phản Hồi" : ("Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận'));
+    if (boxTitle) {
+      boxTitle.innerText = roleInfo.isManager ? ("Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận')) : "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
+    }
+    if (boxSub) boxSub.innerText = "Tiếp nhận các đầu việc do nhân viên gửi lên, tích chọn lọc để tổng hợp báo cáo chuyển Ban Lãnh đạo";
+    if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
+    if (histBtnText) histBtnText.innerText = "Lịch sử báo cáo";
+    if (multiBar) multiBar.classList.remove('hidden');
+    if (tabsContainer) tabsContainer.classList.remove('hidden');
   }
-  if (boxSub) boxSub.innerText = "Xem lại các đầu việc đã gửi báo cáo, thông tin nhân viên & tích chọn tổng hợp";
-  if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
-  if (histBtnText) histBtnText.innerText = "Lịch sử báo cáo";
-  if (multiBar) multiBar.classList.remove('hidden');
-  if (tabsContainer) tabsContainer.classList.remove('hidden');
 
   const allEntries = getAllRpBoxTaskEntries();
 
@@ -25097,7 +25230,7 @@ function renderLeadershipReportsBoxUI() {
     return;
   }
 
-  container.innerHTML = filteredEntries.map((entry) => {
+  container.innerHTML = filteredEntries.map((entry, eIdx) => {
     const it = entry.item;
     const isChecked = rpBoxSelectedTaskKeys.has(entry.entryKey);
     const isOwn = (entry.senderUsername === currentUser.username || entry.senderId === currentUser.id);
@@ -25140,35 +25273,59 @@ function renderLeadershipReportsBoxUI() {
       }
     }
 
+    // Cột bên trái: Quản lý thì có Checkbox để tích chọn, Người gửi (Nhân viên) thì chỉ có Số thứ tự / Icon gửi đi (KHÔNG CÓ CHECKBOX THEO YÊU CẦU)
+    let leftActionCol = '';
+    if (isManagerOrAbove) {
+      leftActionCol = '<div class="pt-1 shrink-0">' +
+        '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + entry.entryKey + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" />' +
+      '</div>';
+    } else {
+      leftActionCol = '<div class="pt-1 shrink-0">' +
+        '<span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs font-num" title="Đầu việc bạn đã gửi"><i class="fa-solid fa-paper-plane text-[10px] text-emerald-600"></i></span>' +
+      '</div>';
+    }
+
+    // Dòng thông tin phụ: Quản lý thấy tên nhân viên gửi; Người gửi thấy người tiếp nhận (Gửi đến ai)
+    let metaDetailsHtml = '';
+    if (isManagerOrAbove) {
+      metaDetailsHtml = '<div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-0.5">' +
+        '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-950 border border-emerald-200/90 font-bold shadow-2xs">' +
+          '<i class="fa-solid fa-user text-emerald-600 text-[10px]"></i>' +
+          '<span>' + escapeHtml(entry.senderFullName) + '</span>' +
+          '<span class="text-emerald-300">•</span>' +
+          '<span class="text-emerald-800 font-semibold">' + escapeHtml(entry.senderDepartment) + '</span>' +
+          '<span class="text-emerald-300">•</span>' +
+          '<span class="text-emerald-700 font-medium">' + escapeHtml(entry.senderRole) + '</span>' +
+        '</span>' +
+        '<span class="font-num text-slate-400 flex items-center gap-1">' +
+          '<i class="fa-regular fa-clock text-[10px]"></i> ' + escapeHtml(entry.displayDate || 'Đã gửi') + ' (Kỳ ' + entry.periodMonth + '/' + entry.periodYear + ')' +
+        '</span>' +
+        (isOwn ? '<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">Công việc của bạn</span>' : '') +
+      '</div>';
+    } else {
+      metaDetailsHtml = '<div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-0.5">' +
+        '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-950 border border-indigo-200 font-bold shadow-2xs">' +
+          '<i class="fa-solid fa-paper-plane text-indigo-600 text-[10px]"></i>' +
+          '<span>Gửi đến: <b>' + escapeHtml(entry.recipientFullName || 'Quản lý bộ phận') + '</b></span>' +
+        '</span>' +
+        '<span class="font-num text-slate-400 flex items-center gap-1">' +
+          '<i class="fa-regular fa-clock text-[10px]"></i> Ngày gửi: ' + escapeHtml(entry.displayDate || 'Đã gửi') + ' (Kỳ ' + entry.periodMonth + '/' + entry.periodYear + ')' +
+        '</span>' +
+      '</div>';
+    }
+
     return (
       '<div class="bg-white border ' + (isChecked ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200') + ' hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 shadow-2xs hover:shadow-xs transition space-y-2 group">' +
         '<div class="flex items-start justify-between gap-3">' +
           '<div class="flex items-start gap-3 min-w-0 flex-1">' +
-            '<div class="pt-1 shrink-0">' +
-              '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + entry.entryKey + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" />' +
-            '</div>' +
+            leftActionCol +
             '<div class="min-w-0 flex-1 space-y-1">' +
               '<div class="flex items-center gap-2 flex-wrap">' +
                 (it.isImportant ? '<span class="text-amber-500 text-sm shrink-0" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
                 typeBadge +
                 '<h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">' + escapeHtml(it.title) + '</h4>' +
               '</div>' +
-
-              '<!-- THÔNG TIN NHÂN VIÊN GỬI BÁO CÁO (NỔI BẬT THEO YÊU CẦU) -->' +
-              '<div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-0.5">' +
-                '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-950 border border-emerald-200/90 font-bold shadow-2xs">' +
-                  '<i class="fa-solid fa-user text-emerald-600 text-[10px]"></i>' +
-                  '<span>' + escapeHtml(entry.senderFullName) + '</span>' +
-                  '<span class="text-emerald-300">•</span>' +
-                  '<span class="text-emerald-800 font-semibold">' + escapeHtml(entry.senderDepartment) + '</span>' +
-                  '<span class="text-emerald-300">•</span>' +
-                  '<span class="text-emerald-700 font-medium">' + escapeHtml(entry.senderRole) + '</span>' +
-                '</span>' +
-                '<span class="font-num text-slate-400 flex items-center gap-1">' +
-                  '<i class="fa-regular fa-clock text-[10px]"></i> ' + escapeHtml(entry.displayDate || 'Đã gửi') + ' (Kỳ ' + entry.periodMonth + '/' + entry.periodYear + ')' +
-                '</span>' +
-                (isOwn ? '<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">Công việc của bạn</span>' : '') +
-              '</div>' +
+              metaDetailsHtml +
             '</div>' +
           '</div>' +
 
