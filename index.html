@@ -1288,19 +1288,19 @@
           <span>Điền báo cáo</span>
         </button>
 
-        <!-- Nút Xuất bảng Excel: Đặt cạnh nút Điền báo cáo theo thứ tự Điền báo cáo -> Xuất bảng Excel -> Menu -->
-        <!-- Nút Sổ tay công việc & Kế hoạch cá nhân: MỌI TÀI KHOẢN -->
-        <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspaceModal()" class="relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Theo dõi việc riêng, lịch kế hoạch, đề xuất & đẩy báo cáo lãnh đạo">
-          <i class="fa-solid fa-calendar-check text-xs"></i>
-          <span class="hidden sm:inline">Việc riêng & Kế hoạch</span>
-          <span class="sm:hidden">Việc riêng</span>
-          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse">0</span>
-        </button>
-
+        <!-- Nút Xuất bảng Excel: Điền báo cáo -> Xuất Excel -> Sổ tay công việc (cạnh Menu) -> Menu -->
         <button type="button" id="btnExportExcel" onclick="exportToExcel()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 hover:border-teal-300 active:scale-95 text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Tải file .xlsx chuẩn in ấn & báo cáo">
           <i class="fa-solid fa-file-excel text-teal-600 text-xs sm:text-sm"></i>
           <span class="hidden sm:inline">Xuất bảng Excel</span>
           <span class="sm:hidden">Xuất Excel</span>
+        </button>
+
+        <!-- Nút Sổ tay công việc: ĐẶT NGAY CẠNH MENU CHỨC NĂNG THEO YÊU CẦU -->
+        <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspacePage()" class="relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Sổ tay công việc & Kế hoạch cá nhân">
+          <i class="fa-solid fa-book-bookmark text-xs"></i>
+          <span class="hidden sm:inline">Sổ tay công việc</span>
+          <span class="sm:hidden">Sổ tay</span>
+          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse">0</span>
         </button>
 
         <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
@@ -1315,7 +1315,7 @@
           <div id="headerActionsMenu" class="hidden absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-2xl shadow-emerald-950/20 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-2 space-y-1">
             
             <!-- Nhóm 1: Tác vụ & Tra cứu nhanh -->
-            <button type="button" onclick="closeHeaderActionsMenu(); openPersonalWorkspaceModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50/80 transition text-left cursor-pointer group border border-transparent hover:border-amber-200">
+            <button type="button" onclick="closeHeaderActionsMenu(); openPersonalWorkspacePage();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50/80 transition text-left cursor-pointer group border border-transparent hover:border-amber-200">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
                   <i class="fa-solid fa-calendar-check"></i>
@@ -1490,7 +1490,7 @@
       <!-- ================= 1. CHẾ ĐỘ VIEW CHÍNH: BẢNG THEO DÕI CÔNG VIỆC BAN ĐẦU ================= -->
       <div id="mainWorkspaceView" class="space-y-3.5 flex flex-col flex-1 w-full">
         <!-- THẺ TRUY CẬP SỔ TAY VIỆC RIÊNG & KẾ HOẠCH CÁ NHÂN (CLICK ĐỂ VÀO TRANG MỚI) -->
-        <div id="personalWorkspaceEntryCard" onclick="openPersonalWorkspacePage()" class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-amber-300 hover:border-amber-500 rounded-2xl p-3 sm:p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
+        <div id="personalWorkspaceEntryCard" onclick="openPersonalWorkspacePage()" class="hidden bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-amber-300 hover:border-amber-500 rounded-2xl p-3 sm:p-4 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-lg shadow-sm shadow-amber-500/30 shrink-0 group-hover:scale-105 transition-transform">
               <i class="fa-solid fa-book-bookmark"></i>
@@ -2017,10 +2017,10 @@
         <div class="px-4 sm:px-6 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 bg-white">
           <!-- 5 Tab lọc -->
           <div class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-0.5 flex-1 min-w-[280px]">
-            <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 bg-slate-900 text-white shadow-2xs">
+            <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 bg-emerald-600 text-white border border-emerald-600 shadow-sm">
               <i class="fa-solid fa-layer-group text-xs"></i>
               <span>Tất cả</span>
-              <span id="pwTabCount_all" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-700 text-white font-num font-bold">0</span>
+              <span id="pwTabCount_all" class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-800 text-emerald-100 font-num font-bold">0</span>
             </button>
 
             <button type="button" id="pwTabBtn_adhoc" onclick="switchPersonalWorkspaceTab('adhoc')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 text-slate-600 hover:bg-slate-100">
@@ -4879,7 +4879,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <div class="px-4 sm:px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         <!-- Tab lọc trạng thái theo quy trình 2 bước -->
         <div class="flex items-center gap-1.5 flex-wrap">
-          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white transition cursor-pointer">
+          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-600 shadow-xs transition cursor-pointer">
             Tất cả
           </button>
           <button type="button" id="rpBoxTab_pending_mgr" onclick="switchRpBoxTab('pending_mgr')" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1">
@@ -21034,9 +21034,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 function toSupabaseTaskRow(it, user = currentUser) {
   return {
     id: it.id,
-    user_id: String(it.userId || (user ? user.id : '')),
+    user_id: String(it.userId || (user ? (user.id || user.username) : '')),
     username: it.username || (user ? user.username : ''),
-    user_fullname: it.userFullname || (user ? user.fullName : ''),
+    user_fullname: it.userFullname || (user ? (user.fullName || user.full_name) : ''),
     department: it.department || (user ? user.department : ''),
     type: it.type || 'adhoc',
     title: it.title || '',
@@ -21048,9 +21048,6 @@ function toSupabaseTaskRow(it, user = currentUser) {
     is_completed: isPersonalTaskFinished(it),
     feedback_response: it.feedbackResponse || null,
     selected_for_report: (it.selectedForReport !== false),
-    is_reported: !!(it.isReported || it.reportedAt),
-    reported_at: it.reportedAt || null,
-    reported_report_id: it.reportedReportId || null,
     updated_at: new Date().toISOString()
   };
 }
@@ -21156,10 +21153,15 @@ function fromSupabaseReportRow(r) {
 async function fetchPersonalTasksFromSupabase() {
   if (!supabase || !currentUser) return;
   try {
-    const { data, error } = await supabase
-      .from('personal_tasks')
-      .select('*')
-      .eq('user_id', String(currentUser.id))
+    const uId = String(currentUser.id || '');
+    const uName = String(currentUser.username || '');
+    let query = supabase.from('personal_tasks').select('*');
+    if (uId && uName && uId !== uName) {
+      query = query.or(`user_id.eq.${uId},username.eq.${uName}`);
+    } else {
+      query = query.eq('user_id', uId || uName);
+    }
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(1000);
 
@@ -21178,6 +21180,12 @@ async function fetchPersonalTasksFromSupabase() {
       const cloudItems = data.map(fromSupabaseTaskRow);
       const localData = getPersonalWorkspaceData(currentUser);
       const localItems = localData.items || [];
+
+      // Nếu cả Cloud và Local đều trống (0 mục), tự động khởi tạo dữ liệu mẫu và đồng bộ
+      if (cloudItems.length === 0 && localItems.length === 0) {
+        seedSamplePersonalWorkspace(false);
+        return;
+      }
 
       // Đồng bộ: Đẩy những mục chỉ có ở local lên cloud (nếu có)
       const cloudIds = new Set(cloudItems.map(c => c.id));
@@ -21419,7 +21427,13 @@ function openPersonalWorkspacePage() {
   if (deptEl) deptEl.innerText = currentUser.department || "Ban DVKH";
   if (roleEl) roleEl.innerText = currentUser.role || "Nhân sự";
 
-  // Đồng bộ và tải dữ liệu
+  // Kiểm tra dữ liệu: nếu chưa có công việc nào (lần đầu hoặc sau khi xóa Supabase), tự động nạp 4 việc mẫu
+  const curData = getPersonalWorkspaceData(currentUser);
+  if (!curData.items || curData.items.length === 0) {
+    seedSamplePersonalWorkspace(false);
+  }
+
+  // Đồng bộ và tải dữ liệu từ Supabase Cloud
   fetchPersonalTasksFromSupabase();
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
@@ -21444,1074 +21458,6 @@ function openPersonalWorkspaceModal() {
 }
 function closePersonalWorkspaceModal() {
   closePersonalWorkspacePage();
-}
-
-// 3. Cập nhật số liệu trên Thẻ Sổ Tay ở Trang Chính
-function updatePersonalWorkspaceEntryCardStats() {
-  if (!currentUser) return;
-  const data = getPersonalWorkspaceData(currentUser);
-  const items = data.items || [];
-
-  let pendingCount = 0;
-  let dueCount = 0;
-  let importantCount = 0;
-
-  items.forEach(it => {
-    const isDone = isPersonalTaskFinished(it);
-    if (!isDone) pendingCount++;
-    if (it.isImportant) importantCount++;
-    if (it.type === 'plan' && !isDone && it.dueDate) {
-      dueCount++;
-    }
-  });
-
-  const pNum = document.getElementById('pwCardPendingNum');
-  const dNum = document.getElementById('pwCardDueNum');
-  if (pNum) pNum.innerText = pendingCount;
-  if (dNum) dNum.innerText = dueCount;
-
-  // Cập nhật nhãn thống kê trên thẻ
-  const statPending = document.getElementById('pwCardStatPending');
-  const statDue = document.getElementById('pwCardStatDue');
-  if (statPending) {
-    if (pendingCount > 0) {
-      statPending.className = "px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[11px] shadow-2xs";
-    } else {
-      statPending.className = "px-2.5 py-1 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px]";
-    }
-  }
-}
-
-// 4. Modal Nhắc Nhở Công Việc Chưa Làm / Đến Hạn Khi Đăng Nhập Hoặc Khởi Động
-function showPersonalTaskReminderOnLogin() {
-  if (!currentUser) return;
-  const data = getPersonalWorkspaceData(currentUser);
-  const items = data.items || [];
-
-  const pendingItems = items.filter(it => !isPersonalTaskFinished(it));
-  let overdueOrDueItems = [];
-
-  pendingItems.forEach(it => {
-    if (it.type === 'plan' && it.dueDate) {
-      const t = calculatePlanTimelineStatus(it);
-      if (t.code === 'overdue' || t.code === 'duetoday' || t.code === 'upcoming') {
-        overdueOrDueItems.push(it);
-      }
-    }
-  });
-
-  // Luôn cập nhật số liệu trên thẻ chính
-  updatePersonalWorkspaceEntryCardStats();
-
-  // Nếu có công việc chưa làm hoặc sắp đến hạn, tự động mở bảng thông báo nhắc nhở
-  if (pendingItems.length > 0 || overdueOrDueItems.length > 0) {
-    const modal = document.getElementById('personalTaskReminderModal');
-    if (!modal) return;
-
-    const greeting = document.getElementById('pwReminderUserGreeting');
-    if (greeting) greeting.innerText = currentUser.fullName || currentUser.username;
-
-    const countP = document.getElementById('pwReminderCountPending');
-    const countD = document.getElementById('pwReminderCountDue');
-    if (countP) countP.innerText = pendingItems.length;
-    if (countD) countD.innerText = overdueOrDueItems.length;
-
-    const listEl = document.getElementById('pwReminderItemsList');
-    if (listEl) {
-      listEl.innerHTML = pendingItems.slice(0, 6).map((it, idx) => {
-        let tag = '';
-        if (it.type === 'adhoc') tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Phát sinh</span>';
-        else if (it.type === 'plan') {
-          tag = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-900">${it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch'}</span>`;
-        } else if (it.type === 'proposal') {
-          tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900">Đề xuất</span>';
-        } else {
-          tag = '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-900">Ý kiến</span>';
-        }
-
-        return `
-          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <div class="font-bold text-slate-800">${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-              ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">${escapeHtml(it.content)}</div>` : ''}
-            </div>
-            <div class="shrink-0">${tag}</div>
-          </div>
-        `;
-      }).join('');
-
-      if (pendingItems.length > 6) {
-        listEl.innerHTML += `<div class="text-center text-[11px] text-slate-400 italic pt-1">Và còn ${pendingItems.length - 6} công việc khác trong sổ tay...</div>`;
-      }
-    }
-
-    setTimeout(() => {
-      modal.classList.remove('hidden');
-    }, 400);
-  }
-}
-
-function closePersonalTaskReminderModal() {
-  const modal = document.getElementById('personalTaskReminderModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-function openPersonalWorkspaceFromReminder() {
-  closePersonalTaskReminderModal();
-  openPersonalWorkspacePage();
-}
-
-// 5. Xác nhận khi tạo lại báo cáo cho các mục đã từng gửi
-let _pendingReportPayloadProceed = false;
-
-function proceedToCreateReportModal() {
-  closeConfirmReReportModal();
-  _pendingReportPayloadProceed = true;
-  openLeadershipReportPreviewModal();
-}
-
-function closeConfirmReReportModal() {
-  const modal = document.getElementById('confirmReReportModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-// 6. XUẤT FILE WORD (.doc) BÁO CÁO CÁ NHÂN CHUẨN MẪU DOANH NGHIỆP
-function generateSingleReportWordHtml(rep) {
-  const m = rep.periodMonth || (new Date().getMonth() + 1);
-  const y = rep.periodYear || new Date().getFullYear();
-  const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-  const adhocList = items.filter(it => it.type === 'adhoc');
-  const planList = items.filter(it => it.type === 'plan');
-  const propList = items.filter(it => it.type === 'proposal');
-  const feedList = items.filter(it => it.type === 'feedback');
-
-  const recipientText = rep.recipientFullName 
-    ? `Kính gửi: ${escapeHtml(rep.recipientFullName)} - ${escapeHtml(rep.recipientRole || 'Quản lý')} (${escapeHtml(rep.recipientDepartment || 'Ban DVKH')})`
-    : ((rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary')
-        ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
-        : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
-
-  let sectionsHtml = '';
-
-  // 1. Việc phát sinh
-  if (adhocList.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
-          I. CÔNG VIỆC PHÁT SINH TRONG THÁNG
-        </div>
-        <div style="margin-top: 8px;">
-          ${adhocList.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 2. Kế hoạch
-  if (planList.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
-          II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC
-        </div>
-        <div style="margin-top: 8px;">
-          ${planList.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''} ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 3. Đề xuất
-  if (propList.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
-          III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ
-        </div>
-        <div style="margin-top: 8px;">
-          ${propList.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 4. Ý kiến phản ánh
-  if (feedList.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
-          IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN
-        </div>
-        <div style="margin-top: 8px;">
-          ${feedList.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  const now = new Date();
-  const dateStr = rep.displayDate || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
-
-  return `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head>
-      <meta charset='utf-8'>
-      <title>Báo cáo công việc - ${escapeHtml(rep.senderFullName || rep.senderUsername)}</title>
-      <!--[if gte mso 9]>
-      <xml>
-        <w:WordDocument>
-          <w:View>Print</w:View>
-          <w:Zoom>100</w:Zoom>
-          <w:DoNotOptimizeForBrowser/>
-        </w:WordDocument>
-      </xml>
-      <![endif]-->
-      <style>
-        @page Section1 {
-          size: 210mm 297mm;
-          margin: 20mm 20mm 20mm 20mm;
-          mso-header-margin: 10mm;
-          mso-footer-margin: 10mm;
-        }
-        div.Section1 { page: Section1; }
-        body {
-          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
-          font-size: 11.5pt;
-          line-height: 1.45;
-          color: #000000;
-        }
-        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
-
-        .info-card {
-          width: 100%;
-          border-collapse: collapse;
-          background-color: transparent;
-          border: none;
-          margin-bottom: 18px;
-        }
-        .info-card td { padding: 4px 6px; vertical-align: top; border: none; background-color: transparent; }
-        .info-label { font-size: 10pt; color: #475569; }
-        .info-val { font-size: 11.5pt; font-weight: bold; color: #000000; margin-top: 2px; }
-
-        .sig-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 35px;
-          page-break-inside: avoid;
-        }
-        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
-        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
-        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
-        .sig-space { height: 60px; }
-        .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
-      </style>
-    </head>
-    <body>
-      <div class="Section1">
-        <!-- HEADER DOANH NGHIỆP TRANG TRỌNG -->
-        <div class="header-box">
-          <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
-          <div class="doc-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
-          <div class="recipient">${recipientText}</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
-        </div>
-
-        <!-- THÔNG TIN NHÂN SỰ SẠCH SẼ (KHÔNG VIỀN, KHÔNG NỀN) -->
-        <table class="info-card">
-          <tr>
-            <td style="width: 35%;">
-              <div class="info-label">Người báo cáo:</div>
-              <div class="info-val">${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
-            </td>
-            <td style="width: 35%;">
-              <div class="info-label">Bộ phận / Tổ kho:</div>
-              <div class="info-val">${escapeHtml(rep.senderDepartment || 'Bộ phận')}</div>
-            </td>
-            <td style="width: 30%;">
-              <div class="info-label">Chức vụ / Vị trí:</div>
-              <div class="info-val" style="color: #047857;">${escapeHtml(rep.senderRole || 'Nhân viên')}</div>
-            </td>
-          </tr>
-        </table>
-
-        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
-        ${sectionsHtml}
-
-        <!-- LỜI NHẮN / Ý KIẾN THÊM -->
-        ${rep.notes ? `
-          <div style="margin-top: 18px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-bottom: 4px;">
-              Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:
-            </div>
-            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
-              ${escapeHtml(rep.notes)}
-            </div>
-          </div>
-        ` : ''}
-
-        ${rep.managerFeedback ? `
-          <div style="margin-top: 14px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 4px;">
-              Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(rep.forwardedBy || 'Quản lý')}):
-            </div>
-            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
-              ${escapeHtml(rep.managerFeedback)}
-            </div>
-          </div>
-        ` : ''}
-
-        ${rep.leaderFeedback ? `
-          <div style="margin-top: 14px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 4px;">
-              Ý KIẾN CHỈ ĐẠO CỦA BAN GIÁM ĐỐC:
-            </div>
-            <div style="font-size: 10.5pt; color: #047857; font-weight: bold; line-height: 1.45; padding-left: 20px;">
-              ${escapeHtml(rep.leaderFeedback)}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- CHỮ KÝ 3 BÊN -->
-        <table class="sig-table">
-          <tr>
-            <td colspan="3" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
-              Hải Phòng, ngày ${now.getDate()} tháng ${now.getMonth()+1} năm ${now.getFullYear()}
-            </td>
-          </tr>
-          <tr>
-            <td class="sig-title">NGƯỜI LẬP BÁO CÁO</td>
-            <td class="sig-title">QUẢN LÝ BỘ PHẬN</td>
-            <td class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO</td>
-          </tr>
-          <tr>
-            <td class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td class="sig-sub">(Ký duyệt)</td>
-          </tr>
-          <tr>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-          </tr>
-          <tr>
-            <td class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
-            <td class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
-            <td class="sig-name">Ban Giám Đốc</td>
-          </tr>
-        </table>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
-  let allAdhoc = [];
-  let allPlan = [];
-  let allProp = [];
-  let allFeed = [];
-  const staffSet = new Set();
-
-  reportsList.forEach(rep => {
-    const sName = rep.senderFullName || rep.senderUsername || 'Nhân sự';
-    const sDept = rep.senderDepartment || deptName || 'Bộ phận';
-    const sRole = rep.senderRole || 'Nhân viên';
-    staffSet.add(sName);
-
-    const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-    its.forEach(it => {
-      const itemWithStaff = { ...it, staffName: sName, staffDept: sDept, staffRole: sRole };
-      if (it.type === 'adhoc') allAdhoc.push(itemWithStaff);
-      else if (it.type === 'plan') allPlan.push(itemWithStaff);
-      else if (it.type === 'proposal') allProp.push(itemWithStaff);
-      else if (it.type === 'feedback') allFeed.push(itemWithStaff);
-    });
-  });
-
-  let sectionsHtml = '';
-
-  // 1. Việc phát sinh
-  if (allAdhoc.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
-          I. CÔNG VIỆC PHÁT SINH TRONG THÁNG (${allAdhoc.length} việc)
-        </div>
-        <div style="margin-top: 8px;">
-          ${allAdhoc.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 2. Kế hoạch
-  if (allPlan.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
-          II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC (${allPlan.length} kế hoạch)
-        </div>
-        <div style="margin-top: 8px;">
-          ${allPlan.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span> ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 3. Đề xuất
-  if (allProp.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
-          III. SÁNG KIẾN, ĐỀ XUẤT &amp; KIẾN NGHỊ (${allProp.length} đề xuất)
-        </div>
-        <div style="margin-top: 8px;">
-          ${allProp.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  // 4. Ý kiến phản ánh
-  if (allFeed.length > 0) {
-    sectionsHtml += `
-      <div style="margin-top: 18px; margin-bottom: 8px;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
-          IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN (${allFeed.length} ý kiến)
-        </div>
-        <div style="margin-top: 8px;">
-          ${allFeed.map((it, idx) => `
-            <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-              <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
-              </div>
-              ${it.content ? `
-                <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                  ${escapeHtml(it.content)}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  const now = new Date();
-  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
-
-  return `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head>
-      <meta charset='utf-8'>
-      <title>Báo cáo tổng hợp - ${escapeHtml(deptName)}</title>
-      <!--[if gte mso 9]>
-      <xml>
-        <w:WordDocument>
-          <w:View>Print</w:View>
-          <w:Zoom>100</w:Zoom>
-          <w:DoNotOptimizeForBrowser/>
-        </w:WordDocument>
-      </xml>
-      <![endif]-->
-      <style>
-        @page Section1 {
-          size: 210mm 297mm;
-          margin: 20mm 20mm 20mm 20mm;
-          mso-header-margin: 10mm;
-          mso-footer-margin: 10mm;
-        }
-        div.Section1 { page: Section1; }
-        body {
-          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
-          font-size: 11.5pt;
-          line-height: 1.45;
-          color: #000000;
-        }
-        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
-
-        .sig-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 35px;
-          page-break-inside: avoid;
-        }
-        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
-        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
-        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
-        .sig-space { height: 60px; }
-        .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
-      </style>
-    </head>
-    <body>
-      <div class="Section1">
-        <!-- HEADER DOANH NGHIỆP TRANG TRỌNG -->
-        <div class="header-box">
-          <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
-          <div class="doc-title">BÁO CÁO CÔNG VIỆC TỔNG HỢP &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
-          <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
-          <div class="period-date">Bộ phận: ${escapeHtml(deptName)} &bull; Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
-        </div>
-
-        <div style="font-size: 11pt; color: #334155; margin-bottom: 16px; font-style: italic;">
-          Tổng hợp từ <b>${reportsList.length}</b> báo cáo của <b>${staffSet.size}</b> nhân sự bộ phận ${escapeHtml(deptName)}.
-        </div>
-
-        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
-        ${sectionsHtml}
-
-        <!-- CHỮ KÝ 2 BÊN -->
-        <table class="sig-table">
-          <tr>
-            <td colspan="3" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
-              Hải Phòng, ngày ${now.getDate()} tháng ${now.getMonth()+1} năm ${now.getFullYear()}
-            </td>
-          </tr>
-          <tr>
-            <td style="width: 50%; text-align: center;" class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</td>
-            <td style="width: 50%; text-align: center;" class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</td>
-          </tr>
-          <tr>
-            <td style="text-align: center;" class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td style="text-align: center;" class="sig-sub">(Ký duyệt)</td>
-          </tr>
-          <tr>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-          </tr>
-          <tr>
-            <td style="text-align: center;" class="sig-name">${escapeHtml(currentUser?.fullName || 'Quản lý bộ phận')}</td>
-            <td style="text-align: center;" class="sig-name">Ban Giám Đốc</td>
-          </tr>
-        </table>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-function exportPreviewReportToWord() {
-  if (!currentUser || currentReportSelectedItems.length === 0) {
-    showToast("Không có mục nào được chọn để xuất Word!", true);
-    return;
-  }
-  const m = currentSelectedMonth || (new Date().getMonth() + 1);
-  const y = currentSelectedYear || new Date().getFullYear();
-  const now = new Date();
-  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const currentNotes = (document.getElementById('rpLeaderNoteInput')?.value || '').trim();
-
-  const previewRep = {
-    senderId: currentUser.id,
-    senderUsername: currentUser.username,
-    senderFullName: currentUser.fullName,
-    senderDepartment: currentUser.department || 'Ban DVKH',
-    senderRole: currentUser.role || 'Nhân sự',
-    periodMonth: m,
-    periodYear: y,
-    displayDate: dateFormatted,
-    notes: currentNotes,
-    managerFeedback: '',
-    forwardedBy: '',
-    leaderFeedback: '',
-    items: currentReportSelectedItems
-  };
-
-  const wordHtml = generateSingleReportWordHtml(previewRep);
-  const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-  downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
-  showToast("📄 Đã tải file Word báo cáo công việc chuẩn mẫu thành công!");
-}
-
-function exportSingleReportToWord(reportId) {
-  const sharedReports = getLeadershipReportsShared();
-  const rep = sharedReports.find(r => r.id === reportId);
-  if (!rep) {
-    showToast("Không tìm thấy dữ liệu báo cáo!", true);
-    return;
-  }
-  const m = rep.periodMonth || (new Date().getMonth() + 1);
-  const y = rep.periodYear || new Date().getFullYear();
-  const wordHtml = generateSingleReportWordHtml(rep);
-  const safeName = removeAccents(rep.senderFullName || 'Bao_cao').replace(/\s+/g, '_');
-  downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
-  showToast(`📄 Đã tải file Word báo cáo của ${rep.senderFullName || 'nhân sự'}!`);
-}
-
-function exportPersonalWorkspaceToWord() {
-  if (!currentUser) return;
-  const data = getPersonalWorkspaceData(currentUser);
-  let items = data.items || [];
-  if (items.length === 0) {
-    showToast("Chưa có dữ liệu công việc trong sổ tay để xuất Word!", true);
-    return;
-  }
-
-  let selectedItems = items.filter(it => it.selectedForReport);
-  if (selectedItems.length === 0) selectedItems = items;
-
-  const m = currentSelectedMonth || (new Date().getMonth() + 1);
-  const y = currentSelectedYear || new Date().getFullYear();
-  const now = new Date();
-  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  const rep = {
-    senderId: currentUser.id,
-    senderUsername: currentUser.username,
-    senderFullName: currentUser.fullName,
-    senderDepartment: currentUser.department || 'Ban DVKH',
-    senderRole: currentUser.role || 'Nhân sự',
-    periodMonth: m,
-    periodYear: y,
-    displayDate: dateFormatted,
-    notes: '',
-    items: selectedItems
-  };
-
-  const wordHtml = generateSingleReportWordHtml(rep);
-  const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-  downloadWordDocument(wordHtml, `So_tay_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
-  showToast("📄 Đã tải file Word sổ tay công việc thành công!");
-}
-
-function downloadWordDocument(htmlContent, fileName) {
-  const blob = new Blob(['\uFEFF' + htmlContent], { type: 'application/msword;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// 9. GỘP BÁO CÁO CỦA CÁC NHÂN SỰ ĐƯỢC QUẢN LÝ TÍCH CHỌN
-let managerSelectedReportIds = new Set();
-
-function onRpBoxCheckboxChange(chk) {
-  const repId = chk.dataset.id;
-  if (!repId) return;
-  if (chk.checked) {
-    managerSelectedReportIds.add(repId);
-  } else {
-    managerSelectedReportIds.delete(repId);
-  }
-  updateManagerSelectedReportsCount();
-}
-
-function toggleSelectAllRpBox(checked) {
-  const checkboxes = document.querySelectorAll('.rp-box-chk');
-  checkboxes.forEach(cb => {
-    cb.checked = checked;
-    const rId = cb.dataset.id;
-    if (rId) {
-      if (checked) managerSelectedReportIds.add(rId);
-      else managerSelectedReportIds.delete(rId);
-    }
-  });
-  updateManagerSelectedReportsCount();
-}
-
-function updateManagerSelectedReportsCount() {
-  const countBadge = document.getElementById('rpBoxSelectedReportsCount');
-  const btnMerge = document.getElementById('rpBoxBtnMergeSelected');
-  const selectAllChk = document.getElementById('rpBoxSelectAllChk');
-
-  const count = managerSelectedReportIds.size;
-  if (countBadge) countBadge.innerText = count;
-
-  if (btnMerge) {
-    if (count > 0) {
-      btnMerge.classList.remove('hidden');
-    } else {
-      btnMerge.classList.add('hidden');
-    }
-  }
-
-  const allCheckboxes = document.querySelectorAll('.rp-box-chk');
-  if (selectAllChk && allCheckboxes.length > 0) {
-    selectAllChk.checked = (count === allCheckboxes.length);
-  }
-}
-
-function exportSelectedReportsToWord() {
-  const sharedReports = getLeadershipReportsShared();
-  let selectedReps = sharedReports.filter(r => managerSelectedReportIds.has(r.id));
-
-  if (selectedReps.length === 0) {
-    showToast("Vui lòng tích chọn ít nhất 1 báo cáo của nhân sự để gộp!", true);
-    return;
-  }
-
-  const deptName = currentUser.department || 'Bộ phận';
-  const m = currentSelectedMonth || (new Date().getMonth() + 1);
-  const y = currentSelectedYear || new Date().getFullYear();
-
-  const wordHtml = generateConsolidatedReportsWordHtml(selectedReps, deptName, m, y);
-  const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
-  downloadWordDocument(wordHtml, `Bao_cao_gop_bo_phan_${safeDept}_Thang_${m}_${y}.doc`);
-  showToast(`📄 Đã gộp và tải file Word thành công (${selectedReps.length} báo cáo)!`);
-}
-
-
-
-function getPersonalWorkspaceStorageKey(user = currentUser) {
-  const uId = user ? (user.id || user.username || 'guest') : 'guest';
-  return `ops_personal_workspace_final_v1_${uId}`;
-}
-
-function getPersonalWorkspaceData(user = currentUser) {
-  if (!user) return { items: [] };
-  const key = getPersonalWorkspaceStorageKey(user);
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data && Array.isArray(data.items)) return data;
-    }
-  } catch(e) {
-    console.error("Lỗi đọc dữ liệu việc riêng:", e);
-  }
-  return { items: [] };
-}
-
-function savePersonalWorkspaceData(data, user = currentUser) {
-  if (!user) return;
-  const key = getPersonalWorkspaceStorageKey(user);
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch(e) {
-    console.error("Lỗi ghi dữ liệu việc riêng:", e);
-  }
-  updatePersonalWorkspaceReminders();
-}
-
-const LEADERSHIP_REPORTS_SHARED_KEY = 'ops_leadership_reports_shared_final_v1';
-
-function getLeadershipReportsShared() {
-  try {
-    const raw = localStorage.getItem(LEADERSHIP_REPORTS_SHARED_KEY);
-    if (raw) {
-      const list = JSON.parse(raw);
-      if (Array.isArray(list)) return list;
-    }
-  } catch(e) {}
-  return [];
-}
-
-function saveLeadershipReportsShared(list) {
-  try {
-    localStorage.setItem(LEADERSHIP_REPORTS_SHARED_KEY, JSON.stringify(list));
-  } catch(e) {}
-}
-
-function calculatePlanTimelineStatus(item) {
-  if (item.isCompleted || item.status === 'completed' || item.status === 'done') {
-    return {
-      code: 'completed',
-      label: 'Đã hoàn thành',
-      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold',
-      icon: 'fa-solid fa-circle-check text-emerald-600'
-    };
-  }
-  if (!item.dueDate) {
-    return {
-      code: 'upcoming',
-      label: 'Sẽ làm',
-      badgeClass: 'bg-sky-100 text-sky-800 border-sky-300 font-bold',
-      icon: 'fa-regular fa-calendar text-sky-600'
-    };
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const parts = item.dueDate.split('-');
-  const due = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-  due.setHours(0, 0, 0, 0);
-
-  const diffTime = due.getTime() - today.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    return {
-      code: 'overdue',
-      days: Math.abs(diffDays),
-      label: `Quá hạn ${Math.abs(diffDays)} ngày`,
-      badgeClass: 'bg-rose-100 text-rose-900 border-rose-300 animate-pulse font-black',
-      icon: 'fa-solid fa-triangle-exclamation text-rose-600'
-    };
-  } else if (diffDays === 0) {
-    return {
-      code: 'duetoday',
-      label: 'Đến hạn hôm nay',
-      badgeClass: 'bg-amber-100 text-amber-950 border-amber-300 font-black',
-      icon: 'fa-solid fa-clock text-amber-600'
-    };
-  } else {
-    return {
-      code: 'upcoming',
-      days: diffDays,
-      label: diffDays === 1 ? 'Đến hạn ngày mai' : `Sẽ làm (còn ${diffDays} ngày)`,
-      badgeClass: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
-      icon: 'fa-solid fa-hourglass-start text-sky-600'
-    };
-  }
-}
-
-function updatePersonalWorkspaceReminders() {
-  if (!currentUser) return;
-  const data = getPersonalWorkspaceData(currentUser);
-  const items = data.items || [];
-
-  let adhocTotal = 0, adhocPending = 0;
-  let planTotal = 0, planPending = 0;
-  let proposalTotal = 0, proposalPending = 0;
-  let feedbackTotal = 0, feedbackPending = 0;
-  let importantTotal = 0, importantPending = 0;
-  let urgentAlertCount = 0;
-
-  items.forEach(it => {
-    const isDone = isPersonalTaskFinished(it);
-    if (it.isImportant) {
-      importantTotal++;
-      if (!isDone) importantPending++;
-    }
-
-    if (it.type === 'adhoc') {
-      adhocTotal++;
-      if (!isDone) {
-        adhocPending++;
-        if (it.isImportant) urgentAlertCount++;
-      }
-    } else if (it.type === 'plan') {
-      planTotal++;
-      if (!isDone) {
-        planPending++;
-        const timeline = calculatePlanTimelineStatus(it);
-        if (timeline.code === 'overdue' || timeline.code === 'duetoday') urgentAlertCount++;
-      }
-    } else if (it.type === 'proposal') {
-      proposalTotal++;
-      if (!isDone) proposalPending++;
-    } else if (it.type === 'feedback') {
-      feedbackTotal++;
-      if (!isDone) feedbackPending++;
-    }
-  });
-
-  // Cập nhật số liệu hiển thị: Tổng đầu việc & (số việc chưa xong)
-  const elAdhocCount = document.getElementById('pwStatAdhocCount');
-  if (elAdhocCount) elAdhocCount.innerText = adhocTotal;
-  const elAdhocPending = document.getElementById('pwStatAdhocPending') || document.getElementById('pwStatAdhocDone');
-  if (elAdhocPending) elAdhocPending.innerText = adhocPending;
-
-  const elPlanCount = document.getElementById('pwStatPlanCount');
-  if (elPlanCount) elPlanCount.innerText = planTotal;
-  const elPlanPending = document.getElementById('pwStatPlanPending') || document.getElementById('pwStatPlanDue');
-  if (elPlanPending) elPlanPending.innerText = planPending;
-
-  const elProposalCount = document.getElementById('pwStatProposalCount');
-  if (elProposalCount) elProposalCount.innerText = proposalTotal;
-  const elProposalPending = document.getElementById('pwStatProposalPending') || document.getElementById('pwStatProposalApproved');
-  if (elProposalPending) elProposalPending.innerText = proposalPending;
-
-  const elFeedbackCount = document.getElementById('pwStatFeedbackCount');
-  if (elFeedbackCount) elFeedbackCount.innerText = feedbackTotal;
-  const elFeedbackPending = document.getElementById('pwStatFeedbackPending');
-  if (elFeedbackPending) elFeedbackPending.innerText = feedbackPending;
-
-  const elImportantCount = document.getElementById('pwStatImportantCount');
-  if (elImportantCount) elImportantCount.innerText = importantTotal;
-  const elImportantPending = document.getElementById('pwStatImportantPending');
-  if (elImportantPending) elImportantPending.innerText = importantPending;
-
-  const banner = document.getElementById('pwReminderAlertBanner');
-  const bannerText = document.getElementById('pwReminderAlertText');
-  if (banner && bannerText) {
-    if (planOverdue > 0 || planDue > 0) {
-      banner.classList.remove('hidden');
-      banner.className = "mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200";
-      let msg = "🚨 <b>Nhắc nhở công việc:</b> Bạn có ";
-      if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline'>${planOverdue} việc quá hạn</span> `;
-      if (planOverdue > 0 && planDue > 0) msg += "và ";
-      if (planDue > 0) msg += `<span class='font-black text-amber-700 underline'>${planDue} việc đến hạn hôm nay</span> `;
-      msg += "cần ưu tiên giải quyết!";
-      bannerText.innerHTML = msg;
-    } else if (importantCount > 0) {
-      banner.classList.remove('hidden');
-      banner.className = "mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2";
-      bannerText.innerHTML = `⭐ Bạn có <b>${importantCount} mục quan trọng</b> được đánh dấu để theo dõi và nhắc nhở làm.`;
-    } else {
-      banner.classList.add('hidden');
-    }
-  }
-
-  const cAll = document.getElementById('pwTabCount_all');
-  if (cAll) cAll.innerText = items.length;
-  const cAdhoc = document.getElementById('pwTabCount_adhoc');
-  if (cAdhoc) cAdhoc.innerText = adhocCount;
-  const cPlan = document.getElementById('pwTabCount_plan');
-  if (cPlan) cPlan.innerText = planCount;
-  const cProp = document.getElementById('pwTabCount_proposal');
-  if (cProp) cProp.innerText = proposalCount;
-  const cFeed = document.getElementById('pwTabCount_feedback');
-  if (cFeed) cFeed.innerText = feedbackCount;
-
-  const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
-  if (headerBadge) {
-    if (urgentAlertCount > 0) {
-      headerBadge.innerText = urgentAlertCount;
-      headerBadge.classList.remove('hidden');
-      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white border border-white shadow-2xs font-num animate-pulse";
-    } else if (importantCount > 0) {
-      headerBadge.innerText = importantCount;
-      headerBadge.classList.remove('hidden');
-      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-white border border-white shadow-2xs font-num";
-    } else {
-      headerBadge.classList.add('hidden');
-    }
-  }
-
-  const menuBadge = document.getElementById('personalWorkspaceMenuBadge');
-  if (menuBadge) {
-    if (urgentAlertCount > 0) {
-      menuBadge.innerText = `${urgentAlertCount} cần làm`;
-      menuBadge.classList.remove('hidden');
-      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-rose-600 text-white rounded-full font-num";
-    } else if (importantCount > 0) {
-      menuBadge.innerText = `${importantCount} quan trọng`;
-      menuBadge.classList.remove('hidden');
-      menuBadge.className = "px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-num";
-    } else {
-      menuBadge.classList.add('hidden');
-    }
-  }
-
-  const mobileBadge = document.getElementById('personalWorkspaceMobileBadge');
-  if (mobileBadge) {
-    if (urgentAlertCount > 0 || importantCount > 0) {
-      mobileBadge.classList.remove('hidden');
-    } else {
-      mobileBadge.classList.add('hidden');
-    }
-  }
-}
-
-function openPersonalWorkspaceModal() {
-  if (!currentUser) {
-    showToast("Vui lòng đăng nhập để xem việc riêng và kế hoạch cá nhân!", true);
-    return;
-  }
-
-  const modal = document.getElementById('personalWorkspaceModal');
-  if (!modal) return;
-
-  const fn = document.getElementById('pwUserFullName');
-  if (fn) fn.innerText = currentUser.fullName || currentUser.username || "Nhân sự";
-  const dp = document.getElementById('pwUserDept');
-  if (dp) dp.innerText = currentUser.department || "Ban DVKH";
-  const rl = document.getElementById('pwUserRole');
-  if (rl) rl.innerText = currentUser.role || "Nhân viên";
-
-  modal.classList.remove('hidden');
-  renderPersonalWorkspaceUI();
-  fetchPersonalTasksFromSupabase();
-  fetchLeadershipReportsFromSupabase(false);
-}
-
-function closePersonalWorkspaceModal() {
-  const modal = document.getElementById('personalWorkspaceModal');
-  if (modal) modal.classList.add('hidden');
 }
 
 function togglePersonalWorkspaceFullscreen() {
@@ -22597,18 +21543,8 @@ function clickPersonalSummaryCard(cardType) {
     }
   }
 
-  // 3. Cập nhật trạng thái các nút tab
-  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
-  tabs.forEach(t => {
-    const btn = document.getElementById(`pwTabBtn_${t}`);
-    if (btn) {
-      if (t === pwCurrentTab && !pwFilterImportantOnly) {
-        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-bold bg-slate-900 text-white shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer";
-      } else {
-        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer";
-      }
-    }
-  });
+  // 3. Cập nhật trạng thái các nút tab đẹp mắt, dịu mắt, không dùng màu đen
+  updatePersonalWorkspaceTabButtonsUI(pwCurrentTab);
 
   // 4. Highlight thẻ được chọn
   updateSummaryCardsActiveState(cardType);
@@ -22642,6 +21578,31 @@ function updateSummaryCardsActiveState(activeType) {
   });
 }
 
+const PW_TAB_STYLE_MAP = {
+  all: { activeBtn: "bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold", activeBadge: "bg-emerald-800 text-emerald-100 font-bold" },
+  adhoc: { activeBtn: "bg-amber-500 text-white border border-amber-500 shadow-sm font-bold", activeBadge: "bg-amber-700 text-amber-100 font-bold" },
+  plan: { activeBtn: "bg-sky-600 text-white border border-sky-600 shadow-sm font-bold", activeBadge: "bg-sky-800 text-sky-100 font-bold" },
+  proposal: { activeBtn: "bg-purple-600 text-white border border-purple-600 shadow-sm font-bold", activeBadge: "bg-purple-800 text-purple-100 font-bold" },
+  feedback: { activeBtn: "bg-teal-600 text-white border border-teal-600 shadow-sm font-bold", activeBadge: "bg-teal-800 text-teal-100 font-bold" }
+};
+
+function updatePersonalWorkspaceTabButtonsUI(activeTab) {
+  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`pwTabBtn_${t}`);
+    const badge = document.getElementById(`pwTabCount_${t}`);
+    const cfg = PW_TAB_STYLE_MAP[t] || PW_TAB_STYLE_MAP.all;
+    if (btn) {
+      if (t === activeTab && !pwFilterImportantOnly && !pwFilterDueOrOverdue) {
+        btn.className = `pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer ${cfg.activeBtn}`;
+        if (badge) badge.className = `px-1.5 py-0.2 rounded-full text-[9px] font-num ${cfg.activeBadge}`;
+      } else {
+        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer";
+        if (badge) badge.className = "px-1.5 py-0.2 rounded-full text-[9px] bg-slate-100 text-slate-700 border border-slate-200 font-num font-bold";
+      }
+    }
+  });
+}
 function switchPersonalWorkspaceTab(tab) {
   pwCurrentTab = tab;
   pwFilterImportantOnly = false;
@@ -22656,17 +21617,7 @@ function switchPersonalWorkspaceTab(tab) {
     dueBtn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
   }
 
-  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
-  tabs.forEach(t => {
-    const btn = document.getElementById(`pwTabBtn_${t}`);
-    if (btn) {
-      if (t === tab) {
-        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-bold bg-slate-900 text-white shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer";
-      } else {
-        btn.className = "pw-tab-btn px-3 py-1.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 cursor-pointer";
-      }
-    }
-  });
+  updatePersonalWorkspaceTabButtonsUI(tab);
 
   updateSummaryCardsActiveState(tab);
   renderPersonalWorkspaceUI();
@@ -23036,8 +21987,9 @@ function renderPersonalWorkspaceUI() {
 
       const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
+      const isReportSelected = !!it.selectedForReport;
       rowsHtml += `
-        <div class="group relative bg-white border ${it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/70 bg-gradient-to-r from-amber-50/20 via-white to-white shadow-xs' : 'border-slate-200 hover:border-slate-300'} hover:shadow-md rounded-2xl p-3.5 sm:p-4 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+        <div class="group relative ${isReportSelected ? 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-300/60 shadow-xs' : (it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/70 bg-gradient-to-r from-amber-50/20 via-white to-white shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300')} hover:shadow-md rounded-2xl p-3.5 sm:p-4 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
           <!-- VÙNG TRÁI: CHECKBOX + STAR + PHÂN LOẠI + TIÊU ĐỀ & NỘI DUNG -->
           <div class="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
             <div class="flex items-center gap-1 pt-0.5 shrink-0">
@@ -23720,7 +22672,7 @@ function submitLeadershipReport() {
       it.selectedForReport = false;
     }
   });
-  savePersonalWorkspaceData(currentUser, userWsData);
+  savePersonalWorkspaceData(userWsData, currentUser);
   (userWsData.items || []).filter(it => selectedIds.has(it.id)).forEach(it => {
     savePersonalTaskToSupabase(it);
   });
@@ -23883,10 +22835,16 @@ function switchRpBoxTab(tab) {
   tabs.forEach(t => {
     const btn = document.getElementById(`rpBoxTab_${t}`);
     if (btn) {
+      const boxStyles = {
+        all: 'bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold',
+        pending_mgr: 'bg-amber-500 text-white border border-amber-500 shadow-xs font-bold',
+        forwarded: 'bg-indigo-600 text-white border border-indigo-600 shadow-xs font-bold',
+        approved: 'bg-teal-600 text-white border border-teal-600 shadow-xs font-bold'
+      };
       if (t === tab) {
-        btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white transition cursor-pointer";
+        btn.className = `px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${boxStyles[t] || 'bg-emerald-600 text-white font-bold'}`;
       } else {
-        btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1";
+        btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent transition cursor-pointer flex items-center gap-1";
       }
     }
   });
@@ -25490,7 +24448,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
 
 
 
-function seedSamplePersonalWorkspace() {
+function seedSamplePersonalWorkspace(showToastAlert = true) {
   if (!currentUser) return;
   const now = new Date();
   const yyyy = now.getFullYear();
@@ -25576,8 +24534,16 @@ function seedSamplePersonalWorkspace() {
   if (!data.items) data.items = [];
   data.items.unshift(...sampleItems);
   savePersonalWorkspaceData(data, currentUser);
+
+  // Đẩy luôn lên Supabase Cloud để đồng bộ tức thì
+  sampleItems.forEach(it => {
+    savePersonalTaskToSupabase(it);
+  });
+
   renderPersonalWorkspaceUI();
-  showToast("⭐ Đã nạp 4 mục ví dụ mẫu để bạn trải nghiệm tính năng!");
+  if (showToastAlert && typeof showToast === 'function') {
+    showToast("⭐ Đã nạp 4 mục ví dụ mẫu để bạn trải nghiệm tính năng!");
+  }
 }
 
 function checkPersonalWorkspaceRemindersOnLogin() {
