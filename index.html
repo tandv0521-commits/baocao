@@ -24,6 +24,9 @@
   <script>
     // Khóa tuyệt đối menu ngữ cảnh ngay từ giai đoạn nạp trang đầu tiên
     window.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
+    // Chống biểu tượng con trỏ autoscroll khi nhấn chuột giữa
+    window.addEventListener('mousedown', function(e) { if (e.button === 1) { e.preventDefault(); e.stopPropagation(); return false; } }, true);
+    window.addEventListener('auxclick', function(e) { if (e.button === 1) { e.preventDefault(); e.stopPropagation(); return false; } }, true);
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
     window.oncontextmenu = function() { return false; };
 
@@ -48,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v30') {
+          if (key !== 'baocao-dvkh-pwa-v32') {
             caches.delete(key);
           }
         });
@@ -2041,7 +2044,7 @@
         <!-- BỘ LỌC THEO TAB VÀ TÌM KIẾM -->
         <div class="px-4 sm:px-6 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 bg-white">
           <!-- 5 Tab lọc với thống kê tổng việc & số việc chưa xong -->
-          <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-1 flex-1 min-w-[280px]">
+          <div class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <!-- 1. Tất cả -->
             <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')" class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold">
               <i class="fa-solid fa-layer-group text-xs"></i>
@@ -2145,6 +2148,12 @@
               <button type="button" onclick="closePersonalWorkspacePage()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
                 <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
                 <span>Quay lại Trang công việc</span>
+              </button>
+
+              <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
+              <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()" class="hidden px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Đưa các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên">
+                <i class="fa-solid fa-inbox text-xs"></i>
+                <span>Gửi vào hộp thư để tổng hợp chung cùng nhân viên</span>
               </button>
 
               <!-- Nút Tạo Báo Cáo -->
@@ -4887,24 +4896,27 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   </div>
 
 
-  <!-- ================= 4. MODAL HỘP THƯ BÁO CÁO LÃNH ĐẠO & LỊCH SỬ GỬI ================= -->
+  <!-- ================= 4. MODAL HỘP THƯ BÁO CÁO LÃNH ĐẠO & LỊCH SỬ GỬI (GIAO DIỆN DÒNG CÔNG VIỆC GIỐNG SỔ TAY, 4 TAB CHUẨN, THÔNG TIN NHÂN VIÊN GỬI & TÍCH CHỌN TỔNG HỢP) ================= -->
   <div id="leadershipReportsBoxModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div id="leadershipReportsBoxDialog" class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-6xl xl:max-w-7xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
       
+      <!-- HEADER HỘP THƯ -->
       <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-2.5">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-base shadow-2xs">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-base shadow-2xs shrink-0">
             <i class="fa-solid fa-inbox"></i>
           </div>
           <div>
             <h3 id="rpBoxModalTitle" class="text-slate-900 font-black text-sm sm:text-base leading-tight">Hộp Thư Báo Cáo Lãnh Đạo &amp; Lịch Sử Gửi</h3>
-            <p id="rpBoxModalSubtitle" class="text-[11px] text-slate-500">Xem lại các lần đẩy báo cáo, tình trạng duyệt đề xuất &amp; phản hồi</p>
+            <p id="rpBoxModalSubtitle" class="text-[11px] text-slate-500">Xem lại các đầu việc đã gửi báo cáo, thông tin nhân viên &amp; tích chọn tổng hợp</p>
           </div>
         </div>
-        <div class="flex items-center gap-1.5">
-          <!-- Nút Phóng to / Thu nhỏ toàn màn hình -->
-          <button type="button" id="btnToggleRpBoxFullscreen" onclick="toggleLeadershipReportsBoxFullscreen()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition duration-200 cursor-pointer border border-slate-200/60 shadow-2xs" title="Phóng to toàn màn hình / Thu nhỏ">
-            <i id="rpBoxFullscreenIcon" class="fa-solid fa-expand text-xs"></i>
+        <div class="flex items-center gap-2">
+          <!-- Nút Thẻ Lịch Sử Báo Cáo (Thay thế nút Phóng to / Thu nhỏ theo yêu cầu) -->
+          <button type="button" id="btnToggleRpBoxHistory" onclick="toggleRpBoxHistoryView()" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95" title="Xem lịch sử các báo cáo tổng hợp đã tạo và các đầu việc bên trong">
+            <i id="rpBoxHistoryBtnIcon" class="fa-solid fa-clock-rotate-left text-purple-600 text-xs"></i>
+            <span id="rpBoxHistoryBtnText">Lịch sử báo cáo</span>
+            <span id="rpBoxHistoryCountBadge" class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-purple-200 text-purple-950 font-num">0</span>
           </button>
           <!-- Nút Đóng -->
           <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
@@ -4913,84 +4925,112 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         </div>
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG & LỌC THEO PHÂN CẤP QUẢN LÝ / LÃNH ĐẠO -->
-      <div class="px-4 sm:px-6 py-2.5 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-        <!-- Tab lọc trạng thái theo quy trình 2 bước -->
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-600 shadow-xs transition cursor-pointer">
-            Tất cả
+      <!-- THANH TAB 4 LOẠI CÔNG VIỆC GIỐNG SỔ TAY (TẤT CẢ, PHÁT SINH, KẾ HOẠCH, ĐỀ XUẤT, Ý KIẾN) & TÌM KIẾM -->
+      <div class="px-4 sm:px-6 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+        
+        <!-- 5 TAB LỌC CÔNG VIỆC (THAY THẾ TOÀN BỘ CÁC TAB CŨ THEO YÊU CẦU) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <!-- 1. Tất cả -->
+          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
+            <i class="fa-solid fa-layer-group text-xs"></i>
+            <span>Tất cả</span>
+            <span id="rpBoxCount_all" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-emerald-800 text-emerald-100">0</span>
           </button>
-          <button type="button" id="rpBoxTab_pending_mgr" onclick="switchRpBoxTab('pending_mgr')" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Chờ Quản lý duyệt</span>
+
+          <!-- 2. Việc phát sinh -->
+          <button type="button" id="rpBoxTab_adhoc" onclick="switchRpBoxTab('adhoc')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
+            <span>Việc phát sinh</span>
+            <span id="rpBoxCount_adhoc" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-amber-50 text-amber-800 border border-amber-200">0</span>
           </button>
-          <button type="button" id="rpBoxTab_forwarded" onclick="switchRpBoxTab('forwarded')" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <span>Đã chuyển Ban Lãnh đạo</span>
+
+          <!-- 3. Lịch & Kế hoạch -->
+          <button type="button" id="rpBoxTab_plan" onclick="switchRpBoxTab('plan')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
+            <span>Lịch &amp; Kế hoạch</span>
+            <span id="rpBoxCount_plan" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
           </button>
-          <button type="button" id="rpBoxTab_approved" onclick="switchRpBoxTab('approved')" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Ban Lãnh đạo đã duyệt</span>
+
+          <!-- 4. Đề xuất & Sáng kiến -->
+          <button type="button" id="rpBoxTab_proposal" onclick="switchRpBoxTab('proposal')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
+            <span>Đề xuất</span>
+            <span id="rpBoxCount_proposal" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-purple-50 text-purple-800 border border-purple-200">0</span>
+          </button>
+
+          <!-- 5. Ý kiến / Phản ánh -->
+          <button type="button" id="rpBoxTab_feedback" onclick="switchRpBoxTab('feedback')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
+            <span>Ý kiến / Phản ánh</span>
+            <span id="rpBoxCount_feedback" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-teal-50 text-teal-800 border border-teal-200">0</span>
           </button>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap ml-auto">
-          <!-- Nút Tổng hợp báo cáo bộ phận (Chỉ dành cho Quản lý) -->
-          <button type="button" id="rpBoxManagerConsolidateBtn" onclick="openManagerConsolidatedReportModal()" class="hidden px-3 py-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-layer-group text-xs"></i>
-            <span>Tổng Hợp Báo Cáo Bộ Phận</span>
-          </button>
-
-          <!-- Nút Xuất Excel Tổng Hợp (Dành cho Quản lý & Ban Lãnh Đạo) -->
-          <!-- Thanh Gộp Báo Cáo Nhiều Nhân Sự -->
-          <div id="rpBoxMultiSelectBar" class="flex items-center gap-2 px-3 py-1 bg-purple-50 border border-purple-200 rounded-xl text-purple-900 text-xs font-bold shadow-2xs">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="rpBoxSelectAllChk" onchange="toggleSelectAllRpBox(this.checked)" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer" />
-              <span>Chọn tất cả</span>
-            </label>
-            <span class="text-purple-300">|</span>
-            <span>Đã chọn: <b id="rpBoxSelectedReportsCount" class="text-purple-700 font-black">0</b></span>
-            <button type="button" id="rpBoxBtnMergeSelected" onclick="exportSelectedReportsToWord()" class="hidden px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs">
-              <i class="fa-solid fa-file-word"></i>
-              <span>Gộp Báo Cáo (.doc)</span>
-            </button>
+        <!-- CÔNG CỤ TÌM KIẾM, BỘ LỌC BỘ PHẬN & LÀM MỚI -->
+        <div class="flex items-center gap-2 flex-wrap shrink-0 ml-auto">
+          <!-- Ô tìm kiếm từ khóa trong hộp thư -->
+          <div class="relative w-36 sm:w-48">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()" placeholder="Tìm việc, nhân viên..." class="w-full pl-7 pr-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xs font-medium" />
           </div>
-
-          <button type="button" id="rpBoxExportConsolidatedExcelBtn" onclick="exportConsolidatedReportsToExcel()" class="hidden px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Tải báo cáo tổng hợp dạng file Excel (.xls) chuẩn doanh nghiệp">
-            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
-            <span class="hidden sm:inline">Xuất Excel Tổng Hợp</span>
-          </button>
-
-          <!-- Nút In / PDF Tổng Hợp (Dành cho Quản lý & Ban Lãnh Đạo) -->
-          <button type="button" id="rpBoxPrintConsolidatedPdfBtn" onclick="printConsolidatedReportsPDF()" class="hidden px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="In hoặc Lưu báo cáo tổng hợp dạng file PDF chuẩn báo cáo A4">
-            <i class="fa-solid fa-file-pdf text-rose-600 text-xs"></i>
-            <span class="hidden sm:inline">In PDF Tổng Hợp</span>
-          </button>
-
-          <!-- Nút Làm mới & Đồng bộ Cloud -->
-          <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)" class="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Làm mới & tải báo cáo mới nhất từ Supabase Cloud">
-            <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-emerald-600 text-xs"></i>
-            <span class="hidden sm:inline">Làm mới</span>
-          </button>
 
           <!-- Bộ lọc bộ phận cho Quản lý & Ban Lãnh Đạo -->
           <div id="rpBoxLeaderDeptFilterWrapper" class="hidden flex items-center gap-1.5">
-            <span class="font-bold text-slate-500 uppercase text-[10px]">Bộ phận:</span>
-            <select id="rpBoxFilterDept" onchange="renderLeadershipReportsBoxUI()" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <select id="rpBoxFilterDept" onchange="renderLeadershipReportsBoxUI()" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer shadow-2xs">
               <option value="ALL">Tất cả bộ phận</option>
             </select>
           </div>
 
-          <span id="rpBoxReportsCountBadge" class="text-[11px] font-bold text-emerald-800 font-num">0 báo cáo</span>
+          <!-- Nút Làm mới -->
+          <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)" class="p-1.5 rounded-xl bg-white hover:bg-slate-200 text-slate-600 border border-slate-200 text-xs font-bold transition cursor-pointer shadow-2xs" title="Làm mới & tải báo cáo mới nhất">
+            <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-emerald-600 text-xs"></i>
+          </button>
+
+          <span id="rpBoxReportsCountBadge" class="text-[11px] font-bold text-emerald-800 font-num">0 đầu việc</span>
+        </div>
+
+      </div>
+
+      <!-- THANH CHỌN ĐẦU VIỆC & NÚT HÀNH ĐỘNG TỔNG HỢP (DÀNH CHO QUẢN LÝ / NGƯỜI XEM) -->
+      <div id="rpBoxMultiSelectBar" class="px-4 sm:px-6 py-2 bg-emerald-50/70 border-b border-emerald-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-800 select-none">
+            <input type="checkbox" id="rpBoxSelectAllChk" onchange="toggleSelectAllRpTasks(this.checked)" class="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+            <span>Chọn tất cả</span>
+          </label>
+          <span class="text-emerald-300">|</span>
+          <span class="text-slate-600">Đã chọn: <b id="rpBoxSelectedTasksCount" class="text-emerald-800 font-black">0</b> đầu việc</span>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Nút Tạo Báo Cáo Từ Các Mục Đã Chọn (Dành cho Quản lý) -->
+          <button type="button" id="rpBoxBtnConsolidateSelected" onclick="consolidateSelectedTasksFromInbox()" class="hidden px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95" title="Tạo báo cáo tổng hợp từ các mục đã chọn và chuyển vào Lịch sử báo cáo">
+            <i class="fa-solid fa-file-circle-check text-xs"></i>
+            <span>Tạo báo cáo</span>
+          </button>
+
+          <!-- Nút Tải Word từ các mục đã chọn -->
+          <button type="button" id="rpBoxBtnExportWordSelected" onclick="exportSelectedTasksToWord()" class="hidden px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-file-word text-blue-600 text-xs"></i>
+            <span>Tải Word (.doc)</span>
+          </button>
+
+          <!-- Nút Tải Excel từ các mục đã chọn -->
+          <button type="button" id="rpBoxBtnExportExcelSelected" onclick="exportSelectedTasksToExcel()" class="hidden px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-file-excel text-teal-600 text-xs"></i>
+            <span>Tải Excel (.xls)</span>
+          </button>
         </div>
       </div>
 
+      <!-- VÙNG DANH SÁCH CÁC DÒNG CÔNG VIỆC -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scroll bg-slate-50/50">
         <div id="rpBoxReportsList" class="space-y-3">
-          <!-- Render danh sách báo cáo tự động -->
+          <!-- Render danh sách từng dòng công việc với thông tin nhân sự gửi -->
         </div>
       </div>
 
+      <!-- FOOTER -->
       <div class="px-5 py-3 border-t border-slate-100 bg-white flex justify-end flex-shrink-0">
         <button type="button" onclick="closeLeadershipReportsBoxModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
           Đóng
@@ -21681,6 +21721,8 @@ function showPersonalTaskReminderOnLogin() {
   const items = data.items || [];
 
   const pendingItems = items.filter(it => !isPersonalTaskFinished(it));
+  // Sắp xếp: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc cũ lên trên
+  sortPersonalWorkspaceItemsList(pendingItems);
   let overdueOrDueItems = [];
 
   pendingItems.forEach(it => {
@@ -22087,14 +22129,19 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   const staffSet = new Set();
 
   reportsList.forEach(rep => {
-    const sName = rep.senderFullName || rep.senderUsername || 'Nhân sự';
-    const sDept = rep.senderDepartment || deptName || 'Bộ phận';
-    const sRole = rep.senderRole || 'Nhân viên';
-    staffSet.add(sName);
+    const defaultAuthor = rep.senderFullName || rep.senderUsername || 'Nhân sự';
+    const defaultDept = rep.senderDepartment || deptName || 'Bộ phận';
+    const defaultRole = rep.senderRole || 'Nhân viên';
 
     const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
     its.forEach(it => {
-      const itemWithStaff = { ...it, staffName: sName, staffDept: sDept, staffRole: sRole };
+      // Ưu tiên họ tên gốc của người thực hiện / phụ trách đầu việc (chỉ hiển thị họ tên)
+      const authorName = it.staffName || it.senderFullName || defaultAuthor;
+      const authorDept = it.staffDept || it.senderDepartment || defaultDept;
+      const authorRole = it.staffRole || it.senderRole || defaultRole;
+      staffSet.add(authorName);
+
+      const itemWithStaff = { ...it, staffName: authorName, staffDept: authorDept, staffRole: authorRole };
       if (it.type === 'adhoc') allAdhoc.push(itemWithStaff);
       else if (it.type === 'plan') allPlan.push(itemWithStaff);
       else if (it.type === 'proposal') allProp.push(itemWithStaff);
@@ -22114,7 +22161,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allAdhoc.length > 0 ? allAdhoc.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -22141,7 +22188,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allPlan.length > 0 ? allPlan.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span> ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
+              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -22168,7 +22215,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allProp.length > 0 ? allProp.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -22195,7 +22242,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allFeed.length > 0 ? allFeed.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -23123,6 +23170,16 @@ function updatePersonalWorkspaceReportButtonsUI() {
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư Báo cáo Toàn ban";
   }
 
+  // Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành riêng cho Quản lý & Lãnh đạo)
+  const sendToInboxBtn = document.getElementById('pwBtnSendToInboxForManager');
+  if (sendToInboxBtn) {
+    if (roleInfo.isManager || isDirectorOrAdmin(currentUser) || isDeputyDirector(currentUser)) {
+      sendToInboxBtn.classList.remove('hidden');
+    } else {
+      sendToInboxBtn.classList.add('hidden');
+    }
+  }
+
   // Luôn cập nhật số lượng đã chọn và trạng thái checkbox Chọn tất cả
   try {
     const data = getPersonalWorkspaceData(currentUser);
@@ -23145,6 +23202,52 @@ function updatePersonalWorkspaceReportButtonsUI() {
 }
 
 // ================= RENDER TOÀN BỘ GIAO DIỆN SỔ TAY CÔNG VIỆC =================
+// Hàm sắp xếp công việc: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+// Việc cùng nhóm xếp cạnh nhau, việc cũ hơn ưu tiên đẩy lên trước
+function sortPersonalWorkspaceItemsList(items) {
+  const typeOrder = {
+    'plan': 1,      // 1. Kế hoạch
+    'adhoc': 2,     // 2. Việc phát sinh
+    'proposal': 3, // 3. Đề xuất & sáng kiến
+    'feedback': 4   // 4. Ý kiến / phản ánh
+  };
+
+  return items.sort((a, b) => {
+    // 1. Việc chưa hoàn thành luôn ưu tiên lên trước việc đã xong
+    const aDone = isPersonalTaskFinished(a);
+    const bDone = isPersonalTaskFinished(b);
+    if (!aDone && bDone) return -1;
+    if (aDone && !bDone) return 1;
+
+    // 2. Nhóm theo loại mục: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+    const orderA = typeOrder[a.type] || 99;
+    const orderB = typeOrder[b.type] || 99;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // 3. Trong cùng nhóm: việc cũ được ưu tiên đẩy lên trên (ngày cũ hơn xếp trước)
+    const dateA = a.date || (a.createdAt ? a.createdAt.substring(0, 10) : '') || a.dueDate || '';
+    const dateB = b.date || (b.createdAt ? b.createdAt.substring(0, 10) : '') || b.dueDate || '';
+    if (dateA && dateB && dateA !== dateB) {
+      return dateA.localeCompare(dateB); // Tăng dần: ngày cũ hơn lên trước
+    }
+
+    // 4. Nếu cùng ngày: việc quan trọng (⭐) lên trước
+    if (a.isImportant && !b.isImportant) return -1;
+    if (!a.isImportant && b.isImportant) return 1;
+
+    // 5. Nếu cùng ngày: thời gian tạo cũ hơn lên trước
+    const tA = new Date(a.createdAt || 0).getTime();
+    const tB = new Date(b.createdAt || 0).getTime();
+    if (tA && tB && tA !== tB) {
+      return tA - tB;
+    }
+
+    return (a.id || '').localeCompare(b.id || '');
+  });
+}
+
 function renderPersonalWorkspaceUI() {
   if (!currentUser) return;
   const container = document.getElementById('pwItemsList');
@@ -23187,24 +23290,8 @@ function renderPersonalWorkspaceUI() {
     });
   }
 
-  // Sắp xếp: Mục quan trọng lên đầu, sau đó đến việc quá hạn/đến hạn, rồi mới nhất
-  items.sort((a, b) => {
-    const aDone = isPersonalTaskFinished(a);
-    const bDone = isPersonalTaskFinished(b);
-    if (!aDone && bDone) return -1;
-    if (aDone && !bDone) return 1;
-
-    if (a.isImportant && !b.isImportant) return -1;
-    if (!a.isImportant && b.isImportant) return 1;
-
-    if (a.type === 'plan' && b.type === 'plan') {
-      const ta = calculatePlanTimelineStatus(a);
-      const tb = calculatePlanTimelineStatus(b);
-      const score = (t) => t.code === 'overdue' ? 3 : (t.code === 'duetoday' ? 2 : (t.code === 'upcoming' ? 1 : 0));
-      if (score(tb) !== score(ta)) return score(tb) - score(ta);
-    }
-    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-  });
+  // Sắp xếp theo nhóm: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc cũ lên trên
+  sortPersonalWorkspaceItemsList(items);
 
   // Cập nhật thống kê & cảnh báo
   updatePersonalWorkspaceReminders(data);
@@ -24455,31 +24542,34 @@ function printLeadershipReport() {
   }
 }
 
-// ================= HỘP THƯ TIẾP NHẬN BÁO CÁO & PHÊ DUYỆT THEO PHÂN CẤP =================
-let rpBoxActiveTab = 'all'; // 'all', 'pending_mgr', 'forwarded', 'approved'
+// ================= HỘP THƯ TIẾP NHẬN BÁO CÁO & PHÊ DUYỆT THEO PHÂN CẤP (GIAO DIỆN DÒNG CÔNG VIỆC NHƯ SỔ TAY, 4 TAB CHUẨN) =================
+let rpBoxActiveTab = 'all'; // 'all', 'adhoc', 'plan', 'proposal', 'feedback'
+let rpBoxSelectedTaskKeys = new Set();
 
 function switchRpBoxTab(tab) {
   rpBoxActiveTab = tab;
-  const tabs = ['all', 'pending_mgr', 'forwarded', 'approved'];
+  const tabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
+  const boxStyles = {
+    all: 'bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold',
+    adhoc: 'bg-amber-500 text-white border border-amber-500 shadow-xs font-bold',
+    plan: 'bg-sky-600 text-white border border-sky-600 shadow-xs font-bold',
+    proposal: 'bg-purple-600 text-white border border-purple-600 shadow-xs font-bold',
+    feedback: 'bg-teal-600 text-white border border-teal-600 shadow-xs font-bold'
+  };
+
   tabs.forEach(t => {
-    const btn = document.getElementById(`rpBoxTab_${t}`);
+    const btn = document.getElementById('rpBoxTab_' + t);
     if (btn) {
-      const boxStyles = {
-        all: 'bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold',
-        pending_mgr: 'bg-amber-500 text-white border border-amber-500 shadow-xs font-bold',
-        forwarded: 'bg-indigo-600 text-white border border-indigo-600 shadow-xs font-bold',
-        approved: 'bg-teal-600 text-white border border-teal-600 shadow-xs font-bold'
-      };
       if (t === tab) {
-        btn.className = `px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${boxStyles[t] || 'bg-emerald-600 text-white font-bold'}`;
+        btn.className = 'rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer transition ' + (boxStyles[t] || 'bg-emerald-600 text-white font-bold');
       } else {
-        btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent transition cursor-pointer flex items-center gap-1";
+        btn.className = 'rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer';
       }
     }
   });
+
   renderLeadershipReportsBoxUI();
 }
-
 
 function exportPreviewReportToExcel() {
   if (!currentUser || currentReportSelectedItems.length === 0) {
@@ -24489,39 +24579,50 @@ function exportPreviewReportToExcel() {
   const m = currentSelectedMonth || (new Date().getMonth() + 1);
   const y = currentSelectedYear || new Date().getFullYear();
   const now = new Date();
-  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const currentNotes = (document.getElementById('rpLeaderNoteInput')?.value || '').trim();
+  const dateFormatted = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth()+1).padStart(2, '0') + '/' + now.getFullYear();
 
-  const previewRep = {
-    senderId: currentUser.id,
-    senderUsername: currentUser.username,
-    senderFullName: currentUser.fullName,
-    senderDepartment: currentUser.department || 'Ban DVKH',
-    senderRole: currentUser.role || 'Nhân viên',
-    periodMonth: m,
-    periodYear: y,
-    displayDate: dateFormatted,
-    notes: currentNotes,
-    managerFeedback: '',
-    forwardedBy: '',
-    leaderFeedback: '',
-    items: currentReportSelectedItems
-  };
+  let rowsHtml = '';
+  currentReportSelectedItems.forEach((it, idx) => {
+    let typeName = 'Phát sinh';
+    if (it.type === 'plan') typeName = 'Kế hoạch';
+    else if (it.type === 'proposal') typeName = 'Đề xuất';
+    else if (it.type === 'feedback') typeName = 'Ý kiến';
 
-  const tableHtml = generateSingleReportExcelHtml(previewRep);
-  const blob = new Blob(['\uFEFF' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    rowsHtml += '<tr>' +
+      '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+      '<td style="text-align:center;">' + typeName + '</td>' +
+      '<td style="font-weight:bold;">' + escapeHtml(it.title) + '</td>' +
+      '<td>' + escapeHtml(it.content || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.dueDate || it.date || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.status || '') + '</td>' +
+    '</tr>';
+  });
+
+  const excelHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="UTF-8"></head>' +
+    '<body>' +
+      '<h2 style="text-align:center;">BÁO CÁO CÔNG VIỆC CÁ NHÂN - ' + escapeHtml((currentUser.fullName || '').toUpperCase()) + '</h2>' +
+      '<p style="text-align:center;">Bộ phận: ' + escapeHtml(currentUser.department || '') + ' | Kỳ: Tháng ' + m + '/' + y + ' | Ngày xuất: ' + dateFormatted + '</p>' +
+      '<table border="1" style="border-collapse:collapse; width:100%;">' +
+        '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
+          '<th>STT</th><th>Loại mục</th><th>Tiêu đề công việc</th><th>Nội dung chi tiết</th><th>Hạn / Ngày</th><th>Trạng thái</th>' +
+        '</tr>' +
+        rowsHtml +
+      '</table>' +
+    '</body></html>';
+
+  const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-  a.download = `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.xls`;
+  const safeName = removeAccents(currentUser.fullName || 'User').replace(/\s+/g, '_');
+  a.download = 'Bao_cao_ca_nhan_' + safeName + '_Thang_' + m + '_' + y + '.xls';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast("📊 Đã tải file Excel báo cáo công việc chuẩn mẫu thành công!");
+  showToast("📊 Đã xuất file Excel cá nhân thành công!");
 }
-
 
 function openLeadershipReportsBoxModal() {
   if (!currentUser) return;
@@ -24533,34 +24634,21 @@ function openLeadershipReportsBoxModal() {
   // Cập nhật tiêu đề hộp thư
   const titleEl = document.getElementById('rpBoxModalTitle');
   const subTitleEl = document.getElementById('rpBoxModalSubtitle');
-  const consolidateBtn = document.getElementById('rpBoxManagerConsolidateBtn');
   const leaderDeptWrapper = document.getElementById('rpBoxLeaderDeptFilterWrapper');
-
-  const expConsExcelBtn = document.getElementById('rpBoxExportConsolidatedExcelBtn');
-  const printConsPdfBtn = document.getElementById('rpBoxPrintConsolidatedPdfBtn');
 
   if (roleInfo.isStaff) {
     if (titleEl) titleEl.innerText = "Lịch Sử Gửi Báo Cáo & Ý Kiến Phản Hồi";
-    if (subTitleEl) subTitleEl.innerText = "Theo dõi tiến độ duyệt của Quản lý bộ phận và Ban Lãnh đạo";
-    if (consolidateBtn) consolidateBtn.classList.add('hidden');
+    if (subTitleEl) subTitleEl.innerText = "Theo dõi các đầu việc đã gửi báo cáo và phản hồi từ Quản lý bộ phận";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.add('hidden');
-    if (expConsExcelBtn) expConsExcelBtn.classList.add('hidden');
-    if (printConsPdfBtn) printConsPdfBtn.classList.add('hidden');
   } else if (roleInfo.isManager) {
-    if (titleEl) titleEl.innerText = `Hộp Thư Tiếp Nhận Báo Cáo: ${currentUser.department || 'Bộ phận'}`;
-    if (subTitleEl) subTitleEl.innerText = "Xem xét báo cáo của nhân viên các bộ phận, duyệt đề xuất, xuất Excel / PDF và chuyển Ban Lãnh đạo";
-    if (consolidateBtn) consolidateBtn.classList.remove('hidden');
+    if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận');
+    if (subTitleEl) subTitleEl.innerText = "Tiếp nhận các đầu việc do nhân viên gửi lên, tích chọn lọc để tổng hợp báo cáo chuyển Ban Lãnh đạo";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
-    if (expConsExcelBtn) expConsExcelBtn.classList.remove('hidden');
-    if (printConsPdfBtn) printConsPdfBtn.classList.remove('hidden');
     populateRpBoxDeptFilter();
   } else {
     if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
-    if (subTitleEl) subTitleEl.innerText = "Tiếp nhận các báo cáo đã được Quản lý các bộ phận thẩm định và chuyển lên";
-    if (consolidateBtn) consolidateBtn.classList.add('hidden');
+    if (subTitleEl) subTitleEl.innerText = "Tiếp nhận và tổng hợp các đầu việc từ các Quản lý bộ phận và nhân viên toàn ban";
     if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
-    if (expConsExcelBtn) expConsExcelBtn.classList.remove('hidden');
-    if (printConsPdfBtn) printConsPdfBtn.classList.remove('hidden');
     populateRpBoxDeptFilter();
   }
 
@@ -24582,28 +24670,157 @@ function toggleLeadershipReportsBoxFullscreen() {
   if (!dialog) return;
 
   if (rpBoxIsFullscreen) {
-    dialog.className = "bg-white w-screen h-screen max-w-none max-h-none rounded-none flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in";
+    dialog.className = "bg-white border-none rounded-none w-screen h-screen max-w-none max-h-none flex flex-col shadow-none overflow-hidden transition-all duration-200";
     if (icon) icon.className = "fa-solid fa-compress text-xs";
   } else {
-    dialog.className = "bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-6xl xl:max-w-7xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95";
+    dialog.className = "bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-6xl xl:max-w-7xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150";
     if (icon) icon.className = "fa-solid fa-expand text-xs";
   }
 }
 
-function renderLeadershipReportsBoxUI() {
-  if (!currentUser) return;
-  const container = document.getElementById('rpBoxReportsList');
-  if (!container) return;
+// Quản lý key các đầu việc đã được gộp báo cáo
+function getConsolidatedTaskKeys() {
+  try {
+    const raw = localStorage.getItem('ops_consolidated_task_keys_v1');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch(e) {}
+  return new Set();
+}
 
+function saveConsolidatedTaskKeys(keysSet) {
+  try {
+    localStorage.setItem('ops_consolidated_task_keys_v1', JSON.stringify(Array.from(keysSet)));
+  } catch(e) {}
+}
+
+// Chế độ xem của Hộp thư: 'inbox' (Hộp thư tiếp nhận các việc chưa tạo báo cáo) hoặc 'history' (Lịch sử các báo cáo đã tạo)
+let rpBoxViewMode = 'inbox';
+
+function toggleRpBoxHistoryView() {
+  rpBoxViewMode = (rpBoxViewMode === 'history' ? 'inbox' : 'history');
+  renderLeadershipReportsBoxUI();
+}
+
+function setRpBoxViewMode(mode) {
+  rpBoxViewMode = mode;
+  renderLeadershipReportsBoxUI();
+}
+
+// Lấy danh sách các báo cáo tổng hợp đã tạo trong Lịch sử
+function getConsolidatedReportsList() {
+  if (!currentUser) return [];
+  const allReports = getLeadershipReportsShared();
+  const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
+
+  // Báo cáo tổng hợp là các báo cáo do Quản lý tạo (manager_summary) hoặc đã chuyển Ban Lãnh đạo
+  let list = allReports.filter(r => r.reportType === 'manager_summary' || r.forwardedBy || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership'));
+
+  if (roleInfo.isStaff) {
+    // Nhân viên xem các báo cáo tổng hợp của bộ phận mình hoặc có chứa đầu việc của mình
+    list = list.filter(r => {
+      if (isSameDept(r.senderDepartment, currentUser.department)) return true;
+      const items = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
+      return items.some(it => it.staffName === currentUser.fullName || it.senderFullName === currentUser.fullName);
+    });
+  } else {
+    const deptSelect = document.getElementById('rpBoxFilterDept');
+    const selectedDept = deptSelect ? deptSelect.value : 'ALL';
+    if (selectedDept && selectedDept !== 'ALL') {
+      list = list.filter(r => isSameDept(r.senderDepartment, selectedDept));
+    }
+  }
+
+  // Sắp xếp báo cáo mới tạo nhất lên đầu
+  list.sort((a, b) => {
+    const timeA = new Date(a.submissionDate || a.createdAt || 0).getTime();
+    const timeB = new Date(b.submissionDate || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
+
+  return list;
+}
+
+// Gửi các đầu việc cá nhân đã chọn của Quản lý vào Hộp thư bộ phận để tổng hợp chung cùng nhân viên
+function sendManagerSelectedTasksToInbox() {
+  if (!currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const selectedItems = (data.items || []).filter(it => it.selectedForReport);
+
+  if (selectedItems.length === 0) {
+    showToast("Vui lòng tích chọn ít nhất 1 đầu việc trong sổ tay để gửi vào hộp thư!", true);
+    return;
+  }
+
+  if (!confirm(`Bạn có chắc muốn gửi ${selectedItems.length} đầu việc cá nhân này vào Hộp thư bộ phận để tổng hợp chung cùng nhân viên?`)) {
+    return;
+  }
+
+  const now = new Date();
+  const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const m = currentSelectedMonth || (now.getMonth() + 1);
+  const y = currentSelectedYear || now.getFullYear();
+
+  const clonedItems = selectedItems.map(it => {
+    const copy = JSON.parse(JSON.stringify(it));
+    copy.staffName = currentUser.fullName || currentUser.username;
+    copy.staffDept = currentUser.department || 'Bộ phận';
+    copy.staffRole = currentUser.role || 'Quản lý';
+    copy.isReported = true;
+    copy.reportedAt = now.toISOString();
+    return copy;
+  });
+
+  const managerInboxReport = {
+    id: 'lr_mgr_inbox_' + Date.now(),
+    senderId: currentUser.id,
+    senderUsername: currentUser.username,
+    senderFullName: currentUser.fullName || currentUser.username,
+    senderDepartment: currentUser.department || 'Bộ phận',
+    senderRole: currentUser.role || 'Quản lý',
+    submissionDate: now.toISOString(),
+    displayDate: dateFormatted,
+    periodMonth: m,
+    periodYear: y,
+    notes: 'Đầu việc của Quản lý gửi vào hộp thư để tổng hợp chung cùng nhân viên.',
+    items: clonedItems,
+    status: 'pending_manager',
+    targetLevel: 'manager',
+    reportType: 'manager_personal_tasks'
+  };
+
+  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay
+  data.items.forEach(it => {
+    if (it.selectedForReport) {
+      it.isReported = true;
+      it.reportedAt = now.toISOString();
+    }
+  });
+  savePersonalWorkspaceData(data, currentUser);
+
+  // Đưa vào danh sách báo cáo chung & Supabase
+  const sharedReports = getLeadershipReportsShared();
+  sharedReports.unshift(managerInboxReport);
+  saveLeadershipReportsShared(sharedReports);
+  saveLeadershipReportToSupabase(managerInboxReport);
+
+  renderPersonalWorkspaceUI();
+  updatePersonalWorkspaceReportButtonsUI();
+  showToast(`📥 Đã gửi thành công ${selectedItems.length} đầu việc vào hộp thư để tổng hợp chung!`);
+}
+
+// Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin nhân sự gửi
+function getAllRpBoxTaskEntries() {
+  if (!currentUser) return [];
   const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
   let reports = getLeadershipReportsShared();
 
-  // 1. Phân quyền xem báo cáo
+  // Báo cáo tổng hợp của quản lý (manager_summary) không phải là đầu việc chờ tổng hợp, loại khỏi danh sách chờ
+  reports = reports.filter(r => r.reportType !== 'manager_summary');
+
+  // Phân quyền xem báo cáo
   if (roleInfo.isStaff) {
-    // Nhân viên chỉ xem báo cáo của chính mình
     reports = reports.filter(r => r.senderId === currentUser.id || r.senderUsername === currentUser.username);
   } else {
-    // Quản lý và Ban Giám Đốc: Xem theo bộ lọc bộ phận
     const deptSelect = document.getElementById('rpBoxFilterDept');
     const selectedDept = deptSelect ? deptSelect.value : 'ALL';
     if (selectedDept && selectedDept !== 'ALL') {
@@ -24611,233 +24828,796 @@ function renderLeadershipReportsBoxUI() {
     }
   }
 
-  // 2. Lọc theo tab quy trình 2 bước
-  if (rpBoxActiveTab === 'pending_mgr') {
-    reports = reports.filter(r => r.status === 'submitted_to_manager' || r.status === 'submitted');
-  } else if (rpBoxActiveTab === 'forwarded') {
-    reports = reports.filter(r => r.status === 'forwarded_to_leadership' || r.status === 'manager_reviewed');
-  } else if (rpBoxActiveTab === 'approved') {
-    reports = reports.filter(r => r.status === 'approved' || r.status === 'leadership_approved');
+  const consolidatedKeys = getConsolidatedTaskKeys();
+  const entries = [];
+  reports.forEach(r => {
+    const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
+    rItems.forEach((it, idx) => {
+      const entryKey = r.id + '_' + (it.id || idx);
+
+      // ĐẦU VIỆC ĐÃ TẠO BÁO CÁO SẼ DI CHUYỂN VÀO PHẦN LỊCH SỬ TẠO BÁO CÁO (KHÔNG HIỂN THỊ Ở HỘP THƯ CHỜ NỮA)
+      if (it.isConsolidated || consolidatedKeys.has(entryKey)) {
+        return;
+      }
+
+      entries.push({
+        entryKey: entryKey,
+        reportId: r.id,
+        item: it,
+        // Hiển thị chính xác họ tên người phụ trách đầu việc (chỉ hiển thị họ tên)
+        senderFullName: it.staffName || r.senderFullName || r.senderUsername || 'Nhân sự',
+        senderUsername: r.senderUsername || '',
+        senderDepartment: it.staffDept || r.senderDepartment || 'Bộ phận',
+        senderRole: it.staffRole || r.senderRole || 'Nhân viên',
+        submissionDate: r.submissionDate || r.createdAt || '',
+        displayDate: r.displayDate || '',
+        periodMonth: r.periodMonth,
+        periodYear: r.periodYear,
+        reportStatus: r.status,
+        reportNotes: r.notes || '',
+        managerFeedback: r.managerFeedback || '',
+        leaderFeedback: r.leaderFeedback || ''
+      });
+    });
+  });
+
+  return entries;
+}
+
+// Sắp xếp các đầu việc trong Hộp thư: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc cũ lên trên
+function sortRpBoxTaskEntries(entries) {
+  const typeOrder = {
+    'plan': 1,      // 1. Kế hoạch
+    'adhoc': 2,     // 2. Phát sinh
+    'proposal': 3, // 3. Đề xuất
+    'feedback': 4   // 4. Ý kiến / Phản ánh
+  };
+
+  return entries.sort((a, b) => {
+    const orderA = typeOrder[a.item.type] || 99;
+    const orderB = typeOrder[b.item.type] || 99;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    const dateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
+    const dateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
+    if (dateA && dateB && dateA !== dateB) {
+      return dateA.localeCompare(dateB); // Tăng dần: việc cũ lên trên
+    }
+
+    if (a.item.isImportant && !b.item.isImportant) return -1;
+    if (!a.item.isImportant && b.item.isImportant) return 1;
+
+    return (a.entryKey || '').localeCompare(b.entryKey || '');
+  });
+}
+
+function onRpTaskCheckboxChange(el) {
+  const key = el.dataset.key;
+  if (el.checked) {
+    rpBoxSelectedTaskKeys.add(key);
+  } else {
+    rpBoxSelectedTaskKeys.delete(key);
+  }
+  const allEntries = getAllRpBoxTaskEntries();
+  let visibleEntries = allEntries;
+  if (rpBoxActiveTab !== 'all') {
+    visibleEntries = visibleEntries.filter(e => e.item.type === rpBoxActiveTab);
+  }
+  updateRpBoxMultiSelectBar(visibleEntries);
+}
+
+function toggleSelectAllRpTasks(checked) {
+  const allEntries = getAllRpBoxTaskEntries();
+  let visibleEntries = allEntries;
+  if (rpBoxActiveTab !== 'all') {
+    visibleEntries = visibleEntries.filter(e => e.item.type === rpBoxActiveTab);
+  }
+  const searchInput = document.getElementById('rpBoxSearchInput');
+  const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  if (keyword) {
+    visibleEntries = visibleEntries.filter(e => {
+      const title = (e.item.title || '').toLowerCase();
+      const content = (e.item.content || '').toLowerCase();
+      const sender = (e.senderFullName || '').toLowerCase();
+      return title.includes(keyword) || content.includes(keyword) || sender.includes(keyword);
+    });
+  }
+
+  if (checked) {
+    visibleEntries.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
+  } else {
+    visibleEntries.forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
+  }
+
+  document.querySelectorAll('.rp-task-chk').forEach(chk => {
+    chk.checked = checked;
+  });
+
+  updateRpBoxMultiSelectBar(visibleEntries);
+}
+
+function updateRpBoxMultiSelectBar(visibleEntries = []) {
+  const countEl = document.getElementById('rpBoxSelectedTasksCount');
+  if (countEl) countEl.innerText = rpBoxSelectedTaskKeys.size;
+
+  const selectAllChk = document.getElementById('rpBoxSelectAllChk');
+  if (selectAllChk) {
+    if (visibleEntries.length > 0 && visibleEntries.every(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
+      selectAllChk.checked = true;
+      selectAllChk.indeterminate = false;
+    } else if (visibleEntries.some(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
+      selectAllChk.checked = false;
+      selectAllChk.indeterminate = true;
+    } else {
+      selectAllChk.checked = false;
+      selectAllChk.indeterminate = false;
+    }
+  }
+
+  const consolidateBtn = document.getElementById('rpBoxBtnConsolidateSelected');
+  const exportWordBtn = document.getElementById('rpBoxBtnExportWordSelected');
+  const exportExcelBtn = document.getElementById('rpBoxBtnExportExcelSelected');
+
+  const hasSelected = rpBoxSelectedTaskKeys.size > 0;
+  if (consolidateBtn) {
+    if (hasSelected) consolidateBtn.classList.remove('hidden');
+    else consolidateBtn.classList.add('hidden');
+  }
+  if (exportWordBtn) {
+    if (hasSelected) exportWordBtn.classList.remove('hidden');
+    else exportWordBtn.classList.add('hidden');
+  }
+  if (exportExcelBtn) {
+    if (hasSelected) exportExcelBtn.classList.remove('hidden');
+    else exportExcelBtn.classList.add('hidden');
+  }
+}
+
+// Render giao diện danh sách từng dòng công việc giống Sổ tay công việc hoặc Lịch sử báo cáo
+function renderLeadershipReportsBoxUI() {
+  if (!currentUser) return;
+  const container = document.getElementById('rpBoxReportsList');
+  if (!container) return;
+
+  // Cập nhật số đếm trên nút Lịch sử báo cáo ở Header
+  const historyReports = getConsolidatedReportsList();
+  const histBadge = document.getElementById('rpBoxHistoryCountBadge');
+  if (histBadge) histBadge.innerText = historyReports.length;
+
+  const boxTitle = document.getElementById('rpBoxModalTitle');
+  const boxSub = document.getElementById('rpBoxModalSubtitle');
+  const histBtnIcon = document.getElementById('rpBoxHistoryBtnIcon');
+  const histBtnText = document.getElementById('rpBoxHistoryBtnText');
+  const multiBar = document.getElementById('rpBoxMultiSelectBar');
+
+  // NẾU ĐANG Ở CHẾ ĐỘ XEM LỊCH SỬ BÁO CÁO ĐÃ TẠO:
+  if (rpBoxViewMode === 'history') {
+    if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo & Chi Tiết Các Đầu Việc";
+    if (boxSub) boxSub.innerText = "Danh sách các báo cáo tổng hợp đã lập gửi Lãnh đạo kèm chi tiết toàn bộ đầu việc bên trong";
+    if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
+    if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
+    if (multiBar) multiBar.classList.add('hidden');
+    renderRpBoxHistoryUI(container, historyReports);
+    return;
+  }
+
+  // CHẾ ĐỘ HỘP THƯ NHẬN VIỆC (MẶC ĐỊNH):
+  if (boxTitle) {
+    const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
+    boxTitle.innerText = roleInfo.isStaff ? "Lịch Sử Gửi Báo Cáo & Ý Kiến Phản Hồi" : ("Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận'));
+  }
+  if (boxSub) boxSub.innerText = "Xem lại các đầu việc đã gửi báo cáo, thông tin nhân viên & tích chọn tổng hợp";
+  if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
+  if (histBtnText) histBtnText.innerText = "Lịch sử báo cáo";
+  if (multiBar) multiBar.classList.remove('hidden');
+
+  const allEntries = getAllRpBoxTaskEntries();
+
+  // 1. Cập nhật số đếm trên 5 Tab: Tất cả, Phát sinh, Kế hoạch, Đề xuất, Ý kiến
+  const countAll = allEntries.length;
+  const countAdhoc = allEntries.filter(e => e.item.type === 'adhoc').length;
+  const countPlan = allEntries.filter(e => e.item.type === 'plan').length;
+  const countProposal = allEntries.filter(e => e.item.type === 'proposal').length;
+  const countFeedback = allEntries.filter(e => e.item.type === 'feedback').length;
+
+  const elAll = document.getElementById('rpBoxCount_all');
+  const elAdhoc = document.getElementById('rpBoxCount_adhoc');
+  const elPlan = document.getElementById('rpBoxCount_plan');
+  const elProp = document.getElementById('rpBoxCount_proposal');
+  const elFeed = document.getElementById('rpBoxCount_feedback');
+
+  if (elAll) elAll.innerText = countAll;
+  if (elAdhoc) elAdhoc.innerText = countAdhoc;
+  if (elPlan) elPlan.innerText = countPlan;
+  if (elProp) elProp.innerText = countProposal;
+  if (elFeed) elFeed.innerText = countFeedback;
+
+  // 2. Lọc theo Tab đang chọn
+  let filteredEntries = allEntries;
+  if (rpBoxActiveTab !== 'all') {
+    filteredEntries = filteredEntries.filter(e => e.item.type === rpBoxActiveTab);
+  }
+
+  // 3. Lọc theo từ khóa tìm kiếm
+  const searchInput = document.getElementById('rpBoxSearchInput');
+  const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  if (keyword) {
+    filteredEntries = filteredEntries.filter(e => {
+      const title = (e.item.title || '').toLowerCase();
+      const content = (e.item.content || '').toLowerCase();
+      const sender = (e.senderFullName || '').toLowerCase();
+      const dept = (e.senderDepartment || '').toLowerCase();
+      return title.includes(keyword) || content.includes(keyword) || sender.includes(keyword) || dept.includes(keyword);
+    });
+  }
+
+  // 4. Sắp xếp: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc cũ lên trên
+  sortRpBoxTaskEntries(filteredEntries);
+
+  // 5. Cập nhật huy hiệu tổng số đầu việc
+  const countBadge = document.getElementById('rpBoxReportsCountBadge');
+  if (countBadge) countBadge.innerText = filteredEntries.length + ' đầu việc';
+
+  updateInboxUnreadBadgeCount(getLeadershipReportsShared());
+  updateRpBoxMultiSelectBar(filteredEntries);
+
+  if (filteredEntries.length === 0) {
+    container.innerHTML = '<div class="py-16 text-center space-y-2">' +
+      '<div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto">' +
+        '<i class="fa-solid fa-inbox"></i>' +
+      '</div>' +
+      '<p class="text-xs font-bold text-slate-500">Chưa có đầu việc nào trong danh mục này</p>' +
+    '</div>';
+    return;
+  }
+
+  container.innerHTML = filteredEntries.map((entry) => {
+    const it = entry.item;
+    const isChecked = rpBoxSelectedTaskKeys.has(entry.entryKey);
+    const isOwn = (entry.senderUsername === currentUser.username || entry.senderId === currentUser.id);
+
+    // Huy hiệu loại mục
+    let typeBadge = '';
+    if (it.type === 'adhoc') {
+      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 shrink-0"><i class="fa-solid fa-bolt text-amber-500"></i> Phát sinh</span>';
+    } else if (it.type === 'plan') {
+      const dueText = it.dueDate ? ('Hạn: ' + formatVNDate(it.dueDate)) : 'Kế hoạch';
+      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase bg-sky-50 text-sky-900 border border-sky-300 shrink-0"><i class="fa-solid fa-calendar-days text-sky-500"></i> ' + dueText + '</span>';
+    } else if (it.type === 'proposal') {
+      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase bg-purple-50 text-purple-900 border border-purple-300 shrink-0"><i class="fa-solid fa-lightbulb text-purple-500"></i> Đề xuất</span>';
+    } else {
+      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase bg-teal-50 text-teal-900 border border-teal-300 shrink-0"><i class="fa-solid fa-comment-dots text-teal-500"></i> Phản ánh</span>';
+    }
+
+    // Trạng thái công việc
+    let statusBadge = '';
+    const st = it.status;
+    if (it.type === 'adhoc') {
+      statusBadge = st === 'done' 
+        ? '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Đã làm</span>'
+        : '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">⏳ Chưa làm</span>';
+    } else if (it.type === 'plan') {
+      statusBadge = st === 'completed'
+        ? '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Đã hoàn thành</span>'
+        : '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-300">📅 Đang tiến hành</span>';
+    } else if (it.type === 'proposal') {
+      statusBadge = st === 'approved_executed'
+        ? '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Đã duyệt</span>'
+        : '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300">⏳ Chưa duyệt</span>';
+    } else {
+      if (st === 'resolved') {
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Đã giải quyết</span>';
+      } else if (st === 'acknowledged') {
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-300">📥 Đã tiếp nhận</span>';
+      } else {
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">⏳ Chờ tiếp nhận</span>';
+      }
+    }
+
+    return (
+      '<div class="bg-white border ' + (isChecked ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200') + ' hover:border-emerald-400 rounded-2xl p-3.5 sm:p-4 shadow-2xs hover:shadow-xs transition space-y-2 group">' +
+        '<div class="flex items-start justify-between gap-3">' +
+          '<div class="flex items-start gap-3 min-w-0 flex-1">' +
+            '<div class="pt-1 shrink-0">' +
+              '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + entry.entryKey + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" />' +
+            '</div>' +
+            '<div class="min-w-0 flex-1 space-y-1">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                (it.isImportant ? '<span class="text-amber-500 text-sm shrink-0" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
+                typeBadge +
+                '<h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">' + escapeHtml(it.title) + '</h4>' +
+              '</div>' +
+
+              '<!-- THÔNG TIN NHÂN VIÊN GỬI BÁO CÁO (NỔI BẬT THEO YÊU CẦU) -->' +
+              '<div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 pt-0.5">' +
+                '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-950 border border-emerald-200/90 font-bold shadow-2xs">' +
+                  '<i class="fa-solid fa-user text-emerald-600 text-[10px]"></i>' +
+                  '<span>' + escapeHtml(entry.senderFullName) + '</span>' +
+                  '<span class="text-emerald-300">•</span>' +
+                  '<span class="text-emerald-800 font-semibold">' + escapeHtml(entry.senderDepartment) + '</span>' +
+                  '<span class="text-emerald-300">•</span>' +
+                  '<span class="text-emerald-700 font-medium">' + escapeHtml(entry.senderRole) + '</span>' +
+                '</span>' +
+                '<span class="font-num text-slate-400 flex items-center gap-1">' +
+                  '<i class="fa-regular fa-clock text-[10px]"></i> ' + escapeHtml(entry.displayDate || 'Đã gửi') + ' (Kỳ ' + entry.periodMonth + '/' + entry.periodYear + ')' +
+                '</span>' +
+                (isOwn ? '<span class="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">Công việc của bạn</span>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="flex items-center gap-2 shrink-0">' +
+            '<div>' + statusBadge + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        (it.content ? (
+          '<div class="text-xs text-slate-600 leading-relaxed bg-slate-50/90 p-2.5 rounded-xl border border-slate-100 pl-3">' +
+            escapeHtml(it.content) +
+          '</div>'
+        ) : '') +
+
+        (entry.reportNotes ? (
+          '<div class="text-[11px] text-amber-900 bg-amber-50/70 p-2 rounded-xl border border-amber-200/80 flex items-start gap-1.5">' +
+            '<i class="fa-solid fa-message text-amber-600 text-[10px] mt-0.5"></i>' +
+            '<span><b>Lời nhắn của nhân viên:</b> ' + escapeHtml(entry.reportNotes) + '</span>' +
+          '</div>'
+        ) : '') +
+
+        (entry.managerFeedback ? (
+          '<div class="text-[11px] text-sky-900 bg-sky-50/80 p-2 rounded-xl border border-sky-200/80 flex items-start gap-1.5">' +
+            '<i class="fa-solid fa-user-tie text-sky-600 text-[10px] mt-0.5"></i>' +
+            '<span><b>Ý kiến Quản lý:</b> ' + escapeHtml(entry.managerFeedback) + '</span>' +
+          '</div>'
+        ) : '') +
+      '</div>'
+    );
+  }).join('');
+}
+
+// Tổng hợp báo cáo từ các đầu việc đã được tích chọn (Dành cho Quản lý)
+function consolidateSelectedTasksFromInbox() {
+  if (!currentUser) return;
+  const allEntries = getAllRpBoxTaskEntries();
+  const selectedEntries = allEntries.filter(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+
+  if (selectedEntries.length === 0) {
+    showToast("Vui lòng tích chọn ít nhất 1 đầu việc để tạo báo cáo!", true);
+    return;
+  }
+
+  const deptSelect = document.getElementById('rpBoxFilterDept');
+  const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+
+  const staffNames = new Set(selectedEntries.map(e => e.senderFullName));
+  const staffListStr = Array.from(staffNames).join(', ');
+
+  const defaultNote = "Báo cáo tổng hợp tình hình công việc Bộ phận " + targetDept + " (Tháng " + m + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").";
+
+  const mgrAssessment = prompt("📊 TẠO BÁO CÁO BỘ PHẬN " + targetDept + " (THÁNG " + m + "/" + y + ")\n\nBao gồm " + selectedEntries.length + " đầu việc đã chọn từ " + staffNames.size + " nhân sự.\nNhập ý kiến đánh giá tổng kết của Quản lý kính trình Ban Giám Đốc:", defaultNote);
+  if (mgrAssessment === null) return;
+
+  const now = new Date();
+  const reportId = 'lr_summary_' + Date.now();
+  const consolidatedItems = selectedEntries.map(e => {
+    const it = JSON.parse(JSON.stringify(e.item));
+    // Giữ nguyên chính xác họ tên của người phụ trách đầu việc (chỉ hiển thị họ tên)
+    it.staffName = e.senderFullName;
+    it.staffDept = e.senderDepartment;
+    it.staffRole = e.senderRole;
+    it.isConsolidated = true;
+    it.consolidatedReportId = reportId;
+    return it;
+  });
+
+  const summaryReport = {
+    id: reportId,
+    senderId: currentUser.id,
+    senderUsername: currentUser.username,
+    senderFullName: currentUser.fullName,
+    senderDepartment: targetDept,
+    senderRole: currentUser.role,
+    submissionDate: now.toISOString(),
+    displayDate: String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth()+1).padStart(2, '0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
+    periodMonth: m,
+    periodYear: y,
+    notes: mgrAssessment.trim(),
+    items: consolidatedItems,
+    status: 'forwarded_to_leadership',
+    targetLevel: 'leadership',
+    reportType: 'manager_summary',
+    managerFeedback: mgrAssessment.trim(),
+    forwardedBy: currentUser.fullName,
+    forwardedAt: now.toISOString(),
+    leaderFeedback: ''
+  };
+
+  // 1. Ghi nhận các key đầu việc vào danh sách đã gộp (để loại bỏ ngay khỏi Hộp thư nhận việc)
+  const consolidatedKeys = getConsolidatedTaskKeys();
+  selectedEntries.forEach(e => {
+    consolidatedKeys.add(e.entryKey);
+  });
+  saveConsolidatedTaskKeys(consolidatedKeys);
+
+  // 2. Cập nhật trạng thái trong các báo cáo nguồn
+  const sharedReports = getLeadershipReportsShared();
+  sharedReports.forEach(r => {
+    const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
+    rItems.forEach((it, idx) => {
+      const k = r.id + '_' + (it.id || idx);
+      if (consolidatedKeys.has(k)) {
+        it.isConsolidated = true;
+        it.consolidatedReportId = reportId;
+      }
+    });
+  });
+
+  // 3. Thêm báo cáo tổng hợp mới vào đầu danh sách và lưu trữ
+  sharedReports.unshift(summaryReport);
+  saveLeadershipReportsShared(sharedReports);
+  saveLeadershipReportToSupabase(summaryReport);
+
+  rpBoxSelectedTaskKeys.clear();
+  showToast("🎉 Đã tạo báo cáo thành công và di chuyển các đầu việc vào Lịch sử báo cáo!");
+
+  // Chuyển sang màn hình Lịch sử báo cáo để hiển thị chi tiết từng đầu việc đã tạo
+  setRpBoxViewMode('history');
+}
+
+// Render giao diện Lịch sử tạo báo cáo (hiển thị rõ các đầu việc đã tạo báo cáo)
+function renderRpBoxHistoryUI(container, historyReports) {
+  const searchInput = document.getElementById('rpBoxSearchInput');
+  const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  let filtered = historyReports;
+
+  if (keyword) {
+    filtered = filtered.filter(r => {
+      const dept = (r.senderDepartment || '').toLowerCase();
+      const notes = (r.notes || '').toLowerCase();
+      const sender = (r.senderFullName || '').toLowerCase();
+      const items = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
+      const itemMatch = items.some(it => (it.title || '').toLowerCase().includes(keyword) || (it.staffName || '').toLowerCase().includes(keyword));
+      return dept.includes(keyword) || notes.includes(keyword) || sender.includes(keyword) || itemMatch;
+    });
   }
 
   const countBadge = document.getElementById('rpBoxReportsCountBadge');
-  if (countBadge) countBadge.innerText = `${reports.length} báo cáo`;
+  if (countBadge) countBadge.innerText = filtered.length + ' báo cáo đã tạo';
 
-  updateInboxUnreadBadgeCount(getLeadershipReportsShared());
-
-  if (reports.length === 0) {
+  if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="py-16 text-center space-y-2">
-        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto">
-          <i class="fa-solid fa-inbox"></i>
+      <div class="py-16 text-center space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mx-auto border border-purple-200">
+          <i class="fa-solid fa-clock-rotate-left"></i>
         </div>
-        <p class="text-xs font-bold text-slate-500">Chưa có báo cáo nào trong danh mục này</p>
+        <p class="text-xs font-bold text-slate-600">Chưa có báo cáo tổng hợp nào trong danh mục lịch sử</p>
+        <button type="button" onclick="setRpBoxViewMode('inbox')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs">
+          <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại hộp thư để tích chọn tạo báo cáo
+        </button>
       </div>
     `;
     return;
   }
 
-  let listHtml = '';
-  reports.forEach(r => {
-    let statusBadge = '';
-    const st = r.status;
-    if (st === 'submitted_to_manager' || st === 'submitted') {
-      statusBadge = '<span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">⏳ Chờ Quản lý duyệt</span>';
-    } else if (st === 'manager_reviewed') {
-      statusBadge = '<span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-sky-100 text-sky-900 border border-sky-300">🔍 Quản lý đã nhận xét</span>';
-    } else if (st === 'forwarded_to_leadership') {
-      statusBadge = '<span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-indigo-100 text-indigo-900 border border-indigo-300">🚀 Quản lý đã chuyển Lãnh đạo</span>';
-    } else if (st === 'approved' || st === 'leadership_approved') {
-      statusBadge = '<span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Ban Lãnh đạo đã duyệt</span>';
-    }
+  container.innerHTML = filtered.map((rep, rIdx) => {
+    const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+    const canManage = currentUser && (currentUser.id === rep.senderId || currentUser.username === rep.senderUsername || isDirectorOrAdmin(currentUser));
 
-    const isOwnReport = (r.senderId === currentUser.id || r.senderUsername === currentUser.username);
-    const rItems = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
-
-    const adhocList = rItems.filter(it => it.type === 'adhoc');
-    const planList = rItems.filter(it => it.type === 'plan');
-    const propList = rItems.filter(it => it.type === 'proposal');
-    const feedList = rItems.filter(it => it.type === 'feedback');
-
-    // Nút hành động theo vai trò phân cấp
-    let actionButtons = '';
-    if (roleInfo.isManager && (st === 'submitted_to_manager' || st === 'submitted' || st === 'manager_reviewed')) {
-      actionButtons = `
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
-          <button type="button" onclick="promptManagerFeedback('${r.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 cursor-pointer">
-            <i class="fa-solid fa-comment-dots text-slate-500"></i>
-            <span>${r.managerFeedback ? 'Sửa nhận xét' : 'Nhận xét / Phản hồi'}</span>
-          </button>
-          ${propList.length > 0 ? `
-            <button type="button" onclick="approveManagerReportProposals('${r.id}')" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-bold rounded-xl transition flex items-center gap-1 cursor-pointer">
-              <i class="fa-solid fa-check-double text-purple-600"></i>
-              <span>Duyệt đề xuất (${propList.length})</span>
-            </button>
-          ` : ''}
-          <button type="button" onclick="forwardReportToLeadership('${r.id}')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-            <span>Chuyển Báo Cáo Lên Ban Lãnh Đạo</span>
-          </button>
-        </div>
-      `;
-    } else if (roleInfo.isLeader) {
-      actionButtons = `
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
-          <button type="button" onclick="promptLeaderFeedback('${r.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1 cursor-pointer">
-            <i class="fa-solid fa-message text-slate-500"></i>
-            <span>${r.leaderFeedback ? 'Sửa chỉ đạo' : 'Ý kiến chỉ đạo'}</span>
-          </button>
-          ${st !== 'approved' && st !== 'leadership_approved' ? `
-            <button type="button" onclick="approveLeadershipReport('${r.id}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-stamp text-xs"></i>
-              <span>Phê Duyệt Chính Thức</span>
-            </button>
-          ` : ''}
-        </div>
-      `;
-    }
-
-    listHtml += `
-      <div class="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 transition">
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex items-start gap-3">
-            <div class="pt-1">
-              <input type="checkbox" class="rp-box-chk w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer" data-id="${r.id}" ${managerSelectedReportIds.has(r.id) ? 'checked' : ''} onchange="onRpBoxCheckboxChange(this)" title="Tích chọn báo cáo này để gộp" />
+    return `
+      <div class="bg-white border border-purple-200/90 hover:border-purple-300 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-sm transition space-y-3">
+        <!-- HEADER BÁO CÁO -->
+        <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-purple-100">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300">
+                <i class="fa-solid fa-file-signature text-purple-600"></i> Báo cáo tổng hợp
+              </span>
+              <h4 class="font-black text-slate-900 text-sm sm:text-base leading-snug">
+                BÁO CÁO BỘ PHẬN ${escapeHtml(rep.senderDepartment || 'BỘ PHẬN').toUpperCase()} &bull; THÁNG ${rep.periodMonth}/${rep.periodYear}
+              </h4>
             </div>
-            <div class="space-y-0.5">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-black text-slate-900 text-sm sm:text-base">${escapeHtml(r.senderFullName || r.senderUsername)}</span>
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(r.senderDepartment || 'Bộ phận')}</span>
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(r.senderRole || 'Nhân viên')}</span>
-              ${isOwnReport ? '<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Báo cáo của bạn</span>' : ''}
+            <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
+              <span>Người tạo: <b class="text-slate-800">${escapeHtml(rep.senderFullName || 'Quản lý')}</b> (${escapeHtml(rep.senderRole || 'Quản lý')})</span>
+              <span class="text-slate-300">•</span>
+              <span class="font-num"><i class="fa-regular fa-clock text-[10px]"></i> ${escapeHtml(rep.displayDate || formatVNDate(rep.submissionDate))}</span>
+              <span class="text-slate-300">•</span>
+              <span class="font-bold text-emerald-700 font-num">${items.length} đầu việc đã tổng hợp</span>
             </div>
-            <p class="text-xs text-slate-400 font-num">
-              <span>Kỳ: Tháng ${r.periodMonth}/${r.periodYear}</span> • 
-              <span>Gửi lúc: ${escapeHtml(r.displayDate || '')}</span>
-              ${r.recipientFullName ? ` • <span class="text-emerald-700 font-medium">Gửi tới: <b>${escapeHtml(r.recipientFullName)}</b> (${escapeHtml(r.recipientRole || 'Quản lý')})</span>` : ''}
-            </p>
           </div>
-          <div class="flex items-center gap-2 shrink-0 flex-wrap">
-            <!-- Nút Tải Excel của cá nhân này -->
-            <!-- Nút Tải Word của cá nhân này -->
-            <button type="button" onclick="exportSingleReportToWord('${r.id}')" class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Tải báo cáo của nhân sự này dạng Word (.doc) chuẩn mẫu">
-              <i class="fa-solid fa-file-word text-blue-600"></i>
-              <span class="hidden sm:inline">Tải Word</span>
+
+          <!-- NÚT HÀNH ĐỘNG XUẤT FILE -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" onclick="downloadConsolidatedReportWordById('${rep.id}')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Tải văn bản Word chuẩn mẫu">
+              <i class="fa-solid fa-file-word text-blue-600 text-xs"></i>
+              <span>Tải Word</span>
             </button>
-            <button type="button" onclick="exportSingleReportToExcel('${r.id}')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Tải báo cáo của nhân sự này dạng Excel (.xls) chuẩn doanh nghiệp">
-              <i class="fa-solid fa-file-excel text-emerald-600"></i>
-              <span class="hidden sm:inline">Tải Excel</span>
+            <button type="button" onclick="downloadConsolidatedReportExcelById('${rep.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Tải bảng tính Excel">
+              <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+              <span>Tải Excel</span>
             </button>
-            <!-- Nút In / Xuất PDF của cá nhân này -->
-            <button type="button" onclick="printSingleReportPDF('${r.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Xem trước và In hoặc Lưu dạng file PDF chuẩn báo cáo A4">
-              <i class="fa-solid fa-file-pdf text-rose-600"></i>
-              <span class="hidden sm:inline">Chọn PDF / In</span>
-            </button>
-            <div>${statusBadge}</div>
+            ${canManage ? `
+              <button type="button" onclick="deleteConsolidatedReport('${rep.id}')" class="p-1.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 transition cursor-pointer" title="Xóa báo cáo này và phục hồi lại các đầu việc về Hộp thư">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            ` : ''}
           </div>
         </div>
 
-        ${r.notes ? `
-          <div class="p-2.5 bg-amber-50/60 border border-amber-200/80 rounded-xl text-xs text-amber-950 leading-relaxed">
-            <b class="text-amber-800">Lời nhắn:</b> ${escapeHtml(r.notes)}
-          </div>
-        ` : ''}
-
-        ${r.managerFeedback ? `
-          <div class="p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-950 leading-relaxed">
-            <b class="text-sky-800"><i class="fa-solid fa-user-tie mr-1"></i>Ý kiến Quản lý:</b> ${escapeHtml(r.managerFeedback)}
-            ${r.forwardedBy ? `<span class="block text-[10px] text-sky-600 mt-0.5 font-num">Chuyển BGD bởi: ${escapeHtml(r.forwardedBy)}</span>` : ''}
-          </div>
-        ` : ''}
-
-        ${r.leaderFeedback ? `
-          <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-950 leading-relaxed">
-            <b class="text-emerald-800"><i class="fa-solid fa-stamp mr-1"></i>Chỉ đạo của Ban Giám Đốc:</b> ${escapeHtml(r.leaderFeedback)}
-          </div>
-        ` : ''}
-
-        <div class="space-y-2 pt-1">
-          ${adhocList.length > 0 ? `
-            <div class="space-y-1.5">
-              <div class="font-extrabold text-amber-800 uppercase text-[11px] tracking-wide flex items-center gap-1.5 pb-1 border-b border-amber-200">
-                <i class="fa-solid fa-bolt text-amber-500"></i>
-                <span>I. Công việc phát sinh trong tháng (${adhocList.length})</span>
-              </div>
-              <div class="space-y-1.5 pt-0.5">
-                ${adhocList.map((it, idx) => `
-                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="font-bold text-slate-800 text-xs">${idx+1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-                    ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${escapeHtml(it.content)}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
+        <!-- GHI CHÚ / ĐÁNH GIÁ CỦA QUẢN LÝ -->
+        ${rep.notes ? `
+          <div class="bg-indigo-50/70 border border-indigo-100/90 rounded-xl p-3 text-xs text-indigo-950 flex items-start gap-2">
+            <i class="fa-solid fa-comment-dots text-indigo-600 mt-0.5 text-xs shrink-0"></i>
+            <div>
+              <b class="text-indigo-900">Ý kiến đánh giá của Quản lý:</b>
+              <p class="mt-0.5 leading-relaxed">${escapeHtml(rep.notes)}</p>
             </div>
-          ` : ''}
+          </div>
+        ` : ''}
 
-          ${planList.length > 0 ? `
-            <div class="space-y-1.5">
-              <div class="font-extrabold text-sky-800 uppercase text-[11px] tracking-wide flex items-center gap-1.5 pb-1 border-b border-sky-200">
-                <i class="fa-solid fa-calendar-days text-sky-500"></i>
-                <span>II. Kế hoạch thực hiện công việc &amp; Lịch làm việc (${planList.length})</span>
-              </div>
-              <div class="space-y-1.5 pt-0.5">
-                ${planList.map((it, idx) => `
-                  <div class="flex items-start justify-between gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="min-w-0 flex-1">
-                      <div class="font-bold text-slate-800 text-xs">${idx+1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-                      ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${escapeHtml(it.content)}</div>` : ''}
+        <!-- DANH SÁCH CHI TIẾT CÁC ĐẦU VIỆC TRONG BÁO CÁO (HIỂN THỊ RÕ RÀNG THEO YÊU CẦU) -->
+        <div class="pt-1 space-y-2">
+          <div class="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-purple-600"></i>
+              <span>Chi tiết các đầu việc đã lập báo cáo (${items.length}):</span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2">
+            ${items.map((it, idx) => {
+              let badge = '';
+              if (it.type === 'adhoc') {
+                badge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 shrink-0"><i class="fa-solid fa-bolt text-amber-500"></i> Phát sinh</span>';
+              } else if (it.type === 'plan') {
+                const due = it.dueDate ? ('Hạn: ' + formatVNDate(it.dueDate)) : 'Kế hoạch';
+                badge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-sky-50 text-sky-900 border border-sky-300 shrink-0"><i class="fa-solid fa-calendar-days text-sky-500"></i> ' + due + '</span>';
+              } else if (it.type === 'proposal') {
+                badge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-50 text-purple-900 border border-purple-300 shrink-0"><i class="fa-solid fa-lightbulb text-purple-500"></i> Đề xuất</span>';
+              } else {
+                badge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-teal-50 text-teal-900 border border-teal-300 shrink-0"><i class="fa-solid fa-comment-dots text-teal-500"></i> Phản ánh</span>';
+              }
+
+              const authorName = it.staffName || it.senderFullName || rep.senderFullName || 'Nhân sự';
+
+              return `
+                <div class="bg-slate-50/80 border border-slate-200/90 rounded-xl p-3 space-y-1.5">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-start gap-2 min-w-0 flex-1 flex-wrap">
+                      <span class="text-xs font-bold text-slate-400 font-num shrink-0">${idx + 1}.</span>
+                      ${badge}
+                      <span class="font-bold text-slate-900 text-xs leading-snug">${escapeHtml(it.title)}</span>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-950 border border-emerald-200 font-bold text-[10.5px] shadow-2xs">
+                        <i class="fa-solid fa-user text-[9px] text-emerald-600"></i>
+                        <span>${escapeHtml(authorName)}</span>
+                      </span>
                     </div>
-                    ${it.dueDate ? `<div class="shrink-0"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200">Hạn: ${formatVNDate(it.dueDate)}</span></div>` : ''}
+                    ${it.status ? `
+                      <span class="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
+                        ${escapeHtml(it.status === 'done' || it.status === 'completed' ? 'Hoàn thành' : 'Đang xử lý')}
+                      </span>
+                    ` : ''}
                   </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
 
-          ${propList.length > 0 ? `
-            <div class="space-y-1.5">
-              <div class="font-extrabold text-purple-800 uppercase text-[11px] tracking-wide flex items-center gap-1.5 pb-1 border-b border-purple-200">
-                <i class="fa-solid fa-lightbulb text-purple-500"></i>
-                <span>III. Đề xuất &amp; Sáng kiến kiến nghị (${propList.length})</span>
-              </div>
-              <div class="space-y-1.5 pt-0.5">
-                ${propList.map((it, idx) => `
-                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="font-bold text-slate-800 text-xs">${idx+1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-                    ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${escapeHtml(it.content)}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          ${feedList.length > 0 ? `
-            <div class="space-y-1.5">
-              <div class="font-extrabold text-teal-800 uppercase text-[11px] tracking-wide flex items-center gap-1.5 pb-1 border-b border-teal-200">
-                <i class="fa-solid fa-comment-dots text-teal-500"></i>
-                <span>IV. Ý kiến đóng góp &amp; Phản ánh khó khăn (${feedList.length})</span>
-              </div>
-              <div class="space-y-1.5 pt-0.5">
-                ${feedList.map((it, idx) => `
-                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="font-bold text-slate-800 text-xs">${idx+1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-                    ${it.content ? `<div class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${escapeHtml(it.content)}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
+                  ${it.content ? `
+                    <div class="text-xs text-slate-600 bg-white p-2 rounded-lg border border-slate-200/60 pl-2.5 leading-relaxed">
+                      ${escapeHtml(it.content)}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
-
-        ${actionButtons}
       </div>
     `;
-  });
-
-  container.innerHTML = listHtml;
+  }).join('');
 }
 
-// 4. Quản lý tổng hợp báo cáo toàn bộ phận
+// Tải file Word của 1 báo cáo tổng hợp theo ID
+function downloadConsolidatedReportWordById(reportId) {
+  const allReports = getLeadershipReportsShared();
+  const rep = allReports.find(r => r.id === reportId);
+  if (!rep) {
+    showToast("Không tìm thấy dữ liệu báo cáo!", true);
+    return;
+  }
+  const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
+  const m = rep.periodMonth || (new Date().getMonth() + 1);
+  const y = rep.periodYear || new Date().getFullYear();
+  const wordHtml = generateConsolidatedReportsWordHtml([rep], deptName, m, y);
+  const safeDept = removeAccents(deptName).replace(/\\s+/g, '_');
+  downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc');
+  showToast("📄 Đã tải file Word báo cáo thành công!");
+}
+
+// Tải file Excel của 1 báo cáo tổng hợp theo ID
+function downloadConsolidatedReportExcelById(reportId) {
+  const allReports = getLeadershipReportsShared();
+  const rep = allReports.find(r => r.id === reportId);
+  if (!rep) {
+    showToast("Không tìm thấy dữ liệu báo cáo!", true);
+    return;
+  }
+  const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
+  const m = rep.periodMonth || (new Date().getMonth() + 1);
+  const y = rep.periodYear || new Date().getFullYear();
+  const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+
+  let rowsHtml = '';
+  items.forEach((it, idx) => {
+    let typeName = 'Phát sinh';
+    if (it.type === 'plan') typeName = 'Kế hoạch';
+    else if (it.type === 'proposal') typeName = 'Đề xuất';
+    else if (it.type === 'feedback') typeName = 'Ý kiến';
+
+    const author = it.staffName || it.senderFullName || rep.senderFullName || 'Nhân sự';
+    rowsHtml += '<tr>' +
+      '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+      '<td>' + escapeHtml(author) + '</td>' +
+      '<td>' + escapeHtml(deptName) + '</td>' +
+      '<td style="text-align:center;">' + typeName + '</td>' +
+      '<td style="font-weight:bold;">' + escapeHtml(it.title) + '</td>' +
+      '<td>' + escapeHtml(it.content || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.dueDate || it.date || rep.displayDate || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.status || '') + '</td>' +
+    '</tr>';
+  });
+
+  const excelHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="UTF-8"></head>' +
+    '<body>' +
+      '<h2 style="text-align:center;">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN ' + escapeHtml(deptName.toUpperCase()) + '</h2>' +
+      '<p style="text-align:center;">Kỳ: Tháng ' + m + '/' + y + ' | Số lượng: ' + items.length + ' đầu việc</p>' +
+      '<table border="1" style="border-collapse:collapse; width:100%;">' +
+        '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
+          '<th>STT</th><th>Nhân Viên Gửi</th><th>Bộ Phận</th><th>Phân Loại</th><th>Tiêu Đề Công Việc</th><th>Nội Dung Chi Tiết</th><th>Hạn / Ngày</th><th>Trạng Thái</th>' +
+        '</tr>' +
+        rowsHtml +
+      '</table>' +
+    '</body></html>';
+
+  const blob = new Blob(['\\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeDept = removeAccents(deptName).replace(/\\s+/g, '_');
+  a.download = 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("📊 Đã tải file Excel báo cáo thành công!");
+}
+
+// Xóa báo cáo tổng hợp và phục hồi các đầu việc quay trở lại Hộp thư nhận việc
+function deleteConsolidatedReport(reportId) {
+  if (!confirm("Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?\\nCác đầu việc bên trong sẽ được phục hồi quay trở lại Hộp thư nhận việc.")) return;
+
+  const allReports = getLeadershipReportsShared();
+  const rep = allReports.find(r => r.id === reportId);
+  if (!rep) return;
+
+  const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+  const consolidatedKeys = getConsolidatedTaskKeys();
+
+  const remainingReports = allReports.filter(r => r.id !== reportId);
+  remainingReports.forEach(r => {
+    const rItems = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
+    rItems.forEach((it, idx) => {
+      const k = r.id + '_' + (it.id || idx);
+      if (it.consolidatedReportId === reportId) {
+        it.isConsolidated = false;
+        delete it.consolidatedReportId;
+        consolidatedKeys.delete(k);
+      }
+    });
+  });
+
+  saveConsolidatedTaskKeys(consolidatedKeys);
+  saveLeadershipReportsShared(remainingReports);
+  renderLeadershipReportsBoxUI();
+  showToast("🗑️ Đã xóa báo cáo và phục hồi các đầu việc về Hộp thư!");
+}
+
+function exportSelectedTasksToWord() {
+  const allEntries = getAllRpBoxTaskEntries();
+  const selectedEntries = allEntries.filter(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+
+  if (selectedEntries.length === 0) {
+    showToast("Vui lòng tích chọn ít nhất 1 đầu việc để xuất file Word!", true);
+    return;
+  }
+
+  const deptSelect = document.getElementById('rpBoxFilterDept');
+  const deptName = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+
+  const consolidatedItems = selectedEntries.map(e => {
+    const it = JSON.parse(JSON.stringify(e.item));
+    it.staffName = e.senderFullName;
+    it.staffDept = e.senderDepartment;
+    it.staffRole = e.senderRole;
+    return it;
+  });
+
+  const pseudoReport = {
+    senderFullName: currentUser.fullName,
+    senderDepartment: deptName,
+    senderRole: currentUser.role,
+    items: consolidatedItems
+  };
+
+  const wordHtml = generateConsolidatedReportsWordHtml([pseudoReport], deptName, m, y);
+  const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
+  downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc');
+  showToast("📄 Đã xuất file Word tổng hợp " + selectedEntries.length + " đầu việc thành công!");
+}
+
+function exportSelectedTasksToExcel() {
+  const allEntries = getAllRpBoxTaskEntries();
+  const selectedEntries = allEntries.filter(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+
+  if (selectedEntries.length === 0) {
+    showToast("Vui lòng tích chọn ít nhất 1 đầu việc để xuất Excel!", true);
+    return;
+  }
+
+  const deptSelect = document.getElementById('rpBoxFilterDept');
+  const deptName = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
+  const m = currentSelectedMonth || (new Date().getMonth() + 1);
+  const y = currentSelectedYear || new Date().getFullYear();
+
+  let rowsHtml = '';
+  selectedEntries.forEach((e, idx) => {
+    const it = e.item;
+    let typeName = 'Phát sinh';
+    if (it.type === 'plan') typeName = 'Kế hoạch';
+    else if (it.type === 'proposal') typeName = 'Đề xuất';
+    else if (it.type === 'feedback') typeName = 'Ý kiến';
+
+    rowsHtml += '<tr>' +
+      '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+      '<td>' + escapeHtml(e.senderFullName) + '</td>' +
+      '<td>' + escapeHtml(e.senderDepartment) + '</td>' +
+      '<td style="text-align:center;">' + typeName + '</td>' +
+      '<td style="font-weight:bold;">' + escapeHtml(it.title) + '</td>' +
+      '<td>' + escapeHtml(it.content || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.dueDate || it.date || e.displayDate || '') + '</td>' +
+      '<td style="text-align:center;">' + (it.status || '') + '</td>' +
+    '</tr>';
+  });
+
+  const excelHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="UTF-8"></head>' +
+    '<body>' +
+      '<h2 style="text-align:center;">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN ' + escapeHtml(deptName.toUpperCase()) + '</h2>' +
+      '<p style="text-align:center;">Kỳ: Tháng ' + m + '/' + y + ' | Số lượng: ' + selectedEntries.length + ' đầu việc</p>' +
+      '<table border="1" style="border-collapse:collapse; width:100%;">' +
+        '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
+          '<th>STT</th><th>Nhân Viên Gửi</th><th>Bộ Phận</th><th>Phân Loại</th><th>Tiêu Đề Công Việc</th><th>Nội Dung Chi Tiết</th><th>Hạn / Ngày</th><th>Trạng Thái</th>' +
+        '</tr>' +
+        rowsHtml +
+      '</table>' +
+    '</body></html>';
+
+  const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
+  a.download = 'Bang_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("📊 Đã xuất file Excel tổng hợp " + selectedEntries.length + " đầu việc!");
+}
+
 function openManagerConsolidatedReportModal() {
   if (!currentUser) return;
   const m = currentSelectedMonth || (new Date().getMonth() + 1);
@@ -25601,14 +26381,18 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
   const staffSet = new Set();
 
   reportsList.forEach(rep => {
-    const sName = rep.senderFullName || rep.senderUsername || 'Nhân sự';
-    const sDept = rep.senderDepartment || deptName || 'Bộ phận';
-    const sRole = rep.senderRole || 'Nhân viên';
-    staffSet.add(sName);
+    const defaultAuthor = rep.senderFullName || rep.senderUsername || 'Nhân sự';
+    const defaultDept = rep.senderDepartment || deptName || 'Bộ phận';
+    const defaultRole = rep.senderRole || 'Nhân viên';
 
     const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
     its.forEach(it => {
-      const itemWithStaff = { ...it, staffName: sName, staffDept: sDept, staffRole: sRole };
+      const authorName = it.staffName || it.senderFullName || defaultAuthor;
+      const authorDept = it.staffDept || it.senderDepartment || defaultDept;
+      const authorRole = it.staffRole || it.senderRole || defaultRole;
+      staffSet.add(authorName);
+
+      const itemWithStaff = { ...it, staffName: authorName, staffDept: authorDept, staffRole: authorRole };
       if (it.type === 'adhoc') allAdhoc.push(itemWithStaff);
       else if (it.type === 'plan') allPlan.push(itemWithStaff);
       else if (it.type === 'proposal') allProp.push(itemWithStaff);
@@ -25632,7 +26416,7 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       sectionsRows += `
         <tr style="height:26px;">
           <td colspan="4" style="background:#f8fafc;border-top:1pt solid #e2e8f0;border-left:1pt solid #e2e8f0;border-right:1pt solid #e2e8f0;font-weight:bold;font-size:11pt;color:#0f172a;padding:8px 14px 2px 14px;mso-number-format:'\\@';">
-            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
           </td>
         </tr>
         <tr style="height:24px;">
@@ -25661,7 +26445,7 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       sectionsRows += `
         <tr style="height:26px;">
           <td colspan="3" style="background:#f8fafc;border-top:1pt solid #e2e8f0;border-left:1pt solid #e2e8f0;font-weight:bold;font-size:11pt;color:#0f172a;padding:8px 14px 2px 14px;mso-number-format:'\\@';">
-            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
           </td>
           <td style="background:#f8fafc;border-top:1pt solid #e2e8f0;border-right:1pt solid #e2e8f0;text-align:right;padding:8px 14px 2px 0;">
             ${dueBadge}
@@ -25692,7 +26476,7 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       sectionsRows += `
         <tr style="height:26px;">
           <td colspan="4" style="background:#f8fafc;border-top:1pt solid #e2e8f0;border-left:1pt solid #e2e8f0;border-right:1pt solid #e2e8f0;font-weight:bold;font-size:11pt;color:#0f172a;padding:8px 14px 2px 14px;mso-number-format:'\\@';">
-            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
           </td>
         </tr>
         <tr style="height:24px;">
@@ -25720,7 +26504,7 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
       sectionsRows += `
         <tr style="height:26px;">
           <td colspan="4" style="background:#f8fafc;border-top:1pt solid #e2e8f0;border-left:1pt solid #e2e8f0;border-right:1pt solid #e2e8f0;font-weight:bold;font-size:11pt;color:#0f172a;padding:8px 14px 2px 14px;mso-number-format:'\\@';">
-            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+            ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
           </td>
         </tr>
         <tr style="height:24px;">
@@ -25881,14 +26665,18 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
   const staffSet = new Set();
 
   reportsList.forEach(rep => {
-    const sName = rep.senderFullName || rep.senderUsername || 'Nhân sự';
-    const sDept = rep.senderDepartment || deptName || 'Bộ phận';
-    const sRole = rep.senderRole || 'Nhân viên';
-    staffSet.add(sName);
+    const defaultAuthor = rep.senderFullName || rep.senderUsername || 'Nhân sự';
+    const defaultDept = rep.senderDepartment || deptName || 'Bộ phận';
+    const defaultRole = rep.senderRole || 'Nhân viên';
 
     const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
     its.forEach(it => {
-      const itemWithStaff = { ...it, staffName: sName, staffDept: sDept, staffRole: sRole };
+      const authorName = it.staffName || it.senderFullName || defaultAuthor;
+      const authorDept = it.staffDept || it.senderDepartment || defaultDept;
+      const authorRole = it.staffRole || it.senderRole || defaultRole;
+      staffSet.add(authorName);
+
+      const itemWithStaff = { ...it, staffName: authorName, staffDept: authorDept, staffRole: authorRole };
       if (it.type === 'adhoc') allAdhoc.push(itemWithStaff);
       else if (it.type === 'plan') allPlan.push(itemWithStaff);
       else if (it.type === 'proposal') allProp.push(itemWithStaff);
@@ -25909,7 +26697,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allAdhoc.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
@@ -25931,7 +26719,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
               <div style="min-width: 0; flex: 1;">
                 <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
                 </div>
                 ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
               </div>
@@ -25954,7 +26742,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allProp.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
@@ -25975,7 +26763,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allFeed.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span> <span style="font-size:9.5pt;color:#64748b;">(${escapeHtml(it.staffDept)})</span>
+                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
