@@ -22824,25 +22824,38 @@ function updatePersonalWorkspaceReportButtonsUI() {
   const selectedSummaryText = document.getElementById('pwSelectedSummaryText');
   const inboxBtnText = document.getElementById('pwInboxBtnText');
 
+  if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+  if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+  if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
+  if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
+
   if (roleInfo.isStaff) {
-    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
-    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư & Lịch sử gửi";
   } else if (roleInfo.isManager) {
-    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
-    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư Báo cáo Bộ phận";
   } else {
-    if (headerBtn) headerBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (headerBtnText) headerBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
-    if (bottomBtn) bottomBtn.title = "Tạo báo cáo theo các mục đã tích chọn";
-    if (bottomBtnText) bottomBtnText.innerText = "Tạo báo cáo theo những mục đã tích chọn";
     if (inboxBtnText) inboxBtnText.innerText = "Hộp thư Báo cáo Toàn ban";
   }
+
+  // Luôn cập nhật số lượng đã chọn và trạng thái checkbox Chọn tất cả
+  try {
+    const data = getPersonalWorkspaceData(currentUser);
+    const items = data.items || [];
+    const selectedCount = items.filter(it => it.selectedForReport).length;
+    const countEl1 = document.getElementById('pwSelectedCount');
+    const countEl2 = document.getElementById('pwSelectedCountNum');
+    if (countEl1) countEl1.innerText = selectedCount;
+    if (countEl2) countEl2.innerText = selectedCount;
+
+    const selectAllCb = document.getElementById('pwSelectAllCheckbox');
+    if (selectAllCb) {
+      selectAllCb.checked = (items.length > 0 && items.every(it => it.selectedForReport));
+    }
+
+    if (selectedSummaryText) {
+      selectedSummaryText.innerHTML = `Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">${selectedCount}</b> mục để tạo báo cáo`;
+    }
+  } catch (err) {}
 }
 
 // ================= RENDER TOÀN BỘ GIAO DIỆN SỔ TAY CÔNG VIỆC =================
@@ -22907,14 +22920,17 @@ function renderPersonalWorkspaceUI() {
 
   // Cập nhật số lượng đã chọn ở chân trang
   const selectedCount = (data.items || []).filter(it => it.selectedForReport).length;
-  const countEl = document.getElementById('pwSelectedCountNum');
+  const countEl = document.getElementById('pwSelectedCount') || document.getElementById('pwSelectedCountNum');
   if (countEl) countEl.innerText = selectedCount;
+
+  const selectAllCb = document.getElementById('pwSelectAllCheckbox');
+  if (selectAllCb) {
+    selectAllCb.checked = (items.length > 0 && items.every(it => it.selectedForReport));
+  }
 
   const selectedSummaryText = document.getElementById('pwSelectedSummaryText');
   if (selectedSummaryText) {
-    const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
-    const targetLabel = roleInfo.isStaff ? "Quản lý bộ phận" : "Ban Lãnh đạo";
-    selectedSummaryText.innerHTML = `Đã chọn <b id="pwSelectedCountNum" class="text-emerald-700 font-black">${selectedCount}</b> mục để gửi ${targetLabel}`;
+    selectedSummaryText.innerHTML = `Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">${selectedCount}</b> mục để tạo báo cáo`;
   }
 
   // Xử lý các trạng thái trống (Empty State)
@@ -23306,6 +23322,10 @@ function toggleSelectAllPersonalItemsForReport(checked) {
   });
   savePersonalWorkspaceData(data, currentUser);
   renderPersonalWorkspaceUI();
+}
+
+function toggleSelectAllPersonalItems(checked) {
+  return toggleSelectAllPersonalItemsForReport(checked);
 }
 
 
