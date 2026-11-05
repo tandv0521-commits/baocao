@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v43') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v45') {
             caches.delete(key);
           }
         });
@@ -21469,15 +21469,16 @@ function updateInboxUnreadBadgeCount(reportsList) {
     // Người gửi (Nhân viên): Đếm các báo cáo của mình đã có phản hồi mới từ Quản lý / Lãnh đạo
     unreadCount = allReports.filter(r => (r.senderId === currentUser.id || r.senderUsername === currentUser.username) && (r.managerFeedback || r.leaderFeedback)).length;
   } else if (!isSuper) {
-    // Quản lý bộ phận: Đếm các báo cáo gửi đích danh cho mình hoặc thuộc bộ phận mình quản lý đang chờ duyệt
+    // Quản lý bộ phận: Đếm các báo cáo gửi đích danh cho mình hoặc thuộc bộ phận mình quản lý đang chờ duyệt (loại trừ báo cáo tổng hợp)
     const myDept = (currentUser.department || '').trim();
     unreadCount = allReports.filter(r => 
+      r.reportType !== 'manager_summary' &&
       (isDirectRecipientOfReport(currentUser, r) || (!r.recipientId && !r.recipientUsername && (isSameDept(r.senderDepartment, myDept) || isDeptEquivalent(r.senderDepartment, myDept)))) &&
       (r.status === 'submitted_to_manager' || r.status === 'submitted')
     ).length;
   } else {
-    // Ban Giám Đốc: Đếm các báo cáo đã chuyển Ban Lãnh đạo đang chờ duyệt
-    unreadCount = allReports.filter(r => r.status === 'forwarded_to_leadership').length;
+    // Ban Giám Đốc: Đếm các báo cáo đã chuyển Ban Lãnh đạo đang chờ duyệt (loại trừ manager_summary vì thuộc lịch sử riêng của quản lý)
+    unreadCount = allReports.filter(r => r.reportType !== 'manager_summary' && (r.status === 'forwarded_to_leadership' || r.targetLevel === 'leadership')).length;
   }
 
   if (unreadCount > 0) {
@@ -21556,13 +21557,18 @@ async function fetchLeadershipReportsFromSupabase(showToastAlert = false) {
     }
 
     if (Array.isArray(data)) {
-      const cloudReports = data.map(fromSupabaseReportRow);
-      const localReports = getLeadershipReportsShared();
+      const deletedIds = getDeletedLeadershipReportIds();
+      const cloudReports = data.map(fromSupabaseReportRow).filter(cr => !deletedIds.has(String(cr.id)));
+      const localReports = getLeadershipReportsShared().filter(lr => !deletedIds.has(String(lr.id)));
 
       const mergedMap = new Map();
       cloudReports.forEach(cr => mergedMap.set(cr.id, cr));
       localReports.forEach(lr => {
-        if (!mergedMap.has(lr.id)) mergedMap.set(lr.id, lr);
+        if (!deletedIds.has(String(lr.id)) && !mergedMap.has(lr.id)) {
+          // Báo cáo tổng hợp mà trên Cloud không có -> nghĩa là đã bị xóa, không hồi sinh lại
+          if (lr.reportType === 'manager_summary') return;
+          mergedMap.set(lr.id, lr);
+        }
       });
 
       const mergedList = Array.from(mergedMap.values());
@@ -22723,13 +22729,68 @@ function savePersonalWorkspaceData(data, user = currentUser) {
 }
 
 const LEADERSHIP_REPORTS_SHARED_KEY = 'ops_leadership_reports_shared_final_v1';
+const DELETED_LEADERSHIP_REPORTS_KEY = 'ops_deleted_leadership_report_ids_final_v1';
+
+function getDeletedLeadershipReportIds() {
+  try {
+    const raw = localStorage.getItem(DELETED_LEADERSHIP_REPORTS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch(e) {}
+  return new Set();
+}
+
+function saveDeletedLeadershipReportIds(idsSet) {
+  try {
+    localStorage.setItem(DELETED_LEADERSHIP_REPORTS_KEY, JSON.stringify(Array.from(idsSet)));
+  } catch(e) {}
+}
+
+function addDeletedLeadershipReportId(reportId) {
+  if (!reportId) return;
+  const ids = getDeletedLeadershipReportIds();
+  ids.add(String(reportId));
+  saveDeletedLeadershipReportIds(ids);
+}
+
+// TỰ ĐỘNG DỌN DẸP DỨT ĐIỂM BÁO CÁO RÁC & ĐƯA LỊCH SỬ VỀ TRỐNG
+(function cleanupZombieLeadershipReports() {
+  try {
+    const deletedIds = getDeletedLeadershipReportIds();
+    // Báo cáo rác mẫu đã xóa trên cloud
+    deletedIds.add('lr_summary_1793784272777');
+    saveDeletedLeadershipReportIds(deletedIds);
+
+    const raw = localStorage.getItem(LEADERSHIP_REPORTS_SHARED_KEY);
+    if (raw) {
+      let list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        list = list.filter(r => r && r.id !== 'lr_summary_1793784272777' && !deletedIds.has(String(r.id)));
+        localStorage.setItem(LEADERSHIP_REPORTS_SHARED_KEY, JSON.stringify(list));
+      }
+    }
+
+    try {
+      const rawKeys = localStorage.getItem('ops_consolidated_task_keys_v1');
+      if (rawKeys) {
+        let keysArr = JSON.parse(rawKeys);
+        if (Array.isArray(keysArr)) {
+          keysArr = keysArr.filter(k => !k.includes('lr_summary_1793784272777'));
+          localStorage.setItem('ops_consolidated_task_keys_v1', JSON.stringify(keysArr));
+        }
+      }
+    } catch(e) {}
+  } catch(e) {}
+})();
 
 function getLeadershipReportsShared() {
   try {
     const raw = localStorage.getItem(LEADERSHIP_REPORTS_SHARED_KEY);
     if (raw) {
       const list = JSON.parse(raw);
-      if (Array.isArray(list)) return list;
+      if (Array.isArray(list)) {
+        const deletedIds = getDeletedLeadershipReportIds();
+        return list.filter(r => r && !deletedIds.has(String(r.id)));
+      }
     }
   } catch(e) {}
   return [];
@@ -24804,6 +24865,9 @@ function openLeadershipReportsBoxModal() {
   const btnHistory = document.getElementById('btnToggleRpBoxHistory');
   const multiBar = document.getElementById('rpBoxMultiSelectBar');
 
+  // Luôn mặc định mở vào Hộp thư nhận việc (tránh kẹt ở tab lịch sử)
+  rpBoxViewMode = 'inbox';
+
   if (!isManagerOrAbove) {
     // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
     // Chỉ có thông tin gửi đi, không có phần tích chọn và không hiển thị phần tạo báo cáo lịch sử
@@ -24812,7 +24876,6 @@ function openLeadershipReportsBoxModal() {
     if (leaderDeptWrapper) leaderDeptWrapper.classList.add('hidden');
     if (btnHistory) btnHistory.classList.add('hidden');
     if (multiBar) multiBar.classList.add('hidden');
-    rpBoxViewMode = 'inbox';
   } else if (roleInfo.isManager) {
     // QUẢN LÝ BỘ PHẬN:
     if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận');
@@ -24855,17 +24918,20 @@ function toggleLeadershipReportsBoxFullscreen() {
   }
 }
 
-// Quản lý key các đầu việc đã được gộp báo cáo
-function getConsolidatedTaskKeys() {
+// Quản lý key các đầu việc đã được gộp báo cáo (phân tách theo từng tài khoản)
+function getConsolidatedTaskKeys(user = currentUser) {
   try {
-    const raw = localStorage.getItem('ops_consolidated_task_keys_v1');
+    const uKey = user ? (user.id || user.username || 'default') : 'default';
+    const raw = localStorage.getItem('ops_consolidated_task_keys_' + uKey) || localStorage.getItem('ops_consolidated_task_keys_v1');
     if (raw) return new Set(JSON.parse(raw));
   } catch(e) {}
   return new Set();
 }
 
-function saveConsolidatedTaskKeys(keysSet) {
+function saveConsolidatedTaskKeys(keysSet, user = currentUser) {
   try {
+    const uKey = user ? (user.id || user.username || 'default') : 'default';
+    localStorage.setItem('ops_consolidated_task_keys_' + uKey, JSON.stringify(Array.from(keysSet)));
     localStorage.setItem('ops_consolidated_task_keys_v1', JSON.stringify(Array.from(keysSet)));
   } catch(e) {}
 }
@@ -24943,6 +25009,14 @@ function isSenderOfReport(user, r) {
 function canUserAccessReport(user, r) {
   if (!user || !r) return false;
 
+  // BÁO CÁO TỔNG HỢP LỊCH SỬ (manager_summary):
+  // "Phần lịch sử báo cáo ở trong hộp thư.... CHỈ CỦA TÀI KHOẢN NÀO THÌ HIỂN THỊ TÀI KHOẢN ĐÓ"
+  // Quản lý tổng hợp xong thì CHỈ tài khoản quản lý đó thấy trong lịch sử của họ.
+  // Giám đốc, Admin và các tài khoản khác tuyệt đối KHÔNG thấy được báo cáo này.
+  if (r.reportType === 'manager_summary') {
+    return isSenderOfReport(user, r);
+  }
+
   // 1. NGƯỜI GỬI: Luôn thấy báo cáo do chính mình gửi đi (Lịch sử gửi)
   if (isSenderOfReport(user, r)) {
     return true;
@@ -24967,8 +25041,7 @@ function canUserAccessReport(user, r) {
   if (isSuper) {
     if (r.targetLevel === 'leadership' || 
         r.status === 'forwarded_to_leadership' || 
-        r.status === 'leadership_approved' ||
-        r.reportType === 'manager_summary') {
+        r.status === 'leadership_approved') {
       return true;
     }
     const recRole = removeAccents(String(r.recipientRole || '')).toLowerCase();
@@ -25040,26 +25113,19 @@ function setRpBoxViewMode(mode) {
 // Lấy danh sách các báo cáo tổng hợp đã tạo trong Lịch sử (Chỉ dành cho Quản lý & Ban Lãnh đạo)
 function getConsolidatedReportsList() {
   if (!currentUser) return [];
-  // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN): TUYỆT ĐỐI KHÔNG CÓ BÁO CÁO LỊCH SỬ TỔNG HỢP (TRÁNH LỘ DỮ LIỆU)
+  // TÀI KHOẢN THƯỜNG (NHÂN VIÊN / CHUYÊN VIÊN): TUYỆT ĐỐI KHÔNG CÓ PHẦN LỊCH SỬ BÁO CÁO NÀY
   if (!isUserReportManagerOrLeadership(currentUser)) return [];
 
   const allReports = getLeadershipReportsShared();
-  const isSuper = isDirectorOrAdmin(currentUser.role, currentUser.username) || isDeputyDirector(currentUser.role, currentUser.username);
 
-  // Báo cáo tổng hợp là các báo cáo do Quản lý tạo (manager_summary) hoặc đã chuyển Ban Lãnh đạo
+  // Báo cáo tổng hợp là các báo cáo do Quản lý / Lãnh đạo tạo (manager_summary) hoặc đã chuyển Ban Lãnh đạo
   let list = allReports.filter(r => r.reportType === 'manager_summary' || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership'));
 
-  if (!isSuper) {
-    // Quản lý bộ phận: CHỈ xem các báo cáo tổng hợp thuộc đúng bộ phận mình quản lý hoặc do chính mình lập
-    list = list.filter(r => isSameDept(r.senderDepartment, currentUser.department) || isDeptEquivalent(r.senderDepartment, currentUser.department) || isSenderOfReport(currentUser, r));
-  } else {
-    // Ban Giám Đốc / Admin: Xem theo bộ phận được lọc trên dropdown
-    const deptSelect = document.getElementById('rpBoxFilterDept');
-    const selectedDept = deptSelect ? deptSelect.value : 'ALL';
-    if (selectedDept && selectedDept !== 'ALL') {
-      list = list.filter(r => isSameDept(r.senderDepartment, selectedDept));
-    }
-  }
+  // QUY TẮC BẢO MẬT & PHÂN QUYỀN RIÊNG TƯ TUYỆT ĐỐI THEO YÊU CẦU:
+  // "Phần lịch sử báo cáo ở trong hộp thư.... CHỈ CỦA TÀI KHOẢN NÀO THÌ HIỂN THỊ TÀI KHOẢN ĐÓ.
+  // Ví dụ tài khoản quản lý tổng hợp báo cáo xong di chuyển vào phần lịch sử thì CHỈ tài khoản quản lý đó thấy được,
+  // tài khoản giám đốc, admin và các tài khoản khác TUYỆT ĐỐI KHÔNG THẤY ĐƯỢC."
+  list = list.filter(r => isSenderOfReport(currentUser, r));
 
   // Sắp xếp báo cáo mới tạo nhất lên đầu
   list.sort((a, b) => {
@@ -25172,8 +25238,10 @@ function getAllRpBoxTaskEntries() {
         return;
       }
 
-      // ĐẦU VIỆC ĐÃ TẠO BÁO CÁO SẼ DI CHUYỂN VÀO PHẦN LỊCH SỬ TẠO BÁO CÁO (KHÔNG HIỂN THỊ Ở HỘP THƯ CHỜ NỮA)
-      if (it.isConsolidated || consolidatedKeys.has(entryKey)) {
+      // ĐẦU VIỆC ĐÃ TẠO BÁO CÁO SẼ DI CHUYỂN VÀO PHẦN LỊCH SỬ TẠO BÁO CÁO
+      // Đối với Quản lý / Lãnh đạo: Ẩn khỏi hộp thư nhận việc chờ tổng hợp vì đã đưa vào lịch sử báo cáo
+      // Đối với Nhân viên (tài khoản thường): Vẫn hiển thị trong Lịch sử gửi của mình để theo dõi
+      if (isManagerOrAbove && (it.isConsolidated || consolidatedKeys.has(entryKey))) {
         return;
       }
 
@@ -25351,8 +25419,9 @@ function renderLeadershipReportsBoxUI() {
     if (btnHistory) btnHistory.classList.remove('hidden');
 
     if (rpBoxViewMode === 'history') {
-      if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo & Chi Tiết Các Đầu Việc";
-      if (boxSub) boxSub.innerText = "Danh sách các báo cáo tổng hợp đã lập gửi Lãnh đạo kèm chi tiết toàn bộ đầu việc bên trong";
+      const uName = currentUser.fullName || currentUser.username || '';
+      if (boxTitle) boxTitle.innerText = "Lịch Sử Báo Cáo Đã Tạo Của Bạn" + (uName ? " (" + uName + ")" : "");
+      if (boxSub) boxSub.innerText = "Danh sách các báo cáo tổng hợp do chính bạn đã lập và lưu trữ trong lịch sử riêng";
       if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
       if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
       if (multiBar) multiBar.classList.add('hidden');
@@ -25678,7 +25747,7 @@ function renderRpBoxHistoryUI(container, historyReports) {
         <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mx-auto border border-purple-200">
           <i class="fa-solid fa-clock-rotate-left"></i>
         </div>
-        <p class="text-xs font-bold text-slate-600">Chưa có báo cáo tổng hợp nào trong danh mục lịch sử</p>
+        <p class="text-xs font-bold text-slate-600">Chưa có báo cáo tổng hợp nào trong danh mục lịch sử của bạn</p>
         <button type="button" onclick="setRpBoxViewMode('inbox')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs">
           <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại hộp thư để tích chọn tạo báo cáo
         </button>
@@ -25689,7 +25758,7 @@ function renderRpBoxHistoryUI(container, historyReports) {
 
   container.innerHTML = filtered.map((rep, rIdx) => {
     const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-    const canManage = currentUser && (currentUser.id === rep.senderId || currentUser.username === rep.senderUsername || isDirectorOrAdmin(currentUser));
+    const canManage = currentUser && isSenderOfReport(currentUser, rep);
 
     return `
       <div class="bg-white border border-purple-200/90 hover:border-purple-300 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-sm transition space-y-3">
@@ -25809,6 +25878,10 @@ function downloadConsolidatedReportWordById(reportId) {
     showToast("Không tìm thấy dữ liệu báo cáo!", true);
     return;
   }
+  if (!isSenderOfReport(currentUser, rep)) {
+    showToast("Bạn không có quyền tải báo cáo của tài khoản khác!", true);
+    return;
+  }
   const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
   const m = rep.periodMonth || (new Date().getMonth() + 1);
   const y = rep.periodYear || new Date().getFullYear();
@@ -25824,6 +25897,10 @@ function downloadConsolidatedReportExcelById(reportId) {
   const rep = allReports.find(r => r.id === reportId);
   if (!rep) {
     showToast("Không tìm thấy dữ liệu báo cáo!", true);
+    return;
+  }
+  if (!isSenderOfReport(currentUser, rep)) {
+    showToast("Bạn không có quyền tải báo cáo của tài khoản khác!", true);
     return;
   }
   const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
@@ -25879,18 +25956,32 @@ function downloadConsolidatedReportExcelById(reportId) {
 
 // Xóa báo cáo tổng hợp và phục hồi các đầu việc quay trở lại Hộp thư nhận việc
 function deleteConsolidatedReport(reportId) {
-  if (!confirm("Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?\\nCác đầu việc bên trong sẽ được phục hồi quay trở lại Hộp thư nhận việc.")) return;
-
   const allReports = getLeadershipReportsShared();
   const rep = allReports.find(r => r.id === reportId);
   if (!rep) return;
+  if (!isSenderOfReport(currentUser, rep)) {
+    showToast("Bạn không có quyền xóa báo cáo của tài khoản khác!", true);
+    return;
+  }
+  if (!confirm("Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?\nCác đầu việc bên trong sẽ được phục hồi quay trở lại Hộp thư nhận việc.")) return;
 
+  // 1. Ghi nhận ID đã xóa vào danh sách chặn vĩnh viễn (chống zombie loop)
+  addDeletedLeadershipReportId(reportId);
+
+  // 2. Xóa vĩnh viễn trên Supabase Cloud
+  if (typeof supabase !== 'undefined' && supabase) {
+    supabase.from('leadership_reports').delete().eq('id', reportId).then(({ error }) => {
+      if (error) console.warn("Lỗi xóa báo cáo trên Supabase:", error);
+    }).catch(err => console.warn("Lỗi kết nối xóa báo cáo:", err));
+  }
+
+  // 3. Phục hồi các đầu việc bên trong quay lại Hộp thư nhận việc
   const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
   const consolidatedKeys = getConsolidatedTaskKeys();
 
   const remainingReports = allReports.filter(r => r.id !== reportId);
   remainingReports.forEach(r => {
-    const rItems = Array.isArray(r.items) ? r.items : (r.items?.tasks || []);
+    const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
     rItems.forEach((it, idx) => {
       const k = r.id + '_' + (it.id || idx);
       if (it.consolidatedReportId === reportId) {
@@ -25903,6 +25994,13 @@ function deleteConsolidatedReport(reportId) {
 
   saveConsolidatedTaskKeys(consolidatedKeys);
   saveLeadershipReportsShared(remainingReports);
+
+  // 4. Nếu không còn báo cáo lịch sử nào, chuyển ngay về giao diện Hộp thư
+  const remainingHist = getConsolidatedReportsList();
+  if (remainingHist.length === 0) {
+    rpBoxViewMode = 'inbox';
+  }
+
   renderLeadershipReportsBoxUI();
   showToast("🗑️ Đã xóa báo cáo và phục hồi các đầu việc về Hộp thư!");
 }
