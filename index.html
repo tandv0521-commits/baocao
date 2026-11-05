@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v47') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v48') {
             caches.delete(key);
           }
         });
@@ -4263,6 +4263,27 @@
           </div>
         </div>
 
+        <!-- Hướng dẫn chi tiết xuất hiện khi bấm Cài Đặt Ngay trên máy tính (nếu trình duyệt giữ prompt native) -->
+        <div id="installDesktopGuidanceBox" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-400/40 text-left animate-in fade-in duration-200">
+          <div class="flex items-center gap-2 text-xs font-black text-amber-300 mb-1.5">
+            <i class="fa-solid fa-arrow-up animate-bounce"></i>
+            <span>BƯỚC TIẾP THEO: XÁC NHẬN CÀI ĐẶT TRÊN THANH ĐỊA CHỈ URL</span>
+          </div>
+          <p class="text-[11px] text-emerald-100 leading-relaxed mb-3">
+            Trình duyệt Chrome / Edge trên máy tính đã sẵn sàng! Bạn chỉ cần nhìn lên <b>góc phải của thanh nhập địa chỉ URL</b> (trên cùng màn hình, cạnh ngôi sao Bookmark ★), nhấn vào biểu tượng <b>Cài đặt App</b> (<i class="fa-solid fa-desktop text-emerald-300"></i> hoặc <i class="fa-solid fa-download text-emerald-300"></i>) và chọn <b>Cài đặt (Install)</b>.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button type="button" onclick="downloadDesktopShortcut()" class="flex-1 py-2 px-3 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition">
+              <i class="fa-solid fa-desktop text-emerald-300"></i>
+              <span>Tải file Lối Tắt Desktop (.url)</span>
+            </button>
+            <button type="button" onclick="closeAppInstallModal(); showOmniboxFloatingIndicator();" class="py-2 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-white font-black text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition shadow-md">
+              <span>Đã Hiểu, Tôi Sẽ Bấm</span>
+              <i class="fa-solid fa-check"></i>
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <!-- 5. Footer: Cam kết bảo mật & Nút để sau -->
@@ -4279,7 +4300,28 @@
     </div>
   </div>
 
-<!-- ================= PROMPT CHỈ DẪN NHANH DÀNH RIÊNG CHO IPHONE / IPAD (IOS) ================= -->
+<!-- ================= BẢNG CHỈ DẪN NỔI GÓC PHẢI TRÊN CÙNG CHỈ VÀO BIỂU TƯỢNG CÀI ĐẶT TRÊN THANH URL ================= -->
+  <div id="omniboxFloatingGuide" class="fixed top-3 right-6 z-[9999] hidden pointer-events-auto select-none animate-in fade-in slide-in-from-top-4 duration-300">
+    <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-emerald-400 flex items-center gap-3 backdrop-blur-xl">
+      <div class="w-8 h-8 rounded-xl bg-emerald-500/30 border border-emerald-300/40 flex items-center justify-center shrink-0 text-emerald-300 text-sm">
+        <i class="fa-solid fa-arrow-up animate-bounce"></i>
+      </div>
+      <div class="text-xs pr-2">
+        <div class="font-black text-amber-300 flex items-center gap-1.5">
+          <span>NHẤN BIỂU TƯỢNG CÀI ĐẶT Ở ĐÂY</span>
+          <i class="fa-solid fa-desktop text-emerald-300"></i>
+        </div>
+        <div class="text-[11px] text-slate-200 mt-0.5">
+          Nhìn lên góc phải thanh địa chỉ URL và chọn <b>Cài đặt (Install)</b>
+        </div>
+      </div>
+      <button type="button" onclick="closeOmniboxFloatingIndicator()" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600/80 text-white/80 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= PROMPT CHỈ DẪN NHANH DÀNH RIÊNG CHO IPHONE / IPAD (IOS) ================= -->
   <div id="iosInstallPrompt" class="fixed inset-x-0 bottom-0 z-[100] p-3 sm:p-4 hidden pointer-events-auto select-none" onclick="if(event.target === this) closeIOSInstallPrompt()">
     <div class="max-w-md mx-auto bg-slate-900/95 backdrop-blur-2xl text-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-emerald-400/40 relative">
       <div class="flex items-start gap-3">
@@ -27706,31 +27748,23 @@ function exportPersonalWorkspaceToExcel() {
       const iosBox = document.getElementById('installIOSGuideBox');
       const manualBox = document.getElementById('installDesktopManualGuide');
       const successBox = document.getElementById('installSuccessBox');
+      const guidanceBox = document.getElementById('installDesktopGuidanceBox');
 
-      // Ẩn tất cả các khối trạng thái trước
-      if (readyBox) readyBox.classList.add('hidden');
+      // Ẩn các khối trạng thái phụ trước
       if (iosBox) iosBox.classList.add('hidden');
       if (manualBox) manualBox.classList.add('hidden');
       if (successBox) successBox.classList.add('hidden');
+      if (guidanceBox) guidanceBox.classList.add('hidden');
 
       if (isAppInstalledOrStandalone()) {
+        if (readyBox) readyBox.classList.add('hidden');
         if (successBox) successBox.classList.remove('hidden');
       } else if (isIOSDevice()) {
+        if (readyBox) readyBox.classList.add('hidden');
         if (iosBox) iosBox.classList.remove('hidden');
-      } else if (window._deferredInstallPrompt) {
-        if (readyBox) readyBox.classList.remove('hidden');
       } else {
-        if (manualBox) {
-          manualBox.classList.remove('hidden');
-          const guideText = document.getElementById('installManualGuideText');
-          if (guideText) {
-            if (typeof isAndroidDevice === 'function' && isAndroidDevice()) {
-              guideText.innerHTML = 'Bấm vào biểu tượng <b>⋮ (3 chấm)</b> ở góc trên trình duyệt và chọn <b>Cài đặt ứng dụng</b> hoặc <b>Thêm vào Màn hình chính</b>.';
-            } else {
-              guideText.innerHTML = 'Nhấn vào biểu tượng <b>Cài đặt App</b> ( <i class="fa-solid fa-download text-emerald-300"></i> hoặc <i class="fa-solid fa-desktop text-emerald-300"></i> ) trên thanh địa chỉ URL trình duyệt của bạn.';
-            }
-          }
-        }
+        // LUÔN LUÔN HIỂN THỊ NÚT BẤM "TIẾN HÀNH CÀI ĐẶT ỨNG DỤNG NGAY" (BẢO ĐẢM 100% CÓ NÚT BẤM CHO PC & ANDROID)
+        if (readyBox) readyBox.classList.remove('hidden');
       }
 
       modal.classList.remove('hidden');
@@ -27746,17 +27780,15 @@ function exportPersonalWorkspaceToExcel() {
     }
 
     async function confirmPWAInstall() {
-      // 1. Đóng modal cài đặt ngay lập tức để tránh chồng chéo giao diện với trình duyệt
-      closeAppInstallModal();
-
-      // 2. Nếu có prompt native từ trình duyệt (Edge / Chrome / Android)
+      // 1. Nếu có prompt native từ trình duyệt (Edge / Chrome / Android)
       if (window._deferredInstallPrompt) {
         try {
           const promptEvent = window._deferredInstallPrompt;
           window._deferredInstallPrompt = null;
+          closeAppInstallModal();
 
           if (typeof showToast === 'function') {
-            showToast('👉 Vui lòng nhấn "Install" trên bảng ở góc trên để hoàn tất!', false);
+            showToast('👉 Vui lòng nhấn "Install" (Cài đặt) trên hộp thoại của trình duyệt để hoàn tất!', false);
           }
 
           promptEvent.prompt();
@@ -27773,17 +27805,60 @@ function exportPersonalWorkspaceToExcel() {
         }
       }
 
-      // 3. Nếu là iOS (Safari)
+      // 2. Nếu là iOS (Safari)
       if (isIOSDevice()) {
-        const iosBox = document.getElementById('installIOSGuideBox');
-        if (iosBox) iosBox.classList.remove('hidden');
-        openAppInstallModal();
+        closeAppInstallModal();
+        const iosModal = document.getElementById('iosInstallPrompt');
+        if (iosModal) iosModal.classList.remove('hidden');
         return;
       }
 
-      // 4. Nếu trên máy tính mà prompt chưa nạp kịp hoặc đã bị ẩn
+      // 3. Nếu trên máy tính mà trình duyệt Chrome/Edge quản lý nút cài đặt trên thanh URL:
+      // Mở hướng dẫn tương tác trực quan ngay trong Modal và chuẩn bị nút tải shortcut 1-chạm
+      const guidanceBox = document.getElementById('installDesktopGuidanceBox');
+      if (guidanceBox) {
+        guidanceBox.classList.remove('hidden');
+        guidanceBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
       if (typeof showToast === 'function') {
-        showToast('Nhấn biểu tượng Cài đặt (+) trên thanh địa chỉ trình duyệt!', false);
+        showToast('👉 Hãy nhìn lên góc phải thanh địa chỉ URL (ở trên cùng) và nhấn biểu tượng Cài đặt!', false);
+      }
+    }
+
+    let _omniboxGuideTimeout = null;
+    function showOmniboxFloatingIndicator() {
+      const guide = document.getElementById('omniboxFloatingGuide');
+      if (!guide) return;
+      guide.classList.remove('hidden');
+      if (_omniboxGuideTimeout) clearTimeout(_omniboxGuideTimeout);
+      _omniboxGuideTimeout = setTimeout(() => {
+        closeOmniboxFloatingIndicator();
+      }, 14000);
+    }
+
+    function closeOmniboxFloatingIndicator() {
+      const guide = document.getElementById('omniboxFloatingGuide');
+      if (guide) guide.classList.add('hidden');
+      if (_omniboxGuideTimeout) clearTimeout(_omniboxGuideTimeout);
+    }
+
+    function downloadDesktopShortcut() {
+      try {
+        const appUrl = window.location.href.split('#')[0];
+        const shortcutContent = '[InternetShortcut]\r\nURL=' + appUrl + '\r\nIconIndex=0\r\n';
+        const blob = new Blob([shortcutContent], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Bao_Cao_Ban_DVKH.url';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        if (typeof showToast === 'function') {
+          showToast('🎉 Đã tải file Lối tắt Desktop (Bao_Cao_Ban_DVKH.url). Bạn kéo ra Desktop để mở 1 chạm!', false);
+        }
+      } catch (err) {
+        console.warn('Lỗi tạo shortcut:', err);
       }
     }
 
