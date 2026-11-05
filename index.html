@@ -138,6 +138,13 @@
       }
     }
 
+    /* TRÊN MÁY TÍNH / PC (TỪ 640PX TRỞ LÊN): LUÔN HIỂN THỊ NÚT SỔ TAY CẠNH NÚT MENU CHỨC NĂNG */
+    @media (min-width: 640px) {
+      #btnOpenPersonalWorkspace {
+        display: inline-flex !important;
+      }
+    }
+
     /* ================= KHÓA CUỘN NỀN VÀ CÔ LẬP CUỘN BẢNG / MODAL TRÊN ĐIỆN THOẠI =================
        Khi mở bất kỳ bảng popup nào, chỉ cho phép vuốt cuộn bên trong bảng đó;
        tuyệt đối không làm xê dịch, rung lắc hay cuộn màn hình chính bên ngoài. */
@@ -1313,11 +1320,10 @@
         </button>
 
         <!-- Nút Sổ tay công việc: ĐẶT NGAY CẠNH MENU CHỨC NĂNG THEO YÊU CẦU -->
-        <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspacePage()" class="hidden sm:flex relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition items-center gap-1.5 cursor-pointer" title="Sổ tay công việc & Kế hoạch cá nhân">
-          <i class="fa-solid fa-book-bookmark text-xs"></i>
-          <span class="hidden sm:inline">Sổ tay công việc</span>
-          <span class="sm:hidden">Sổ tay</span>
-          <span id="personalWorkspaceHeaderBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num">0</span>
+        <button type="button" id="btnOpenPersonalWorkspace" onclick="openPersonalWorkspacePage()" class="relative px-3 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-amber-600/20 transition inline-flex items-center gap-1.5 cursor-pointer" title="Sổ tay công việc & Kế hoạch cá nhân">
+          <i class="fa-solid fa-book-bookmark text-xs sm:text-sm"></i>
+          <span>Sổ tay</span>
+          <span id="personalWorkspaceHeaderBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/25 text-white border border-white/60 shadow-2xs font-num min-w-[18px] text-center">0</span>
         </button>
 
         <!-- Dropdown Menu Gộp Tất Cả Chức Năng -->
@@ -1335,10 +1341,10 @@
             <button type="button" onclick="closeHeaderActionsMenu(); openPersonalWorkspacePage();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-amber-50/80 transition text-left cursor-pointer group border border-transparent hover:border-amber-200">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  <i class="fa-solid fa-calendar-check"></i>
+                  <i class="fa-solid fa-book-bookmark"></i>
                 </span>
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-amber-900">Việc riêng & Kế hoạch cá nhân</span>
+                  <span class="text-xs font-bold text-slate-800 block truncate group-hover:text-amber-900">Sổ tay công việc & Kế hoạch cá nhân</span>
                   <span class="text-[10px] text-slate-400 block truncate">Việc phát sinh, lịch làm việc, đề xuất & báo cáo</span>
                 </div>
               </div>
@@ -20604,7 +20610,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               title: 'Sổ tay công việc & Kế hoạch cá nhân',
               subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
               icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
-              badge: 'Việc riêng',
+              badge: 'Sổ tay',
               handler: () => { closeCommandPalette(); openPersonalWorkspaceModal(); },
               tags: 'so tay viec rieng ke hoach ca nhan de xuat phan anh bao cao lich lam viec'
             },
@@ -20719,7 +20725,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               title: 'Sổ tay công việc & Kế hoạch cá nhân',
               subtitle: 'Theo dõi việc phát sinh, lịch làm việc, đề xuất & đẩy báo cáo',
               icon: 'fa-solid fa-calendar-check text-amber-600 bg-amber-50',
-              badge: 'Việc riêng',
+              badge: 'Sổ tay',
               handler: () => { closeCommandPalette(); openPersonalWorkspaceModal(); },
               tags: 'so tay viec rieng ke hoach ca nhan de xuat phan anh bao cao lich lam viec'
             },
@@ -21723,13 +21729,14 @@ function updatePersonalWorkspaceEntryCardStats() {
   // Đồng bộ số lượng việc chưa làm lên biểu tượng Sổ tay trên thanh tiêu đề và menu
   const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
   if (headerBadge) {
+    headerBadge.innerText = pendingCount || 0;
+    headerBadge.classList.remove('hidden');
     if (pendingCount > 0) {
-      headerBadge.innerText = pendingCount;
-      headerBadge.classList.remove('hidden');
-      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num";
+      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/25 text-white border border-white/60 shadow-2xs font-num min-w-[18px] text-center";
       headerBadge.title = `${pendingCount} công việc chưa làm / chưa hoàn thiện`;
     } else {
-      headerBadge.classList.add('hidden');
+      headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-white/15 text-white/90 border border-white/30 shadow-2xs font-num min-w-[18px] text-center";
+      headerBadge.title = "0 công việc chưa làm";
     }
   }
 
@@ -22881,13 +22888,14 @@ function updatePersonalWorkspaceReminders(dataArg) {
     // BIỂU TƯỢNG SỔ TAY: CHỈ ĐẾM SỐ LƯỢNG VIỆC CHƯA LÀM - CHƯA HOÀN THIỆN
     const headerBadge = document.getElementById('personalWorkspaceHeaderBadge');
     if (headerBadge) {
+      headerBadge.innerText = totalPending || 0;
+      headerBadge.classList.remove('hidden');
       if (totalPending > 0) {
-        headerBadge.innerText = totalPending;
-        headerBadge.classList.remove('hidden');
-        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/20 text-white border border-white shadow-2xs font-num";
+        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white/25 text-white border border-white/60 shadow-2xs font-num min-w-[18px] text-center";
         headerBadge.title = `${totalPending} công việc chưa làm / chưa hoàn thiện`;
       } else {
-        headerBadge.classList.add('hidden');
+        headerBadge.className = "px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-white/15 text-white/90 border border-white/30 shadow-2xs font-num min-w-[18px] text-center";
+        headerBadge.title = "0 công việc chưa làm";
       }
     }
 
