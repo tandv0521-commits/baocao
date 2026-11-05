@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v51') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v52') {
             caches.delete(key);
           }
         });
@@ -9584,18 +9584,27 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         console.warn("Lỗi checkPersonalWorkspaceRemindersOnLogin:", e);
       }
 
-      // Xóa dữ liệu mẫu cũ trên localStorage để đồng bộ sạch sẽ với Supabase
+      // Tự động xóa cache local cũ để nạp nguyên trạng dữ liệu chuẩn từ Supabase Cloud
       try {
-        if (!localStorage.getItem('pw_sample_v5_cleaned')) {
+        if (!localStorage.getItem('pw_cache_resync_v52')) {
           for (let k in localStorage) {
-            if (k.startsWith('pw_data_')) {
+            if (k && (k.startsWith('ops_personal_workspace_final_v1_') || k.startsWith('pw_data_'))) {
               localStorage.removeItem(k);
             }
           }
-          localStorage.setItem('pw_sample_v5_cleaned', 'true');
+          localStorage.setItem('pw_cache_resync_v52', 'true');
         }
       } catch (e) {
-        console.warn("Lỗi dọn dẹp localStorage:", e);
+        console.warn("Lỗi dọn dẹp cache:", e);
+      }
+
+      // Tự động kích hoạt đồng bộ từ Supabase Cloud ngay khi vào app hoặc ấn F5
+      try {
+        if (typeof fetchPersonalTasksFromSupabase === 'function') {
+          fetchPersonalTasksFromSupabase();
+        }
+      } catch (e) {
+        console.warn("Lỗi fetchPersonalTasksFromSupabase on login:", e);
       }
 
       try {
@@ -21514,24 +21523,18 @@ async function fetchPersonalTasksFromSupabase() {
         supabase.from('personal_tasks').upsert(rowsToInsert).then(() => {});
       }
 
-      // Hợp nhất danh sách (chỉ giữ công việc thực tế của người dùng & bảo lưu trạng thái hoàn thành)
+      // Hợp nhất danh sách (Ưu tiên dữ liệu chuẩn xác từ Supabase Cloud làm nguồn sự thật)
       const mergedMap = new Map();
       cloudItems.forEach(ci => {
         if (!isSampleTaskItem(ci)) {
-          const localMatch = localItems.find(li => li.id === ci.id);
-          if (localMatch && (isPersonalTaskFinished(localMatch) || localMatch.isReported)) {
-            ci.isCompleted = true;
-            ci.is_completed = true;
-            ci.isReported = true;
-            if (localMatch.status && localMatch.status !== 'pending') {
-              ci.status = localMatch.status;
-            }
-          }
           mergedMap.set(ci.id, ci);
         }
       });
       localItems.forEach(li => {
-        if (!isSampleTaskItem(li) && !mergedMap.has(li.id)) mergedMap.set(li.id, li);
+        // Chỉ lưu lại những mục mới tạo ở local chưa kịp đẩy lên cloud
+        if (!isSampleTaskItem(li) && !mergedMap.has(li.id)) {
+          mergedMap.set(li.id, li);
+        }
       });
 
       localData.items = Array.from(mergedMap.values());
@@ -21539,6 +21542,7 @@ async function fetchPersonalTasksFromSupabase() {
       localStorage.setItem(key, JSON.stringify(localData));
       renderPersonalWorkspaceUI();
       updatePersonalWorkspaceEntryCardStats();
+      showPersonalTaskReminderOnLogin();
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
