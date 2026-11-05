@@ -9441,6 +9441,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function initMainDashboard() {
+      // Quét và xóa sạch các công việc mẫu trên tất cả các tài khoản
+      if (typeof purgeAllSampleTasksEverywhere === 'function') {
+        purgeAllSampleTasksEverywhere();
+      }
       document.documentElement.classList.remove('app-auto-login-pending');
       const splash = document.getElementById('appAutoLoginSplash');
       if (splash) splash.remove();
@@ -21322,30 +21326,34 @@ async function fetchPersonalTasksFromSupabase() {
     updateCloudSyncBadge(true);
 
     if (Array.isArray(data)) {
-      const cloudItems = data.map(fromSupabaseTaskRow);
+      // Loại bỏ hoàn toàn mọi công việc mẫu cả từ Cloud lẫn Local
+      const cloudItems = data.map(fromSupabaseTaskRow).filter(it => it && !isSampleTaskItem(it));
       const localData = getPersonalWorkspaceData(currentUser);
-      const localItems = localData.items || [];
+      const localItems = (localData.items || []).filter(it => it && !isSampleTaskItem(it));
 
-      // Nếu cả Cloud và Local đều trống (0 mục), tự động khởi tạo dữ liệu mẫu và đồng bộ
+      // Không tự động tạo công việc mẫu khi tài khoản mới hoặc danh sách trống (để trống sạch sẽ)
       if (cloudItems.length === 0 && localItems.length === 0) {
-        seedSamplePersonalWorkspace(false);
+        localData.items = [];
+        savePersonalWorkspaceData(localData, currentUser);
+        renderPersonalWorkspaceUI();
+        updatePersonalWorkspaceEntryCardStats();
         return;
       }
 
-      // Đồng bộ: Đẩy những mục chỉ có ở local lên cloud (nếu có)
+      // Đồng bộ: Đẩy những mục chỉ có ở local lên cloud (tuyệt đối không đẩy việc mẫu)
       const cloudIds = new Set(cloudItems.map(c => c.id));
-      const unuploaded = localItems.filter(l => !cloudIds.has(l.id));
+      const unuploaded = localItems.filter(l => !cloudIds.has(l.id) && !isSampleTaskItem(l));
 
       if (unuploaded.length > 0) {
         const rowsToInsert = unuploaded.map(u => toSupabaseTaskRow(u, currentUser));
         supabase.from('personal_tasks').upsert(rowsToInsert).then(() => {});
       }
 
-      // Hợp nhất danh sách
+      // Hợp nhất danh sách (chỉ giữ công việc thực tế của người dùng)
       const mergedMap = new Map();
-      cloudItems.forEach(ci => mergedMap.set(ci.id, ci));
+      cloudItems.forEach(ci => { if (!isSampleTaskItem(ci)) mergedMap.set(ci.id, ci); });
       localItems.forEach(li => {
-        if (!mergedMap.has(li.id)) mergedMap.set(li.id, li);
+        if (!isSampleTaskItem(li) && !mergedMap.has(li.id)) mergedMap.set(li.id, li);
       });
 
       localData.items = Array.from(mergedMap.values());
@@ -21625,11 +21633,7 @@ function openPersonalWorkspacePage() {
   updatePersonalWorkspaceTabButtonsUI('all');
   updateSummaryCardsActiveState('all');
 
-  // Kiểm tra dữ liệu: nếu chưa có công việc nào (lần đầu hoặc sau khi xóa Supabase), tự động nạp 4 việc mẫu
-  const curData = getPersonalWorkspaceData(currentUser);
-  if (!curData.items || curData.items.length === 0) {
-    seedSamplePersonalWorkspace(false);
-  }
+  // Không tự động tạo công việc mẫu khi tài khoản chưa có việc (để sổ tay trống sạch sẽ theo yêu cầu)
 
   // Đồng bộ và tải dữ liệu
   fetchPersonalTasksFromSupabase();
@@ -22565,6 +22569,63 @@ function getPersonalWorkspaceStorageKey(user = currentUser) {
   return `ops_personal_workspace_final_v1_${uId}`;
 }
 
+// Kiểm tra xem đầu việc có phải là công việc mẫu hệ thống tự sinh hay không
+function isSampleTaskItem(it) {
+  if (!it) return false;
+  const idStr = String(it.id || '');
+  if (idStr.startsWith('pw_sample_')) return true;
+  const title = String(it.title || '').trim().toLowerCase();
+  const sampleTitles = [
+    'hỗ trợ kiểm tra gấp lô hàng ống upvc phát sinh ngoài kế hoạch',
+    'tổng hợp số liệu tiến độ tuần và lập lịch giao hàng tuần tới',
+    'đề xuất trang bị máy quét mã vạch không dây cầm tay cho tổ kho',
+    'ý kiến góp ý tối ưu thời gian bàn giao ca giữa tổ kho và tổ tiếp liệu'
+  ];
+  return sampleTitles.includes(title);
+}
+
+// Quét và xóa sạch tất cả công việc mẫu trên toàn bộ các tài khoản (LocalStorage và bộ nhớ)
+function purgeAllSampleTasksEverywhere() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('pw_data_')) {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && Array.isArray(data.items)) {
+              const beforeCount = data.items.length;
+              data.items = data.items.filter(it => it && !isSampleTaskItem(it));
+              if (data.items.length !== beforeCount) {
+                localStorage.setItem(k, JSON.stringify(data));
+              }
+            }
+          }
+        } catch(e) {}
+      }
+    }
+    const rawShared = localStorage.getItem(LEADERSHIP_REPORTS_SHARED_KEY);
+    if (rawShared) {
+      try {
+        const list = JSON.parse(rawShared);
+        if (Array.isArray(list)) {
+          list.forEach(r => {
+            if (r.items && Array.isArray(r.items.tasks)) {
+              r.items.tasks = r.items.tasks.filter(it => it && !isSampleTaskItem(it));
+            } else if (Array.isArray(r.items)) {
+              r.items = r.items.filter(it => it && !isSampleTaskItem(it));
+            }
+          });
+          localStorage.setItem(LEADERSHIP_REPORTS_SHARED_KEY, JSON.stringify(list));
+        }
+      } catch(e) {}
+    }
+  } catch(e) {
+    console.warn("Lỗi purgeAllSampleTasksEverywhere:", e);
+  }
+}
+
 function getPersonalWorkspaceData(user = currentUser) {
   if (!user) return { items: [] };
   const key = getPersonalWorkspaceStorageKey(user);
@@ -22572,7 +22633,11 @@ function getPersonalWorkspaceData(user = currentUser) {
     const raw = localStorage.getItem(key);
     if (raw) {
       const data = JSON.parse(raw);
-      if (data && Array.isArray(data.items)) return data;
+      if (data && Array.isArray(data.items)) {
+        // Tự động loại bỏ hoàn toàn mọi công việc mẫu hệ thống
+        data.items = data.items.filter(it => it && !isSampleTaskItem(it));
+        return data;
+      }
     }
   } catch(e) {
     console.error("Lỗi đọc dữ liệu việc riêng:", e);
@@ -23482,10 +23547,7 @@ function renderPersonalWorkspaceUI() {
             <i class="fa-solid fa-comment-dots text-teal-600 text-xs"></i>
             <span>Ý kiến phản ánh</span>
           </button>
-          <button type="button" onclick="seedSamplePersonalWorkspace()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-            <span>Nạp 4 mục ví dụ mẫu</span>
-          </button>
+
         </div>
       </div>
     `;
@@ -25043,6 +25105,11 @@ function getAllRpBoxTaskEntries() {
     const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
     rItems.forEach((it, idx) => {
       const entryKey = r.id + '_' + (it.id || idx);
+
+      // BỎ QUA CÁC ĐẦU VIỆC MẪU NẾU CÓ
+      if (typeof isSampleTaskItem === 'function' && isSampleTaskItem(it)) {
+        return;
+      }
 
       // ĐẦU VIỆC ĐÃ TẠO BÁO CÁO SẼ DI CHUYỂN VÀO PHẦN LỊCH SỬ TẠO BÁO CÁO (KHÔNG HIỂN THỊ Ở HỘP THƯ CHỜ NỮA)
       if (it.isConsolidated || consolidatedKeys.has(entryKey)) {
@@ -27122,102 +27189,9 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
 
 
 
-function seedSamplePersonalWorkspace(showToastAlert = true) {
-  if (!currentUser) return;
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tY = tomorrow.getFullYear();
-  const tM = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const tD = String(tomorrow.getDate()).padStart(2, '0');
-  const tomorrowStr = `${tY}-${tM}-${tD}`;
-
-  const sampleItems = [
-    {
-      id: 'pw_sample_1_' + Date.now(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      type: 'adhoc',
-      title: 'Hỗ trợ kiểm tra gấp lô hàng ống UPVC phát sinh ngoài kế hoạch',
-      content: 'Đã phối hợp kiểm đếm, xác nhận đạt chất lượng xuất xưởng theo yêu cầu đại lý.',
-      date: todayStr,
-      dueDate: '',
-      isImportant: true,
-      status: 'done',
-      isCompleted: true,
-      selectedForReport: true,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString()
-    },
-    {
-      id: 'pw_sample_2_' + Date.now(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      type: 'plan',
-      title: 'Tổng hợp số liệu tiến độ tuần và lập lịch giao hàng tuần tới',
-      content: 'Đối chiếu số liệu thực xuất từ phần mềm kho và hoàn thiện báo cáo trước 16h30.',
-      date: todayStr,
-      dueDate: tomorrowStr,
-      isImportant: true,
-      status: 'pending',
-      isCompleted: false,
-      selectedForReport: true,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString()
-    },
-    {
-      id: 'pw_sample_3_' + Date.now(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      type: 'proposal',
-      title: 'Đề xuất trang bị máy quét mã vạch không dây cầm tay cho tổ kho',
-      content: 'Tăng tốc độ kiểm kê ống và phụ kiện lên 30%, hạn chế tối đa sai sót ghi chép.',
-      date: todayStr,
-      dueDate: '',
-      isImportant: false,
-      status: 'rejected_pending',
-      isCompleted: false,
-      selectedForReport: true,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString()
-    },
-    {
-      id: 'pw_sample_4_' + Date.now(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      type: 'feedback',
-      title: 'Ý kiến góp ý tối ưu thời gian bàn giao ca giữa tổ kho và tổ tiếp liệu',
-      content: 'Quy định khung giờ bàn giao cố định 15 phút trước giờ đổi ca để ký biên bản đầy đủ.',
-      date: todayStr,
-      dueDate: '',
-      isImportant: false,
-      status: 'acknowledged',
-      isCompleted: false,
-      selectedForReport: true,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString()
-    }
-  ];
-
-  const data = getPersonalWorkspaceData(currentUser);
-  if (!data.items) data.items = [];
-  data.items.unshift(...sampleItems);
-  savePersonalWorkspaceData(data, currentUser);
-
-  // Đẩy luôn lên Supabase Cloud để đồng bộ tức thì
-  sampleItems.forEach(it => {
-    savePersonalTaskToSupabase(it);
-  });
-
-  renderPersonalWorkspaceUI();
-  if (showToastAlert && typeof showToast === 'function') {
-    showToast("⭐ Đã nạp 4 mục ví dụ mẫu để bạn trải nghiệm tính năng!");
-  }
+function seedSamplePersonalWorkspace(showToastAlert = false) {
+  // Đã vô hiệu hóa hoàn toàn việc tự động tạo công việc mẫu theo yêu cầu
+  return;
 }
 
 function checkPersonalWorkspaceRemindersOnLogin() {
