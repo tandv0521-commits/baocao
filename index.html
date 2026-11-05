@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v50') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v51') {
             caches.delete(key);
           }
         });
@@ -21358,7 +21358,7 @@ function fromSupabaseTaskRow(r) {
     isCompleted: isFinished,
     feedbackResponse: r.feedback_response || '',
     selectedForReport: (r.selected_for_report !== false),
-    isReported: isFinished,
+    isReported: false,
     reportedAt: null,
     reportedReportId: null,
     createdAt: r.created_at,
@@ -21777,14 +21777,12 @@ let pwIsFullscreen = false;
 // 1. Kiểm tra trạng thái hoàn thành của công việc cá nhân
 function isPersonalTaskFinished(it) {
   if (!it) return false;
-  // 1. Nếu công việc đã được đưa vào báo cáo hoặc gửi vào hộp thư -> Đã hoàn thành nghĩa vụ báo cáo
-  if (it.isReported === true) return true;
-  // 2. Kiểm tra cờ hoàn thành trực tiếp
+  // 1. Kiểm tra cờ hoàn thành trực tiếp do người dùng xác nhận
   if (it.is_completed === true || it.isCompleted === true) return true;
-  // 3. Chuẩn hóa trạng thái văn bản
+  // 2. Chuẩn hóa trạng thái văn bản hoàn tất
   const st = String(it.status || '').toLowerCase().trim();
   if (st === 'done' || st === 'completed' || st === 'approved_executed' || st === 'resolved' || st === 'processed' || st === 'approved' || st === 'closed') return true;
-  // 4. Theo từng loại hình cụ thể
+  // 3. Theo từng loại hình cụ thể
   if (it.type === 'proposal') {
     return st === 'approved_executed' || st === 'approved';
   }
@@ -24849,7 +24847,7 @@ function submitLeadershipReport() {
   saveLeadershipReportsShared(sharedReports);
   saveLeadershipReportToSupabase(reportPayload);
 
-  // Đánh dấu các công việc này đã gửi báo cáo trong sổ tay cá nhân & tự động hoàn thành
+  // Đánh dấu các công việc này đã gửi báo cáo trong sổ tay cá nhân (giữ nguyên trạng thái hoàn thành thực tế của người dùng)
   const userWsData = getPersonalWorkspaceData(currentUser);
   const selectedIds = new Set(currentReportSelectedItems.map(it => it.id));
   (userWsData.items || []).forEach(it => {
@@ -24858,12 +24856,6 @@ function submitLeadershipReport() {
       it.reportedAt = now.toISOString();
       it.reportedReportId = reportId;
       it.selectedForReport = false;
-      it.isCompleted = true;
-      it.is_completed = true;
-      if (it.type === 'adhoc') it.status = 'done';
-      else if (it.type === 'plan') it.status = 'completed';
-      else if (it.type === 'proposal') it.status = 'approved_executed';
-      else if (it.type === 'feedback') it.status = 'resolved';
       it.updatedAt = now.toISOString();
     }
   });
@@ -25442,18 +25434,12 @@ function sendManagerSelectedTasksToInbox() {
     reportType: 'manager_personal_tasks'
   };
 
-  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay & tự động hoàn thành
+  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay (giữ nguyên trạng thái hoàn thành thực tế của người dùng)
   data.items.forEach(it => {
     if (it.selectedForReport) {
       it.isReported = true;
       it.reportedAt = now.toISOString();
       it.selectedForReport = false;
-      it.isCompleted = true;
-      it.is_completed = true;
-      if (it.type === 'adhoc') it.status = 'done';
-      else if (it.type === 'plan') it.status = 'completed';
-      else if (it.type === 'proposal') it.status = 'approved_executed';
-      else if (it.type === 'feedback') it.status = 'resolved';
       it.updatedAt = now.toISOString();
       savePersonalTaskToSupabase(it);
     }
