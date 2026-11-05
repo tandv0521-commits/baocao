@@ -47,11 +47,11 @@
       }
     });
 
-    // Dọn dẹp cache cũ và kích hoạt phiên bản Service Worker mới tức thì
+    // Dọn dẹp cache cũ và bảo toàn phiên bản Service Worker đang hoạt động
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key !== 'baocao-dvkh-pwa-v32') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v42') {
             caches.delete(key);
           }
         });
@@ -1475,6 +1475,20 @@
                 <i class="fa-solid fa-user-gear text-slate-400"></i>
                 <span>Tài khoản & Hệ thống</span>
               </div>
+
+              <!-- Nút Cài đặt ứng dụng PWA trong Menu chức năng -->
+              <button type="button" id="btnMenuInstallApp" onclick="closeHeaderActionsMenu(); handlePWAInstallClick();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-emerald-50 transition text-left cursor-pointer group">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span id="menuInstallAppIconBox" class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    <i id="menuInstallAppIcon" class="fa-solid fa-download"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <span id="menuInstallAppTitle" class="text-xs font-bold text-slate-800 block truncate group-hover:text-emerald-800">Cài đặt ứng dụng (App)</span>
+                    <span id="menuInstallAppDesc" class="text-[10px] text-slate-400 block truncate">Thêm vào màn hình chính PC / Mobile</span>
+                  </div>
+                </div>
+                <span id="menuInstallAppBadge" class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full font-num">App</span>
+              </button>
 
               <button type="button" onclick="closeHeaderActionsMenu(); openChangePasswordModal();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition text-left cursor-pointer group">
                 <div class="flex items-center gap-2.5 min-w-0">
@@ -4233,11 +4247,11 @@
           </div>
         </div>
 
-        <!-- Trạng thái 3: Hướng dẫn thủ công nếu trình duyệt Desktop đã ẩn prompt native -->
+        <!-- Trạng thái 3: Hướng dẫn thủ công nếu trình duyệt Desktop/Mobile đã ẩn prompt native -->
         <div id="installDesktopManualGuide" class="hidden bg-emerald-950/60 border border-emerald-400/30 rounded-2xl p-3 text-center">
           <div class="flex items-center justify-center gap-2 text-xs text-emerald-200 font-medium">
-            <i class="fa-solid fa-circle-info text-emerald-400"></i>
-            <span>Nhấn vào biểu tượng <b>Cài đặt App</b> ( <i class="fa-solid fa-download text-emerald-300"></i> hoặc <i class="fa-solid fa-desktop text-emerald-300"></i> ) trên thanh địa chỉ URL trình duyệt của bạn.</span>
+            <i class="fa-solid fa-circle-info text-emerald-400 shrink-0"></i>
+            <span id="installManualGuideText">Nhấn vào biểu tượng <b>Cài đặt App</b> ( <i class="fa-solid fa-download text-emerald-300"></i> hoặc <i class="fa-solid fa-desktop text-emerald-300"></i> ) trên thanh địa chỉ URL trình duyệt của bạn.</span>
           </div>
         </div>
 
@@ -5810,6 +5824,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function isAppInstalledOrStandalone() {
       return window.matchMedia('(display-mode: standalone)').matches ||
+             window.matchMedia('(display-mode: fullscreen)').matches ||
+             window.matchMedia('(display-mode: minimal-ui)').matches ||
              window.navigator.standalone === true ||
              (typeof document.referrer === 'string' && document.referrer.includes('android-app://'));
     }
@@ -20701,6 +20717,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             },
             {
               type: 'action',
+              title: 'Cài đặt ứng dụng lên máy (PWA App)',
+              subtitle: 'Thêm vào màn hình chính PC, iPhone hoặc Android',
+              icon: 'fa-solid fa-download text-emerald-600 bg-emerald-50',
+              badge: 'Cài đặt',
+              handler: () => { closeCommandPalette(); handlePWAInstallClick(); },
+              tags: 'cai dat ung dung app pwa download man hinh chinh desktop mobile'
+            },
+            {
+              type: 'action',
               title: 'Đổi mật khẩu bảo mật',
               subtitle: 'Cập nhật mật khẩu đăng nhập an toàn',
               icon: 'fa-solid fa-key text-amber-600 bg-amber-50',
@@ -27471,7 +27496,17 @@ function exportPersonalWorkspaceToExcel() {
       } else if (window._deferredInstallPrompt) {
         if (readyBox) readyBox.classList.remove('hidden');
       } else {
-        if (manualBox) manualBox.classList.remove('hidden');
+        if (manualBox) {
+          manualBox.classList.remove('hidden');
+          const guideText = document.getElementById('installManualGuideText');
+          if (guideText) {
+            if (typeof isAndroidDevice === 'function' && isAndroidDevice()) {
+              guideText.innerHTML = 'Bấm vào biểu tượng <b>⋮ (3 chấm)</b> ở góc trên trình duyệt và chọn <b>Cài đặt ứng dụng</b> hoặc <b>Thêm vào Màn hình chính</b>.';
+            } else {
+              guideText.innerHTML = 'Nhấn vào biểu tượng <b>Cài đặt App</b> ( <i class="fa-solid fa-download text-emerald-300"></i> hoặc <i class="fa-solid fa-desktop text-emerald-300"></i> ) trên thanh địa chỉ URL trình duyệt của bạn.';
+            }
+          }
+        }
       }
 
       modal.classList.remove('hidden');
@@ -28867,12 +28902,40 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     function updateInstallButtonState() {
       const btn = document.getElementById('btnInstallAppLogin');
-      if (!btn) return;
       const title = document.getElementById('installBtnTitle');
       const desc = document.getElementById('installBtnDesc');
       const badge = document.getElementById('installBtnBadge');
       const icon = document.getElementById('installBtnIcon');
       const iconBox = document.getElementById('installBtnIconBox');
+
+      // Đồng bộ nút Cài đặt trong menu chức năng
+      const menuTitle = document.getElementById('menuInstallAppTitle');
+      const menuDesc = document.getElementById('menuInstallAppDesc');
+      const menuBadge = document.getElementById('menuInstallAppBadge');
+      const menuIcon = document.getElementById('menuInstallAppIcon');
+      const menuIconBox = document.getElementById('menuInstallAppIconBox');
+
+      if (isAppInstalledOrStandalone()) {
+        if (menuTitle) menuTitle.innerText = 'Đang Chạy Bản App';
+        if (menuDesc) menuDesc.innerText = 'Ứng dụng đã cài đặt trên máy';
+        if (menuBadge) {
+          menuBadge.className = 'px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-num';
+          menuBadge.innerHTML = '<i class="fa-solid fa-check text-[9px]"></i> Đã cài';
+        }
+        if (menuIcon) menuIcon.className = 'fa-solid fa-circle-check text-emerald-600';
+        if (menuIconBox) menuIconBox.className = 'w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center text-xs shrink-0 shadow-2xs';
+      } else {
+        if (menuTitle) menuTitle.innerText = 'Cài đặt ứng dụng (App)';
+        if (menuDesc) menuDesc.innerText = 'Thêm vào màn hình chính PC / Mobile';
+        if (menuBadge) {
+          menuBadge.className = 'px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full font-num';
+          menuBadge.innerText = 'App';
+        }
+        if (menuIcon) menuIcon.className = 'fa-solid fa-download';
+        if (menuIconBox) menuIconBox.className = 'w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs';
+      }
+
+      if (!btn) return;
 
       if (isAppInstalledOrStandalone()) {
         if (title) title.innerText = 'Đang Chạy Trên Ứng Dụng (App)';
