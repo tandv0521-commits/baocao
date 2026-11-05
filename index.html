@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v53') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v54') {
             caches.delete(key);
           }
         });
@@ -21763,6 +21763,41 @@ function copySupabaseSqlScript() {
     fallbackCopyText(txt);
   }
 }
+
+// ================= TỰ ĐỘNG LÀM MỚI VÀ ĐỒNG BỘ DỮ LIỆU KHI MỞ LẠI THẺ TRÌNH DUYỆT (TAB RESUME / VISIBILITY AUTO-SYNC) =================
+let _lastTabResumeSyncTime = 0;
+function handleTabResumeAutoSync() {
+  const now = Date.now();
+  // Giới hạn tần suất: Chỉ tự động sync ngầm nếu lần sync gần nhất đã qua ít nhất 15 giây (tránh spam request khi chuyển tab liên tục)
+  if (now - _lastTabResumeSyncTime < 15000) return;
+  _lastTabResumeSyncTime = now;
+
+  if (!currentUser) return;
+
+  // 1. Tự động đồng bộ ngầm Sổ tay công việc từ Supabase Cloud
+  try {
+    if (typeof fetchPersonalTasksFromSupabase === 'function') {
+      fetchPersonalTasksFromSupabase();
+    }
+  } catch (e) {}
+
+  // 2. Tự động đồng bộ ngầm Hộp thư báo cáo bộ phận từ Supabase Cloud (không hiện toast)
+  try {
+    if (typeof fetchLeadershipReportsFromSupabase === 'function') {
+      fetchLeadershipReportsFromSupabase(false);
+    }
+  } catch (e) {}
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    handleTabResumeAutoSync();
+  }
+});
+
+window.addEventListener('focus', () => {
+  handleTabResumeAutoSync();
+});
 
 
 // =========================================================================
