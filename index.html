@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v52') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v53') {
             caches.delete(key);
           }
         });
@@ -21542,7 +21542,6 @@ async function fetchPersonalTasksFromSupabase() {
       localStorage.setItem(key, JSON.stringify(localData));
       renderPersonalWorkspaceUI();
       updatePersonalWorkspaceEntryCardStats();
-      showPersonalTaskReminderOnLogin();
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
@@ -21798,6 +21797,7 @@ function isPersonalTaskFinished(it) {
 
 // 2. Chuyển đổi giữa Chế độ View Ban Đầu và Trang Sổ Tay Mới
 function openPersonalWorkspacePage() {
+  closePersonalTaskReminderModal();
   if (!currentUser) {
     if (typeof showToast === 'function') showToast("Vui lòng đăng nhập để mở Sổ tay công việc!", true);
     return;
@@ -21976,6 +21976,21 @@ function updatePersonalWorkspaceEntryCardStats() {
 function showPersonalTaskReminderOnLogin() {
   if (!currentUser) return;
   const modal = document.getElementById('personalTaskReminderModal');
+
+  // 1. Nếu người dùng đang ở trong trang Sổ tay công việc -> TUYỆT ĐỐI KHÔNG BẬT POPUP ĐÈ LÊN
+  const pwPage = document.getElementById('personalWorkspacePageView');
+  if (pwPage && !pwPage.classList.contains('hidden')) {
+    if (modal) modal.classList.add('hidden');
+    return;
+  }
+
+  // 2. Nếu trong phiên làm việc này người dùng đã bấm Đóng hoặc đã vào Sổ tay -> Không bật lại
+  try {
+    if (sessionStorage.getItem('pw_reminder_dismissed_session') === 'true') {
+      if (modal) modal.classList.add('hidden');
+      return;
+    }
+  } catch (e) {}
   
   const data = getPersonalWorkspaceData(currentUser);
   const items = data.items || [];
@@ -22070,6 +22085,19 @@ function showPersonalTaskReminderOnLogin() {
   }
 
   setTimeout(() => {
+    // Nếu trong lúc chờ người dùng đã mở Sổ tay hoặc đã bấm Đóng thì dừng ngay
+    const pwPageCheck = document.getElementById('personalWorkspacePageView');
+    if (pwPageCheck && !pwPageCheck.classList.contains('hidden')) {
+      if (modal) modal.classList.add('hidden');
+      return;
+    }
+    try {
+      if (sessionStorage.getItem('pw_reminder_dismissed_session') === 'true') {
+        if (modal) modal.classList.add('hidden');
+        return;
+      }
+    } catch (e) {}
+
     // Kiểm tra lại lần cuối trước khi hiển thị để phòng trường hợp dữ liệu vừa được hoàn tất
     const checkData = getPersonalWorkspaceData(currentUser);
     const checkPending = (checkData.items || []).filter(it => !isPersonalTaskFinished(it));
@@ -22084,6 +22112,9 @@ function showPersonalTaskReminderOnLogin() {
 function closePersonalTaskReminderModal() {
   const modal = document.getElementById('personalTaskReminderModal');
   if (modal) modal.classList.add('hidden');
+  try {
+    sessionStorage.setItem('pw_reminder_dismissed_session', 'true');
+  } catch (e) {}
 }
 
 function openPersonalWorkspaceFromReminder() {
