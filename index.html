@@ -3156,7 +3156,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button type="button" onclick="openLoginHistoryModal()" class="px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95">
+          <button type="button" id="btnUserModalLoginHistory" onclick="openLoginHistoryModal()" class="hidden px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold transition items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95">
             <i class="fa-solid fa-clock-rotate-left text-sky-600 text-xs"></i>
             <span>Lịch sử đăng nhập</span>
           </button>
@@ -6241,6 +6241,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
       return r === "admin" || r.includes("quantri") || u === "admin" || u.includes("quantri");
+    }
+
+    /**
+     * KIỂM TRA ĐÍCH DANH TÀI KHOẢN ADMIN KỸ THUẬT QUẢN TRỊ HỆ THỐNG
+     * Chỉ tài khoản "admin" mới có quyền truy cập nhật ký đăng nhập, audit bảo mật, IP & thiết bị
+     */
+    function isSystemAdminUser(user = currentUser) {
+      if (!user) return false;
+      return isSystemAdmin(user.role, user.username) || (user.username || '').toLowerCase() === 'admin';
     }
 
     function isOnlyDirector(roleStr, usernameStr) {
@@ -9633,8 +9642,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         btnAssign.classList.remove('hidden');
         if (btnUserManager) btnUserManager.classList.remove('hidden');
         if (btnDeptManager) btnDeptManager.classList.remove('hidden');
-        if (btnLoginHistory) btnLoginHistory.classList.remove('hidden');
         if (adminSection) adminSection.classList.remove('hidden');
+
+        // LỊCH SỬ ĐĂNG NHẬP: CHỈ HIỂN THỊ DUY NHẤT CHO TÀI KHOẢN "admin" (ẨN HOÀN TOÀN VỚI QUẢN LÝ & BAN GIÁM ĐỐC)
+        if (btnLoginHistory) {
+          if (isSystemAdminUser(currentUser)) {
+            btnLoginHistory.classList.remove('hidden');
+          } else {
+            btnLoginHistory.classList.add('hidden');
+          }
+        }
 
         deptSelect.innerHTML = '';
 
@@ -9690,7 +9707,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // KÍCH HOẠT BẢO MẬT: REALTIME WATCHER + HEARTBEAT GIÁM SÁT ĐỔI MẬT KHẨU TỪ THIẾT BỊ KHÁC
       setupUserSecurityRealtimeListener();
       startSecurityHeartbeat();
-      if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
+      if (currentUser && isSystemAdminUser(currentUser)) {
         setupLoginHistoryRealtimeListener();
       }
     }
@@ -18334,6 +18351,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // ================= QUẢN LÝ NHÂN SỰ, TÀI KHOẢN & ĐIỀU CHUYỂN =================
     function openUserManagerModal() {
       document.getElementById('userManagerModal').classList.remove('hidden');
+      const btnLog = document.getElementById('btnUserModalLoginHistory');
+      if (btnLog) {
+        if (isSystemAdminUser(currentUser)) {
+          btnLog.classList.remove('hidden');
+        } else {
+          btnLog.classList.add('hidden');
+        }
+      }
       loadAllUsersManagementData();
     }
 
@@ -20785,15 +20810,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             },
             {
               type: 'action',
-              title: 'Lịch sử đăng nhập & Kiểm tra thiết bị truy cập',
-              subtitle: 'Theo dõi mã máy, IP, trình duyệt & ngày giờ đăng nhập',
-              icon: 'fa-solid fa-clock-rotate-left text-sky-700 bg-sky-50',
-              badge: 'Bảo mật',
-              handler: () => { closeCommandPalette(); openLoginHistoryModal(); },
-              tags: 'lich su dang nhap nhat ky login history ip ma may thiet bi security audit'
-            },
-            {
-              type: 'action',
               title: 'Phân công & Giao việc (Đầu việc)',
               subtitle: 'Thêm mới hoặc phân công danh mục công việc',
               icon: 'fa-solid fa-list-check text-teal-700 bg-teal-50',
@@ -20856,6 +20872,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               tags: 'dang xuat logout thoat'
             }
           ];
+
+          if (isSystemAdminUser(currentUser)) {
+            adminActions.push({
+              type: 'action',
+              title: 'Lịch sử đăng nhập & Kiểm tra thiết bị truy cập',
+              subtitle: 'Theo dõi mã máy, IP, trình duyệt & ngày giờ đăng nhập',
+              icon: 'fa-solid fa-clock-rotate-left text-sky-700 bg-sky-50',
+              badge: 'Bảo mật',
+              handler: () => { closeCommandPalette(); openLoginHistoryModal(); },
+              tags: 'lich su dang nhap nhat ky login history ip ma may thiet bi security audit'
+            });
+          }
 
           adminActions.forEach(a => {
             if (!kw || removeAccents(a.title).toLowerCase().includes(kw) || removeAccents(a.subtitle).toLowerCase().includes(kw) || a.tags.includes(kw)) {
@@ -27973,8 +28001,8 @@ function exportPersonalWorkspaceToExcel() {
           filterLoginHistoryTable();
         }
 
-        // Hiển thị thông báo tức thì (Live Toast) góc màn hình cho Ban Quản trị
-        if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
+        // Hiển thị thông báo tức thì (Live Toast) góc màn hình CHỈ RIÊNG CHO TÀI KHOẢN ADMIN
+        if (currentUser && isSystemAdminUser(currentUser)) {
           if (!currentUser.username || currentUser.username.toLowerCase() !== (newLog.username || '').toLowerCase()) {
             showLiveLoginToast(newLog);
           }
@@ -28094,8 +28122,8 @@ function exportPersonalWorkspaceToExcel() {
 
     // ================= CHỨC NĂNG DỌN DẸP NHẬT KÝ ĐĂNG NHẬP =================
     function openCleanupLoginHistoryModal() {
-      if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
-        showToast("Chức năng chỉ dành cho Ban Quản trị & Điều hành!", true);
+      if (!currentUser || !isSystemAdminUser(currentUser)) {
+        showToast("Bạn không có quyền thực hiện thao tác này! Chức năng chỉ dành riêng cho Admin.", true);
         return;
       }
       const modal = document.getElementById('cleanupLoginHistoryModal');
@@ -28222,8 +28250,8 @@ function exportPersonalWorkspaceToExcel() {
     }
 
     function openLoginHistoryModal() {
-      if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
-        showToast("Chức năng chỉ dành cho Ban Quản trị & Điều hành!", true);
+      if (!currentUser || !isSystemAdminUser(currentUser)) {
+        showToast("Chức năng Lịch sử đăng nhập chỉ dành riêng cho tài khoản Quản trị viên (Admin)!", true);
         return;
       }
       const modal = document.getElementById('loginHistoryModal');
@@ -28243,6 +28271,10 @@ function exportPersonalWorkspaceToExcel() {
      */
     async function loadLoginHistoryData(forceRefresh = false) {
       const loadingEl = document.getElementById('loadingLoginHistoryBox');
+      if (!currentUser || !isSystemAdminUser(currentUser)) {
+        if (loadingEl) loadingEl.classList.add('hidden');
+        return;
+      }
       const emptyEl = document.getElementById('emptyLoginHistoryBox');
       const noticeEl = document.getElementById('loginHistorySupabaseNotice');
       const tbody = document.getElementById('loginHistoryTableBody');
