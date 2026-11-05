@@ -21223,26 +21223,31 @@ function fromSupabaseReportRow(r) {
   let forwardedAt = '';
   let targetLevel = 'manager';
   let reportType = 'staff_report';
-  let recipientId = null;
-  let recipientUsername = '';
-  let recipientFullName = '';
+  let recipientId = r.recipient_id || null;
+  let recipientUsername = r.recipient_username || '';
+  let recipientFullName = r.recipient_fullname || '';
   let recipientRole = '';
   let recipientDepartment = '';
 
-  if (Array.isArray(r.items)) {
-    taskItems = r.items;
-  } else if (r.items && typeof r.items === 'object') {
-    taskItems = Array.isArray(r.items.tasks) ? r.items.tasks : [];
-    managerFeedback = r.items.managerFeedback || '';
-    forwardedBy = r.items.forwardedBy || '';
-    forwardedAt = r.items.forwardedAt || '';
-    targetLevel = r.items.targetLevel || 'manager';
-    reportType = r.items.reportType || 'staff_report';
-    recipientId = r.items.recipientId || null;
-    recipientUsername = r.items.recipientUsername || '';
-    recipientFullName = r.items.recipientFullName || '';
-    recipientRole = r.items.recipientRole || '';
-    recipientDepartment = r.items.recipientDepartment || '';
+  let itemsObj = r.items;
+  if (typeof itemsObj === 'string') {
+    try { itemsObj = JSON.parse(itemsObj); } catch(e) {}
+  }
+
+  if (Array.isArray(itemsObj)) {
+    taskItems = itemsObj;
+  } else if (itemsObj && typeof itemsObj === 'object') {
+    taskItems = Array.isArray(itemsObj.tasks) ? itemsObj.tasks : [];
+    managerFeedback = itemsObj.managerFeedback || '';
+    forwardedBy = itemsObj.forwardedBy || '';
+    forwardedAt = itemsObj.forwardedAt || '';
+    targetLevel = itemsObj.targetLevel || 'manager';
+    reportType = itemsObj.reportType || 'staff_report';
+    recipientId = itemsObj.recipientId || recipientId;
+    recipientUsername = itemsObj.recipientUsername || recipientUsername;
+    recipientFullName = itemsObj.recipientFullName || recipientFullName;
+    recipientRole = itemsObj.recipientRole || recipientRole;
+    recipientDepartment = itemsObj.recipientDepartment || recipientDepartment;
   }
 
   let st = r.status || 'submitted_to_manager';
@@ -21384,8 +21389,9 @@ function updateInboxUnreadBadgeCount(reportsList) {
     unreadCount = allReports.filter(r => (r.senderId === currentUser.id || r.senderUsername === currentUser.username) && (r.managerFeedback || r.leaderFeedback)).length;
   } else if (!isSuper) {
     // Quản lý bộ phận: Đếm các báo cáo gửi đích danh cho mình hoặc thuộc bộ phận mình quản lý đang chờ duyệt
+    const myDept = (currentUser.department || '').trim();
     unreadCount = allReports.filter(r => 
-      (r.recipientId === currentUser.id || String(r.recipientUsername).toLowerCase() === String(currentUser.username).toLowerCase() || (!r.recipientId && isSameDept(r.senderDepartment, currentUser.department))) &&
+      (isDirectRecipientOfReport(currentUser, r) || (!r.recipientId && !r.recipientUsername && (isSameDept(r.senderDepartment, myDept) || isDeptEquivalent(r.senderDepartment, myDept)))) &&
       (r.status === 'submitted_to_manager' || r.status === 'submitted')
     ).length;
   } else {
@@ -21407,28 +21413,12 @@ function populateRpBoxDeptFilter() {
 
   const isSuper = isDirectorOrAdmin(currentUser.role, currentUser.username) || isDeputyDirector(currentUser.role, currentUser.username);
 
-  // QUẢN LÝ BỘ PHẬN: Khóa cố định bộ phận của mình, không cho phép xem bộ phận khác
-  if (!isSuper) {
-    const myDept = currentUser.department || 'Bộ phận';
-    deptSelect.innerHTML = '<option value="' + escapeHtml(myDept) + '">' + escapeHtml(myDept) + '</option>';
-    deptSelect.value = myDept;
-    deptSelect.disabled = true;
-    return;
-  }
-
-  // BAN GIÁM ĐỐC / ADMIN: Cho phép lọc tất cả các bộ phận
   deptSelect.disabled = false;
   const prevVal = deptSelect.value || 'ALL';
   const deptSet = new Set();
 
-  if (typeof globalInitData !== 'undefined' && globalInitData && Array.isArray(globalInitData.departments)) {
-    globalInitData.departments.forEach(d => {
-      const name = typeof d === 'string' ? d : d.name;
-      if (name && name !== 'ALL') deptSet.add(name.trim());
-    });
-  }
-
-  const allReports = getLeadershipReportsShared();
+  // Thu thập các bộ phận từ các báo cáo mà tài khoản hiện tại được quyền tiếp nhận
+  const allReports = getLeadershipReportsShared().filter(r => canUserAccessReport(currentUser, r));
   allReports.forEach(r => {
     if (r.senderDepartment && r.senderDepartment !== 'ALL') {
       deptSet.add(r.senderDepartment.trim());
@@ -21439,12 +21429,23 @@ function populateRpBoxDeptFilter() {
     deptSet.add(currentUser.department.trim());
   }
 
+  // BAN GIÁM ĐỐC / ADMIN: Bổ sung thêm tất cả các phòng ban trong toàn hệ thống
+  if (isSuper) {
+    if (typeof globalInitData !== 'undefined' && globalInitData && Array.isArray(globalInitData.departments)) {
+      globalInitData.departments.forEach(d => {
+        const name = typeof d === 'string' ? d : d.name;
+        if (name && name !== 'ALL') deptSet.add(name.trim());
+      });
+    }
+  }
+
   let opts = '<option value="ALL">Tất cả bộ phận</option>';
-  Array.from(deptSet).sort().forEach(d => {
+  Array.from(deptSet).sort((a, b) => a.localeCompare(b, 'vi')).forEach(d => {
     opts += `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`;
   });
   deptSelect.innerHTML = opts;
 
+  // Mặc định luôn chọn ALL ("Tất cả bộ phận") để hiển thị đầy đủ mọi đầu việc gửi đến cho Quản lý
   if (prevVal && (prevVal === 'ALL' || deptSet.has(prevVal))) {
     deptSelect.value = prevVal;
   } else {
@@ -21618,6 +21619,7 @@ function openPersonalWorkspacePage() {
 
   // Đồng bộ và tải dữ liệu
   fetchPersonalTasksFromSupabase();
+  fetchLeadershipReportsFromSupabase(false);
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
 }
@@ -24741,31 +24743,81 @@ function isUserReportManagerOrLeadership(user = currentUser) {
   return false;
 }
 
+// Hàm chuẩn hóa username loại bỏ dấu chấm và khoảng trắng để so khớp chính xác (vd: thuy.tm == thuytm)
+function cleanReportUsername(str) {
+  return removeAccents(String(str || '')).toLowerCase().replace(/[\.\s\-_]/g, '').trim();
+}
+
+// Kiểm tra xem user có phải là người nhận đích danh của báo cáo không
+function isDirectRecipientOfReport(user, r) {
+  if (!user || !r) return false;
+
+  const myId = String(user.id || '').trim();
+  const myCleanU = cleanReportUsername(user.username);
+  const myFullName = removeAccents(String(user.fullName || user.full_name || '')).toLowerCase().trim();
+
+  const recipientId = String(r.recipientId || '').trim();
+  const recipientCleanU = cleanReportUsername(r.recipientUsername);
+  const recipientFullName = removeAccents(String(r.recipientFullName || '')).toLowerCase().trim();
+
+  // 1. So khớp ID người nhận
+  if (myId && recipientId && myId === recipientId) return true;
+
+  // 2. So khớp Username người nhận (hỗ trợ cả có dấu chấm hoặc không có dấu chấm: thuy.tm == thuytm)
+  if (myCleanU && recipientCleanU && myCleanU === recipientCleanU) return true;
+
+  // 3. So khớp Họ tên người nhận
+  if (myFullName && recipientFullName) {
+    if (myFullName === recipientFullName) return true;
+    if (typeof isStaffMatchedInCell === 'function' && isStaffMatchedInCell(user.fullName || user.full_name, r.recipientFullName)) return true;
+  }
+
+  return false;
+}
+
+// Kiểm tra xem user có phải là người gửi của báo cáo không
+function isSenderOfReport(user, r) {
+  if (!user || !r) return false;
+
+  const myId = String(user.id || '').trim();
+  const myCleanU = cleanReportUsername(user.username);
+  const myFullName = removeAccents(String(user.fullName || user.full_name || '')).toLowerCase().trim();
+
+  const senderId = String(r.senderId || '').trim();
+  const senderCleanU = cleanReportUsername(r.senderUsername);
+  const senderFullName = removeAccents(String(r.senderFullName || '')).toLowerCase().trim();
+
+  // 1. So khớp ID người gửi
+  if (myId && senderId && myId === senderId) return true;
+
+  // 2. So khớp Username người gửi
+  if (myCleanU && senderCleanU && myCleanU === senderCleanU) return true;
+
+  // 3. So khớp Họ tên người gửi
+  if (myFullName && senderFullName) {
+    if (myFullName === senderFullName) return true;
+    if (typeof isStaffMatchedInCell === 'function' && isStaffMatchedInCell(user.fullName || user.full_name, r.senderFullName)) return true;
+  }
+
+  return false;
+}
+
 // Kiểm tra quyền riêng tư & bảo mật: "Gửi đến ai - tài khoản nào thì tài khoản đó mới nhận thông tin"
 function canUserAccessReport(user, r) {
   if (!user || !r) return false;
 
-  const myId = String(user.id || '');
-  const myUsername = String(user.username || '').toLowerCase().trim();
-  const myDept = (user.department || '').trim();
+  // 1. NGƯỜI GỬI: Luôn thấy báo cáo do chính mình gửi đi (Lịch sử gửi)
+  if (isSenderOfReport(user, r)) {
+    return true;
+  }
+
+  // 2. NGƯỜI NHẬN ĐÍCH DANH: Được người gửi chọn đích danh để gửi đến (Hộp thư tiếp nhận)
+  if (isDirectRecipientOfReport(user, r)) {
+    return true;
+  }
+
   const isManagerOrLeader = isUserReportManagerOrLeadership(user);
   const isSuper = isDirectorOrAdmin(user.role, user.username) || isDeputyDirector(user.role, user.username);
-
-  const senderId = String(r.senderId || '');
-  const senderUsername = String(r.senderUsername || '').toLowerCase().trim();
-  const recipientId = String(r.recipientId || '');
-  const recipientUsername = String(r.recipientUsername || '').toLowerCase().trim();
-
-  // 1. NGƯỜI GỬI: Luôn thấy báo cáo do chính mình gửi đi (Lịch sử gửi)
-  if ((myId && senderId === myId) || (myUsername && senderUsername === myUsername)) {
-    return true;
-  }
-
-  // 2. NGƯỜI NHẬN ĐÍCH DANH: Được người gửi chọn đích danh để gửi đến
-  if ((myId && recipientId && recipientId === myId) ||
-      (myUsername && recipientUsername && recipientUsername === myUsername)) {
-    return true;
-  }
 
   // 3. NẾU LÀ NGƯỜI GỬI / NHÂN VIÊN THÔNG THƯỜNG:
   // TUYỆT ĐỐI KHÔNG XEM BÁO CÁO CỦA TÀI KHOẢN KHÁC (tránh lộ thông tin tràn lan)
@@ -24782,16 +24834,25 @@ function canUserAccessReport(user, r) {
         r.reportType === 'manager_summary') {
       return true;
     }
+    const recRole = removeAccents(String(r.recipientRole || '')).toLowerCase();
+    const recDept = removeAccents(String(r.recipientDepartment || '')).toLowerCase();
+    if (recRole.includes('giam doc') || recDept.includes('ban giam doc') || recDept.includes('ban lanh dao')) {
+      return true;
+    }
   }
 
   // 5. QUẢN LÝ BỘ PHẬN:
   // - Nếu báo cáo có ghi nhận đích danh người nhận khác -> KHÔNG ĐƯỢC THẤY!
-  if (recipientId && recipientId !== myId && recipientUsername && recipientUsername !== myUsername) {
+  const hasSpecificOtherRecipient = (r.recipientId || r.recipientUsername || r.recipientFullName) && !isDirectRecipientOfReport(user, r);
+  if (hasSpecificOtherRecipient) {
     return false;
   }
-  // - Tiếp nhận báo cáo gửi cấp Quản lý thuộc đúng bộ phận mình phụ trách
+
+  // - Tiếp nhận báo cáo gửi cấp Quản lý thuộc đúng bộ phận mình phụ trách (khi không ghi đích danh người nhận)
+  const myDept = (user.department || '').trim();
   const roleInfo = getPersonalWorkspaceReportingRole(user);
-  if (roleInfo.isManager && isSameDept(r.senderDepartment, myDept) && (r.targetLevel === 'manager' || r.status === 'submitted_to_manager' || r.status === 'submitted')) {
+  if (roleInfo.isManager && (isSameDept(r.senderDepartment, myDept) || isDeptEquivalent(r.senderDepartment, myDept)) &&
+      (r.targetLevel === 'manager' || r.status === 'submitted_to_manager' || r.status === 'submitted')) {
     return true;
   }
 
@@ -24853,7 +24914,7 @@ function getConsolidatedReportsList() {
 
   if (!isSuper) {
     // Quản lý bộ phận: CHỈ xem các báo cáo tổng hợp thuộc đúng bộ phận mình quản lý hoặc do chính mình lập
-    list = list.filter(r => isSameDept(r.senderDepartment, currentUser.department) || r.senderId === currentUser.id || r.senderUsername === currentUser.username);
+    list = list.filter(r => isSameDept(r.senderDepartment, currentUser.department) || isDeptEquivalent(r.senderDepartment, currentUser.department) || isSenderOfReport(currentUser, r));
   } else {
     // Ban Giám Đốc / Admin: Xem theo bộ phận được lọc trên dropdown
     const deptSelect = document.getElementById('rpBoxFilterDept');
@@ -24958,7 +25019,7 @@ function getAllRpBoxTaskEntries() {
     const deptSelect = document.getElementById('rpBoxFilterDept');
     const selectedDept = deptSelect ? deptSelect.value : 'ALL';
     if (selectedDept && selectedDept !== 'ALL') {
-      reports = reports.filter(r => isSameDept(r.senderDepartment, selectedDept));
+      reports = reports.filter(r => isSameDept(r.senderDepartment, selectedDept) || isDeptEquivalent(r.senderDepartment, selectedDept));
     }
   }
 
