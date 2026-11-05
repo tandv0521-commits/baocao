@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v49') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v50') {
             caches.delete(key);
           }
         });
@@ -21312,6 +21312,14 @@ ALTER TABLE public.leadership_reports ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership_reports FOR ALL USING (true) WITH CHECK (true);`;
 
 function toSupabaseTaskRow(it, user = currentUser) {
+  const finished = isPersonalTaskFinished(it);
+  let statusVal = it.status || (finished ? 'done' : 'pending');
+  if (finished && (statusVal === 'pending' || statusVal === 'rejected_pending')) {
+    if (it.type === 'adhoc') statusVal = 'done';
+    else if (it.type === 'plan') statusVal = 'completed';
+    else if (it.type === 'proposal') statusVal = 'approved_executed';
+    else if (it.type === 'feedback') statusVal = 'resolved';
+  }
   return {
     id: it.id,
     user_id: String(it.userId || (user ? (user.id || user.username) : '')),
@@ -21324,8 +21332,8 @@ function toSupabaseTaskRow(it, user = currentUser) {
     date: (it.date && String(it.date).trim() !== '') ? String(it.date).trim() : null,
     due_date: (it.dueDate && String(it.dueDate).trim() !== '') ? String(it.dueDate).trim() : null,
     is_important: !!it.isImportant,
-    status: it.status || 'pending',
-    is_completed: isPersonalTaskFinished(it),
+    status: statusVal,
+    is_completed: finished,
     feedback_response: it.feedbackResponse || null,
     selected_for_report: (it.selectedForReport !== false),
     updated_at: new Date().toISOString()
@@ -21333,6 +21341,7 @@ function toSupabaseTaskRow(it, user = currentUser) {
 }
 
 function fromSupabaseTaskRow(r) {
+  const isFinished = (r.is_completed === true || r.status === 'done' || r.status === 'completed' || r.status === 'approved_executed' || r.status === 'resolved' || r.status === 'processed' || r.status === 'approved');
   return {
     id: r.id,
     userId: r.user_id,
@@ -21346,10 +21355,10 @@ function fromSupabaseTaskRow(r) {
     dueDate: r.due_date || '',
     isImportant: !!r.is_important,
     status: r.status,
-    isCompleted: !!r.is_completed,
+    isCompleted: isFinished,
     feedbackResponse: r.feedback_response || '',
     selectedForReport: (r.selected_for_report !== false),
-    isReported: false,
+    isReported: isFinished,
     reportedAt: null,
     reportedReportId: null,
     createdAt: r.created_at,
@@ -21505,9 +21514,22 @@ async function fetchPersonalTasksFromSupabase() {
         supabase.from('personal_tasks').upsert(rowsToInsert).then(() => {});
       }
 
-      // Hợp nhất danh sách (chỉ giữ công việc thực tế của người dùng)
+      // Hợp nhất danh sách (chỉ giữ công việc thực tế của người dùng & bảo lưu trạng thái hoàn thành)
       const mergedMap = new Map();
-      cloudItems.forEach(ci => { if (!isSampleTaskItem(ci)) mergedMap.set(ci.id, ci); });
+      cloudItems.forEach(ci => {
+        if (!isSampleTaskItem(ci)) {
+          const localMatch = localItems.find(li => li.id === ci.id);
+          if (localMatch && (isPersonalTaskFinished(localMatch) || localMatch.isReported)) {
+            ci.isCompleted = true;
+            ci.is_completed = true;
+            ci.isReported = true;
+            if (localMatch.status && localMatch.status !== 'pending') {
+              ci.status = localMatch.status;
+            }
+          }
+          mergedMap.set(ci.id, ci);
+        }
+      });
       localItems.forEach(li => {
         if (!isSampleTaskItem(li) && !mergedMap.has(li.id)) mergedMap.set(li.id, li);
       });
@@ -21516,6 +21538,7 @@ async function fetchPersonalTasksFromSupabase() {
       const key = getPersonalWorkspaceStorageKey(currentUser);
       localStorage.setItem(key, JSON.stringify(localData));
       renderPersonalWorkspaceUI();
+      updatePersonalWorkspaceEntryCardStats();
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
@@ -21754,15 +21777,20 @@ let pwIsFullscreen = false;
 // 1. Kiểm tra trạng thái hoàn thành của công việc cá nhân
 function isPersonalTaskFinished(it) {
   if (!it) return false;
-  // Đề xuất chưa duyệt (status !== 'approved_executed') luôn được tính là CHƯA XONG / CHƯA HOÀN THIỆN
+  // 1. Nếu công việc đã được đưa vào báo cáo hoặc gửi vào hộp thư -> Đã hoàn thành nghĩa vụ báo cáo
+  if (it.isReported === true) return true;
+  // 2. Kiểm tra cờ hoàn thành trực tiếp
+  if (it.is_completed === true || it.isCompleted === true) return true;
+  // 3. Chuẩn hóa trạng thái văn bản
+  const st = String(it.status || '').toLowerCase().trim();
+  if (st === 'done' || st === 'completed' || st === 'approved_executed' || st === 'resolved' || st === 'processed' || st === 'approved' || st === 'closed') return true;
+  // 4. Theo từng loại hình cụ thể
   if (it.type === 'proposal') {
-    return it.status === 'approved_executed';
+    return st === 'approved_executed' || st === 'approved';
   }
   if (it.type === 'feedback') {
-    return it.status === 'processed' || it.status === 'resolved';
+    return st === 'processed' || st === 'resolved';
   }
-  if (it.is_completed === true || it.isCompleted === true) return true;
-  if (it.status === 'done' || it.status === 'completed' || it.status === 'approved_executed' || it.status === 'resolved') return true;
   return false;
 }
 
@@ -21945,18 +21973,32 @@ function updatePersonalWorkspaceEntryCardStats() {
 // 4. Modal Nhắc Nhở Công Việc Chưa Làm / Đến Hạn Khi Đăng Nhập Hoặc Khởi Động
 function showPersonalTaskReminderOnLogin() {
   if (!currentUser) return;
+  const modal = document.getElementById('personalTaskReminderModal');
+  
   const data = getPersonalWorkspaceData(currentUser);
   const items = data.items || [];
 
   const pendingItems = items.filter(it => !isPersonalTaskFinished(it));
-  // Sắp xếp: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc cũ lên trên
-  sortPersonalWorkspaceItemsList(pendingItems);
-  let overdueOrDueItems = [];
 
+  // Luôn cập nhật số liệu trên thẻ chính trước
+  updatePersonalWorkspaceEntryCardStats();
+
+  // NẾU TẤT CẢ CÔNG VIỆC ĐÃ HOÀN TẤT HOẶC KHÔNG CÒN VIỆC CHƯA LÀM:
+  // TUYỆT ĐỐI KHÔNG HIỆN THÔNG BÁO VÀ ĐÓNG MODAL NGAY LẬP TỨC
+  if (pendingItems.length === 0) {
+    if (modal) modal.classList.add('hidden');
+    return;
+  }
+
+  // Sắp xếp: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến; việc sắp hết hạn lên trước
+  sortPersonalWorkspaceItemsList(pendingItems);
+  
+  // Chỉ tính vào danh sách đến hạn / quá hạn những kế hoạch thực sự quá hạn hoặc đến hạn hôm nay
+  let overdueOrDueItems = [];
   pendingItems.forEach(it => {
     if (it.type === 'plan' && it.dueDate) {
       const t = calculatePlanTimelineStatus(it);
-      if (t.code === 'overdue' || t.code === 'duetoday' || t.code === 'upcoming') {
+      if (t.code === 'overdue' || t.code === 'duetoday') {
         overdueOrDueItems.push(it);
       }
     }
@@ -21964,77 +22006,77 @@ function showPersonalTaskReminderOnLogin() {
 
   const importantPendingItems = pendingItems.filter(it => it.isImportant);
 
-  // Luôn cập nhật số liệu trên thẻ chính
-  updatePersonalWorkspaceEntryCardStats();
+  if (!modal) return;
 
-  // Nếu có công việc chưa làm hoặc sắp đến hạn, tự động mở bảng thông báo nhắc nhở
-  if (pendingItems.length > 0 || overdueOrDueItems.length > 0) {
-    const modal = document.getElementById('personalTaskReminderModal');
-    if (!modal) return;
+  const greeting = document.getElementById('pwReminderUserGreeting');
+  if (greeting) greeting.innerText = currentUser.fullName || currentUser.username;
 
-    const greeting = document.getElementById('pwReminderUserGreeting');
-    if (greeting) greeting.innerText = currentUser.fullName || currentUser.username;
+  const countP = document.getElementById('pwReminderCountPending');
+  const countD = document.getElementById('pwReminderCountDue');
+  const countImp = document.getElementById('pwReminderCountImportant');
+  if (countP) countP.innerText = pendingItems.length;
+  if (countD) countD.innerText = overdueOrDueItems.length;
+  if (countImp) countImp.innerText = importantPendingItems.length;
 
-    const countP = document.getElementById('pwReminderCountPending');
-    const countD = document.getElementById('pwReminderCountDue');
-    const countImp = document.getElementById('pwReminderCountImportant');
-    if (countP) countP.innerText = pendingItems.length;
-    if (countD) countD.innerText = overdueOrDueItems.length;
-    if (countImp) countImp.innerText = importantPendingItems.length;
-
-    const listEl = document.getElementById('pwReminderItemsList');
-    if (listEl) {
-      const displayItems = pendingItems.slice(0, 12);
-      if (displayItems.length === 0) {
-        listEl.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-slate-400 italic">Hiện không có công việc nào tồn đọng. Chúc bạn một ngày làm việc hiệu quả!</div>';
-      } else {
-        listEl.innerHTML = displayItems.map((it, idx) => {
-          let tag = '';
-          if (it.type === 'adhoc') {
-            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80 shrink-0">⚡ Phát sinh</span>';
-          } else if (it.type === 'plan') {
-            const tl = it.dueDate ? calculatePlanTimelineStatus(it) : null;
-            let dueText = it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch';
-            let dueStyle = 'bg-sky-100/90 text-sky-900 border-sky-200/80';
-            if (tl && (tl.code === 'overdue' || tl.code === 'duetoday')) {
-              dueStyle = 'bg-rose-100/90 text-rose-900 border-rose-200/80 animate-pulse';
-            }
-            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ' + dueStyle + ' border shrink-0">📅 ' + dueText + '</span>';
-          } else if (it.type === 'proposal') {
-            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200/80 shrink-0">💡 Đề xuất</span>';
-          } else {
-            tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-100/90 text-teal-900 border border-teal-200/80 shrink-0">💬 Phản ánh</span>';
+  const listEl = document.getElementById('pwReminderItemsList');
+  if (listEl) {
+    const displayItems = pendingItems.slice(0, 12);
+    if (displayItems.length === 0) {
+      listEl.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-slate-400 italic">Hiện không có công việc nào tồn đọng. Chúc bạn một ngày làm việc hiệu quả!</div>';
+    } else {
+      listEl.innerHTML = displayItems.map((it, idx) => {
+        let tag = '';
+        if (it.type === 'adhoc') {
+          tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80 shrink-0">⚡ Phát sinh</span>';
+        } else if (it.type === 'plan') {
+          const tl = it.dueDate ? calculatePlanTimelineStatus(it) : null;
+          let dueText = it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch';
+          let dueStyle = 'bg-sky-100/90 text-sky-900 border-sky-200/80';
+          if (tl && (tl.code === 'overdue' || tl.code === 'duetoday')) {
+            dueStyle = 'bg-rose-100/90 text-rose-900 border-rose-200/80 animate-pulse';
           }
-
-          return (
-            '<div class="p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/60 border border-slate-200/90 hover:border-amber-400 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between gap-2 cursor-pointer group select-none" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);" title="Bấm vào để xem và cập nhật mục này trong Sổ tay">' +
-              '<div class="flex items-start justify-between gap-2">' +
-                '<div class="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-amber-950 transition flex items-start gap-1.5 min-w-0">' +
-                  '<span class="text-slate-400 group-hover:text-amber-600 font-black shrink-0">' + (idx + 1) + '.</span>' +
-                  '<span class="truncate font-bold">' + escapeHtml(it.title) + '</span>' +
-                  (it.isImportant ? '<span class="text-amber-500 shrink-0 text-xs" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
-                '</div>' +
-                '<div class="shrink-0">' + tag + '</div>' +
-              '</div>' +
-              (it.content ? '<div class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed pl-4">' + escapeHtml(it.content) + '</div>' : '') +
-              '<div class="flex items-center justify-between pt-1.5 border-t border-slate-200/70 text-[10px] text-slate-400 pl-4 mt-auto">' +
-                '<span class="flex items-center gap-1"><i class="fa-regular fa-calendar-days text-[10px]"></i> ' + (it.date ? formatVNDate(it.date) : 'Đang theo dõi') + '</span>' +
-                '<span class="text-amber-600 font-bold group-hover:underline flex items-center gap-1">Xem &amp; Cập nhật <i class="fa-solid fa-angle-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i></span>' +
-              '</div>' +
-            '</div>'
-          );
-        }).join('');
-
-        if (pendingItems.length > 12) {
-          listEl.innerHTML += '<div class="col-span-full text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl">Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...</div>';
+          tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ' + dueStyle + ' border shrink-0">📅 ' + dueText + '</span>';
+        } else if (it.type === 'proposal') {
+          tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200/80 shrink-0">💡 Đề xuất</span>';
+        } else {
+          tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-100/90 text-teal-900 border border-teal-200/80 shrink-0">💬 Phản ánh</span>';
         }
+
+        return (
+          '<div class="p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/60 border border-slate-200/90 hover:border-amber-400 transition-all shadow-2xs hover:shadow-xs flex flex-col justify-between gap-2 cursor-pointer group select-none" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);" title="Bấm vào để xem và cập nhật mục này trong Sổ tay">' +
+            '<div class="flex items-start justify-between gap-2">' +
+              '<div class="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-amber-950 transition flex items-start gap-1.5 min-w-0">' +
+                '<span class="text-slate-400 group-hover:text-amber-600 font-black shrink-0">' + (idx + 1) + '.</span>' +
+                '<span class="truncate font-bold">' + escapeHtml(it.title) + '</span>' +
+                (it.isImportant ? '<span class="text-amber-500 shrink-0 text-xs" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
+              '</div>' +
+              '<div class="shrink-0">' + tag + '</div>' +
+            '</div>' +
+            (it.content ? '<div class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed pl-4">' + escapeHtml(it.content) + '</div>' : '') +
+            '<div class="flex items-center justify-between pt-1.5 border-t border-slate-200/70 text-[10px] text-slate-400 pl-4 mt-auto">' +
+              '<span class="flex items-center gap-1"><i class="fa-regular fa-calendar-days text-[10px]"></i> ' + (it.date ? formatVNDate(it.date) : 'Đang theo dõi') + '</span>' +
+              '<span class="text-amber-600 font-bold group-hover:underline flex items-center gap-1">Xem &amp; Cập nhật <i class="fa-solid fa-angle-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i></span>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      if (pendingItems.length > 12) {
+        listEl.innerHTML += '<div class="col-span-full text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl">Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...</div>';
       }
     }
-
-    setTimeout(() => {
-      modal.classList.remove('hidden');
-    }, 400);
   }
+
+  setTimeout(() => {
+    // Kiểm tra lại lần cuối trước khi hiển thị để phòng trường hợp dữ liệu vừa được hoàn tất
+    const checkData = getPersonalWorkspaceData(currentUser);
+    const checkPending = (checkData.items || []).filter(it => !isPersonalTaskFinished(it));
+    if (checkPending.length > 0) {
+      modal.classList.remove('hidden');
+    } else {
+      modal.classList.add('hidden');
+    }
+  }, 400);
 }
 
 function closePersonalTaskReminderModal() {
@@ -24399,6 +24441,7 @@ function savePersonalItem() {
   if (selectedType === 'adhoc') {
     const rad = document.querySelector('input[name="pwStatusAdhoc"]:checked');
     statusVal = rad ? rad.value : 'pending';
+    isCompletedVal = (statusVal === 'done');
   } else if (selectedType === 'plan') {
     const rad = document.querySelector('input[name="pwStatusPlan"]:checked');
     isCompletedVal = (rad && rad.value === 'completed');
@@ -24406,11 +24449,11 @@ function savePersonalItem() {
   } else if (selectedType === 'proposal') {
     const rad = document.querySelector('input[name="pwStatusProposal"]:checked');
     statusVal = rad ? rad.value : 'rejected_pending';
-    isCompletedVal = (statusVal === 'approved_executed');
+    isCompletedVal = (statusVal === 'approved_executed' || statusVal === 'approved');
   } else if (selectedType === 'feedback') {
     const rad = document.querySelector('input[name="pwStatusFeedback"]:checked');
     statusVal = rad ? rad.value : 'pending';
-    isCompletedVal = (statusVal === 'resolved');
+    isCompletedVal = (statusVal === 'resolved' || statusVal === 'processed');
   }
 
   const data = getPersonalWorkspaceData(currentUser);
@@ -24806,7 +24849,7 @@ function submitLeadershipReport() {
   saveLeadershipReportsShared(sharedReports);
   saveLeadershipReportToSupabase(reportPayload);
 
-  // Đánh dấu các công việc này đã gửi báo cáo trong sổ tay cá nhân
+  // Đánh dấu các công việc này đã gửi báo cáo trong sổ tay cá nhân & tự động hoàn thành
   const userWsData = getPersonalWorkspaceData(currentUser);
   const selectedIds = new Set(currentReportSelectedItems.map(it => it.id));
   (userWsData.items || []).forEach(it => {
@@ -24815,6 +24858,13 @@ function submitLeadershipReport() {
       it.reportedAt = now.toISOString();
       it.reportedReportId = reportId;
       it.selectedForReport = false;
+      it.isCompleted = true;
+      it.is_completed = true;
+      if (it.type === 'adhoc') it.status = 'done';
+      else if (it.type === 'plan') it.status = 'completed';
+      else if (it.type === 'proposal') it.status = 'approved_executed';
+      else if (it.type === 'feedback') it.status = 'resolved';
+      it.updatedAt = now.toISOString();
     }
   });
   savePersonalWorkspaceData(userWsData, currentUser);
@@ -25392,11 +25442,20 @@ function sendManagerSelectedTasksToInbox() {
     reportType: 'manager_personal_tasks'
   };
 
-  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay
+  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay & tự động hoàn thành
   data.items.forEach(it => {
     if (it.selectedForReport) {
       it.isReported = true;
       it.reportedAt = now.toISOString();
+      it.selectedForReport = false;
+      it.isCompleted = true;
+      it.is_completed = true;
+      if (it.type === 'adhoc') it.status = 'done';
+      else if (it.type === 'plan') it.status = 'completed';
+      else if (it.type === 'proposal') it.status = 'approved_executed';
+      else if (it.type === 'feedback') it.status = 'resolved';
+      it.updatedAt = now.toISOString();
+      savePersonalTaskToSupabase(it);
     }
   });
   savePersonalWorkspaceData(data, currentUser);
