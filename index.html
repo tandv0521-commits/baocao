@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v48') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v49') {
             caches.delete(key);
           }
         });
@@ -7089,6 +7089,41 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     /**
+     * KIỂM TRA GIÁ TRỊ CÓ PHẢI LÀ KÝ HIỆU NGÀY NGHỈ THEO QUY CHUẨN (HT, P, Ô, O, CT, VR, H, L...)
+     * Các ngày nghỉ mặc định không có công việc phát sinh nên hiển thị trống trong Biểu đồ Nhịp độ
+     */
+    function isLeaveSymbolValue(val) {
+      if (val === undefined || val === null) return false;
+      const s = String(val).trim();
+      if (!s || s === '-' || s === '·' || s === '0') return false;
+
+      // 1. Nhận diện qua getSmartSymbolInfo (isLeave: true)
+      if (typeof getSmartSymbolInfo === 'function') {
+        const symInfo = getSmartSymbolInfo(s);
+        if (symInfo && symInfo.isLeave) return true;
+      }
+
+      // 2. Khớp mã quy chuẩn trực tiếp (viết hoa / thường)
+      const sUpper = s.toUpperCase();
+      if (['P', 'Ô', 'O', 'CT', 'VR', 'HT', 'H', 'L'].includes(sUpper)) {
+        return true;
+      }
+
+      // 3. Khớp tiếng Việt không dấu
+      if (typeof removeAccents === 'function') {
+        const sNorm = removeAccents(s).toLowerCase();
+        if (sNorm.includes('phep') || sNorm.includes('nghi om') || sNorm.includes('kham') ||
+            sNorm.includes('cong tac') || sNorm.includes('ctac') || sNorm.includes('viec rieng') ||
+            sNorm.includes('hang tuan') || sNorm.includes('nghi tuan') || sNorm.includes('nghi ca') ||
+            sNorm.includes('tap huan') || sNorm.includes('dao tao') || sNorm.includes('nghi le') || sNorm.includes('tet')) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /**
      * TỰ ĐỘNG ẨN SỐ 0: NẾU GIÁ TRỊ LÀ 0 THÌ TRẢ VỀ RỖNG (ẨN ĐI)
      */
     function formatNumberWithCommas(val) {
@@ -12856,10 +12891,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
               const strVal = String(raw).trim();
               if (strVal !== '-' && strVal !== '·' && strVal !== '0') {
-                totalLoggedTaskDays++;
-                deptAggregation[dName].loggedTaskDays++;
-                dailyActiveTasksMap[dc.label]++;
-                thisTaskHasData = true;
+                // BỎ QUA NGÀY NGHỈ THEO QUY CHUẨN (HT, P, Ô, O, CT, VR, H, L...): Nghỉ mặc định không có việc phát sinh
+                if (!isLeaveSymbolValue(strVal)) {
+                  totalLoggedTaskDays++;
+                  deptAggregation[dName].loggedTaskDays++;
+                  dailyActiveTasksMap[dc.label]++;
+                  thisTaskHasData = true;
+                }
               }
             }
           });
@@ -13120,7 +13158,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
                   const strVal = String(raw).trim();
                   if (strVal !== '-' && strVal !== '·' && strVal !== '0') {
-                    dailyMap[dc.label] = (dailyMap[dc.label] || 0) + 1;
+                    // BỎ QUA KÝ HIỆU NGÀY NGHỈ (HT, P, Ô, O, CT, VR, H, L...): Hiển thị trống vì nghỉ không có việc phát sinh
+                    if (!isLeaveSymbolValue(strVal)) {
+                      dailyMap[dc.label] = (dailyMap[dc.label] || 0) + 1;
+                    }
                   }
                 }
               });
@@ -13229,17 +13270,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           dayCols.forEach(dc => {
             const raw = curTask.dailyValues[dc.colIndex];
             if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
-              activeDaysCount++;
-              lastActiveDay = dc.label;
-              lastActiveValStr = String(raw).trim();
+              const strVal = String(raw).trim();
+              // BỎ QUA NGÀY NGHỈ THEO QUY CHUẨN (HT, P, Ô, O, CT, VR, H, L...): Hiển thị trống và không tính vào ngày hoạt động
+              if (!isLeaveSymbolValue(strVal)) {
+                activeDaysCount++;
+                lastActiveDay = dc.label;
+                lastActiveValStr = strVal;
 
-              const cleanStr = String(raw).replace(/,/g, '').trim();
-              const num = parseFloat(cleanStr);
-              if (!isNaN(num) && !curTask.isTextMode) {
-                if (num > maxVal) {
-                  maxVal = num;
-                  peakDay = dc.label;
-                  peakValStr = formatNumberWithCommas(num);
+                const cleanStr = strVal.replace(/,/g, '').trim();
+                const num = parseFloat(cleanStr);
+                if (!isNaN(num) && !curTask.isTextMode) {
+                  if (num > maxVal) {
+                    maxVal = num;
+                    peakDay = dc.label;
+                    peakValStr = formatNumberWithCommas(num);
+                  }
                 }
               }
             }
@@ -13294,7 +13339,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           let html = '';
           dayCols.forEach(dc => {
             const raw = curTask.dailyValues[dc.colIndex];
-            const hasData = (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0');
+            const strVal = (raw !== undefined && raw !== null) ? String(raw).trim() : '';
+            const isLeave = isLeaveSymbolValue(strVal);
+            const hasData = (strVal !== '' && strVal !== '-' && strVal !== '·' && strVal !== '0' && !isLeave);
             const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
             const weekendClass = dc.isWeekend ? "opacity-75" : "";
 
@@ -13304,7 +13351,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             let barColor = "bg-slate-100 group-hover:bg-slate-200";
 
             if (hasData) {
-              const strVal = String(raw).trim();
               if (!curTask.isTextMode) {
                 const num = parseFloat(strVal.replace(/,/g, ''));
                 if (!isNaN(num)) {
@@ -13323,7 +13369,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                     topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${displayVal}</span>`;
                   }
                 } else {
-                  // ĐIỀN CHỮ / KÝ HIỆU TRONG ĐẦU VIỆC ĐỊNH LƯỢNG (Ví dụ: P, Ô, CT, VR, HT, H, L, X, Đ, C...):
+                  // ĐẦU VIỆC CHECK-LIST HOẶC KÝ HIỆU HOÀN THÀNH (X, Đ, C...):
                   const symInfo = getSmartSymbolInfo(strVal);
                   heightPercent = 12; // Mức thấp nhất cho dữ liệu chữ / ký hiệu
                   barColor = isToday 
@@ -13338,9 +13384,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   }
                 }
               } else {
-                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN (X, Đ, C, P...)
+                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN HOÀN THÀNH (X, Đ, C...)
                 const symInfo = getSmartSymbolInfo(strVal);
-                heightPercent = 16; // Mức tượng trưng thấp đồng đều
+                heightPercent = 16;
                 barColor = isToday
                   ? "bg-gradient-to-t from-teal-600 to-emerald-500 ring-2 ring-emerald-400 shadow-xs"
                   : "bg-gradient-to-t from-teal-500 to-emerald-400 group-hover:from-teal-600";
@@ -13352,6 +13398,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
                 }
               }
+            } else if (isLeave) {
+              // HIỂN THỊ TRỐNG: Ngày nghỉ theo quy chuẩn (HT, P, Ô, O, CT, VR, H, L...) nghỉ mặc định không có việc để báo cáo
+              topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
+              heightPercent = 8;
+              barColor = "bg-slate-100/70 group-hover:bg-slate-200/70";
+              const symInfo = getSmartSymbolInfo(strVal);
+              displayVal = symInfo ? `${symInfo.code} (${symInfo.title || 'Nghỉ'})` : strVal;
             } else {
               topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
             }
@@ -14212,7 +14265,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           grp.tasks.forEach(t => {
             const val = t.dailyValues[todayDayNum];
             if (val !== undefined && val !== null && String(val).trim() !== '' && String(val).trim() !== '-' && String(val).trim() !== '·' && String(val).trim() !== '0') {
-              todayEntries++;
+              if (!isLeaveSymbolValue(val)) {
+                todayEntries++;
+              }
             }
           });
         });
