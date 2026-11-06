@@ -858,7 +858,7 @@
     }
   
     /* Chuẩn hóa font chữ và định dạng giao diện sổ tay, hộp thư báo cáo */
-    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal, #confirmSendToInboxModal, #confirmDeletePersonalItemModal, #confirmDeleteLeadershipReportModal {
+    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal, #confirmSendToInboxModal, #confirmDeletePersonalItemModal, #confirmDeleteLeadershipReportModal, #consolidateAssessmentModal, #leaderFeedbackModal {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -26543,7 +26543,10 @@ function renderLeadershipReportsBoxUI() {
   }).join('');
 }
 
-// Tổng hợp báo cáo từ các đầu việc đã được tích chọn (Dành cho Quản lý)
+// Biến tạm lưu trữ thông tin khi Quản lý mở bảng tổng hợp báo cáo
+let _pendingConsolidatePayload = null;
+
+// Tổng hợp báo cáo từ các đầu việc đã được tích chọn (Mở Bảng Hiện Đại, Chuyên Nghiệp)
 function consolidateSelectedTasksFromInbox() {
   if (!currentUser) return;
   const allEntries = getAllRpBoxTaskEntries();
@@ -26564,14 +26567,67 @@ function consolidateSelectedTasksFromInbox() {
 
   const defaultNote = "Báo cáo tổng hợp tình hình công việc " + formatDeptName(targetDept) + " (Tháng " + m + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").";
 
-  const mgrAssessment = prompt("📊 " + formatDeptReportTitle(targetDept) + " (THÁNG " + m + "/" + y + ")\n\nBao gồm " + selectedEntries.length + " đầu việc đã chọn từ " + staffNames.size + " nhân sự.\nNhập ý kiến đánh giá tổng kết của Quản lý kính trình Ban Giám Đốc:", defaultNote);
-  if (mgrAssessment === null) return;
+  _pendingConsolidatePayload = {
+    targetDept,
+    m,
+    y,
+    selectedEntries,
+    staffNames: Array.from(staffNames),
+    defaultNote
+  };
+
+  // Nạp dữ liệu vào bảng Modal chuyên nghiệp
+  const deptEl = document.getElementById('csModalDeptName');
+  if (deptEl) deptEl.innerText = formatDeptName(targetDept);
+
+  const periodEl = document.getElementById('csModalPeriodText');
+  if (periodEl) periodEl.innerText = 'Tháng ' + m + ' / ' + y;
+
+  const taskCountEl = document.getElementById('csModalTaskCount');
+  if (taskCountEl) taskCountEl.innerText = selectedEntries.length;
+
+  const staffCountEl = document.getElementById('csModalStaffCount');
+  if (staffCountEl) staffCountEl.innerText = staffNames.size;
+
+  const staffListEl = document.getElementById('csModalStaffList');
+  if (staffListEl) staffListEl.innerText = staffListStr || '---';
+
+  const inputEl = document.getElementById('csModalAssessmentInput');
+  if (inputEl) inputEl.value = defaultNote;
+
+  const modal = document.getElementById('consolidateAssessmentModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeConsolidateAssessmentModal() {
+  const modal = document.getElementById('consolidateAssessmentModal');
+  if (modal) modal.classList.add('hidden');
+  _pendingConsolidatePayload = null;
+}
+
+function resetConsolidateDefaultNote() {
+  if (_pendingConsolidatePayload) {
+    const inputEl = document.getElementById('csModalAssessmentInput');
+    if (inputEl) inputEl.value = _pendingConsolidatePayload.defaultNote;
+  }
+}
+
+function executeConsolidateSelectedTasksFromInbox() {
+  if (!_pendingConsolidatePayload) {
+    closeConsolidateAssessmentModal();
+    return;
+  }
+
+  const { targetDept, m, y, selectedEntries, staffNames, defaultNote } = _pendingConsolidatePayload;
+  const inputEl = document.getElementById('csModalAssessmentInput');
+  const mgrAssessment = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : defaultNote;
+
+  closeConsolidateAssessmentModal();
 
   const now = new Date();
   const reportId = 'lr_summary_' + Date.now();
   const consolidatedItems = selectedEntries.map(e => {
     const it = JSON.parse(JSON.stringify(e.item));
-    // Giữ nguyên chính xác họ tên của người phụ trách đầu việc (chỉ hiển thị họ tên)
     it.staffName = e.senderFullName;
     it.staffDept = e.senderDepartment;
     it.staffRole = e.senderRole;
@@ -26591,12 +26647,12 @@ function consolidateSelectedTasksFromInbox() {
     displayDate: String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth()+1).padStart(2, '0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
     periodMonth: m,
     periodYear: y,
-    notes: mgrAssessment.trim(),
+    notes: mgrAssessment,
     items: consolidatedItems,
     status: 'forwarded_to_leadership',
     targetLevel: 'leadership',
     reportType: 'manager_summary',
-    managerFeedback: mgrAssessment.trim(),
+    managerFeedback: mgrAssessment,
     forwardedBy: currentUser.fullName,
     forwardedAt: now.toISOString(),
     leaderFeedback: ''
@@ -26628,13 +26684,12 @@ function consolidateSelectedTasksFromInbox() {
   saveLeadershipReportToSupabase(summaryReport);
 
   rpBoxSelectedTaskKeys.clear();
-  showToast("🎉 Đã tạo báo cáo thành công và di chuyển các đầu việc vào Lịch sử báo cáo!");
+  showToast("🎉 Đã tạo Báo cáo Tổng hợp Bộ phận thành công và chuyển lên Ban Giám Đốc!");
 
   // Chuyển sang màn hình Lịch sử báo cáo để hiển thị chi tiết từng đầu việc đã tạo
   setRpBoxViewMode('history');
 }
 
-// Render giao diện Lịch sử tạo báo cáo (hiển thị rõ các đầu việc đã tạo báo cáo)
 function renderRpBoxHistoryUI(container, historyReports) {
   const searchInput = document.getElementById('rpBoxSearchInput');
   const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -27082,7 +27137,7 @@ function openManagerConsolidatedReportModal() {
   const staffListStr = Array.from(staffNames).join(', ');
   const defaultNote = `Báo cáo tổng hợp tình hình công việc Bộ phận ${targetDept} Tháng ${m}/${y}. Bao gồm ${deptReports.length} báo cáo từ ${staffNames.size} nhân sự (${staffListStr}). Tổng cộng: ${adhocCount} việc phát sinh, ${planCount} kế hoạch, ${propCount} đề xuất kiến nghị.`;
 
-  const mgrAssessment = prompt(`📊 TỔNG HỢP BÁO CÁO BỘ PHẬN ${targetDept} (THÁNG ${m}/${y})\n\nBao gồm ${deptReports.length} báo cáo từ ${staffNames.size} nhân sự.\nNhập ý kiến đánh giá tổng kết của Quản lý kính trình Ban Giám Đốc:`, defaultNote);
+  const mgrAssessment = defaultNote;
   if (mgrAssessment === null) return;
 
   const now = new Date();
@@ -27123,15 +27178,42 @@ function openManagerConsolidatedReportModal() {
   showToast(`🎉 Đã tạo Báo cáo Tổng hợp Bộ phận ${targetDept} và chuyển lên Ban Lãnh đạo thành công!`);
 }
 
-// 5. Ban Giám Đốc cho ý kiến chỉ đạo
+// 5. Ban Giám Đốc cho ý kiến chỉ đạo (Dùng Modal Hiện Đại)
+let _pendingLeaderFeedbackReportId = null;
+
 function promptLeaderFeedback(reportId) {
-  const fb = prompt("Nhập ý kiến chỉ đạo của Ban Giám Đốc gửi cho Quản lý & Nhân sự:");
-  if (fb === null || !fb.trim()) return;
+  _pendingLeaderFeedbackReportId = reportId;
+  const inputEl = document.getElementById('leaderFeedbackInput');
+  if (inputEl) inputEl.value = '';
+  const modal = document.getElementById('leaderFeedbackModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeLeaderFeedbackModal() {
+  const modal = document.getElementById('leaderFeedbackModal');
+  if (modal) modal.classList.add('hidden');
+  _pendingLeaderFeedbackReportId = null;
+}
+
+function executeSubmitLeaderFeedback() {
+  const reportId = _pendingLeaderFeedbackReportId;
+  if (!reportId) {
+    closeLeaderFeedbackModal();
+    return;
+  }
+
+  const inputEl = document.getElementById('leaderFeedbackInput');
+  const fb = inputEl ? inputEl.value.trim() : '';
+  if (!fb) {
+    showToast("Vui lòng nhập nội dung ý kiến chỉ đạo!", true);
+    return;
+  }
+  closeLeaderFeedbackModal();
 
   const sharedReports = getLeadershipReportsShared();
   const rep = sharedReports.find(r => r.id === reportId);
   if (rep) {
-    rep.leaderFeedback = fb.trim();
+    rep.leaderFeedback = fb;
     saveLeadershipReportsShared(sharedReports);
     saveLeadershipReportToSupabase(rep);
 
@@ -27143,7 +27225,7 @@ function promptLeaderFeedback(reportId) {
         if (uData && Array.isArray(uData.items)) {
           (rep.items || []).forEach(repIt => {
             const m = uData.items.find(x => x.id === repIt.id);
-            if (m) m.feedbackResponse = `[Ban Giám Đốc]: ${fb.trim()}`;
+            if (m) m.feedbackResponse = `[Ban Giám Đốc]: ${fb}`;
           });
           localStorage.setItem(uKey, JSON.stringify(uData));
         }
@@ -30332,6 +30414,131 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         <button type="button" onclick="executeDeleteLeadershipReport()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-trash-can text-xs"></i>
           <span>Xóa Báo Cáo</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+
+  <!-- ================= MODAL NHẬP Ý KIẾN ĐÁNH GIÁ TỔNG HỢP BÁO CÁO BỘ PHẬN (THIẾT KẾ HIỆN ĐẠI, CHUYÊN NGHIỆP) ================= -->
+  <div id="consolidateAssessmentModal" class="fixed inset-0 z-[85] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Tổng Hợp Báo Cáo Bộ Phận</h4>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Kính trình Ban Giám Đốc xem xét & chỉ đạo</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConsolidateAssessmentModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-3.5 text-xs">
+        <!-- THẺ TỔNG QUAN BỘ PHẬN & QUY MÔ -->
+        <div class="p-3.5 bg-gradient-to-br from-slate-50 to-emerald-50/40 rounded-2xl border border-slate-200/90 space-y-2 shadow-2xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-500 font-semibold text-[11px]">BỘ PHẬN BÁO CÁO:</span>
+            <span id="csModalDeptName" class="font-black text-emerald-800 text-xs sm:text-sm">---</span>
+          </div>
+          <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 text-[11px]">
+            <span class="text-slate-500 font-medium">Kỳ báo cáo:</span>
+            <span id="csModalPeriodText" class="font-bold text-slate-700">Tháng 11/2026</span>
+          </div>
+          <div class="flex items-center justify-between gap-2 text-[11px]">
+            <span class="text-slate-500 font-medium">Quy mô tổng hợp:</span>
+            <span class="font-bold text-slate-800">
+              <span id="csModalTaskCount" class="text-emerald-700 font-black">0</span> đầu việc từ 
+              <span id="csModalStaffCount" class="text-indigo-700 font-black">0</span> nhân sự
+            </span>
+          </div>
+          <div class="pt-1 text-[11px] text-slate-500 truncate" id="csModalStaffListWrap">
+            Nhân sự: <span id="csModalStaffList" class="font-semibold text-slate-700">---</span>
+          </div>
+        </div>
+
+        <!-- Ô NHẬP Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ -->
+        <div class="space-y-1.5">
+          <label for="csModalAssessmentInput" class="block font-bold text-slate-700 text-xs flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+              <span>Ý kiến đánh giá tổng kết của Quản lý:</span>
+            </span>
+            <button type="button" onclick="resetConsolidateDefaultNote()" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold hover:underline flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i>
+              <span>Mặc định</span>
+            </button>
+          </label>
+          <textarea id="csModalAssessmentInput" rows="4" class="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition resize-none leading-relaxed text-slate-800 font-medium" placeholder="Nhập ý kiến đánh giá tình hình công việc, tiến độ và đề xuất của bộ phận kính trình Ban Giám Đốc..."></textarea>
+          <p class="text-[11px] text-slate-400 font-medium">Quản lý có thể giữ nguyên ý kiến tổng hợp mẫu hoặc chỉnh sửa chi tiết theo yêu cầu.</p>
+        </div>
+
+        <!-- HỘP THÔNG BÁO TIẾN TRÌNH RÕ RÀNG -->
+        <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl text-[11px] text-emerald-950 flex items-start gap-2.5 shadow-2xs">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-sm mt-0.5 shrink-0"></i>
+          <div class="leading-relaxed">
+            <b>Tiến trình xử lý:</b> Báo cáo tổng hợp sẽ được chuyển thẳng đến <b>Ban Giám Đốc</b> để xem xét & chỉ đạo, đồng thời lưu trữ vào <b>Lịch sử báo cáo</b> của bộ phận để bạn xuất file Word, Excel hoặc in ấn bất kỳ lúc nào.
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConsolidateAssessmentModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeConsolidateSelectedTasksFromInbox()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-600/25 transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+          <span>Xác Nhận & Gửi Ban Giám Đốc</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL BAN GIÁM ĐỐC CHO Ý KIẾN CHỈ ĐẠO (THIẾT KẾ HIỆN ĐẠI, CHUYÊN NGHIỆP) ================= -->
+  <div id="leaderFeedbackModal" class="fixed inset-0 z-[85] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-comment-dots"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Ý Kiến Chỉ Đạo Của Ban Giám Đốc</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Chỉ đạo gửi Quản lý & Nhân sự bộ phận</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeLeaderFeedbackModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-2 text-xs">
+        <label for="leaderFeedbackInput" class="block font-bold text-slate-700">Nội dung ý kiến chỉ đạo:</label>
+        <textarea id="leaderFeedbackInput" rows="4" class="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-none leading-relaxed text-slate-800 font-medium" placeholder="Nhập ý kiến nhận xét, chỉ đạo định hướng công việc cho bộ phận..."></textarea>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeLeaderFeedbackModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeSubmitLeaderFeedback()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-amber-600/25 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+          <span>Gửi Ý Kiến Chỉ Đạo</span>
         </button>
       </div>
 
