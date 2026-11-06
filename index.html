@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v56') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v57') {
             caches.delete(key);
           }
         });
@@ -13016,8 +13016,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             scopeText = `Bộ phận: ${currentSelectedDept} • `;
           }
           leaderboardSubtitle.innerText = isManagerOrAdmin 
-            ? `${scopeText}Đã hoàn thành báo cáo đến ngày ${targetDateLabel}` 
-            : `Tiến độ báo cáo đến ngày ${targetDateLabel}`;
+            ? `${scopeText}Đã hoàn thành đủ báo cáo đến ngày ${targetDateLabel}` 
+            : `Đã hoàn thành đủ báo cáo đến ngày ${targetDateLabel}`;
         }
 
         if (leaderboardBadge) {
@@ -13060,7 +13060,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 <div class="text-right shrink-0">
                   <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
                     <i class="fa-solid fa-check text-emerald-600 text-[9px]"></i>
-                    <span>${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày</span>
+                    <span>Đủ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày</span>
                   </span>
                   <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này'}</p>
                 </div>
@@ -13752,13 +13752,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         };
 
         // Phân loại:
-        // Nếu người/nhóm có ngày chưa báo cáo (unreportedDaysCount > 0) -> Đưa vào bảng đôn đốc
+        // 1. Nếu người/nhóm có ngày chưa báo cáo (unreportedDaysCount > 0) -> Đưa vào bảng đôn đốc
         if (unreportedDaysCount > 0) {
           pendingList.push(itemObj);
         }
 
-        // Nếu đã hoàn thành báo cáo đến ngày targetDayNum -> Đưa vào bảng thi đua
-        if (hasReportedTargetDay || unreportedDaysCount === 0) {
+        // 2. BẢNG THI ĐUA TIẾN ĐỘ: Chỉ những người/nhóm ĐÃ BÁO CÁO ĐỦ 100% (không thiếu bất kỳ ngày nào tính đến ngày xét duyệt: unreportedDaysCount === 0) mới được xuất hiện!
+        if (unreportedDaysCount === 0 && totalTasks > 0 && totalDaysToEval > 0) {
           completedList.push(itemObj);
         }
       });
