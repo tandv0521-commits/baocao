@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v55') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v56') {
             caches.delete(key);
           }
         });
@@ -2660,164 +2660,148 @@
   </div>
 
 
-  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC (THIẾT KẾ RỘNG RÃI, HIỆN ĐẠI & TRỰC QUAN) ================= -->
-  <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
-    <div class="bg-white border border-slate-200/90 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col p-5 sm:p-7 shadow-2xl ring-1 ring-slate-900/5 space-y-4 animate-in zoom-in-95 duration-150">
+  <!-- ================= MODAL GIAO VIỆC & QUẢN LÝ ĐẦU VIỆC (THIẾT KẾ RỘNG RÃI, COMPACT TOOLBAR & HIỂN THỊ TỐI ĐA ĐẦU VIỆC) ================= -->
+  <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-3 md:p-5 animate-in fade-in duration-200">
+    <div class="bg-white border border-slate-200/90 rounded-3xl max-w-5xl xl:max-w-6xl w-full max-h-[94vh] flex flex-col p-3.5 sm:p-5 shadow-2xl ring-1 ring-slate-900/5 space-y-2.5 animate-in zoom-in-95 duration-150">
       
-      <!-- HEADER MODAL -->
-      <div class="flex items-start sm:items-center justify-between pb-3.5 border-b border-slate-100 flex-shrink-0 gap-3">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-            <i class="fa-solid fa-clipboard-list text-lg"></i>
+      <!-- HEADER MODAL TINH GỌN -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 flex-shrink-0 gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <i class="fa-solid fa-clipboard-list text-sm"></i>
           </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">Phân Công & Quản Lý Danh Mục Công Việc</h3>
-              <span id="modalAssignPeriodBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">Kỳ hiện tại</span>
-            </div>
-            <p class="text-xs text-slate-500 font-medium truncate mt-0.5">Sắp xếp thứ tự bằng kéo thả chuột, đổi tên hoặc thêm công việc. Các kỳ cũ được bảo lưu 100% nguyên vẹn.</p>
+          <div class="min-w-0 flex items-center gap-2 flex-wrap">
+            <h3 class="text-sm sm:text-base font-black text-slate-800 tracking-tight">Phân Công & Quản Lý Danh Mục Công Việc</h3>
+            <span id="modalAssignPeriodBadge" class="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Kỳ hiện tại</span>
+            <span class="text-[11px] text-slate-400 font-medium hidden md:inline">• Kéo thả chuột đổi thứ tự hoặc thêm/sửa đầu việc</span>
           </div>
         </div>
-        <button type="button" onclick="closeAssignModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
-          <i class="fa-solid fa-xmark text-base group-hover:rotate-90 transition-transform duration-200"></i>
+        <button type="button" onclick="closeAssignModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs group" title="Đóng cửa sổ">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
-      <!-- KHU VỰC LỰA CHỌN NHÂN SỰ PHÂN CÔNG (GỒM 2 PHƯƠNG THỨC TÁCH BIỆT RÕ RÀNG) -->
-      <div class="space-y-3 flex-shrink-0">
-        <!-- PHƯƠNG THỨC 1: TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN BỘ CÔNG TY) -->
-        <div class="relative z-40 bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-200/90 rounded-2xl p-2.5 sm:p-3 shadow-2xs transition focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500" id="modalAssignQuickSearchWrapper">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-white border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-              <i class="fa-solid fa-user-tag text-xs"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-1">
-                <label for="modalAssignQuickStaffSearch" class="block text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5 cursor-pointer">
-                  <i class="fa-solid fa-magnifying-glass text-[10px] text-emerald-600"></i>
-                  <span>Tìm kiếm nhanh nhân viên theo tên <span class="text-slate-400 font-semibold normal-case">(Gõ tìm để hiện danh sách gợi ý toàn công ty)</span></span>
-                </label>
-              </div>
-              <div class="relative flex items-center">
-                <input type="text" id="modalAssignQuickStaffSearch" oninput="onModalAssignQuickSearchInput(this.value)" onfocus="onModalAssignQuickSearchFocus()" placeholder="Nhập tên nhân viên cần phân công (ví dụ: Đức, Tuấn, Phó Giám Đốc, Lan...)" class="w-full bg-white border border-slate-200/90 focus:border-emerald-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none shadow-2xs pr-8" autocomplete="off">
-                <button type="button" id="modalAssignQuickSearchClearBtn" onclick="clearModalAssignQuickSearch()" class="hidden absolute right-2 w-5 h-5 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center text-[11px] transition cursor-pointer" title="Xóa tìm kiếm">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+      <!-- THANH TOOLBAR ĐIỀU KHIỂN SIÊU GỌN: CHỌN BỘ PHẬN + CHỌN NHÂN SỰ + TÌM KIẾM NHANH TRÊN CÙNG 1 HÀNG -->
+      <div class="bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-200/80 rounded-2xl p-2 sm:p-2.5 space-y-1.5 flex-shrink-0 relative z-30">
+        <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
+        <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
+        <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
 
-          <!-- DROPDOWN DANH SÁCH GỢI Ý NHÂN VIÊN TƯƠNG ỨNG -->
-          <div id="modalAssignQuickSearchDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-300 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div class="px-3 py-2 border-b border-slate-100 bg-emerald-50/80 flex items-center justify-between text-[11px] font-bold text-emerald-950">
-              <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
-                <span>Danh sách nhân viên gợi ý tương ứng</span>
-              </span>
-              <span id="modalAssignQuickSearchCount" class="text-[10px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">0 kết quả</span>
-            </div>
-            <div id="modalAssignQuickSearchResults" class="max-h-60 overflow-y-auto custom-scroll p-1.5 space-y-1">
-              <!-- Render items dynamically -->
-            </div>
-          </div>
-        </div>
-
-        <!-- DẢI PHÂN CÁCH TRỰC QUAN TÁCH BIỆT RÕ RÀNG -->
-        <div class="flex items-center gap-3">
-          <div class="h-px bg-slate-200 flex-1"></div>
-          <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 bg-white select-none">
-            HOẶC CHỌN THEO BỘ PHẬN - NHÂN SỰ PHÂN CÔNG
-          </span>
-          <div class="h-px bg-slate-200 flex-1"></div>
-        </div>
-
-        <!-- PHƯƠNG THỨC 2: CHỌN THEO BỘ PHẬN & NHÂN SỰ PHÂN CÔNG (2 CỘT TÁCH BIỆT) -->
-        <div class="relative z-30 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <!-- Hidden native selects giữ tương thích 100% với logic hệ thống -->
-          <select id="modalAssignDeptSelect" onchange="onAssignDeptSelectChange(this.value)" class="hidden"></select>
-          <select id="modalAssignStaffSelect" onchange="onAssignStaffSelectChange(this.value)" class="hidden"></select>
-
-          <!-- 1. BỘ PHẬN PHÂN CÔNG: CUSTOM PICKER -->
-          <div class="relative" id="modalAssignDeptPickerWrapper">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
-              <i class="fa-solid fa-layer-group text-slate-400 text-xs"></i>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-2.5 items-end">
+          
+          <!-- 1. BỘ PHẬN PHÂN CÔNG (md:col-span-4) -->
+          <div class="relative md:col-span-4" id="modalAssignDeptPickerWrapper">
+            <label class="block text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-layer-group text-slate-400 text-[11px]"></i>
               <span>1. Chọn Bộ phận</span>
             </label>
-            <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span id="modalAssignDeptIconBox" class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+            <button type="button" id="modalAssignDeptBtn" onclick="toggleModalAssignDeptPicker(event)" class="w-full h-8.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer text-left">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="modalAssignDeptIconBox" class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-[11px] shadow-2xs">
                   <i class="fa-solid fa-layer-group"></i>
                 </span>
-                <span id="modalAssignDeptText" class="truncate font-bold text-slate-800">Đang tải bộ phận...</span>
+                <span id="modalAssignDeptText" class="truncate font-bold text-slate-800 text-xs">Đang tải bộ phận...</span>
               </div>
-              <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs shrink-0 transition-transform duration-200"></i>
+              <i id="modalAssignDeptChevron" class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 transition-transform duration-200"></i>
             </button>
 
             <!-- Dropdown menu chọn bộ phận -->
             <div id="modalAssignDeptMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                 <div class="relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                  <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="modalAssignDeptSearchInput" oninput="filterModalAssignDeptList()" placeholder="Tìm nhanh bộ phận..." class="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20" autocomplete="off">
                 </div>
               </div>
-              <div id="modalAssignDeptList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+              <div id="modalAssignDeptList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
             </div>
           </div>
 
-          <!-- 2. NHÂN SỰ PHÂN CÔNG: CUSTOM PICKER -->
-          <div class="relative" id="modalAssignStaffPickerWrapper">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
-              <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
-              <span>2. Chọn Nhân sự phân công <span class="text-rose-500">*</span></span>
+          <!-- 2. NHÂN SỰ PHÂN CÔNG (md:col-span-4) -->
+          <div class="relative md:col-span-4" id="modalAssignStaffPickerWrapper">
+            <label class="block text-[10.5px] font-bold uppercase tracking-wider text-emerald-800 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-user-check text-emerald-600 text-[11px]"></i>
+              <span>2. Nhân sự phân công <span class="text-rose-500">*</span></span>
             </label>
-            <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full bg-emerald-50/30 hover:bg-emerald-50/60 border border-emerald-300 hover:border-emerald-500 rounded-xl px-3 py-2.5 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-2 cursor-pointer text-left">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span id="modalAssignStaffAvatarBox" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs">
-                  <i class="fa-solid fa-user text-[11px]"></i>
+            <button type="button" id="modalAssignStaffBtn" onclick="toggleModalAssignStaffPicker(event)" class="w-full h-8.5 bg-emerald-50/50 hover:bg-emerald-50/80 border border-emerald-300 hover:border-emerald-500 rounded-xl px-2.5 py-1 text-xs font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-500 focus:outline-none transition shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer text-left">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="modalAssignStaffAvatarBox" class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-2xs">
+                  <i class="fa-solid fa-user"></i>
                 </span>
                 <div class="min-w-0 flex flex-col leading-tight">
-                  <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950">Chọn nhân sự...</span>
-                  <span id="modalAssignStaffSubText" class="truncate text-[10px] text-emerald-700 font-medium hidden"></span>
+                  <span id="modalAssignStaffText" class="truncate font-bold text-emerald-950 text-xs">Chọn nhân sự...</span>
+                  <span id="modalAssignStaffSubText" class="truncate text-[9.5px] text-emerald-700 font-medium hidden"></span>
                 </div>
               </div>
-              <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-xs shrink-0 transition-transform duration-200"></i>
+              <i id="modalAssignStaffChevron" class="fa-solid fa-chevron-down text-emerald-600 text-[10px] shrink-0 transition-transform duration-200"></i>
             </button>
 
             <!-- Dropdown menu chọn nhân sự -->
             <div id="modalAssignStaffMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-200 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div class="p-2.5 border-b border-slate-100 bg-slate-50/90">
+              <div class="p-2 border-b border-slate-100 bg-slate-50/90">
                 <div class="relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                  <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" autocomplete="off">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                  <input type="text" id="modalAssignStaffSearchInput" oninput="filterModalAssignStaffList()" placeholder="Tìm tên nhân sự..." class="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20" autocomplete="off">
                 </div>
               </div>
-              <div id="modalAssignStaffList" class="max-h-56 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+              <div id="modalAssignStaffList" class="max-h-52 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
             </div>
           </div>
+
+          <!-- 3. TÌM KIẾM NHANH NHÂN VIÊN TOÀN CÔNG TY (md:col-span-4) -->
+          <div class="relative md:col-span-4 z-40" id="modalAssignQuickSearchWrapper">
+            <label for="modalAssignQuickStaffSearch" class="block text-[10.5px] font-bold uppercase tracking-wider text-teal-950 mb-1 flex items-center justify-between cursor-pointer">
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-bolt text-amber-500 text-[10.5px]"></i>
+                <span>Tìm nhanh toàn cty</span>
+              </span>
+              <span class="text-slate-400 font-normal text-[10px] normal-case hidden sm:inline">(Gõ tên để gợi ý)</span>
+            </label>
+            <div class="relative flex items-center">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-emerald-600 text-[10.5px] pointer-events-none"></i>
+              <input type="text" id="modalAssignQuickStaffSearch" oninput="onModalAssignQuickSearchInput(this.value)" onfocus="onModalAssignQuickSearchFocus()" placeholder="Gõ tên nhân viên (Đức, Tuấn, Lan...)" class="w-full h-8.5 bg-white border border-slate-200/90 focus:border-emerald-500 rounded-xl pl-7 pr-7 py-1 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 shadow-2xs" autocomplete="off">
+              <button type="button" id="modalAssignQuickSearchClearBtn" onclick="clearModalAssignQuickSearch()" class="hidden absolute right-2 w-4.5 h-4.5 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center text-[10px] transition cursor-pointer" title="Xóa tìm kiếm">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <!-- Dropdown gợi ý nhân viên tìm nhanh -->
+            <div id="modalAssignQuickSearchDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl border border-emerald-300 shadow-2xl shadow-emerald-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div class="px-2.5 py-1.5 border-b border-slate-100 bg-emerald-50/80 flex items-center justify-between text-[10.5px] font-bold text-emerald-950">
+                <span class="flex items-center gap-1">
+                  <i class="fa-solid fa-list-check text-emerald-600 text-[10px]"></i>
+                  <span>Gợi ý nhân viên</span>
+                </span>
+                <span id="modalAssignQuickSearchCount" class="text-[9.5px] font-bold text-emerald-800 bg-white px-1.5 py-0.2 rounded-full border border-emerald-200">0 kết quả</span>
+              </div>
+              <div id="modalAssignQuickSearchResults" class="max-h-52 overflow-y-auto custom-scroll p-1 space-y-0.5"></div>
+            </div>
+          </div>
+
         </div>
+
+        <!-- DẢI THÔNG BÁO TRẠNG THÁI & HƯỚNG DẪN SIÊU MỎNG -->
+        <div class="flex items-center justify-between gap-2 text-[11px] pt-1 border-t border-emerald-100/80 text-slate-600">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <i class="fa-solid fa-circle-info text-emerald-600 text-xs shrink-0"></i>
+            <span id="modalAssignActiveStaffNote" class="truncate font-medium">Vui lòng chọn nhân sự để phân công và quản lý các đầu việc.</span>
+          </div>
+          <div class="hidden sm:flex items-center gap-1.5 text-[10.5px] text-slate-400 shrink-0 font-medium">
+            <span class="inline-flex items-center gap-1 bg-white px-1.5 py-0.2 rounded border border-slate-200 text-slate-600 font-semibold shadow-2xs">
+              <i class="fa-solid fa-grip-vertical text-emerald-600 text-[10px]"></i> Kéo thả
+            </span>
+            <span>hoặc</span>
+            <span class="inline-flex items-center gap-0.5 bg-white px-1.5 py-0.2 rounded border border-slate-200 text-slate-600 font-semibold shadow-2xs">
+              ↑ ↓
+            </span>
+            <span>đổi vị trí</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- THANH THÔNG BÁO TRẠNG THÁI & HƯỚNG DẪN KÉO THẢ -->
-      <div class="bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-100/90 rounded-2xl px-4 py-2.5 flex items-center justify-between gap-3 text-xs flex-shrink-0">
-        <div class="flex items-center gap-2 text-slate-700 font-medium min-w-0">
-          <i class="fa-solid fa-circle-info text-emerald-600 text-sm shrink-0"></i>
-          <span id="modalAssignActiveStaffNote" class="truncate">Vui lòng chọn nhân sự để quản lý phân công công việc.</span>
-        </div>
-        <div class="flex items-center gap-2 text-[11px] text-slate-500 shrink-0 font-medium hidden sm:flex">
-          <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 font-bold shadow-2xs">
-            <i class="fa-solid fa-grip-vertical text-emerald-600"></i> Kéo thả
-          </span>
-          <span>hoặc dùng</span>
-          <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 font-bold shadow-2xs">
-            ↑ ↓ Mũi tên
-          </span>
-          <span>để đổi vị trí hàng</span>
-        </div>
-      </div>
-
-      <!-- KHU VỰC DANH MỤC CÔNG VIỆC RỘNG RÃI & HIỆN ĐẠI -->
-      <div class="flex-1 flex flex-col min-h-0 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 space-y-3 relative z-10">
+      <!-- KHU VỰC DANH MỤC CÔNG VIỆC: MỞ RỘNG TỐI ĐA CHIỀU CAO & DIỆN TÍCH QUAN SÁT -->
+      <div class="flex-1 flex flex-col min-h-0 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-2.5 sm:p-3 space-y-2 relative z-10">
         <!-- Header danh mục -->
         <div class="flex items-center justify-between flex-shrink-0">
           <div class="flex items-center gap-2">
@@ -2831,26 +2815,19 @@
           </button>
         </div>
 
-        <!-- Tiêu đề cột gợi ý -->
-        <div class="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-slate-100/90 rounded-xl text-[11px] font-bold text-slate-500 uppercase tracking-wider flex-shrink-0">
-          <div class="w-24 text-center shrink-0">Vị trí / STT</div>
-          <div class="flex-1">Tên nội dung công việc & Hướng dẫn chi tiết</div>
-          <div class="w-16 text-center shrink-0">Thao tác</div>
-        </div>
-
-        <!-- Khung cuộn danh sách công việc -->
-        <div id="assignTasksListEditor" class="flex-1 space-y-2.5 overflow-y-auto custom-scroll pr-1.5 min-h-[220px] max-h-[46vh]"></div>
+        <!-- Khung cuộn danh sách công việc: Tối đa hóa chiều cao (lên tới 62vh - 65vh) -->
+        <div id="assignTasksListEditor" class="flex-1 space-y-1.5 sm:space-y-2 overflow-y-auto custom-scroll pr-1 min-h-[260px] max-h-[62vh] sm:max-h-[65vh]"></div>
       </div>
 
-      <!-- FOOTER MODAL -->
-      <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+      <!-- FOOTER MODAL GỌN GÀNG -->
+      <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5 flex-shrink-0">
         <div class="text-[11px] text-slate-500 flex items-center gap-1.5 w-full sm:w-auto">
           <i class="fa-solid fa-shield-halved text-emerald-600 text-xs shrink-0"></i>
           <span>Khi đổi tên hoặc sắp xếp ở kỳ hiện tại, <b>các tháng cũ bảo lưu 100%</b> tên và số liệu gốc.</span>
         </div>
-        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-          <button onclick="closeAssignModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy bỏ</button>
-          <button onclick="submitAdminAssign()" id="btnSubmitAssign" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer">
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="closeAssignModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">Hủy bỏ</button>
+          <button onclick="submitAdminAssign()" id="btnSubmitAssign" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-check"></i>
             <span>Lưu phân công</span>
           </button>
@@ -2859,7 +2836,6 @@
 
     </div>
   </div>
-
 
   <!-- ================= MODAL DI CHUYỂN & SAO CHÉP ĐẦU VIỆC (CHUYỂN/NHÂN BẢN CHO BỘ PHẬN/NHÂN SỰ) ================= -->
   <div id="transferTaskModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -17332,7 +17308,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
       const row = document.createElement('div');
-      row.className = "assign-task-row bg-white hover:bg-slate-50/60 p-3 sm:p-3.5 rounded-2xl border border-slate-200/90 hover:border-emerald-300 shadow-2xs hover:shadow-xs transition flex items-start gap-2.5 sm:gap-3 group select-none";
+      // Thiết kế hàng tinh gọn (Compact Row): chiều cao tối ưu, bo góc sắc nét, padding vừa vặn
+      row.className = "assign-task-row bg-white hover:bg-slate-50/80 p-2 sm:p-2.5 rounded-xl border border-slate-200/90 hover:border-emerald-400 shadow-2xs hover:shadow-xs transition flex items-center gap-2 sm:gap-2.5 group select-none";
       row.draggable = true;
       row.dataset.originalTaskName = originalTaskName || "";
       row.dataset.hasData = hasData ? "true" : "false";
@@ -17343,49 +17320,49 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       row.dataset.originalOrder = displayNum;
 
       const dataBadge = hasData 
-        ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-lg font-bold whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs"><i class="fa-solid fa-database text-[9px]"></i><span>Đã có số</span></span>` 
-        : `<span class="text-[10px] bg-slate-100 text-slate-500 border border-slate-200/80 px-2 py-0.5 rounded-lg font-medium whitespace-nowrap shrink-0">Chưa có số</span>`;
+        ? `<span class="text-[9.5px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-md font-bold whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs"><i class="fa-solid fa-database text-[8.5px]"></i><span>Đã có số</span></span>` 
+        : `<span class="text-[9.5px] bg-slate-100 text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded-md font-medium whitespace-nowrap shrink-0">Chưa có số</span>`;
 
       row.innerHTML = `
-        <!-- ĐIỀU KHIỂN THỨ TỰ & KÉO THẢ -->
-        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 pt-1">
-          <div class="task-drag-handle flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100/80 hover:bg-emerald-50 text-slate-400 hover:text-emerald-700 cursor-grab active:cursor-grabbing transition shrink-0" title="Kéo thả chuột để đổi vị trí công việc">
-            <i class="fa-solid fa-grip-vertical text-xs pointer-events-none"></i>
+        <!-- ĐIỀU KHIỂN THỨ TỰ & KÉO THẢ (COMPACT) -->
+        <div class="flex items-center gap-1 shrink-0">
+          <div class="task-drag-handle flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-100/90 hover:bg-emerald-50 text-slate-400 hover:text-emerald-700 cursor-grab active:cursor-grabbing transition shrink-0" title="Kéo thả chuột để đổi vị trí công việc">
+            <i class="fa-solid fa-grip-vertical text-[11px] pointer-events-none"></i>
           </div>
           <div class="flex flex-col gap-0.5 shrink-0">
-            <button type="button" onclick="moveAssignTaskRowUp(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển lên trên">
-              <i class="fa-solid fa-chevron-up text-[9px] pointer-events-none"></i>
+            <button type="button" onclick="moveAssignTaskRowUp(this)" class="w-3.5 h-3 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển lên trên">
+              <i class="fa-solid fa-chevron-up text-[8px] pointer-events-none"></i>
             </button>
-            <button type="button" onclick="moveAssignTaskRowDown(this)" class="w-4 h-3.5 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển xuống dưới">
-              <i class="fa-solid fa-chevron-down text-[9px] pointer-events-none"></i>
+            <button type="button" onclick="moveAssignTaskRowDown(this)" class="w-3.5 h-3 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition" title="Chuyển xuống dưới">
+              <i class="fa-solid fa-chevron-down text-[8px] pointer-events-none"></i>
             </button>
           </div>
-          <span class="task-order-num w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">${displayNum}</span>
+          <span class="task-order-num w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/90 font-black text-[11px] sm:text-xs flex items-center justify-center shrink-0 shadow-2xs">${displayNum}</span>
         </div>
 
-        <!-- NỘI DUNG TÊN CÔNG VIỆC VÀ HƯỚNG DẪN -->
-        <div class="flex-1 space-y-1.5 min-w-0 cursor-auto select-text">
+        <!-- NỘI DUNG TÊN CÔNG VIỆC VÀ HƯỚNG DẪN (2 TẦNG GỌN GÀNG) -->
+        <div class="flex-1 min-w-0 cursor-auto select-text flex flex-col gap-1">
           <div class="flex items-center gap-2">
-            <input type="text" value="${escapeHtml(taskName)}" placeholder="Nhập tên nội dung công việc (VD: Kiểm tra khối lượng và đơn giá)..." oninput="onAssignTaskNameInput(this)" class="assign-task-name flex-1 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-800 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-2xs" />
+            <input type="text" value="${escapeHtml(taskName)}" placeholder="Nhập tên nội dung công việc (VD: Kiểm tra khối lượng và đơn giá)..." oninput="onAssignTaskNameInput(this)" class="assign-task-name flex-1 px-2.5 py-1 text-xs sm:text-[13px] font-bold text-slate-800 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-400 focus:outline-none transition shadow-2xs h-7 sm:h-8" />
             ${dataBadge}
           </div>
-          <div class="relative">
-            <i class="fa-regular fa-lightbulb absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="text" value="${escapeHtml(guide)}" placeholder="Hướng dẫn điền số liệu (VD: Nhập số lượng hồ sơ)..." class="assign-task-guide w-full pl-7 pr-3 py-1 sm:py-1.5 text-xs text-slate-600 bg-slate-50/40 border border-slate-200/70 rounded-lg focus:bg-white focus:border-emerald-400 focus:outline-none transition" />
+          <div class="relative flex items-center">
+            <i class="fa-regular fa-lightbulb absolute left-2 text-slate-400 text-[10.5px] pointer-events-none"></i>
+            <input type="text" value="${escapeHtml(guide)}" placeholder="Hướng dẫn điền số liệu (VD: Ghi tổng số hồ sơ hoàn tất)..." class="assign-task-guide w-full pl-6 pr-2 py-0.5 text-[11px] text-slate-600 bg-slate-50/40 border border-slate-200/60 rounded-md focus:bg-white focus:border-emerald-400 focus:outline-none transition h-6" />
           </div>
-          <p class="edit-warn-msg hidden text-[11px] text-emerald-700 font-medium flex items-center gap-1.5 mt-1 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-200/60">
+          <p class="edit-warn-msg hidden text-[10px] text-emerald-700 font-medium flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
             <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-            <span>Đã đổi tên công việc — Vị trí này sẽ áp dụng tên mới ở kỳ hiện tại, toàn bộ tháng cũ giữ nguyên vẹn 100% tên gốc.</span>
+            <span>Đã đổi tên công việc — Áp dụng tên mới ở kỳ này, các tháng cũ bảo lưu 100% tên gốc.</span>
           </p>
         </div>
 
-        <!-- THAO TÁC DI CHUYỂN / SAO CHÉP & XÓA -->
-        <div class="flex items-center gap-1 sm:gap-1.5 pt-1 shrink-0">
-          <button type="button" onclick="openTransferTaskModal(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-xl border border-emerald-200/80 hover:border-emerald-300 transition cursor-pointer shadow-2xs group-hover:scale-105" title="Di chuyển hoặc Sao chép đầu việc này sang nhân sự / bộ phận khác">
-            <i class="fa-solid fa-arrow-right-arrow-left text-xs pointer-events-none"></i>
+        <!-- THAO TÁC DI CHUYỂN / SAO CHÉP & XÓA (GỌN GÀNG) -->
+        <div class="flex items-center gap-1 shrink-0">
+          <button type="button" onclick="openTransferTaskModal(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg border border-emerald-200/90 hover:border-emerald-300 transition cursor-pointer shadow-2xs group-hover:scale-105" title="Di chuyển hoặc Sao chép đầu việc này sang nhân sự / bộ phận khác">
+            <i class="fa-solid fa-arrow-right-arrow-left text-[11px] pointer-events-none"></i>
           </button>
-          <button type="button" onclick="deleteAssignTaskRow(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition cursor-pointer" title="Xóa đầu việc này">
-            <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
+          <button type="button" onclick="deleteAssignTaskRow(this)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-200 transition cursor-pointer" title="Xóa đầu việc này">
+            <i class="fa-solid fa-trash-can text-[11px] pointer-events-none"></i>
           </button>
         </div>
       `;
