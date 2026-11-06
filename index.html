@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v71') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v72') {
             caches.delete(key);
           }
         });
@@ -1698,10 +1698,10 @@
             </button>
           </div>
 
-          <!-- BADGE CHỈ BÁO REALTIME LIVE SYNC TỰ ĐỘNG -->
-            <div id="matrixRealtimeSyncBadge" title="Hệ thống tự động đồng bộ tức thì số liệu khi các tài khoản khác lưu/sửa" class="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 text-[10px] sm:text-[11px] font-bold shadow-2xs transition-all duration-300 shrink-0">
-              <span id="matrixRealtimeSyncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span id="matrixRealtimeSyncText">Đồng bộ tự động</span>
+          <!-- BADGE CHỈ BÁO REALTIME (MẶC ĐỊNH ẨN HOÀN TOÀN, CHỈ HIỆN 3 GIÂY KHI CÓ ĐỒNG NGHIỆP CẬP NHẬT) -->
+            <div id="matrixRealtimeSyncBadge" class="hidden items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 ring-2 ring-amber-300/70 text-[10px] sm:text-[11px] font-bold shadow-xs transition-all duration-300 shrink-0">
+              <span id="matrixRealtimeSyncDot" class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+              <span id="matrixRealtimeSyncText"></span>
             </div>
 
             <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
@@ -12437,15 +12437,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
 
         _matrixRealtimeChannel.subscribe((status, err) => {
-          const badgeDot = document.getElementById('matrixRealtimeSyncDot');
-          const badgeText = document.getElementById('matrixRealtimeSyncText');
-          if (status === 'SUBSCRIBED') {
-            if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-            if (badgeText) badgeText.innerText = "Đồng bộ tự động";
-          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-            if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-amber-400";
-            if (badgeText) badgeText.innerText = "Đang kết nối lại...";
-          }
+          // Kênh Realtime hoạt động ngầm tự động, không hiển thị chữ "Đồng bộ tự động" trên giao diện
         });
       } catch (err) {
         console.warn("[Realtime] Setup error:", err);
@@ -12638,9 +12630,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const badgeDot = document.getElementById('matrixRealtimeSyncDot');
 
       if (badge && badgeText && badgeDot) {
-        // Nháy sáng nhẹ thanh lịch
-        badge.classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
-        badge.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
+        // Hiện nhãn nháy sáng nhẹ hổ phách trong 3 giây
+        badge.classList.remove('hidden');
+        badge.classList.add('inline-flex', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
         badgeDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
 
         const shortName = senderName.length > 18 ? senderName.substring(0, 18) + '...' : senderName;
@@ -12648,10 +12640,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         if (window._syncBadgeTimer) clearTimeout(window._syncBadgeTimer);
         window._syncBadgeTimer = setTimeout(() => {
-          badge.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
-          badge.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
-          badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-          badgeText.innerText = "Đồng bộ tự động";
+          // Sau 3 giây tự động ẩn hoàn toàn khỏi giao diện, không hiện lại chữ "Đồng bộ tự động"
+          badge.classList.add('hidden');
+          badge.classList.remove('inline-flex', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
+          badgeText.innerText = "";
           window._syncBadgeTimer = null;
         }, 3000);
       }
