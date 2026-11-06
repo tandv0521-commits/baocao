@@ -21959,6 +21959,12 @@ async function fetchPersonalTasksFromSupabase(isSilentSync = false) {
           itemsToSyncToCloud.push(li);
         } else {
           const ci = mergedMap.get(li.id);
+          // Bảo toàn cờ trạng thái báo cáo / hộp thư từ local
+          if (li.isReported) ci.isReported = true;
+          if (li.reportedAt) ci.reportedAt = li.reportedAt;
+          if (li.reportedReportId) ci.reportedReportId = li.reportedReportId;
+          if (li.copiedToInboxAt) ci.copiedToInboxAt = li.copiedToInboxAt;
+          if (li.sentToInboxAt) ci.sentToInboxAt = li.sentToInboxAt;
           const cloudTime = ci.updatedAt ? new Date(ci.updatedAt).getTime() : 0;
           const localTime = li.updatedAt ? new Date(li.updatedAt).getTime() : 0;
 
@@ -24264,12 +24270,90 @@ function sortPersonalWorkspaceItemsList(items) {
   });
 }
 
+// Phục hồi và đồng bộ cờ trạng thái gửi báo cáo / gửi hộp thư từ leadership_reports (chống mất khi F5 / đổi máy)
+function syncReportTransferStatusForPersonalTasks(tasksList, user = currentUser) {
+  if (!Array.isArray(tasksList) || !user) return;
+  try {
+    const userReports = getLeadershipReportsShared();
+    const uId = String(user.id || '');
+    const uName = String(user.username || '');
+
+    tasksList.forEach(task => {
+      for (const rep of userReports) {
+        const isSender = (String(rep.senderId || '') === uId || String(rep.senderUsername || '') === uName);
+        if (!isSender) continue;
+
+        const repItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+        const found = repItems.find(x => x && (x.id === task.id || (x.title === task.title && x.type === task.type)));
+        if (found) {
+          if (rep.reportType === 'manager_personal_tasks' || String(rep.id).startsWith('lr_mgr_inbox_')) {
+            task.copiedToInboxAt = task.copiedToInboxAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
+          } else {
+            task.isReported = true;
+            task.reportedAt = task.reportedAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
+            task.reportedReportId = rep.id;
+          }
+        }
+      }
+    });
+  } catch(e) {}
+}
+
+// Sinh HTML huy hiệu thông báo đã chuyển vào hộp thư hoặc đã gửi báo cáo
+function getPersonalTaskTransferBadgeHtml(it, user = currentUser) {
+  if (!it) return '';
+  let badges = '';
+
+  // 1. Đã chuyển vào Hộp thư bộ phận (Dành cho Quản lý / Lãnh đạo)
+  if (it.copiedToInboxAt || it.sentToInboxAt) {
+    badges += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs" title="Công việc này đã được chuyển vào Hộp thư bộ phận để tổng hợp"><i class="fa-solid fa-inbox text-[9px]"></i> Đã chuyển vào hộp thư</span>`;
+  }
+
+  // 2. Đã tạo báo cáo gửi Quản lý / Ban Giám Đốc (Dành cho Nhân viên & Quản lý)
+  if (it.isReported || it.reportedAt) {
+    badges += `${badges ? ' ' : ''}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs" title="Công việc này đã gửi báo cáo lên cấp quản lý"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>`;
+  }
+
+  // 3. Nếu cả 2 cờ đều chưa gắn, đối chiếu trực tiếp từ leadership_reports để tự động phục hồi ngay lập tức
+  if (!badges && user) {
+    try {
+      const userReports = getLeadershipReportsShared();
+      const uId = String(user.id || '');
+      const uName = String(user.username || '');
+
+      for (const rep of userReports) {
+        const isSender = (String(rep.senderId || '') === uId || String(rep.senderUsername || '') === uName);
+        if (!isSender) continue;
+
+        const repItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+        const found = repItems.find(x => x && (x.id === it.id || (x.title === it.title && x.type === it.type)));
+        if (found) {
+          if (rep.reportType === 'manager_personal_tasks' || String(rep.id).startsWith('lr_mgr_inbox_')) {
+            it.copiedToInboxAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
+            badges += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs" title="Công việc này đã được chuyển vào Hộp thư bộ phận để tổng hợp"><i class="fa-solid fa-inbox text-[9px]"></i> Đã chuyển vào hộp thư</span>`;
+          } else {
+            it.isReported = true;
+            it.reportedAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
+            it.reportedReportId = rep.id;
+            badges += `${badges ? ' ' : ''}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs" title="Công việc này đã gửi báo cáo lên cấp quản lý"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>`;
+          }
+          break;
+        }
+      }
+    } catch(e) {}
+  }
+
+  return badges;
+}
+
 function renderPersonalWorkspaceUI() {
   if (!currentUser) return;
   const container = document.getElementById('pwItemsList');
   if (!container) return;
 
   const data = getPersonalWorkspaceData(currentUser);
+  // Đồng bộ và phục hồi cờ trạng thái gửi báo cáo / gửi hộp thư từ các báo cáo đã lưu
+  syncReportTransferStatusForPersonalTasks(data.items, currentUser);
   let items = data.items || [];
 
   // Lọc theo mục quan trọng chưa hoàn thiện (khi bấm Xem ngay trên thông báo)
@@ -24584,7 +24668,7 @@ function renderPersonalWorkspaceUI() {
                 <span class="font-bold text-slate-900 text-xs sm:text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
                   ${escapeHtml(it.title)}
                 </span>
-                ${(it.isReported || it.reportedAt) ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0" title="Công việc này đã gửi báo cáo"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>` : ''}
+                ${getPersonalTaskTransferBadgeHtml(it, currentUser)}
               </div>
 
               ${it.content ? `<p class="text-xs text-slate-500 leading-relaxed break-words pl-0.5 font-normal">${escapeHtml(it.content)}</p>` : ''}
@@ -24664,7 +24748,7 @@ function renderPersonalWorkspaceUI() {
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 flex-wrap">
               ${typeBadge}
-              ${(it.isReported || it.reportedAt) ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Công việc này đã gửi báo cáo"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi</span>` : ''}
+              ${getPersonalTaskTransferBadgeHtml(it, currentUser)}
             </div>
             <div class="flex items-center gap-1">
               <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng">
