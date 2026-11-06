@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v70') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v71') {
             caches.delete(key);
           }
         });
@@ -9577,9 +9577,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       // Tự động kích hoạt đồng bộ từ Supabase Cloud ngay khi vào app hoặc ấn F5
+      _pwReminderDismissedInSession = false;
       try {
         if (typeof fetchPersonalTasksFromSupabase === 'function') {
-          fetchPersonalTasksFromSupabase();
+          fetchPersonalTasksFromSupabase(false);
         }
       } catch (e) {
         console.warn("Lỗi fetchPersonalTasksFromSupabase on login:", e);
@@ -12430,7 +12431,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const rec = payload.new || payload.old;
           if (rec && currentUser && (String(rec.user_id) === String(currentUser.id) || String(rec.username) === String(currentUser.username))) {
             if (typeof fetchPersonalTasksFromSupabase === 'function') {
-              fetchPersonalTasksFromSupabase();
+              fetchPersonalTasksFromSupabase(true);
             }
           }
         });
@@ -12489,7 +12490,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (p.action === 'personal_task_mutation') {
         if (currentUser && String(p.userId) === String(currentUser.id)) {
           if (typeof fetchPersonalTasksFromSupabase === 'function') {
-            fetchPersonalTasksFromSupabase();
+            fetchPersonalTasksFromSupabase(true);
           }
         }
         return;
@@ -21872,7 +21873,7 @@ function fromSupabaseReportRow(r) {
   };
 }
 
-async function fetchPersonalTasksFromSupabase() {
+async function fetchPersonalTasksFromSupabase(isSilentSync = false) {
   if (!supabase || !currentUser) return;
   try {
     const uId = String(currentUser.id || '');
@@ -21957,8 +21958,14 @@ async function fetchPersonalTasksFromSupabase() {
       updatePersonalWorkspaceEntryCardStats();
       updatePersonalWorkspaceReminders(localData);
 
-      // CẬP NHẬT TỨC THÌ LÊN BẢNG THÔNG BÁO NHẮC NHỞ CÔNG VIỆC CHƯA LÀM (CHỈ KHI ĐANG MỞ)!
-      showPersonalTaskReminderOnLogin(true);
+      // HIỂN THỊ HOẶC CẬP NHẬT BẢNG THÔNG BÁO VIỆC CHƯA LÀM:
+      // - Khi F5 hoặc Đăng nhập (!isSilentSync && !_pwReminderDismissedInSession): Bật bảng thông báo lên với dữ liệu Cloud mới nhất!
+      // - Khi Thu nhỏ app rồi quay lại hoặc Realtime (isSilentSync === true): Chỉ cập nhật ngầm, tuyệt đối không tự bật lên!
+      if (!isSilentSync && !_pwReminderDismissedInSession) {
+        showPersonalTaskReminderOnLogin(false);
+      } else {
+        showPersonalTaskReminderOnLogin(true);
+      }
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
@@ -22191,10 +22198,10 @@ function handleTabResumeAutoSync() {
 
   if (!currentUser) return;
 
-  // 1. Tự động đồng bộ ngầm Sổ tay công việc từ Supabase Cloud
+  // 1. Tự động đồng bộ ngầm Sổ tay công việc từ Supabase Cloud (chế độ im lặng, không bật popup)
   try {
     if (typeof fetchPersonalTasksFromSupabase === 'function') {
-      fetchPersonalTasksFromSupabase();
+      fetchPersonalTasksFromSupabase(true);
     }
   } catch (e) {}
 
@@ -22304,8 +22311,8 @@ function openPersonalWorkspacePage() {
 
   // Không tự động tạo công việc mẫu khi tài khoản chưa có việc (để sổ tay trống sạch sẽ theo yêu cầu)
 
-  // Đồng bộ và tải dữ liệu
-  fetchPersonalTasksFromSupabase();
+  // Đồng bộ và tải dữ liệu (im lặng)
+  fetchPersonalTasksFromSupabase(true);
   fetchLeadershipReportsFromSupabase(false);
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
