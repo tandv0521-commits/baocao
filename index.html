@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v68') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v69') {
             caches.delete(key);
           }
         });
@@ -22592,7 +22592,7 @@ function generateSingleReportWordHtml(rep) {
   const feedList = items.filter(it => it.type === 'feedback');
 
   const recipientText = rep.recipientFullName 
-    ? `Kính gửi: ${escapeHtml(rep.recipientFullName)} - ${escapeHtml(rep.recipientRole || 'Quản lý')} (${escapeHtml(rep.recipientDepartment || 'Ban DVKH')})`
+    ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
     : ((rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary')
         ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
         : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
@@ -22860,7 +22860,7 @@ function generateSingleReportWordHtml(rep) {
           <tr>
             <td class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
             <td class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
-            <td class="sig-name">Ban Giám Đốc</td>
+            <td class="sig-name">Lê Thị Kim Oanh</td>
           </tr>
         </table>
       </div>
@@ -23097,7 +23097,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
           </tr>
           <tr>
             <td style="text-align: center;" class="sig-name">${escapeHtml(currentUser?.fullName || 'Quản lý bộ phận')}</td>
-            <td style="text-align: center;" class="sig-name">Ban Giám Đốc</td>
+            <td style="text-align: center;" class="sig-name">Lê Thị Kim Oanh</td>
           </tr>
         </table>
       </div>
@@ -25095,7 +25095,7 @@ function loadReportRecipientsOptions(customUserList) {
   currentReportRecipientsList = filtered;
 
   select.innerHTML = currentReportRecipientsList.map(u => {
-    return `<option value="${u.id}">${escapeHtml(u.fullName)} - ${escapeHtml(u.role)} (${escapeHtml(u.department)})</option>`;
+    return `<option value="${u.id}">${escapeHtml(u.fullName || u.full_name || u.username)}</option>`;
   }).join('');
 
   if (currentReportRecipientsList.length > 0) {
@@ -25130,7 +25130,7 @@ function onReportRecipientSelectChange(userId) {
 
   const recipientText = document.getElementById('rpPreviewRecipientText');
   if (recipientText) {
-    recipientText.innerText = `Kính gửi: ${fName} - ${roleName} (${deptName})`;
+    recipientText.innerText = `Kính gửi: ${fName}`;
   }
 }
 
@@ -27300,7 +27300,7 @@ function generateSingleReportExcelHtml(rep) {
         <tr>
           <td colspan="2" class="sig-name" style="border:none;">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
           <td class="sig-name" style="border:none;">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
-          <td class="sig-name" style="border:none;">Ban Giám Đốc</td>
+          <td class="sig-name" style="border:none;">Lê Thị Kim Oanh</td>
         </tr>
       </table>
     </body>
@@ -27847,7 +27847,7 @@ function generateConsolidatedReportsExcelHtml(reportsList, deptName, m, y) {
         <tr style="height:60px;"><td colspan="4" style="border:none;"></td></tr>
         <tr>
           <td colspan="2" class="sig-name" style="border:none;">Quản lý: ${escapeHtml(deptName)}</td>
-          <td colspan="2" class="sig-name" style="border:none;">Ban Giám Đốc</td>
+          <td colspan="2" class="sig-name" style="border:none;">Lê Thị Kim Oanh</td>
         </tr>
       </table>
     </body>
