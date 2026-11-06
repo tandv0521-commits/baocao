@@ -2222,7 +2222,7 @@
               </button>
 
               <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
-              <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()" class="hidden px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Đưa các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên">
+              <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()" class="hidden px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer" title="Sao chép các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên (vẫn giữ nguyên trong sổ tay)">
                 <i class="fa-solid fa-inbox text-xs"></i>
                 <span>Gửi vào hộp thư</span>
               </button>
@@ -22934,152 +22934,7 @@ function generateSingleReportWordHtml(rep) {
         </table>
       </div>
     
-  <!-- ================= MODAL XÁC NHẬN GỬI ĐẦU VIỆC VÀO HỘP THƯ BỘ PHẬN (THIẾT KẾ CHUYÊN NGHIỆP, THẨM MỸ CAO) ================= -->
-  <div id="confirmSendToInboxModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
-      
-      <!-- HEADER -->
-      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
-            <i class="fa-solid fa-inbox"></i>
-          </div>
-          <div>
-            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Đưa Đầu Việc Vào Hộp Thư Bộ Phận</h4>
-            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Tổng hợp công việc của Quản lý cùng báo cáo nhân viên</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeConfirmSendToInboxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
-          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
-        </button>
-      </div>
-
-      <!-- BODY -->
-      <div class="space-y-3 text-xs leading-relaxed">
-        <p class="text-slate-600">
-          Bạn đang chọn chuyển <b id="sendInboxCountText" class="text-indigo-600 font-black text-sm font-num">1</b> đầu việc cá nhân vào <b>Hộp thư chung của bộ phận</b>:
-        </p>
-
-        <!-- DANH SÁCH XEM TRƯỚC ĐẦU VIỆC -->
-        <div id="sendInboxPreviewList" class="max-h-44 overflow-y-auto custom-scroll space-y-1.5 p-2 bg-slate-50/90 rounded-2xl border border-slate-200/80 text-xs font-medium">
-          <!-- Render danh sách việc được chọn -->
-        </div>
-
-        <!-- HỘP MÔ TẢ MỤC ĐÍCH RÕ RÀNG -->
-        <div class="p-3 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl text-[11px] sm:text-xs text-indigo-950 flex items-start gap-2.5 shadow-2xs">
-          <i class="fa-solid fa-circle-info text-indigo-600 text-sm mt-0.5 shrink-0"></i>
-          <div class="leading-relaxed">
-            <b>Mục đích tổng hợp:</b> Sau khi đưa vào Hộp thư, các đầu việc này sẽ xuất hiện trong danh sách nhận việc để bạn có thể chọn lọc, gộp chung cùng các báo cáo của nhân viên thành <b>Báo cáo tổng hợp bộ phận</b> gửi lên Ban Giám Đốc.
-          </div>
-        </div>
-      </div>
-
-      <!-- FOOTER -->
-      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-        <button type="button" onclick="closeConfirmSendToInboxModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
-          Hủy bỏ
-        </button>
-        <button type="button" onclick="executeSendManagerSelectedTasksToInbox()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-check text-xs"></i>
-          <span>Xác Nhận Đưa Vào Hộp Thư</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================= MODAL XÁC NHẬN XÓA CÔNG VIỆC CÁ NHÂN TRONG SỔ TAY ================= -->
-  <div id="confirmDeletePersonalItemModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
-      
-      <!-- HEADER -->
-      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
-            <i class="fa-solid fa-trash-can"></i>
-          </div>
-          <div>
-            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Công Việc</h4>
-            <p class="text-[11px] text-slate-400 font-medium">Thao tác xóa khỏi Sổ tay cá nhân</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
-          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
-        </button>
-      </div>
-
-      <!-- BODY -->
-      <div class="space-y-2.5 text-xs">
-        <p class="text-slate-600">Bạn có chắc chắn muốn xóa mục công việc này?</p>
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
-          <div id="deleteItemTitlePreview" class="font-bold text-slate-800 line-clamp-2">---</div>
-          <div id="deleteItemTypePreview" class="text-[11px] text-slate-400 font-semibold">---</div>
-        </div>
-        <p class="text-[11px] text-rose-600 font-medium">⚠️ Mục công việc sẽ bị gỡ bỏ hoàn toàn khỏi sổ tay và đồng bộ xóa khỏi máy chủ.</p>
-      </div>
-
-      <!-- FOOTER -->
-      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
-          Hủy bỏ
-        </button>
-        <button type="button" onclick="executeDeletePersonalItem()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
-          <i class="fa-solid fa-trash-can text-xs"></i>
-          <span>Xóa Công Việc</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================= MODAL XÁC NHẬN XÓA BÁO CÁO TỔNG HỢP ================= -->
-  <div id="confirmDeleteLeadershipReportModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
-      
-      <!-- HEADER -->
-      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
-            <i class="fa-solid fa-trash-can"></i>
-          </div>
-          <div>
-            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Báo Cáo</h4>
-            <p class="text-[11px] text-slate-400 font-medium">Báo cáo tổng hợp bộ phận</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
-          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
-        </button>
-      </div>
-
-      <!-- BODY -->
-      <div class="space-y-2.5 text-xs">
-        <p class="text-slate-700 leading-relaxed">
-          Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?
-        </p>
-        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] sm:text-xs text-amber-950 flex items-start gap-2">
-          <i class="fa-solid fa-rotate-left text-amber-700 mt-0.5 shrink-0"></i>
-          <div class="leading-relaxed">
-            <b>Cơ chế phục hồi:</b> Tất cả các đầu việc thành phần bên trong sẽ được <b>tự động phục hồi quay trở lại Hộp thư nhận việc</b> để bạn có thể tổng hợp lại bất cứ lúc nào.
-          </div>
-        </div>
-      </div>
-
-      <!-- FOOTER -->
-      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
-          Hủy bỏ
-        </button>
-        <button type="button" onclick="executeDeleteLeadershipReport()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
-          <i class="fa-solid fa-trash-can text-xs"></i>
-          <span>Xóa Báo Cáo</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-</body>
+  </body>
     </html>
   `;
 }
@@ -26224,12 +26079,12 @@ function executeSendManagerSelectedTasksToInbox() {
     reportType: 'manager_personal_tasks'
   };
 
-  // Đánh dấu các mục cá nhân đã gửi báo cáo trong sổ tay (giữ nguyên trạng thái hoàn thành thực tế của người dùng)
+  // ================= BẢO TOÀN NGUYÊN VẸN CÁC ĐẦU VIỆC GỐC TRONG SỔ TAY CÔNG VIỆC =================
+  // CHỈ THỰC HIỆN SAO CHÉP: KHÔNG xóa, KHÔNG di chuyển mất, KHÔNG đổi trạng thái của đầu việc gốc trong sổ tay
   data.items.forEach(it => {
     if (it.selectedForReport) {
-      it.isReported = true;
-      it.reportedAt = now.toISOString();
-      it.selectedForReport = false;
+      it.selectedForReport = false; // Bỏ tích chọn sau khi đã sao chép để người dùng tiếp tục làm việc thuận tiện
+      it.copiedToInboxAt = now.toISOString();
       it.updatedAt = now.toISOString();
       savePersonalTaskToSupabase(it);
     }
@@ -26244,7 +26099,7 @@ function executeSendManagerSelectedTasksToInbox() {
 
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceReportButtonsUI();
-  showToast(`📥 Đã đưa thành công ${selectedItems.length} đầu việc vào hộp thư để tổng hợp chung!`);
+  showToast(`📋 Đã sao chép thành công ${selectedItems.length} đầu việc vào hộp thư (Đầu việc ở sổ tay vẫn giữ nguyên vẹn)!`);
 }
 
 // Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin bảo mật và người nhận
@@ -30333,6 +30188,153 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           <span>Tiếp Tục Tạo Báo Cáo</span>
         </button>
       </div>
+    </div>
+  </div>
+
+
+
+  <!-- ================= MODAL XÁC NHẬN GỬI ĐẦU VIỆC VÀO HỘP THƯ BỘ PHẬN (THIẾT KẾ CHUYÊN NGHIỆP, THẨM MỸ CAO) ================= -->
+  <div id="confirmSendToInboxModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Sao Chép Đầu Việc Vào Hộp Thư Bộ Phận</h4>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Tạo bản sao gửi vào Hộp thư để Quản lý gộp chung cùng nhân viên (Sổ tay giữ nguyên)</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmSendToInboxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-3 text-xs leading-relaxed">
+        <p class="text-slate-600">
+          Bạn đang chọn sao chép <b id="sendInboxCountText" class="text-indigo-600 font-black text-sm font-num">1</b> đầu việc cá nhân vào <b>Hộp thư chung của bộ phận</b>:
+        </p>
+
+        <!-- DANH SÁCH XEM TRƯỚC ĐẦU VIỆC -->
+        <div id="sendInboxPreviewList" class="max-h-44 overflow-y-auto custom-scroll space-y-1.5 p-2 bg-slate-50/90 rounded-2xl border border-slate-200/80 text-xs font-medium">
+          <!-- Render danh sách việc được chọn -->
+        </div>
+
+        <!-- HỘP MÔ TẢ MỤC ĐÍCH RÕ RÀNG -->
+        <div class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-2xl text-[11px] sm:text-xs text-indigo-950 flex items-start gap-2.5 shadow-2xs">
+          <i class="fa-solid fa-clone text-indigo-600 text-sm mt-0.5 shrink-0"></i>
+          <div class="leading-relaxed">
+            <b>Chỉ sao chép (Bảo toàn Sổ tay):</b> Thao tác này <b>chỉ sao chép nội dung</b> đầu việc sang Hộp thư để phục vụ tổng hợp báo cáo bộ phận. Tất cả các đầu việc gốc trong Sổ tay cá nhân của bạn <b>vẫn được giữ nguyên 100%</b> (không bị xóa, không bị di chuyển mất) để bạn tiếp tục theo dõi và xử lý bình thường.
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmSendToInboxModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeSendManagerSelectedTasksToInbox()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span>Xác Nhận Sao Chép Vào Hộp Thư</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL XÁC NHẬN XÓA CÔNG VIỆC CÁ NHÂN TRONG SỔ TAY ================= -->
+  <div id="confirmDeletePersonalItemModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Công Việc</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Thao tác xóa khỏi Sổ tay cá nhân</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-2.5 text-xs">
+        <p class="text-slate-600">Bạn có chắc chắn muốn xóa mục công việc này?</p>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+          <div id="deleteItemTitlePreview" class="font-bold text-slate-800 line-clamp-2">---</div>
+          <div id="deleteItemTypePreview" class="text-[11px] text-slate-400 font-semibold">---</div>
+        </div>
+        <p class="text-[11px] text-rose-600 font-medium">⚠️ Mục công việc sẽ bị gỡ bỏ hoàn toàn khỏi sổ tay và đồng bộ xóa khỏi máy chủ.</p>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeDeletePersonalItem()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Xóa Công Việc</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL XÁC NHẬN XÓA BÁO CÁO TỔNG HỢP ================= -->
+  <div id="confirmDeleteLeadershipReportModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Báo Cáo</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Báo cáo tổng hợp bộ phận</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-2.5 text-xs">
+        <p class="text-slate-700 leading-relaxed">
+          Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?
+        </p>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] sm:text-xs text-amber-950 flex items-start gap-2">
+          <i class="fa-solid fa-rotate-left text-amber-700 mt-0.5 shrink-0"></i>
+          <div class="leading-relaxed">
+            <b>Cơ chế phục hồi:</b> Tất cả các đầu việc thành phần bên trong sẽ được <b>tự động phục hồi quay trở lại Hộp thư nhận việc</b> để bạn có thể tổng hợp lại bất cứ lúc nào.
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeDeleteLeadershipReport()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Xóa Báo Cáo</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
