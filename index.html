@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v72') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v73') {
             caches.delete(key);
           }
         });
@@ -862,6 +862,41 @@
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ================= ĐỒNG BỘ HIỆU ỨNG NÚT "X" ĐÓNG BẢNG / MODAL TOÀN CHƯƠNG TRÌNH ================= */
+    /* Khi rê chuột vào: Đổ màu đỏ hồng tươi rực rỡ và xoay vòng icon chữ X mượt mà */
+    button[onclick*="close"]:has(i.fa-xmark),
+    button[onclick*="close"]:has(i.fa-times),
+    .modal-close-x-btn {
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    button[onclick*="close"]:has(i.fa-xmark):hover,
+    button[onclick*="close"]:has(i.fa-times):hover,
+    .modal-close-x-btn:hover {
+      background-color: #f43f5e !important; /* bg-rose-500 đỏ tươi sang trọng */
+      border-color: #f43f5e !important;
+      color: #ffffff !important;
+      transform: scale(1.08) !important;
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35) !important;
+    }
+
+    button[onclick*="close"]:has(i.fa-xmark):hover i,
+    button[onclick*="close"]:has(i.fa-xmark):hover svg,
+    button[onclick*="close"]:has(i.fa-times):hover i,
+    button[onclick*="close"]:has(i.fa-times):hover svg,
+    .modal-close-x-btn:hover i,
+    .modal-close-x-btn:hover svg {
+      color: #ffffff !important;
+      transform: rotate(90deg) !important;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+
+    button[onclick*="close"]:has(i.fa-xmark):active,
+    button[onclick*="close"]:has(i.fa-times):active,
+    .modal-close-x-btn:active {
+      transform: scale(0.94) !important;
     }
 </style>
 </head>
@@ -4293,8 +4328,8 @@
           Nhìn lên góc phải thanh địa chỉ URL và chọn <b>Cài đặt (Install)</b>
         </div>
       </div>
-      <button type="button" onclick="closeOmniboxFloatingIndicator()" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-600/80 text-white/80 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">
-        <i class="fa-solid fa-xmark"></i>
+      <button type="button" onclick="closeOmniboxFloatingIndicator()" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-500 text-white flex items-center justify-center text-xs transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-white/20 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+        <i class="fa-solid fa-xmark group-hover:rotate-90 transition-transform duration-200"></i>
       </button>
     </div>
   </div>
@@ -4631,8 +4666,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <p class="text-[11px] sm:text-xs text-slate-500">Theo dõi việc riêng, nhắc nhở tiến độ &amp; xuất báo cáo lãnh đạo</p>
           </div>
         </div>
-        <button type="button" onclick="closePersonalItemEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer shadow-2xs shrink-0">
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button type="button" onclick="closePersonalItemEditModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
@@ -4813,8 +4848,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <p id="rpPreviewModalSubtitle" class="text-[11px] text-emerald-100/90 font-medium">Kiểm tra nội dung, sao chép hoặc gửi trực tiếp lên hệ thống</p>
           </div>
         </div>
-        <button type="button" onclick="closeLeadershipReportPreviewModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition duration-200 cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button type="button" onclick="closeLeadershipReportPreviewModal()" class="w-8 h-8 rounded-xl bg-white/15 hover:bg-rose-500 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-white/25 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/25 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
@@ -4973,8 +5008,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <span id="rpBoxHistoryCountBadge" class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-purple-200 text-purple-950 font-num">0</span>
           </button>
           <!-- Nút Đóng -->
-          <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer">
-            <i class="fa-solid fa-xmark text-sm"></i>
+          <button type="button" onclick="closeLeadershipReportsBoxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+            <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
           </button>
         </div>
       </div>
@@ -5118,8 +5153,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <p class="text-xs text-slate-500 mt-0.5">Lưu trữ đám mây an toàn cho mọi tài khoản &amp; đồng bộ đa thiết bị tức thì</p>
           </div>
         </div>
-        <button type="button" onclick="closeSupabaseTableSetupGuide()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-sm transition cursor-pointer">
-          <i class="fa-solid fa-xmark"></i>
+        <button type="button" onclick="closeSupabaseTableSetupGuide()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
@@ -29937,8 +29972,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <p class="text-[11px] sm:text-xs text-amber-100 mt-0.5">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn cần ưu tiên xử lý</p>
           </div>
         </div>
-        <button type="button" onclick="closePersonalTaskReminderModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-xs cursor-pointer transition shadow-2xs shrink-0" >
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button type="button" onclick="closePersonalTaskReminderModal()" class="w-8 h-8 rounded-xl bg-white/15 hover:bg-rose-500 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-white/25 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/25 group" >
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
@@ -30011,14 +30046,19 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   <!-- ================= MODAL XÁC NHẬN TẠO LẠI BÁO CÁO KHI CÓ MỤC ĐÃ TỪNG GỬI ================= -->
   <div id="confirmReReportModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 space-y-4 animate-in zoom-in-95 duration-150">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
-          <i class="fa-solid fa-triangle-exclamation"></i>
+      <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-900 text-sm sm:text-base">Xác Nhận Tạo Lại Báo Cáo</h4>
+            <p class="text-[11px] text-slate-500">Phát hiện mục đã gửi báo cáo trước đó</p>
+          </div>
         </div>
-        <div>
-          <h4 class="font-black text-slate-900 text-sm sm:text-base">Xác Nhận Tạo Lại Báo Cáo</h4>
-          <p class="text-[11px] text-slate-500">Phát hiện mục đã gửi báo cáo trước đó</p>
-        </div>
+        <button type="button" onclick="closeConfirmReReportModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
       </div>
       <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-950 leading-relaxed space-y-1.5">
         <p>Trong số các mục bạn chọn, có <b id="reReportCountText">0</b> công việc <b>đã từng được gửi báo cáo</b> trước đây:</p>
