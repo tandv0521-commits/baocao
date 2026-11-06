@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v57') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v58') {
             caches.delete(key);
           }
         });
@@ -2748,12 +2748,12 @@
             </div>
           </div>
 
-          <!-- 3. TÌM KIẾM NHANH NHÂN VIÊN TOÀN CÔNG TY (md:col-span-4) -->
+          <!-- 3. TÌM KIẾM NHANH NHÂN VIÊN TOÀN BAN DVKH (md:col-span-4) -->
           <div class="relative md:col-span-4 z-40" id="modalAssignQuickSearchWrapper">
             <label for="modalAssignQuickStaffSearch" class="block text-[10.5px] font-bold uppercase tracking-wider text-teal-950 mb-1 flex items-center justify-between cursor-pointer">
               <span class="flex items-center gap-1">
                 <i class="fa-solid fa-bolt text-amber-500 text-[10.5px]"></i>
-                <span>Tìm nhanh toàn cty</span>
+                <span>Tìm nhanh toàn Ban DVKH</span>
               </span>
               <span class="text-slate-400 font-normal text-[10px] normal-case hidden sm:inline">(Gõ tên để gợi ý)</span>
             </label>
@@ -16394,7 +16394,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let modalAssignStaffCache = [];
     let modalAssignAllStaffCache = []; // Toàn bộ danh sách nhân sự công ty phục vụ tìm kiếm gợi ý
 
-    // HÀM TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN CÔNG TY)
+    // HÀM TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN BAN DVKH)
     function onModalAssignQuickSearchInput(query) {
       const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
       const resultsContainer = document.getElementById('modalAssignQuickSearchResults');
