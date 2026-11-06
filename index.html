@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v69') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v70') {
             caches.delete(key);
           }
         });
@@ -21909,7 +21909,7 @@ async function fetchPersonalTasksFromSupabase() {
         renderPersonalWorkspaceUI();
         updatePersonalWorkspaceEntryCardStats();
         updatePersonalWorkspaceReminders(localData);
-        showPersonalTaskReminderOnLogin();
+        showPersonalTaskReminderOnLogin(true);
         return;
       }
 
@@ -21957,8 +21957,8 @@ async function fetchPersonalTasksFromSupabase() {
       updatePersonalWorkspaceEntryCardStats();
       updatePersonalWorkspaceReminders(localData);
 
-      // CẬP NHẬT TỨC THÌ LÊN BẢNG THÔNG BÁO NHẮC NHỞ CÔNG VIỆC CHƯA LÀM!
-      showPersonalTaskReminderOnLogin();
+      // CẬP NHẬT TỨC THÌ LÊN BẢNG THÔNG BÁO NHẮC NHỞ CÔNG VIỆC CHƯA LÀM (CHỈ KHI ĐANG MỞ)!
+      showPersonalTaskReminderOnLogin(true);
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
@@ -22425,14 +22425,30 @@ function updatePersonalWorkspaceEntryCardStats() {
 }
 
 // 4. Modal Nhắc Nhở Công Việc Chưa Làm / Đến Hạn Khi Đăng Nhập Hoặc Khởi Động
-function showPersonalTaskReminderOnLogin() {
+let _pwReminderDismissedInSession = false;
+
+function showPersonalTaskReminderOnLogin(onlyUpdateIfOpen = false) {
   if (!currentUser) return;
   const modal = document.getElementById('personalTaskReminderModal');
+  if (!modal) return;
+
+  const isModalOpen = !modal.classList.contains('hidden');
 
   // 1. Nếu người dùng đang ở trong trang Sổ tay công việc -> TUYỆT ĐỐI KHÔNG BẬT POPUP ĐÈ LÊN
   const pwPage = document.getElementById('personalWorkspacePageView');
   if (pwPage && !pwPage.classList.contains('hidden')) {
-    if (modal) modal.classList.add('hidden');
+    if (isModalOpen) modal.classList.add('hidden');
+    return;
+  }
+
+  // 2. Chống lặp lại phiền hà: Nếu người dùng đã chủ động đóng bảng trong phiên này
+  // HOẶC chỉ là luồng đồng bộ ngầm khi thu nhỏ app/chuyển tab/realtime (onlyUpdateIfOpen = true):
+  // NẾU MODAL ĐANG ĐÓNG -> TUYỆT ĐỐI DỪNG LẠI, KHÔNG MỞ LÊN!
+  if ((onlyUpdateIfOpen || _pwReminderDismissedInSession) && !isModalOpen) {
+    if (window._pwReminderOpenTimer) {
+      clearTimeout(window._pwReminderOpenTimer);
+      window._pwReminderOpenTimer = null;
+    }
     return;
   }
   
@@ -22447,7 +22463,7 @@ function showPersonalTaskReminderOnLogin() {
   // NẾU TẤT CẢ CÔNG VIỆC ĐÃ HOÀN TẤT HOẶC KHÔNG CÒN VIỆC CHƯA LÀM:
   // TUYỆT ĐỐI KHÔNG HIỆN THÔNG BÁO VÀ ĐÓNG MODAL NGAY LẬP TỨC
   if (pendingItems.length === 0) {
-    if (modal) modal.classList.add('hidden');
+    if (isModalOpen) modal.classList.add('hidden');
     if (window._pwReminderOpenTimer) {
       clearTimeout(window._pwReminderOpenTimer);
       window._pwReminderOpenTimer = null;
@@ -22470,8 +22486,6 @@ function showPersonalTaskReminderOnLogin() {
   });
 
   const importantPendingItems = pendingItems.filter(it => it.isImportant);
-
-  if (!modal) return;
 
   const greeting = document.getElementById('pwReminderUserGreeting');
   if (greeting) greeting.innerText = currentUser.fullName || currentUser.username;
@@ -22532,16 +22546,26 @@ function showPersonalTaskReminderOnLogin() {
     }
   }
 
-  // NẾU MODAL ĐÃ ĐANG MỞ: CẬP NHẬT TRỰC TIẾP NỘI DUNG NGAY LẬP TỨC (KHÔNG CẦN CHỜ TIMEOUT)
-  if (modal && !modal.classList.contains('hidden')) {
+  // NẾU MODAL ĐÃ ĐANG MỞ: CẬP NHẬT TRỰC TIẾP NỘI DUNG XONG LÀ KẾT THÚC (KHÔNG CẦN CHỜ TIMEOUT)
+  if (isModalOpen) {
+    return;
+  }
+
+  // Nếu onlyUpdateIfOpen = true hoặc người dùng đã tắt thông báo trong phiên: TUYỆT ĐỐI KHÔNG TỰ Ý BẬT LÊN
+  if (onlyUpdateIfOpen || _pwReminderDismissedInSession) {
     return;
   }
 
   if (window._pwReminderOpenTimer) clearTimeout(window._pwReminderOpenTimer);
   window._pwReminderOpenTimer = setTimeout(() => {
-    // Nếu trong lúc chờ người dùng đã mở Sổ tay công việc thì dừng ngay không mở popup đè lên
+    // Nếu trong lúc chờ người dùng đã mở Sổ tay công việc hoặc đã đóng thì dừng ngay không mở popup đè lên
     const pwPageCheck = document.getElementById('personalWorkspacePageView');
     if (pwPageCheck && !pwPageCheck.classList.contains('hidden')) {
+      if (modal) modal.classList.add('hidden');
+      return;
+    }
+
+    if (_pwReminderDismissedInSession) {
       if (modal) modal.classList.add('hidden');
       return;
     }
@@ -22560,6 +22584,17 @@ function showPersonalTaskReminderOnLogin() {
 function closePersonalTaskReminderModal() {
   const modal = document.getElementById('personalTaskReminderModal');
   if (modal) modal.classList.add('hidden');
+  if (window._pwReminderOpenTimer) {
+    clearTimeout(window._pwReminderOpenTimer);
+    window._pwReminderOpenTimer = null;
+  }
+  // Ghi nhớ người dùng đã chủ động đóng bảng nhắc việc -> KHÔNG TỰ ĐỘNG BẬT LẠI KHI THU NHỎ / QUAY LẠI APP
+  _pwReminderDismissedInSession = true;
+}
+
+function openPersonalTaskReminderModal() {
+  _pwReminderDismissedInSession = false;
+  showPersonalTaskReminderOnLogin(false);
 }
 
 function openPersonalWorkspaceFromReminder() {
@@ -24738,7 +24773,7 @@ function togglePersonalItemStatus(id) {
   savePersonalTaskToSupabase(item);
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
-  showPersonalTaskReminderOnLogin();
+  showPersonalTaskReminderOnLogin(true);
   broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast(`Đã chuyển trạng thái: ${newStatusLabel}`);
 }
@@ -24986,7 +25021,7 @@ function savePersonalItem() {
   closePersonalItemEditModal();
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
-  showPersonalTaskReminderOnLogin();
+  showPersonalTaskReminderOnLogin(true);
   broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast("Đã lưu mục công việc cá nhân thành công!");
 }
@@ -24999,7 +25034,7 @@ function deletePersonalItem(id) {
   deletePersonalTaskFromSupabase(id);
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceEntryCardStats();
-  showPersonalTaskReminderOnLogin();
+  showPersonalTaskReminderOnLogin(true);
   broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast("Đã xóa mục công việc.");
 }
@@ -28306,6 +28341,7 @@ function exportPersonalWorkspaceToExcel() {
       
       document.documentElement.classList.remove('app-auto-login-pending');
       window._earlySavedUser = null;
+      _pwReminderDismissedInSession = false;
       currentUser = null;
       fullPeriodMatrixCache = null;
       cachedPreloadMatrix = null;
@@ -29888,7 +29924,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   </script>
 
   <!-- ================= MODAL NHẮC NHỞ CÔNG VIỆC CHƯA LÀM / ĐẾN HẠN ĐẦU NGÀY (THIẾT KẾ RỘNG RÃI, 2 CỘT THOÁNG MẮT, KHÔNG PHẢI CUỘN NHIỀU) ================= -->
-  <div id="personalTaskReminderModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in duration-200">
+  <div id="personalTaskReminderModal" onclick="if(event.target===this)closePersonalTaskReminderModal();" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in duration-200">
     <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full max-h-[92vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
       
       <!-- HEADER THIẾT KẾ RỘNG RÃI, TRANG TRỌNG -->
