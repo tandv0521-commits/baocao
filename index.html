@@ -858,7 +858,7 @@
     }
   
     /* Chuẩn hóa font chữ và định dạng giao diện sổ tay, hộp thư báo cáo */
-    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal, #confirmSendToInboxModal, #confirmDeletePersonalItemModal, #confirmDeleteLeadershipReportModal, #consolidateAssessmentModal, #leaderFeedbackModal {
+    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal, #confirmSendToInboxModal, #confirmDeletePersonalItemModal, #confirmDeleteLeadershipReportModal, #consolidateAssessmentModal, #leaderFeedbackModal, #confirmSelectReportedItemModal {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -24641,7 +24641,7 @@ function renderPersonalWorkspaceUI() {
 
       // 4. Checkbox chọn đẩy báo cáo
       const checkBtn = `
-        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Tích chọn mục này để tạo báo cáo" />
+        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Tích chọn mục này để tạo báo cáo" />
       `;
 
       // 5. Nội dung phản hồi (nếu có)
@@ -24754,7 +24754,7 @@ function renderPersonalWorkspaceUI() {
               <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng">
                 <i class="fa-solid fa-star"></i>
               </button>
-              <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Chọn đưa vào báo cáo" />
+              <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Chọn đưa vào báo cáo" />
             </div>
           </div>
           <h4 class="font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
@@ -24897,25 +24897,113 @@ function togglePersonalItemStatus(id) {
   showToast(`Đã chuyển trạng thái: ${newStatusLabel}`);
 }
 
-function togglePersonalItemReportSelect(id, checked) {
+let _pendingSelectReportedItemId = null;
+let _pendingSelectReportedCheckboxEl = null;
+
+function togglePersonalItemReportSelect(id, checked, checkboxEl = null) {
   if (!currentUser) return;
   const data = getPersonalWorkspaceData(currentUser);
+  syncReportTransferStatusForPersonalTasks(data.items, currentUser);
   const item = (data.items || []).find(it => it.id === id);
-  if (item) {
-    item.selectedForReport = checked;
-    savePersonalWorkspaceData(data, currentUser);
-    updatePersonalWorkspaceReportButtonsUI();
+  if (!item) return;
+
+  // Nếu người dùng bấm TÍCH CHỌN (checked === true) vào một mục ĐÃ TỪNG GỬI VÀO HỘP THƯ HOẶC ĐÃ GỬI BÁO CÁO:
+  const isAlreadyTransferred = !!(item.copiedToInboxAt || item.sentToInboxAt || item.isReported || item.reportedAt);
+  if (checked && isAlreadyTransferred) {
+    // Tạm thời trả lại trạng thái bỏ tích
+    if (checkboxEl) checkboxEl.checked = false;
+    _pendingSelectReportedItemId = id;
+    _pendingSelectReportedCheckboxEl = checkboxEl;
+
+    // Hiển thị modal cảnh báo yêu cầu chỉnh sửa nội dung
+    const titleEl = document.getElementById('reSelectTaskTitle');
+    if (titleEl) titleEl.innerText = item.title;
+
+    const badgeEl = document.getElementById('reSelectTaskBadge');
+    if (badgeEl) badgeEl.innerHTML = getPersonalTaskTransferBadgeHtml(item, currentUser);
+
+    const modal = document.getElementById('confirmSelectReportedItemModal');
+    if (modal) modal.classList.remove('hidden');
+    return;
   }
+
+  item.selectedForReport = checked;
+  savePersonalWorkspaceData(data, currentUser);
+  updatePersonalWorkspaceReportButtonsUI();
+}
+
+function closeConfirmSelectReportedItemModal() {
+  const modal = document.getElementById('confirmSelectReportedItemModal');
+  if (modal) modal.classList.add('hidden');
+  if (_pendingSelectReportedCheckboxEl) {
+    _pendingSelectReportedCheckboxEl.checked = false;
+  }
+  _pendingSelectReportedItemId = null;
+  _pendingSelectReportedCheckboxEl = null;
+}
+
+function editReportedItemBeforeSelect() {
+  const itemId = _pendingSelectReportedItemId;
+  closeConfirmSelectReportedItemModal();
+  if (itemId) {
+    openPersonalItemEditModal(itemId);
+  }
+}
+
+function proceedSelectReportedItem() {
+  const itemId = _pendingSelectReportedItemId;
+  if (!itemId) {
+    closeConfirmSelectReportedItemModal();
+    return;
+  }
+
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === itemId);
+  if (item) {
+    item.selectedForReport = true;
+    savePersonalWorkspaceData(data, currentUser);
+  }
+
+  closeConfirmSelectReportedItemModal();
+  renderPersonalWorkspaceUI();
+  updatePersonalWorkspaceReportButtonsUI();
+  showToast("✅ Đã tích chọn đầu việc (Lưu ý: nội dung cần có cập nhật mới trước khi gửi).");
 }
 
 function toggleSelectAllPersonalItemsForReport(checked) {
   if (!currentUser) return;
   const data = getPersonalWorkspaceData(currentUser);
-  (data.items || []).forEach(it => {
-    it.selectedForReport = checked;
-  });
-  savePersonalWorkspaceData(data, currentUser);
-  renderPersonalWorkspaceUI();
+  syncReportTransferStatusForPersonalTasks(data.items, currentUser);
+
+  if (checked) {
+    // CHỈ TỰ ĐỘNG CHỌN CÁC MỤC CHƯA GỬI HỘP THƯ VÀ CHƯA GỬI BÁO CÁO
+    // BỎ QUA CÁC MỤC ĐÃ GỬI (ĐÚNG YÊU CẦU NGƯỜI DÙNG)
+    let selectedCount = 0;
+    let skippedCount = 0;
+    (data.items || []).forEach(it => {
+      const isAlreadyTransferred = !!(it.copiedToInboxAt || it.sentToInboxAt || it.isReported || it.reportedAt);
+      if (!isAlreadyTransferred) {
+        it.selectedForReport = true;
+        selectedCount++;
+      } else {
+        it.selectedForReport = false;
+        skippedCount++;
+      }
+    });
+    savePersonalWorkspaceData(data, currentUser);
+    renderPersonalWorkspaceUI();
+
+    if (skippedCount > 0) {
+      showToast(`Đã chọn ${selectedCount} việc mới. ${skippedCount} việc đã gửi hộp thư/báo cáo được giữ bỏ chọn (chỉ tích chọn khi có chỉnh sửa mới).`);
+    }
+  } else {
+    // BỎ TÍCH TẤT CẢ
+    (data.items || []).forEach(it => {
+      it.selectedForReport = false;
+    });
+    savePersonalWorkspaceData(data, currentUser);
+    renderPersonalWorkspaceUI();
+  }
 }
 
 function toggleSelectAllPersonalItems(checked) {
@@ -30623,6 +30711,69 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         <button type="button" onclick="executeSubmitLeaderFeedback()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-amber-600/25 transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-paper-plane text-xs"></i>
           <span>Gửi Ý Kiến Chỉ Đạo</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+
+  <!-- ================= MODAL XÁC NHẬN TÍCH CHỌN ĐẦU VIỆC ĐÃ GỬI BÁO CÁO / HỘP THƯ ================= -->
+  <div id="confirmSelectReportedItemModal" class="fixed inset-0 z-[85] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Chọn Đầu Việc Đã Gửi</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Đầu việc đã gửi vào Hộp thư hoặc Báo cáo trước đó</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmSelectReportedItemModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-3 text-xs leading-relaxed">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Đầu việc:</span>
+            <div id="reSelectTaskBadge"></div>
+          </div>
+          <div id="reSelectTaskTitle" class="font-bold text-slate-800 text-sm leading-snug">---</div>
+        </div>
+
+        <!-- HỘP CẢNH BÁO YÊU CẦU CHỈNH SỬA KHÔNG ĐƯỢC GIỐNG LƯỢT TRƯỚC -->
+        <div class="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-[11px] sm:text-xs text-amber-950 space-y-2 shadow-2xs">
+          <div class="font-bold flex items-center gap-2 text-amber-900">
+            <i class="fa-solid fa-circle-exclamation text-amber-600 text-sm shrink-0"></i>
+            <span>Quy định gửi lại công việc:</span>
+          </div>
+          <p class="leading-relaxed">
+            Đầu việc này đã từng được chuyển vào Hộp thư bộ phận hoặc đã gửi báo cáo ở lượt trước. 
+            Để tiếp tục đưa vào báo cáo hoặc hộp thư lần này, <b>nội dung công việc bắt buộc phải có sự chỉnh sửa / bổ sung cập nhật mới, không được giữ nguyên trùng lặp giống lượt gửi hoặc di chuyển trước đây</b>.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmSelectReportedItemModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer text-center">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="editReportedItemBeforeSelect()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-pen-to-square text-xs"></i>
+          <span>Chỉnh Sửa Việc</span>
+        </button>
+        <button type="button" onclick="proceedSelectReportedItem()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span>Đã Cập Nhật - Tích Chọn</span>
         </button>
       </div>
 
