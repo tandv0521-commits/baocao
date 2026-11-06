@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v73') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v74') {
             caches.delete(key);
           }
         });
@@ -858,7 +858,7 @@
     }
   
     /* Chuẩn hóa font chữ và định dạng giao diện sổ tay, hộp thư báo cáo */
-    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal {
+    #personalWorkspacePageView, #personalWorkspaceEntryCard, #leadershipReportsBoxModal, #leadershipReportPreviewModal, #personalTaskReminderModal, #confirmReReportModal, #confirmSendToInboxModal, #confirmDeletePersonalItemModal, #confirmDeleteLeadershipReportModal {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -22933,7 +22933,153 @@ function generateSingleReportWordHtml(rep) {
           </tr>
         </table>
       </div>
-    </body>
+    
+  <!-- ================= MODAL XÁC NHẬN GỬI ĐẦU VIỆC VÀO HỘP THƯ BỘ PHẬN (THIẾT KẾ CHUYÊN NGHIỆP, THẨM MỸ CAO) ================= -->
+  <div id="confirmSendToInboxModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Đưa Đầu Việc Vào Hộp Thư Bộ Phận</h4>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Tổng hợp công việc của Quản lý cùng báo cáo nhân viên</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmSendToInboxModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-3 text-xs leading-relaxed">
+        <p class="text-slate-600">
+          Bạn đang chọn chuyển <b id="sendInboxCountText" class="text-indigo-600 font-black text-sm font-num">1</b> đầu việc cá nhân vào <b>Hộp thư chung của bộ phận</b>:
+        </p>
+
+        <!-- DANH SÁCH XEM TRƯỚC ĐẦU VIỆC -->
+        <div id="sendInboxPreviewList" class="max-h-44 overflow-y-auto custom-scroll space-y-1.5 p-2 bg-slate-50/90 rounded-2xl border border-slate-200/80 text-xs font-medium">
+          <!-- Render danh sách việc được chọn -->
+        </div>
+
+        <!-- HỘP MÔ TẢ MỤC ĐÍCH RÕ RÀNG -->
+        <div class="p-3 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl text-[11px] sm:text-xs text-indigo-950 flex items-start gap-2.5 shadow-2xs">
+          <i class="fa-solid fa-circle-info text-indigo-600 text-sm mt-0.5 shrink-0"></i>
+          <div class="leading-relaxed">
+            <b>Mục đích tổng hợp:</b> Sau khi đưa vào Hộp thư, các đầu việc này sẽ xuất hiện trong danh sách nhận việc để bạn có thể chọn lọc, gộp chung cùng các báo cáo của nhân viên thành <b>Báo cáo tổng hợp bộ phận</b> gửi lên Ban Giám Đốc.
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmSendToInboxModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeSendManagerSelectedTasksToInbox()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span>Xác Nhận Đưa Vào Hộp Thư</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL XÁC NHẬN XÓA CÔNG VIỆC CÁ NHÂN TRONG SỔ TAY ================= -->
+  <div id="confirmDeletePersonalItemModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Công Việc</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Thao tác xóa khỏi Sổ tay cá nhân</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-2.5 text-xs">
+        <p class="text-slate-600">Bạn có chắc chắn muốn xóa mục công việc này?</p>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+          <div id="deleteItemTitlePreview" class="font-bold text-slate-800 line-clamp-2">---</div>
+          <div id="deleteItemTypePreview" class="text-[11px] text-slate-400 font-semibold">---</div>
+        </div>
+        <p class="text-[11px] text-rose-600 font-medium">⚠️ Mục công việc sẽ bị gỡ bỏ hoàn toàn khỏi sổ tay và đồng bộ xóa khỏi máy chủ.</p>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmDeletePersonalItemModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeDeletePersonalItem()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Xóa Công Việc</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL XÁC NHẬN XÓA BÁO CÁO TỔNG HỢP ================= -->
+  <div id="confirmDeleteLeadershipReportModal" class="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+      
+      <!-- HEADER -->
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <div>
+            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Xóa Báo Cáo</h4>
+            <p class="text-[11px] text-slate-400 font-medium">Báo cáo tổng hợp bộ phận</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- BODY -->
+      <div class="space-y-2.5 text-xs">
+        <p class="text-slate-700 leading-relaxed">
+          Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?
+        </p>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] sm:text-xs text-amber-950 flex items-start gap-2">
+          <i class="fa-solid fa-rotate-left text-amber-700 mt-0.5 shrink-0"></i>
+          <div class="leading-relaxed">
+            <b>Cơ chế phục hồi:</b> Tất cả các đầu việc thành phần bên trong sẽ được <b>tự động phục hồi quay trở lại Hộp thư nhận việc</b> để bạn có thể tổng hợp lại bất cứ lúc nào.
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmDeleteLeadershipReportModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
+          Hủy bỏ
+        </button>
+        <button type="button" onclick="executeDeleteLeadershipReport()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-rose-600/25 transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Xóa Báo Cáo</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
     </html>
   `;
 }
@@ -25060,8 +25206,45 @@ function savePersonalItem() {
   showToast("Đã lưu mục công việc cá nhân thành công!");
 }
 
+let _pendingDeletePersonalItemId = null;
+
 function deletePersonalItem(id) {
-  if (!confirm("Bạn có chắc chắn muốn xóa mục này khỏi sổ tay công việc?")) return;
+  if (!id || !currentUser) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const item = (data.items || []).find(it => it.id === id);
+  if (!item) return;
+
+  _pendingDeletePersonalItemId = id;
+
+  const titleEl = document.getElementById('deleteItemTitlePreview');
+  const typeEl = document.getElementById('deleteItemTypePreview');
+  if (titleEl) titleEl.innerText = item.title || 'Công việc không tên';
+  if (typeEl) {
+    let tName = '⚡ Công việc phát sinh';
+    if (item.type === 'plan') tName = '📅 Kế hoạch công việc' + (item.dueDate ? ' (Hạn: ' + formatVNDate(item.dueDate) + ')' : '');
+    else if (item.type === 'proposal') tName = '💡 Đề xuất & Sáng kiến';
+    else if (item.type === 'feedback') tName = '💬 Ý kiến & Phản ánh';
+    typeEl.innerText = tName;
+  }
+
+  const modal = document.getElementById('confirmDeletePersonalItemModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeConfirmDeletePersonalItemModal() {
+  const modal = document.getElementById('confirmDeletePersonalItemModal');
+  if (modal) modal.classList.add('hidden');
+  _pendingDeletePersonalItemId = null;
+}
+
+function executeDeletePersonalItem() {
+  const id = _pendingDeletePersonalItemId;
+  if (!id || !currentUser) {
+    closeConfirmDeletePersonalItemModal();
+    return;
+  }
+  closeConfirmDeletePersonalItemModal();
+
   const data = getPersonalWorkspaceData(currentUser);
   data.items = (data.items || []).filter(it => it.id !== id);
   savePersonalWorkspaceData(data, currentUser);
@@ -25070,7 +25253,7 @@ function deletePersonalItem(id) {
   updatePersonalWorkspaceEntryCardStats();
   showPersonalTaskReminderOnLogin(true);
   broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
-  showToast("Đã xóa mục công việc.");
+  showToast("🗑️ Đã xóa mục công việc khỏi sổ tay.");
 }
 
 let currentReportSelectedItems = [];
@@ -25945,6 +26128,8 @@ function getConsolidatedReportsList() {
 }
 
 // Gửi các đầu việc cá nhân đã chọn của Quản lý vào Hộp thư bộ phận để tổng hợp chung cùng nhân viên
+let _pendingSendToInboxItems = [];
+
 function sendManagerSelectedTasksToInbox() {
   if (!currentUser) return;
   const data = getPersonalWorkspaceData(currentUser);
@@ -25955,10 +26140,57 @@ function sendManagerSelectedTasksToInbox() {
     return;
   }
 
-  if (!confirm(`Bạn có chắc muốn gửi ${selectedItems.length} đầu việc cá nhân này vào Hộp thư bộ phận để tổng hợp chung cùng nhân viên?`)) {
-    return;
+  _pendingSendToInboxItems = selectedItems;
+
+  // Hiển thị số lượng và danh sách xem trước lên Bảng chuyên nghiệp
+  const countEl = document.getElementById('sendInboxCountText');
+  if (countEl) countEl.innerText = selectedItems.length;
+
+  const listEl = document.getElementById('sendInboxPreviewList');
+  if (listEl) {
+    listEl.innerHTML = selectedItems.map((it, idx) => {
+      let typeBadge = '';
+      if (it.type === 'adhoc') {
+        typeBadge = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 shrink-0">⚡ Phát sinh</span>';
+      } else if (it.type === 'plan') {
+        typeBadge = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-100 text-sky-900 border border-sky-200 shrink-0">📅 Kế hoạch</span>';
+      } else if (it.type === 'proposal') {
+        typeBadge = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200 shrink-0">💡 Đề xuất</span>';
+      } else {
+        typeBadge = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-100 text-teal-900 border border-teal-200 shrink-0">💬 Phản ánh</span>';
+      }
+
+      return (
+        '<div class="flex items-center justify-between gap-2 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs">' +
+          '<div class="flex items-center gap-2 min-w-0">' +
+            '<span class="text-slate-400 font-black text-[11px] shrink-0">' + (idx + 1) + '.</span>' +
+            '<span class="font-bold text-slate-800 truncate text-xs">' + escapeHtml(it.title) + '</span>' +
+          '</div>' +
+          typeBadge +
+        '</div>'
+      );
+    }).join('');
   }
 
+  const modal = document.getElementById('confirmSendToInboxModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeConfirmSendToInboxModal() {
+  const modal = document.getElementById('confirmSendToInboxModal');
+  if (modal) modal.classList.add('hidden');
+  _pendingSendToInboxItems = [];
+}
+
+function executeSendManagerSelectedTasksToInbox() {
+  const selectedItems = _pendingSendToInboxItems;
+  if (!selectedItems || selectedItems.length === 0) {
+    closeConfirmSendToInboxModal();
+    return;
+  }
+  closeConfirmSendToInboxModal();
+
+  const data = getPersonalWorkspaceData(currentUser);
   const now = new Date();
   const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const m = currentSelectedMonth || (now.getMonth() + 1);
@@ -26012,7 +26244,7 @@ function sendManagerSelectedTasksToInbox() {
 
   renderPersonalWorkspaceUI();
   updatePersonalWorkspaceReportButtonsUI();
-  showToast(`📥 Đã gửi thành công ${selectedItems.length} đầu việc vào hộp thư để tổng hợp chung!`);
+  showToast(`📥 Đã đưa thành công ${selectedItems.length} đầu việc vào hộp thư để tổng hợp chung!`);
 }
 
 // Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin bảo mật và người nhận
@@ -26789,7 +27021,34 @@ function deleteConsolidatedReport(reportId) {
     showToast("Bạn không có quyền xóa báo cáo của tài khoản khác!", true);
     return;
   }
-  if (!confirm("Bạn có chắc chắn muốn xóa báo cáo tổng hợp này?\nCác đầu việc bên trong sẽ được phục hồi quay trở lại Hộp thư nhận việc.")) return;
+  _pendingDeleteReportId = reportId;
+  const modal = document.getElementById('confirmDeleteLeadershipReportModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    return;
+  }
+  executeDeleteLeadershipReport();
+}
+
+let _pendingDeleteReportId = null;
+
+function closeConfirmDeleteLeadershipReportModal() {
+  const modal = document.getElementById('confirmDeleteLeadershipReportModal');
+  if (modal) modal.classList.add('hidden');
+  _pendingDeleteReportId = null;
+}
+
+function executeDeleteLeadershipReport() {
+  const reportId = _pendingDeleteReportId;
+  if (!reportId) {
+    closeConfirmDeleteLeadershipReportModal();
+    return;
+  }
+  closeConfirmDeleteLeadershipReportModal();
+
+  const allReports = getLeadershipReportsShared();
+  const rep = allReports.find(r => r.id === reportId);
+  if (!rep) return;
 
   // 1. Ghi nhận ID đã xóa vào danh sách chặn vĩnh viễn (chống zombie loop)
   addDeletedLeadershipReportId(reportId);
