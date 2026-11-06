@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v61') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v62') {
             caches.delete(key);
           }
         });
@@ -15898,7 +15898,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (isFuture) {
           rowHighlightClass = "opacity-60 bg-slate-50/70 border-slate-200 cursor-not-allowed";
         } else if (d.isToday) {
-          rowHighlightClass = "border-2 border-emerald-500 bg-emerald-50/40 shadow-xs ring-2 ring-emerald-400/20";
+          // Ngày hôm nay: Viền trái emerald nổi bật, nền xanh dịu, không bị gắt, cân đối hoàn hảo
+          rowHighlightClass = "border-emerald-400 border-l-[3.5px] border-l-emerald-600 bg-emerald-50/35 shadow-xs";
         } else if (isLeave) {
           rowHighlightClass = "border-teal-300 bg-teal-50/50";
         } else if (hasVal) {
@@ -15907,7 +15908,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           rowHighlightClass = "border-dashed border-slate-300 bg-slate-50/60 hover:bg-amber-50/20";
         }
 
-        item.className = `modal-entry-card p-3 border rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition select-none ${rowHighlightClass}`;
+        // Layout cân đối, khoảng cách gap vừa vặn trên điện thoại
+        item.className = `modal-entry-card p-2.5 sm:p-3 border rounded-2xl flex items-center justify-between gap-2 sm:gap-3 shadow-2xs hover:border-slate-300 transition select-none ${rowHighlightClass}`;
         item.setAttribute('data-day-num', d.dayNum);
         if (d.isToday) {
           item.id = "taskEntryTodayRow";
@@ -15916,11 +15918,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const placeholderText = isFuture ? 'Chưa đến ngày' : (isReadOnly ? 'Chỉ xem' : 'Nhập báo cáo công việc');
         const formattedVal = isSymbol ? d.value : formatNumberWithCommas(d.value);
 
+        // Chiều rộng input tối ưu trên mobile: w-36 (144px) giúp cột thông tin bên trái luôn rộng rãi, không bị rớt dòng
         let inputControl = '';
         if (isSymbol) {
           inputControl = `
-            <div class="flex items-center gap-1.5">
-              <div class="relative w-44 sm:w-56">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="relative w-36 sm:w-56 shrink-0">
                 ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
                 <input type="text" id="taskDayInput_${idx}" data-day-num="${d.dayNum}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="triggerDraftAutosave(); updateDayInputCellStatusLive(this); updateTaskModeReportAlertUI();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 ${hasVal ? 'pl-7 pr-7 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-2.5 pr-7 border border-slate-300 bg-white text-slate-800'} rounded-xl text-center sm:text-left font-bold text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none uppercase transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isDayReadOnly ? `
@@ -15933,8 +15936,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           `;
         } else {
           inputControl = `
-            <div class="flex items-center gap-1.5">
-              <div class="relative w-44 sm:w-56">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="relative w-36 sm:w-56 shrink-0">
                 ${hasVal ? `<span class="day-input-check-icon absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 font-black text-xs pointer-events-none z-10">✓</span>` : ''}
                 <input type="text" id="taskDayInput_${idx}" data-day-num="${d.dayNum}" value="${formattedVal}" placeholder="${placeholderText}" ${isDayReadOnly ? 'readonly disabled' : ''} oninput="formatNumberInputLive(this); triggerDraftAutosave(); updateDayInputCellStatusLive(this); updateTaskModeReportAlertUI();" onkeydown="handleModalInputKeydown(event, ${idx}, 'taskDayInput_')" class="w-full h-9 ${hasVal ? 'pl-7 pr-7 border-2 border-emerald-500 bg-emerald-50/20 text-emerald-950 font-bold' : 'pl-2.5 pr-7 border border-slate-300 bg-slate-50 text-slate-800'} rounded-xl text-xs sm:text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400 ${isDayReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" style="${hasVal ? 'border-color: #10b981;' : ''}" />
                 ${!isDayReadOnly ? `
@@ -15947,17 +15950,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           `;
         }
 
+        // Khối số ngày: Thanh lịch, tinh tế
+        const numBoxClass = d.isToday
+          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/90 font-black'
+          : (isFuture ? 'bg-slate-100 text-slate-400 font-medium' : 'bg-slate-100 text-slate-700 font-bold');
+
         item.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <span class="w-9 h-9 rounded-2xl ${d.isToday ? 'bg-emerald-600 text-white font-black' : (isFuture ? 'bg-slate-100 text-slate-400 font-medium' : 'bg-slate-100 text-slate-700 font-bold')} text-xs font-num flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${numBoxClass} text-xs font-num flex items-center justify-center shrink-0 shadow-2xs">
               ${d.dayNum}
             </span>
-            <div>
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">Ngày ${d.label}</span>
-                ${d.isToday ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-600 text-white font-num shadow-2xs">Hôm nay</span>' : ''}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1 sm:gap-1.5 flex-nowrap">
+                <span class="font-black text-xs sm:text-sm ${d.isToday ? 'text-emerald-950' : 'text-slate-800'} leading-tight whitespace-nowrap">Ngày ${d.label}</span>
+                ${d.isToday ? '<span class="px-1.5 py-0.2 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-num whitespace-nowrap shrink-0 shadow-2xs tracking-tight">Hôm nay</span>' : ''}
               </div>
-              <p class="text-[11px] text-slate-400 font-medium">${isFuture ? 'Chưa phát sinh ngày' : (isLeave ? (sym.title || 'Nghỉ') : (hasVal ? 'Đã ghi nhận số liệu' : 'Chưa có số liệu'))}</p>
+              <p class="text-[10px] sm:text-[11px] ${d.isToday && !hasVal ? 'text-amber-700 font-medium' : 'text-slate-400'} font-medium truncate mt-0.5 whitespace-nowrap">
+                ${isFuture ? 'Chưa phát sinh ngày' : (isLeave ? (sym.title || 'Nghỉ') : (hasVal ? 'Đã ghi nhận số liệu' : 'Chưa có số liệu'))}
+              </p>
             </div>
           </div>
           <div>${inputControl}</div>
