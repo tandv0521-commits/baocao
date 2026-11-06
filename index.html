@@ -30719,19 +30719,19 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
 
 
-  <!-- ================= MODAL XÁC NHẬN TÍCH CHỌN ĐẦU VIỆC ĐÃ GỬI BÁO CÁO / HỘP THƯ ================= -->
+  <!-- ================= MODAL XÁC NHẬN TÍCH CHỌN ĐẦU VIỆC ĐÃ GỬI BÁO CÁO / HỘP THƯ (THIẾT KẾ HIỆN ĐẠI, CÂN ĐỐI) ================= -->
   <div id="confirmSelectReportedItemModal" class="fixed inset-0 z-[85] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
-    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+    <div class="bg-white border border-slate-200/90 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-6 sm:p-7 space-y-4 animate-in zoom-in-95 duration-150">
       
       <!-- HEADER -->
-      <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shrink-0 shadow-2xs">
+      <div class="flex items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-xl shrink-0 shadow-xs">
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div>
-            <h4 class="font-black text-slate-800 text-base leading-tight">Xác Nhận Chọn Đầu Việc Đã Gửi</h4>
-            <p class="text-[11px] text-slate-400 font-medium">Đầu việc đã gửi vào Hộp thư hoặc Báo cáo trước đó</p>
+            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Xác Nhận Chọn Đầu Việc Đã Gửi</h4>
+            <p class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">Đầu việc đã từng được gửi vào Hộp thư hoặc Báo cáo trước đó</p>
           </div>
         </div>
         <button type="button" onclick="closeConfirmSelectReportedItemModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
@@ -30740,38 +30740,47 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- BODY -->
-      <div class="space-y-3 text-xs leading-relaxed">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+      <div class="space-y-3.5 text-xs leading-relaxed">
+        <!-- KHỐI HIỂN THỊ CHI TIẾT ĐẦU VIỆC -->
+        <div class="p-3.5 bg-gradient-to-r from-slate-50 via-slate-50/90 to-indigo-50/30 border border-slate-200/90 rounded-2xl space-y-2 shadow-2xs">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Đầu việc:</span>
+            <span class="text-[10.5px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-slate-400"></i>
+              <span>Đầu việc đang chọn:</span>
+            </span>
             <div id="reSelectTaskBadge"></div>
           </div>
-          <div id="reSelectTaskTitle" class="font-bold text-slate-800 text-sm leading-snug">---</div>
+          <div id="reSelectTaskTitle" class="font-black text-slate-800 text-sm sm:text-base leading-snug">---</div>
         </div>
 
-        <!-- HỘP CẢNH BÁO YÊU CẦU CHỈNH SỬA KHÔNG ĐƯỢC GIỐNG LƯỢT TRƯỚC -->
-        <div class="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-[11px] sm:text-xs text-amber-950 space-y-2 shadow-2xs">
-          <div class="font-bold flex items-center gap-2 text-amber-900">
-            <i class="fa-solid fa-circle-exclamation text-amber-600 text-sm shrink-0"></i>
+        <!-- HỘP CẢNH BÁO QUY ĐỊNH CÂN ĐỐI, RÕ RÀNG -->
+        <div class="p-4 bg-gradient-to-br from-amber-50/80 via-amber-50/50 to-orange-50/40 border border-amber-200/90 rounded-2xl space-y-2.5 shadow-2xs">
+          <div class="flex items-center gap-2 text-amber-900 font-black text-xs sm:text-sm">
+            <span class="w-5 h-5 rounded-lg bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-2xs shrink-0">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
             <span>Quy định gửi lại công việc:</span>
           </div>
-          <p class="leading-relaxed">
-            Đầu việc này đã từng được chuyển vào Hộp thư bộ phận hoặc đã gửi báo cáo ở lượt trước. 
-            Để tiếp tục đưa vào báo cáo hoặc hộp thư lần này, <b>nội dung công việc bắt buộc phải có sự chỉnh sửa / bổ sung cập nhật mới, không được giữ nguyên trùng lặp giống lượt gửi hoặc di chuyển trước đây</b>.
+          <p class="text-xs text-amber-950/90 leading-relaxed font-medium">
+            Đầu việc này đã từng được chuyển vào <b>Hộp thư bộ phận</b> hoặc đã <b>gửi báo cáo</b> ở lượt trước.
           </p>
+          <div class="p-2.5 bg-white/90 rounded-xl border border-amber-200/80 text-xs text-amber-900 leading-relaxed font-semibold flex items-start gap-2 shadow-2xs">
+            <i class="fa-solid fa-circle-info text-amber-600 text-xs mt-0.5 shrink-0"></i>
+            <span>Nội dung gửi lần này <b>bắt buộc phải có sự chỉnh sửa / bổ sung cập nhật mới</b>, không được gửi trùng lặp nguyên xi giống như lượt gửi hoặc di chuyển trước đây.</span>
+          </div>
         </div>
       </div>
 
-      <!-- FOOTER -->
-      <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-slate-100">
-        <button type="button" onclick="closeConfirmSelectReportedItemModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer text-center">
+      <!-- FOOTER: 3 NÚT CÂN ĐỐI, NẰM THẲNG HÀNG TRÊN DESKTOP, KHÔNG BỊ NGẮT DÒNG CHỮ -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeConfirmSelectReportedItemModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer text-center">
           Hủy bỏ
         </button>
-        <button type="button" onclick="editReportedItemBeforeSelect()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center justify-center gap-1.5">
+        <button type="button" onclick="editReportedItemBeforeSelect()" class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs sm:text-sm font-black transition whitespace-nowrap cursor-pointer shadow-2xs flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-pen-to-square text-xs"></i>
           <span>Chỉnh Sửa Việc</span>
         </button>
-        <button type="button" onclick="proceedSelectReportedItem()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-1.5 cursor-pointer">
+        <button type="button" onclick="proceedSelectReportedItem()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-600/25 transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-check text-xs"></i>
           <span>Đã Cập Nhật - Tích Chọn</span>
         </button>
