@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v67') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v68') {
             caches.delete(key);
           }
         });
@@ -12425,6 +12425,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           scheduleSilentMatrixRefresh(250, '');
         });
 
+        // Lắng nghe thay đổi Sổ tay công việc (personal_tasks) để tự động nhảy số liệu ngay lập tức
+        _matrixRealtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'personal_tasks' }, payload => {
+          const rec = payload.new || payload.old;
+          if (rec && currentUser && (String(rec.user_id) === String(currentUser.id) || String(rec.username) === String(currentUser.username))) {
+            if (typeof fetchPersonalTasksFromSupabase === 'function') {
+              fetchPersonalTasksFromSupabase();
+            }
+          }
+        });
+
         _matrixRealtimeChannel.subscribe((status, err) => {
           const badgeDot = document.getElementById('matrixRealtimeSyncDot');
           const badgeText = document.getElementById('matrixRealtimeSyncText');
@@ -12474,6 +12484,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function handleIncomingMatrixBroadcast(msg) {
       if (!msg || !msg.payload) return;
       const p = msg.payload;
+
+      // Nếu là sự kiện cập nhật Sổ tay công việc cá nhân của chính user này (từ tab khác hoặc thiết bị khác):
+      if (p.action === 'personal_task_mutation') {
+        if (currentUser && String(p.userId) === String(currentUser.id)) {
+          if (typeof fetchPersonalTasksFromSupabase === 'function') {
+            fetchPersonalTasksFromSupabase();
+          }
+        }
+        return;
+      }
 
       // Nếu chính máy này là người gửi thì bỏ qua (vì đã tự cập nhật cục bộ)
       if (currentUser && p.senderId && p.senderId === currentUser.id) return;
@@ -21743,6 +21763,7 @@ function fromSupabaseTaskRow(r) {
     isImportant: !!r.is_important,
     status: r.status,
     isCompleted: isFinished,
+    is_completed: isFinished,
     feedbackResponse: r.feedback_response || '',
     selectedForReport: (r.selected_for_report !== false),
     isReported: false,
@@ -21878,48 +21899,66 @@ async function fetchPersonalTasksFromSupabase() {
     updateCloudSyncBadge(true);
 
     if (Array.isArray(data)) {
-      // Loại bỏ hoàn toàn mọi công việc mẫu cả từ Cloud lẫn Local
       const cloudItems = data.map(fromSupabaseTaskRow).filter(it => it && !isSampleTaskItem(it));
       const localData = getPersonalWorkspaceData(currentUser);
       const localItems = (localData.items || []).filter(it => it && !isSampleTaskItem(it));
 
-      // Không tự động tạo công việc mẫu khi tài khoản mới hoặc danh sách trống (để trống sạch sẽ)
       if (cloudItems.length === 0 && localItems.length === 0) {
         localData.items = [];
         savePersonalWorkspaceData(localData, currentUser);
         renderPersonalWorkspaceUI();
         updatePersonalWorkspaceEntryCardStats();
+        updatePersonalWorkspaceReminders(localData);
+        showPersonalTaskReminderOnLogin();
         return;
       }
 
-      // Đồng bộ: Đẩy những mục chỉ có ở local lên cloud (tuyệt đối không đẩy việc mẫu)
-      const cloudIds = new Set(cloudItems.map(c => c.id));
-      const unuploaded = localItems.filter(l => !cloudIds.has(l.id) && !isSampleTaskItem(l));
-
-      if (unuploaded.length > 0) {
-        const rowsToInsert = unuploaded.map(u => toSupabaseTaskRow(u, currentUser));
-        supabase.from('personal_tasks').upsert(rowsToInsert).then(() => {});
-      }
-
-      // Hợp nhất danh sách (Ưu tiên dữ liệu chuẩn xác từ Supabase Cloud làm nguồn sự thật)
+      // HỢP NHẤT THÔNG MINH DỮ LIỆU: BẢO VỆ 100% CÔNG VIỆC VỪA HOÀN THÀNH
+      // So sánh thời điểm cập nhật updatedAt giữa Cloud và Local, không bao giờ để dữ liệu cũ ghi đè dữ liệu mới!
       const mergedMap = new Map();
       cloudItems.forEach(ci => {
         if (!isSampleTaskItem(ci)) {
           mergedMap.set(ci.id, ci);
         }
       });
+
+      const itemsToSyncToCloud = [];
       localItems.forEach(li => {
-        // Chỉ lưu lại những mục mới tạo ở local chưa kịp đẩy lên cloud
-        if (!isSampleTaskItem(li) && !mergedMap.has(li.id)) {
+        if (isSampleTaskItem(li)) return;
+
+        if (!mergedMap.has(li.id)) {
           mergedMap.set(li.id, li);
+          itemsToSyncToCloud.push(li);
+        } else {
+          const ci = mergedMap.get(li.id);
+          const cloudTime = ci.updatedAt ? new Date(ci.updatedAt).getTime() : 0;
+          const localTime = li.updatedAt ? new Date(li.updatedAt).getTime() : 0;
+
+          // Nếu thao tác ở local mới hơn cloud (ví dụ vừa hoàn thành việc ở local trước khi F5):
+          if (localTime > cloudTime + 300) {
+            mergedMap.set(li.id, li);
+            itemsToSyncToCloud.push(li);
+          }
         }
       });
+
+      // Nếu có mục ở local mới hơn -> tự động đẩy đồng bộ lên cloud
+      if (itemsToSyncToCloud.length > 0 && supabase) {
+        const rows = itemsToSyncToCloud.map(u => toSupabaseTaskRow(u, currentUser));
+        supabase.from('personal_tasks').upsert(rows).then(() => {}).catch(() => {});
+      }
 
       localData.items = Array.from(mergedMap.values());
       const key = getPersonalWorkspaceStorageKey(currentUser);
       localStorage.setItem(key, JSON.stringify(localData));
+
+      // CẬP NHẬT ĐỒNG BỘ TOÀN DIỆN MỌI THÀNH PHẦN GIAO DIỆN LIÊN QUAN:
       renderPersonalWorkspaceUI();
       updatePersonalWorkspaceEntryCardStats();
+      updatePersonalWorkspaceReminders(localData);
+
+      // CẬP NHẬT TỨC THÌ LÊN BẢNG THÔNG BÁO NHẮC NHỞ CÔNG VIỆC CHƯA LÀM!
+      showPersonalTaskReminderOnLogin();
     }
   } catch(e) {
     console.warn("Chưa kết nối bảng Supabase personal_tasks:", e);
@@ -22409,6 +22448,10 @@ function showPersonalTaskReminderOnLogin() {
   // TUYỆT ĐỐI KHÔNG HIỆN THÔNG BÁO VÀ ĐÓNG MODAL NGAY LẬP TỨC
   if (pendingItems.length === 0) {
     if (modal) modal.classList.add('hidden');
+    if (window._pwReminderOpenTimer) {
+      clearTimeout(window._pwReminderOpenTimer);
+      window._pwReminderOpenTimer = null;
+    }
     return;
   }
 
@@ -22489,7 +22532,13 @@ function showPersonalTaskReminderOnLogin() {
     }
   }
 
-  setTimeout(() => {
+  // NẾU MODAL ĐÃ ĐANG MỞ: CẬP NHẬT TRỰC TIẾP NỘI DUNG NGAY LẬP TỨC (KHÔNG CẦN CHỜ TIMEOUT)
+  if (modal && !modal.classList.contains('hidden')) {
+    return;
+  }
+
+  if (window._pwReminderOpenTimer) clearTimeout(window._pwReminderOpenTimer);
+  window._pwReminderOpenTimer = setTimeout(() => {
     // Nếu trong lúc chờ người dùng đã mở Sổ tay công việc thì dừng ngay không mở popup đè lên
     const pwPageCheck = document.getElementById('personalWorkspacePageView');
     if (pwPageCheck && !pwPageCheck.classList.contains('hidden')) {
@@ -22497,7 +22546,6 @@ function showPersonalTaskReminderOnLogin() {
       return;
     }
 
-    // Kiểm tra lại lần cuối trước khi hiển thị để phòng trường hợp dữ liệu vừa được hoàn tất
     const checkData = getPersonalWorkspaceData(currentUser);
     const checkPending = (checkData.items || []).filter(it => !isPersonalTaskFinished(it));
     if (checkPending.length > 0) {
@@ -22505,7 +22553,8 @@ function showPersonalTaskReminderOnLogin() {
     } else {
       modal.classList.add('hidden');
     }
-  }, 400);
+    window._pwReminderOpenTimer = null;
+  }, 250);
 }
 
 function closePersonalTaskReminderModal() {
@@ -24688,6 +24737,9 @@ function togglePersonalItemStatus(id) {
   savePersonalWorkspaceData(data, currentUser);
   savePersonalTaskToSupabase(item);
   renderPersonalWorkspaceUI();
+  updatePersonalWorkspaceEntryCardStats();
+  showPersonalTaskReminderOnLogin();
+  broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast(`Đã chuyển trạng thái: ${newStatusLabel}`);
 }
 
@@ -24933,6 +24985,9 @@ function savePersonalItem() {
   }
   closePersonalItemEditModal();
   renderPersonalWorkspaceUI();
+  updatePersonalWorkspaceEntryCardStats();
+  showPersonalTaskReminderOnLogin();
+  broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast("Đã lưu mục công việc cá nhân thành công!");
 }
 
@@ -24943,6 +24998,9 @@ function deletePersonalItem(id) {
   savePersonalWorkspaceData(data, currentUser);
   deletePersonalTaskFromSupabase(id);
   renderPersonalWorkspaceUI();
+  updatePersonalWorkspaceEntryCardStats();
+  showPersonalTaskReminderOnLogin();
+  broadcastMatrixChange('personal_task_mutation', { userId: currentUser.id });
   showToast("Đã xóa mục công việc.");
 }
 
