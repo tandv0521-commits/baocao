@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v63') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v64') {
             caches.delete(key);
           }
         });
@@ -1698,7 +1698,13 @@
             </button>
           </div>
 
-          <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
+          <!-- BADGE CHỈ BÁO REALTIME LIVE SYNC TỰ ĐỘNG -->
+            <div id="matrixRealtimeSyncBadge" title="Hệ thống tự động đồng bộ tức thì số liệu khi các tài khoản khác lưu/sửa" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 text-[11px] font-bold shadow-2xs transition-all duration-300">
+              <span id="matrixRealtimeSyncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="matrixRealtimeSyncText">Đồng bộ tự động</span>
+            </div>
+
+            <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
             <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
             <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()" 
               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
@@ -12012,6 +12018,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           inputElem.classList.remove('cell-saving');
           applyClientFilterAndRender();
           refreshReportingProgressRealtime();
+          broadcastMatrixChange('cell_saved', {
+            targetYear: currentSelectedYear,
+            targetMonth: currentSelectedMonth,
+            senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Nhân sự'
+          });
           showToast(`Đã gộp ngày nghỉ (${symInfo.code}) cho ${staffGrp.staffName}`);
           setTimeout(() => {
             const restoredInp = document.querySelector(`input[data-day="${dayNum}"][data-is-leave-merged="true"]`)
@@ -12078,6 +12089,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           inputElem.classList.remove('cell-saving');
           applyClientFilterAndRender();
           refreshReportingProgressRealtime();
+          broadcastMatrixChange('cell_saved', {
+            targetYear: currentSelectedYear,
+            targetMonth: currentSelectedMonth,
+            senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Nhân sự'
+          });
           showToast(`Đã tách các ô làm việc cho ${staffGrp.staffName}`);
           setTimeout(() => {
             const restoredInp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${dayNum}"]`);
@@ -12174,6 +12190,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
         refreshReportingProgressRealtime();
+        broadcastMatrixChange('cell_saved', {
+          targetYear: currentSelectedYear,
+          targetMonth: currentSelectedMonth,
+          senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Nhân sự'
+        });
         showToast("Cập nhật báo cáo thành công!");
       } catch (err) {
         inputElem.classList.remove('cell-saving');
@@ -12362,40 +12383,114 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      * LẮNG NGHE SỰ KIỆN NHẬP BÁO CÁO REALTIME TỪ SUPABASE:
      * Khi bất kỳ nhân viên nào lưu báo cáo, các máy quản lý/admin nhận cập nhật tức thì
      */
-    let _dailyReportRealtimeChannel = null;
+    // ================= HỆ THỐNG REALTIME ĐA TẦNG (MULTI-ENGINE REALTIME SYNC) =================
+    // Tự động nhảy số liệu tức thì (50ms - 100ms) qua Broadcast Channel khi bất kỳ ai lưu/sửa
+    // Tích hợp Smart Polling Heartbeat (12s) và Visibility Wakeup khi quay lại tab / mở điện thoại
+    let _matrixRealtimeChannel = null;
+    let _lastKnownReportUpdatedAt = null;
+    let _isSilentRefreshing = false;
+    let _autoSyncPollingInterval = null;
+    let _silentRefreshTimer = null;
+    let _lastToastTime = 0;
 
     function setupDailyReportsRealtimeListener() {
-      if (!supabase || _dailyReportRealtimeChannel) return;
+      if (!supabase) return;
+      
+      // Đóng kênh cũ nếu có để tránh trùng lặp
+      if (_matrixRealtimeChannel) {
+        try { supabase.removeChannel(_matrixRealtimeChannel); } catch(e) {}
+        _matrixRealtimeChannel = null;
+      }
+
       try {
-        _dailyReportRealtimeChannel = supabase
-          .channel('public:daily_reports_realtime_board')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_reports' }, payload => {
-            handleRealtimeDailyReportChange(payload);
-          })
-          .subscribe();
+        const channelName = 'matrix_realtime_sync_feed';
+        _matrixRealtimeChannel = supabase.channel(channelName, {
+          config: {
+            broadcast: { ack: false, self: false }
+          }
+        });
+
+        // TẦNG 1: BROADCAST CHANNEL - Nhận tín hiệu siêu tốc (50ms - 100ms) ngay khi đồng nghiệp bấm Lưu / Sửa
+        _matrixRealtimeChannel.on('broadcast', { event: 'matrix_mutation' }, payload => {
+          handleIncomingMatrixBroadcast(payload);
+        });
+
+        // TẦNG 2: POSTGRES CHANGES - Lắng nghe thay đổi trực tiếp từ cơ sở dữ liệu trên daily_reports
+        _matrixRealtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'daily_reports' }, payload => {
+          handleRealtimeDailyReportChange(payload);
+        });
+
+        // Lắng nghe thay đổi phân công công việc từ bảng tasks
+        _matrixRealtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
+          scheduleSilentMatrixRefresh(250, 'hệ thống phân công');
+        });
+
+        _matrixRealtimeChannel.subscribe((status, err) => {
+          const badgeDot = document.getElementById('matrixRealtimeSyncDot');
+          const badgeText = document.getElementById('matrixRealtimeSyncText');
+          if (status === 'SUBSCRIBED') {
+            if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+            if (badgeText) badgeText.innerText = "Đồng bộ tự động";
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-amber-400";
+            if (badgeText) badgeText.innerText = "Đang kết nối lại...";
+          }
+        });
       } catch (err) {
-        console.warn("Realtime listener error:", err);
+        console.warn("[Realtime] Setup error:", err);
+      }
+
+      // Khởi động Tầng 3 (Heartbeat Polling) và Tầng 4 (Visibility Wakeup Sync)
+      startMatrixAutoSyncPolling();
+      setupTabVisibilitySyncListener();
+    }
+
+    // GỬI BROADCAST SỐ LIỆU ĐẾN TẤT CẢ CÁC MÁY ĐANG MỞ
+    function broadcastMatrixChange(actionType, extraData = {}) {
+      try {
+        const payload = {
+          action: actionType || 'report_saved',
+          senderId: currentUser ? currentUser.id : null,
+          senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Nhân sự',
+          targetMonth: extraData.targetMonth || currentSelectedMonth,
+          targetYear: extraData.targetYear || currentSelectedYear,
+          timestamp: Date.now(),
+          ...extraData
+        };
+
+        if (_matrixRealtimeChannel) {
+          _matrixRealtimeChannel.send({
+            type: 'broadcast',
+            event: 'matrix_mutation',
+            payload: payload
+          });
+        }
+      } catch (e) {
+        console.warn("[Broadcast] Failed to send:", e);
       }
     }
 
-    let _realtimeBoardRefreshTimer = null;
-    function scheduleRealtimeBoardRefresh() {
-      if (_realtimeBoardRefreshTimer) clearTimeout(_realtimeBoardRefreshTimer);
-      _realtimeBoardRefreshTimer = setTimeout(() => {
-        refreshReportingProgressRealtime();
-        _realtimeBoardRefreshTimer = null;
-      }, 70);
+    // TIẾP NHẬN BROADCAST TỪ CÁC THIẾT BỊ KHÁC
+    function handleIncomingMatrixBroadcast(msg) {
+      if (!msg || !msg.payload) return;
+      const p = msg.payload;
+
+      // Nếu chính máy này là người gửi thì bỏ qua (vì đã tự cập nhật cục bộ)
+      if (currentUser && p.senderId && p.senderId === currentUser.id) return;
+
+      // Nếu kỳ thay đổi không phải kỳ đang xem trên màn hình thì bỏ qua
+      if (p.targetMonth && p.targetYear) {
+        if (p.targetMonth !== currentSelectedMonth || p.targetYear !== currentSelectedYear) {
+          return;
+        }
+      }
+
+      const sender = p.senderName || 'Đồng nghiệp';
+      console.log(`[Matrix Realtime] Nhận được tín hiệu cập nhật từ ${sender} (${p.action})`);
+      scheduleSilentMatrixRefresh(120, sender);
     }
 
-    let _realtimeMatrixRenderTimer = null;
-    function scheduleRealtimeMatrixRender() {
-      if (_realtimeMatrixRenderTimer) clearTimeout(_realtimeMatrixRenderTimer);
-      _realtimeMatrixRenderTimer = setTimeout(() => {
-        applyClientFilterAndRender();
-        _realtimeMatrixRenderTimer = null;
-      }, 90);
-    }
-
+    // TIẾP NHẬN SỰ KIỆN POSTGRES CHANGES
     function handleRealtimeDailyReportChange(payload) {
       if (!payload) return;
       const isDelete = (payload.eventType === 'DELETE');
@@ -12405,49 +12500,184 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const parts = rec.report_date.split('-');
       const y = parseInt(parts[0], 10);
       const m = parseInt(parts[1], 10);
-      const d = parseInt(parts[2], 10);
-
       if (m !== currentSelectedMonth || y !== currentSelectedYear) return;
 
-      const taskId = rec.task_id;
-      let val = "";
-      if (!isDelete) {
-        if (rec.num_val !== null && rec.num_val !== undefined) val = rec.num_val;
-        else if (rec.sym_val) val = rec.sym_val;
-        else if (rec.text_val) val = rec.text_val;
+      // Bật làm mới ngầm ma trận và các bảng phân tích bên dưới
+      scheduleSilentMatrixRefresh(250, 'đồng nghiệp');
+    }
+
+    // ĐIỀU PHỐI LÀM MỚI NGẦM (DEBOUNCE ĐỂ TRÁNH DỒN TOÁN)
+    function scheduleSilentMatrixRefresh(delayMs = 150, senderName = '') {
+      if (_silentRefreshTimer) clearTimeout(_silentRefreshTimer);
+      _silentRefreshTimer = setTimeout(() => {
+        _silentRefreshTimer = null;
+        silentRefreshMatrixData(senderName);
+      }, delayMs);
+    }
+
+    // LÀM MỚI NGẦM MA TRẬN: BẢO LƯU VỊ TRÍ CUỘN & KHÔNG LÀM MẤT CON TRỎ SOẠN THẢO
+    async function silentRefreshMatrixData(senderName = '') {
+      if (_isSilentRefreshing) return;
+      _isSilentRefreshing = true;
+
+      try {
+        const tableContainer = document.getElementById('tableScrollContainer');
+        const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
+        const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
+
+        // Lưu lại vị trí ô input nếu người dùng hiện tại đang gõ dở
+        const activeEl = document.activeElement;
+        let activeInputMeta = null;
+        if (activeEl && activeEl.tagName === 'INPUT' && activeEl.dataset.taskId && activeEl.dataset.day) {
+          activeInputMeta = {
+            taskId: activeEl.dataset.taskId,
+            day: activeEl.dataset.day,
+            val: activeEl.value,
+            selectionStart: activeEl.selectionStart,
+            selectionEnd: activeEl.selectionEnd
+          };
+        }
+
+        // Tải dữ liệu ma trận mới nhất trong nền (không bật vòng xoay loadingTasksBox)
+        const fresh = await fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear);
+        if (fresh && fresh.staffGroups) {
+          fullPeriodMatrixCache = fresh;
+          currentMatrixData = fresh;
+          cachedPreloadMatrix = fresh;
+          const memKey = `${currentSelectedYear}_${currentSelectedMonth}`;
+          if (typeof periodMatrixMemoryCache !== 'undefined' && periodMatrixMemoryCache) {
+            periodMatrixMemoryCache.set(memKey, fresh);
+          }
+          try {
+            localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
+          } catch(e) {}
+
+          // Vẽ lại ma trận mượt mà
+          applyClientFilterAndRender();
+
+          // Cập nhật lại 3 bảng phân tích bên dưới (Đôn Đốc, Thi Đua, Nhịp Độ)
+          refreshReportingProgressRealtime();
+
+          // Khôi phục chính xác vị trí cuộn
+          if (tableContainer) {
+            tableContainer.scrollLeft = prevScrollLeft;
+            tableContainer.scrollTop = prevScrollTop;
+          }
+
+          // Khôi phục lại focus nếu người dùng đang gõ
+          if (activeInputMeta) {
+            const restoredInp = document.querySelector(`input[data-task-id="${activeInputMeta.taskId}"][data-day="${activeInputMeta.day}"]`);
+            if (restoredInp) {
+              restoredInp.value = activeInputMeta.val;
+              restoredInp.focus();
+              try {
+                restoredInp.setSelectionRange(activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
+              } catch(e) {}
+            }
+          }
+
+          // Hiển thị chỉ báo đồng bộ tức thì
+          showLiveSyncIndicator(senderName);
+        }
+      } catch (err) {
+        console.warn("[SilentRefresh] Lỗi cập nhật ma trận ngầm:", err);
+      } finally {
+        _isSilentRefreshing = false;
+      }
+    }
+
+    // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME
+    function showLiveSyncIndicator(senderName = '') {
+      const badge = document.getElementById('matrixRealtimeSyncBadge');
+      const badgeText = document.getElementById('matrixRealtimeSyncText');
+      const badgeDot = document.getElementById('matrixRealtimeSyncDot');
+
+      if (badge && badgeText && badgeDot) {
+        badge.classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
+        badge.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300', 'scale-105');
+        badgeDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
+        badgeText.innerText = senderName ? `Vừa cập nhật từ ${senderName}` : "Vừa đồng bộ dữ liệu";
+
+        setTimeout(() => {
+          badge.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300', 'scale-105');
+          badge.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
+          badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+          badgeText.innerText = "Đồng bộ tự động";
+        }, 3200);
       }
 
-      let hasChanged = false;
-      const targetCaches = Array.from(new Set([fullPeriodMatrixCache, currentMatrixData].filter(Boolean)));
-      targetCaches.forEach(targetCache => {
-        if (targetCache && targetCache.staffGroups) {
-          targetCache.staffGroups.forEach(grp => {
-            const matchedTask = (grp.tasks || []).find(t => t.taskId === taskId);
-            if (matchedTask) {
-              if (matchedTask.dailyValues && matchedTask.dailyValues[d] !== val) {
-                matchedTask.dailyValues[d] = val;
-                matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
-                hasChanged = true;
-              }
+      // Thông báo Toast nhẹ nhàng (chống spam toast dồn dập, tối thiểu 6s/lần)
+      const now = Date.now();
+      if (senderName && (now - _lastToastTime > 6000)) {
+        _lastToastTime = now;
+        showToast(`⚡ Bảng ma trận vừa tự động cập nhật số liệu mới từ ${senderName}!`);
+      }
+    }
+
+    // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (12S - 15S)
+    // Tự động kiểm tra bản ghi mới nhất trên cơ sở dữ liệu để phòng trường hợp ngắt websocket hoặc sleep
+    function startMatrixAutoSyncPolling() {
+      if (_autoSyncPollingInterval) clearInterval(_autoSyncPollingInterval);
+
+      _autoSyncPollingInterval = setInterval(async () => {
+        if (document.hidden) return; // Không truy vấn khi tab đang ẩn
+        if (_isSilentRefreshing) return;
+
+        try {
+          const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+          const startDate = `${currentSelectedYear}-${mFormatted}-01`;
+          const endDate = `${currentSelectedYear}-${mFormatted}-31`;
+
+          const { data, error } = await supabase
+            .from('daily_reports')
+            .select('updated_at')
+            .gte('report_date', startDate)
+            .lte('report_date', endDate)
+            .order('updated_at', { ascending: false })
+            .limit(1);
+
+          if (!error && data && data.length > 0) {
+            const latestDbUpdate = new Date(data[0].updated_at).getTime();
+            if (!_lastKnownReportUpdatedAt) {
+              _lastKnownReportUpdatedAt = latestDbUpdate;
+            } else if (latestDbUpdate > _lastKnownReportUpdatedAt + 500) {
+              _lastKnownReportUpdatedAt = latestDbUpdate;
+              console.log("[Heartbeat] Phát hiện số liệu mới trên máy chủ -> Tự động đồng bộ ma trận!");
+              scheduleSilentMatrixRefresh(200, 'đồng nghiệp');
             }
-          });
+          }
+        } catch(e) {}
+      }, 12000);
+    }
+
+    // TẦNG 4: VISIBILITY CHANGE & WINDOW FOCUS RE-SYNC
+    // Khi giữ tab lâu rồi quay lại thẻ trình duyệt hoặc mở khóa điện thoại -> Tự động đồng bộ ngay lập tức!
+    let _lastVisibilitySyncTime = Date.now();
+    function setupTabVisibilitySyncListener() {
+      if (window._hasSetupVisibilitySyncListener) return;
+      window._hasSetupVisibilitySyncListener = true;
+
+      const handleTabWakeup = () => {
+        const now = Date.now();
+        if (now - _lastVisibilitySyncTime < 4000) return; // Debounce 4s
+        _lastVisibilitySyncTime = now;
+
+        console.log("[VisibilitySync] Người dùng quay lại thẻ trình duyệt -> Đồng bộ dữ liệu mới nhất...");
+        if (_matrixRealtimeChannel && _matrixRealtimeChannel.state === 'closed') {
+          try { _matrixRealtimeChannel.subscribe(); } catch(e) {}
+        }
+        scheduleSilentMatrixRefresh(150, 'máy chủ');
+      };
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          handleTabWakeup();
         }
       });
 
-      if (hasChanged) {
-        scheduleRealtimeBoardRefresh();
-        const sym = getSmartSymbolInfo(val);
-        if (sym && sym.isLeave) {
-          scheduleRealtimeMatrixRender();
-        } else {
-          // Cập nhật giá trị hiển thị trên ô ma trận nếu đang mở ô này mà người dùng không đang gõ
-          const inp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${d}"]`);
-          if (inp && document.activeElement !== inp) {
-            inp.value = (val === '-' || val === '·' || val === '0') ? '' : val;
-            inp.dataset.oldValue = val;
-          }
-        }
-      }
+      window.addEventListener('focus', () => {
+        handleTabWakeup();
+      });
     }
 
     let currentNavActiveDay = null;
@@ -16355,6 +16585,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           closeDayEntryModal();
           // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
           refreshReportingProgressRealtime();
+          // BẮN BROADCAST ĐỒNG BỘ REALTIME TỚI TẤT CẢ CÁC TÀI KHOẢN KHÁC ĐANG MỞ
+          broadcastMatrixChange('report_saved', {
+            targetYear: targetYear,
+            targetMonth: targetMonth,
+            senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Nhân sự'
+          });
         }, 80);
       } catch (err) {
         hideProgressHud(100);
@@ -18244,6 +18480,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           closeTransferTaskModal();
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
+          broadcastMatrixChange('task_transferred', {
+            targetYear: currentSelectedYear,
+            targetMonth: currentSelectedMonth,
+            senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Quản lý'
+          });
 
           // Cập nhật lại số lượng badge task
           const countBadge = document.getElementById('modalAssignTaskCountBadge');
@@ -18573,6 +18814,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
           loadMatrixData(true);
+          broadcastMatrixChange('tasks_assigned', {
+            targetYear: currentSelectedYear,
+            targetMonth: currentSelectedMonth,
+            senderName: currentUser ? (currentUser.full_name || currentUser.username) : 'Quản lý'
+          });
         }, 80);
       } catch (err) {
         hideProgressHud(100);
