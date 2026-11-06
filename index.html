@@ -51,7 +51,7 @@
     if ('caches' in window) {
       caches.keys().then(function(keys) {
         keys.forEach(function(key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v64') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v67') {
             caches.delete(key);
           }
         });
@@ -1699,7 +1699,7 @@
           </div>
 
           <!-- BADGE CHỈ BÁO REALTIME LIVE SYNC TỰ ĐỘNG -->
-            <div id="matrixRealtimeSyncBadge" title="Hệ thống tự động đồng bộ tức thì số liệu khi các tài khoản khác lưu/sửa" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 text-[11px] font-bold shadow-2xs transition-all duration-300">
+            <div id="matrixRealtimeSyncBadge" title="Hệ thống tự động đồng bộ tức thì số liệu khi các tài khoản khác lưu/sửa" class="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/90 text-[10px] sm:text-[11px] font-bold shadow-2xs transition-all duration-300 shrink-0">
               <span id="matrixRealtimeSyncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span id="matrixRealtimeSyncText">Đồng bộ tự động</span>
             </div>
@@ -12422,7 +12422,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // Lắng nghe thay đổi phân công công việc từ bảng tasks
         _matrixRealtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
-          scheduleSilentMatrixRefresh(250, 'hệ thống phân công');
+          scheduleSilentMatrixRefresh(250, '');
         });
 
         _matrixRealtimeChannel.subscribe((status, err) => {
@@ -12503,7 +12503,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (m !== currentSelectedMonth || y !== currentSelectedYear) return;
 
       // Bật làm mới ngầm ma trận và các bảng phân tích bên dưới
-      scheduleSilentMatrixRefresh(250, 'đồng nghiệp');
+      scheduleSilentMatrixRefresh(250, '');
     }
 
     // ĐIỀU PHỐI LÀM MỚI NGẦM (DEBOUNCE ĐỂ TRÁNH DỒN TOÁN)
@@ -12586,31 +12586,53 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME
+    // KIỂM TRA PHÂN QUYỀN THÔNG BÁO REALTIME:
+    // Chỉ Ban Giám Đốc, Quản lý và Admin mới thấy thông báo nháy sáng; Nhân viên không thấy.
+    function canUserSeeLiveSyncNotification(user = currentUser) {
+      if (!user) return false;
+      const role = user.role || '';
+      const username = user.username || '';
+      return isAdminOrManager(role, username) || 
+             isDirectorOrAdmin(role, username) || 
+             isBoardOfDirectors(user) || 
+             isSystemAdmin(role, username) ||
+             (typeof isSystemAdminUser === 'function' && isSystemAdminUser(user));
+    }
+
+    // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME: CHỈ NHÁY SÁNG NHẸ NHÃN KHI CÓ ĐỒNG NGHIỆP LƯU/SỬA
+    // Phân quyền theo cấp bậc: Chỉ Ban Giám Đốc, Quản lý & Admin mới thấy nháy sáng; Nhân viên bình thường không thấy.
     function showLiveSyncIndicator(senderName = '') {
+      // 1. Phân quyền: Nhân viên bình thường không thấy nháy sáng (số liệu vẫn tự động nhảy ngầm)
+      if (!canUserSeeLiveSyncNotification(currentUser)) {
+        return;
+      }
+
+      // 2. Bỏ qua nếu không có tên người gửi hoặc từ hệ thống/máy chủ
+      if (!senderName || senderName === 'máy chủ' || senderName === 'hệ thống' || senderName === 'đồng nghiệp' || senderName === 'hệ thống phân công') {
+        return;
+      }
+
       const badge = document.getElementById('matrixRealtimeSyncBadge');
       const badgeText = document.getElementById('matrixRealtimeSyncText');
       const badgeDot = document.getElementById('matrixRealtimeSyncDot');
 
       if (badge && badgeText && badgeDot) {
+        // Nháy sáng nhẹ thanh lịch
         badge.classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
-        badge.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300', 'scale-105');
+        badge.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
         badgeDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
-        badgeText.innerText = senderName ? `Vừa cập nhật từ ${senderName}` : "Vừa đồng bộ dữ liệu";
 
-        setTimeout(() => {
-          badge.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300', 'scale-105');
+        const shortName = senderName.length > 18 ? senderName.substring(0, 18) + '...' : senderName;
+        badgeText.innerText = `⚡ ${shortName} vừa cập nhật báo cáo`;
+
+        if (window._syncBadgeTimer) clearTimeout(window._syncBadgeTimer);
+        window._syncBadgeTimer = setTimeout(() => {
+          badge.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
           badge.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200/90');
           badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
           badgeText.innerText = "Đồng bộ tự động";
-        }, 3200);
-      }
-
-      // Thông báo Toast nhẹ nhàng (chống spam toast dồn dập, tối thiểu 6s/lần)
-      const now = Date.now();
-      if (senderName && (now - _lastToastTime > 6000)) {
-        _lastToastTime = now;
-        showToast(`⚡ Bảng ma trận vừa tự động cập nhật số liệu mới từ ${senderName}!`);
+          window._syncBadgeTimer = null;
+        }, 3000);
       }
     }
 
@@ -12643,7 +12665,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             } else if (latestDbUpdate > _lastKnownReportUpdatedAt + 500) {
               _lastKnownReportUpdatedAt = latestDbUpdate;
               console.log("[Heartbeat] Phát hiện số liệu mới trên máy chủ -> Tự động đồng bộ ma trận!");
-              scheduleSilentMatrixRefresh(200, 'đồng nghiệp');
+              scheduleSilentMatrixRefresh(200, '');
             }
           }
         } catch(e) {}
@@ -12666,7 +12688,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (_matrixRealtimeChannel && _matrixRealtimeChannel.state === 'closed') {
           try { _matrixRealtimeChannel.subscribe(); } catch(e) {}
         }
-        scheduleSilentMatrixRefresh(150, 'máy chủ');
+        scheduleSilentMatrixRefresh(150, '');
       };
 
       document.addEventListener('visibilitychange', () => {
