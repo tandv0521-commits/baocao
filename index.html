@@ -22613,12 +22613,10 @@ function showPersonalTaskReminderOnLogin(onlyUpdateIfOpen = false) {
           tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80 shrink-0">⚡ Phát sinh</span>';
         } else if (it.type === 'plan') {
           const tl = it.dueDate ? calculatePlanTimelineStatus(it) : null;
-          let dueText = it.dueDate ? 'Hạn: ' + formatVNDate(it.dueDate) : 'Kế hoạch';
-          let dueStyle = 'bg-sky-100/90 text-sky-900 border-sky-200/80';
-          if (tl && (tl.code === 'overdue' || tl.code === 'duetoday')) {
-            dueStyle = 'bg-rose-100/90 text-rose-900 border-rose-200/80 animate-pulse';
-          }
-          tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ' + dueStyle + ' border shrink-0">📅 ' + dueText + '</span>';
+          let dueText = it.dueDate ? (tl ? tl.label + ' (Hạn: ' + formatVNDate(it.dueDate) + ')' : 'Hạn: ' + formatVNDate(it.dueDate)) : 'Kế hoạch';
+          let dueStyle = tl ? tl.badgeClass : 'bg-sky-100/90 text-sky-900 border-sky-200/80';
+          let dueIcon = tl ? tl.icon : 'fa-regular fa-calendar text-sky-600';
+          tag = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap ' + dueStyle + ' border shrink-0"><i class="' + dueIcon + ' text-[9.5px]"></i><span>' + dueText + '</span></span>';
         } else if (it.type === 'proposal') {
           tag = '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200/80 shrink-0">💡 Đề xuất</span>';
         } else {
@@ -23637,23 +23635,31 @@ function calculatePlanTimelineStatus(item) {
   if (item.isCompleted || item.status === 'completed' || item.status === 'done') {
     return {
       code: 'completed',
+      urgency: 'completed',
+      isDueSoon: false,
       label: 'Đã hoàn thành',
-      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold',
-      icon: 'fa-solid fa-circle-check text-emerald-600'
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
+      icon: 'fa-solid fa-circle-check text-emerald-600',
+      accentClass: 'bg-emerald-500',
+      rowTintClass: ''
     };
   }
   if (!item.dueDate) {
     return {
       code: 'upcoming',
+      urgency: 'none',
+      isDueSoon: false,
       label: 'Sẽ làm',
-      badgeClass: 'bg-sky-100 text-sky-800 border-sky-300 font-bold',
-      icon: 'fa-regular fa-calendar text-sky-600'
+      badgeClass: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
+      icon: 'fa-regular fa-calendar text-sky-600',
+      accentClass: 'bg-sky-400',
+      rowTintClass: ''
     };
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const parts = item.dueDate.split('-');
+  const parts = String(item.dueDate).split('-');
   const due = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
   due.setHours(0, 0, 0, 0);
 
@@ -23663,25 +23669,74 @@ function calculatePlanTimelineStatus(item) {
   if (diffDays < 0) {
     return {
       code: 'overdue',
+      urgency: 'overdue',
+      isDueSoon: false,
       days: Math.abs(diffDays),
       label: `Quá hạn ${Math.abs(diffDays)} ngày`,
-      badgeClass: 'bg-rose-100 text-rose-900 border-rose-300 animate-pulse font-black',
-      icon: 'fa-solid fa-triangle-exclamation text-rose-600'
+      badgeClass: 'bg-rose-100 text-rose-900 border-rose-400 font-extrabold ring-1 ring-rose-300/60',
+      icon: 'fa-solid fa-triangle-exclamation text-rose-600 animate-pulse',
+      accentClass: 'bg-rose-600',
+      rowTintClass: 'border-rose-300 bg-rose-50/25'
     };
   } else if (diffDays === 0) {
     return {
       code: 'duetoday',
+      urgency: 'today',
+      isDueSoon: false,
+      days: 0,
       label: 'Đến hạn hôm nay',
-      badgeClass: 'bg-amber-100 text-amber-950 border-amber-300 font-black',
-      icon: 'fa-solid fa-clock text-amber-600'
+      badgeClass: 'bg-red-100 text-red-900 border-red-400 font-extrabold ring-1 ring-red-300/60',
+      icon: 'fa-solid fa-bell text-red-600 animate-bounce',
+      accentClass: 'bg-red-500',
+      rowTintClass: 'border-red-300 bg-red-50/20'
+    };
+  } else if (diffDays === 1) {
+    return {
+      code: 'upcoming',
+      urgency: 'duesoon_1',
+      isDueSoon: true,
+      days: 1,
+      label: 'Đến hạn ngày mai',
+      badgeClass: 'bg-orange-100 text-orange-950 border-orange-400 font-extrabold ring-1 ring-orange-300/50',
+      icon: 'fa-solid fa-fire-flame-curved text-orange-600',
+      accentClass: 'bg-orange-500',
+      rowTintClass: 'border-orange-300 bg-orange-50/20'
+    };
+  } else if (diffDays === 2) {
+    return {
+      code: 'upcoming',
+      urgency: 'duesoon_2',
+      isDueSoon: true,
+      days: 2,
+      label: 'Sẽ làm (còn 2 ngày)',
+      badgeClass: 'bg-amber-100 text-amber-950 border-amber-400 font-extrabold ring-1 ring-amber-300/50',
+      icon: 'fa-solid fa-stopwatch text-amber-600',
+      accentClass: 'bg-amber-500',
+      rowTintClass: 'border-amber-300 bg-amber-50/15'
+    };
+  } else if (diffDays <= 5) {
+    return {
+      code: 'upcoming',
+      urgency: 'medium',
+      isDueSoon: false,
+      days: diffDays,
+      label: `Sẽ làm (còn ${diffDays} ngày)`,
+      badgeClass: 'bg-indigo-50 text-indigo-900 border-indigo-300 font-bold',
+      icon: 'fa-solid fa-hourglass-half text-indigo-600',
+      accentClass: 'bg-indigo-500',
+      rowTintClass: ''
     };
   } else {
     return {
       code: 'upcoming',
+      urgency: 'normal',
+      isDueSoon: false,
       days: diffDays,
-      label: diffDays === 1 ? 'Đến hạn ngày mai' : `Sẽ làm (còn ${diffDays} ngày)`,
+      label: `Sẽ làm (còn ${diffDays} ngày)`,
       badgeClass: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
-      icon: 'fa-solid fa-hourglass-start text-sky-600'
+      icon: 'fa-regular fa-calendar-check text-sky-600',
+      accentClass: 'bg-sky-400',
+      rowTintClass: ''
     };
   }
 }
@@ -23693,7 +23748,7 @@ function updatePersonalWorkspaceReminders(dataArg) {
     const items = data.items || [];
 
     let adhocTotal = 0, adhocPending = 0;
-    let planTotal = 0, planPending = 0, planOverdue = 0, planDue = 0;
+    let planTotal = 0, planPending = 0, planOverdue = 0, planDue = 0, planDueSoon = 0;
     let proposalTotal = 0, proposalPending = 0;
     let feedbackTotal = 0, feedbackPending = 0;
     let importantTotal = 0, importantPending = 0;
@@ -23722,6 +23777,9 @@ function updatePersonalWorkspaceReminders(dataArg) {
             urgentAlertCount++;
           } else if (timeline.code === 'duetoday') {
             planDue++;
+            urgentAlertCount++;
+          } else if (timeline.isDueSoon) {
+            planDueSoon++;
             urgentAlertCount++;
           }
         }
@@ -23784,13 +23842,30 @@ function updatePersonalWorkspaceReminders(dataArg) {
         let msg = "<b>Nhắc nhở công việc:</b> Bạn có ";
         if (planOverdue > 0) msg += `<span class='font-black text-rose-700 underline font-num'>${planOverdue} việc quá hạn</span> `;
         if (planOverdue > 0 && planDue > 0) msg += "và ";
-        if (planDue > 0) msg += `<span class='font-black text-amber-700 underline font-num'>${planDue} việc đến hạn hôm nay</span> `;
-        if (importantPending > 0) msg += ` (kèm <span class='font-black text-amber-800 underline font-num'>${importantPending} việc quan trọng chưa làm</span>)`;
-        msg += " cần ưu tiên giải quyết!";
+        if (planDue > 0) msg += `<span class='font-black text-red-700 underline font-num'>${planDue} việc đến hạn hôm nay</span> `;
+        if (planDueSoon > 0) msg += `(cùng <span class='font-black text-orange-700 underline font-num'>${planDueSoon} việc sắp hết hạn ≤ 2 ngày</span>) `;
+        if (importantPending > 0) msg += `(kèm <span class='font-black text-amber-800 underline font-num'>${importantPending} việc quan trọng chưa làm</span>) `;
+        msg += "cần ưu tiên giải quyết!";
         bannerText.innerHTML = msg;
         if (bannerBtn) {
           bannerBtn.onclick = (e) => { e.stopPropagation(); filterPersonalWorkspaceDueToday(); };
           bannerBtn.className = "px-3 py-1.5 rounded-xl bg-rose-600 group-hover:bg-rose-700 text-white font-black text-xs transition shadow-2xs cursor-pointer shrink-0 flex items-center gap-1";
+          bannerBtn.innerHTML = `<span>Xem ngay</span> <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>`;
+        }
+      } else if (planDueSoon > 0) {
+        banner.classList.remove('hidden');
+        banner.className = "mt-2 p-2.5 rounded-2xl bg-orange-50 hover:bg-orange-100/80 border border-orange-300 text-orange-950 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 shadow-2xs hover:shadow-sm cursor-pointer transition select-none group";
+        banner.title = "Bấm vào thanh này để xem ngay danh sách công việc sắp hết hạn (còn từ 1-2 ngày)";
+        banner.onclick = () => filterPersonalWorkspaceDueToday();
+
+        if (bannerIcon) bannerIcon.innerHTML = '<i class="fa-solid fa-stopwatch text-orange-600 text-xs"></i>';
+        let msg = `<b>Cảnh báo sắp hết hạn:</b> Bạn có <span class='font-black text-orange-800 underline font-num'>${planDueSoon} công việc kế hoạch còn ≤ 2 ngày</span> `;
+        if (importantPending > 0) msg += `(kèm <span class='font-black text-amber-800 underline font-num'>${importantPending} việc quan trọng chưa làm</span>) `;
+        msg += "cần lưu ý ưu tiên thực hiện!";
+        bannerText.innerHTML = msg;
+        if (bannerBtn) {
+          bannerBtn.onclick = (e) => { e.stopPropagation(); filterPersonalWorkspaceDueToday(); };
+          bannerBtn.className = "px-3 py-1.5 rounded-xl bg-orange-600 group-hover:bg-orange-700 text-white font-black text-xs transition shadow-2xs cursor-pointer shrink-0 flex items-center gap-1";
           bannerBtn.innerHTML = `<span>Xem ngay</span> <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform"></i>`;
         }
       } else if (importantPending > 0) {
@@ -24102,18 +24177,19 @@ function filterPersonalWorkspaceDueToday() {
 function onViewReminderAlertItems() {
   const data = getPersonalWorkspaceData(currentUser);
   const items = data.items || [];
-  let planOverdue = 0, planDue = 0, importantPending = 0;
+  let planOverdue = 0, planDue = 0, planDueSoon = 0, importantPending = 0;
   items.forEach(it => {
     const isDone = isPersonalTaskFinished(it);
     if (it.isImportant && !isDone) importantPending++;
     if (it.type === 'plan' && !isDone) {
       const t = calculatePlanTimelineStatus(it);
       if (t.code === 'overdue') planOverdue++;
-      if (t.code === 'duetoday') planDue++;
+      else if (t.code === 'duetoday') planDue++;
+      else if (t.isDueSoon) planDueSoon++;
     }
   });
 
-  if (planOverdue > 0 || planDue > 0) {
+  if (planOverdue > 0 || planDue > 0 || planDueSoon > 0) {
     filterPersonalWorkspaceDueToday();
   } else if (importantPending > 0) {
     viewPendingImportantTasks();
@@ -24436,12 +24512,12 @@ function renderPersonalWorkspaceUI() {
     }
   }
 
-  // Lọc theo việc đến hạn / quá hạn
+  // Lọc theo việc đến hạn / quá hạn / sắp hết hạn (<= 2 ngày)
   if (pwFilterDueOrOverdue) {
     items = items.filter(it => {
       if (it.type !== 'plan') return false;
       const t = calculatePlanTimelineStatus(it);
-      return t.code === 'overdue' || t.code === 'duetoday';
+      return t.code === 'overdue' || t.code === 'duetoday' || t.isDueSoon;
     });
   }
 
@@ -24621,26 +24697,27 @@ function renderPersonalWorkspaceUI() {
   if (pwViewMode === 'table') {
     let rowsHtml = '';
     items.forEach((it, idx) => {
-      // 1. Phân loại & Icon
+      // 1. Phân loại & Icon đồng bộ kích thước
       let typeBadge = '';
       if (it.type === 'adhoc') {
-        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
       } else if (it.type === 'plan') {
-        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
       } else if (it.type === 'proposal') {
-        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
       } else if (it.type === 'feedback') {
-        typeBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
       }
 
-      // 2. Trạng thái & Nút chuyển nhanh 1 chạm
+      // 2. Trạng thái & Huy hiệu thời hạn 1 dòng (có phân tầng màu cảnh báo)
       let statusHtml = '';
       let dueDateBadge = '';
+      let planTimeline = null;
 
       if (it.type === 'adhoc') {
         const isDone = (it.status === 'done');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
             <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
             <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
           </button>
@@ -24648,24 +24725,39 @@ function renderPersonalWorkspaceUI() {
       } else if (it.type === 'plan') {
         const isCompleted = (it.status === 'completed' || it.isCompleted === true);
         const t = calculatePlanTimelineStatus(it);
+        planTimeline = t;
+
+        let statusBtnStyle = 'bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300';
+        let statusIconStyle = 'fa-clock text-sky-600';
+        if (isCompleted) {
+          statusBtnStyle = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300';
+          statusIconStyle = 'fa-circle-check text-emerald-600';
+        } else if (t.code === 'overdue' || t.code === 'duetoday') {
+          statusBtnStyle = 'bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300';
+          statusIconStyle = 'fa-clock text-rose-600';
+        } else if (t.isDueSoon) {
+          statusBtnStyle = 'bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300';
+          statusIconStyle = 'fa-clock text-amber-600';
+        }
+
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isCompleted ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300'}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
-            <i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-600' : 'fa-clock text-sky-600'}"></i>
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
+            <i class="fa-solid ${statusIconStyle}"></i>
             <span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span>
           </button>
         `;
         if (it.dueDate) {
           dueDateBadge = `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border shadow-2xs ${t.badgeClass}">
-              <i class="fa-solid ${t.icon}"></i>
-              <span>${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
+              <i class="${t.icon} text-[10.5px] shrink-0"></i>
+              <span class="whitespace-nowrap">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
             </span>
           `;
         }
       } else if (it.type === 'proposal') {
         const isApproved = (it.status === 'approved_executed');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
             <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600'}"></i>
             <span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span>
           </button>
@@ -24674,21 +24766,21 @@ function renderPersonalWorkspaceUI() {
         const st = it.status || 'pending';
         if (st === 'resolved' || st === 'processed') {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
               <i class="fa-solid fa-circle-check text-emerald-600"></i>
               <span>Đã giải quyết</span>
             </button>
           `;
         } else if (st === 'acknowledged') {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
               <i class="fa-solid fa-inbox text-sky-600"></i>
               <span>Đã tiếp nhận</span>
             </button>
           `;
         } else {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
               <i class="fa-solid fa-clock text-amber-600"></i>
               <span>Chờ tiếp nhận</span>
             </button>
@@ -24698,7 +24790,7 @@ function renderPersonalWorkspaceUI() {
 
       // 3. Ngôi sao quan trọng
       const starBtn = `
-        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer p-1.5 rounded-xl hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}">
+        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}">
           <i class="fa-solid fa-star"></i>
         </button>
       `;
@@ -24711,62 +24803,82 @@ function renderPersonalWorkspaceUI() {
       // 5. Nội dung phản hồi (nếu có)
       let fbSnippet = '';
       if (it.feedbackResponse) {
-        fbSnippet = `<div class="mt-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-2 font-medium"><i class="fa-solid fa-reply mr-1"></i><b>Phản hồi:</b> ${escapeHtml(it.feedbackResponse)}</div>`;
+        fbSnippet = `<div class="mt-1.5 text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-reply mr-1 text-emerald-600"></i><b>Phản hồi:</b> ${escapeHtml(it.feedbackResponse)}</div>`;
       }
 
       const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
       const isReportSelected = !!it.selectedForReport;
-      const accentColor = it.type === 'adhoc' ? 'bg-amber-400' : (it.type === 'plan' ? 'bg-sky-400' : (it.type === 'proposal' ? 'bg-purple-400' : 'bg-teal-400'));
+      let accentColor = it.type === 'adhoc' ? 'bg-amber-400' : (it.type === 'plan' ? 'bg-sky-400' : (it.type === 'proposal' ? 'bg-purple-400' : 'bg-teal-400'));
+      if (planTimeline && planTimeline.accentClass) {
+        accentColor = planTimeline.accentClass;
+      }
+
+      let rowSurfaceClass = 'bg-white border-slate-200/90 hover:border-slate-300';
+      if (isReportSelected) {
+        rowSurfaceClass = 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-300/60';
+      } else if (planTimeline && planTimeline.rowTintClass) {
+        rowSurfaceClass = planTimeline.rowTintClass + ' hover:shadow-md';
+      } else if (it.isImportant) {
+        rowSurfaceClass = 'border-amber-300 ring-1 ring-amber-200/70 bg-amber-50/25';
+      }
+
       const transferBadgesHtml = getPersonalTaskTransferBadgeHtml(it, currentUser);
       rowsHtml += `
-        <div class="group relative ${isReportSelected ? 'bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-300/60' : (it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/60 bg-amber-50/30' : 'bg-white border-slate-200 hover:border-slate-300')} hover:shadow-md rounded-2xl pl-5 pr-4 py-3.5 transition-all duration-200 flex flex-col gap-2.5 md:grid md:grid-cols-[60px_112px_minmax(0,1fr)_200px_150px_72px] md:items-center md:gap-4 border shadow-2xs">
-          <span class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full ${accentColor}"></span>
+        <div class="group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl pl-4 pr-3.5 py-3 transition-all duration-200 flex flex-col gap-2.5 md:grid md:grid-cols-[64px_112px_minmax(240px,1fr)_290px_150px_76px] md:items-center md:gap-3.5 border shadow-2xs">
+          <span class="absolute left-0 top-2.5 bottom-2.5 w-1.5 rounded-r-full ${accentColor}"></span>
 
           <!-- CỘT 1: CHỌN BÁO CÁO + QUAN TRỌNG -->
-          <div class="flex items-center gap-1 shrink-0">
-            ${checkBtn}
-            ${starBtn}
+          <div class="flex items-center justify-between md:justify-center gap-1.5 shrink-0">
+            <div class="flex items-center gap-1.5">
+              ${checkBtn}
+              ${starBtn}
+            </div>
+            <div class="md:hidden">
+              ${typeBadge}
+            </div>
           </div>
 
-          <!-- CỘT 2: PHÂN LOẠI -->
-          <div class="shrink-0">
+          <!-- CỘT 2: PHÂN LOẠI (Desktop) -->
+          <div class="hidden md:flex items-center shrink-0">
             ${typeBadge}
           </div>
 
           <!-- CỘT 3: TIÊU ĐỀ, NỘI DUNG, DẤU HIỆU ĐÃ GỬI -->
-          <div class="min-w-0 space-y-1">
-            <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
-              ${escapeHtml(it.title)}
+          <div class="min-w-0 space-y-1 pr-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
+                ${escapeHtml(it.title)}
+              </div>
+              ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
             </div>
             ${it.content ? `<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">${escapeHtml(it.content)}</p>` : ''}
-            ${transferBadgesHtml ? `<div class="flex items-center gap-1.5 flex-wrap pt-0.5">${transferBadgesHtml}</div>` : ''}
             ${fbSnippet}
           </div>
 
-          <!-- CỘT 4: THỜI GIAN (NGÀY GHI NHẬN + HẠN CHÓT) -->
-          <div class="flex flex-row md:flex-col items-center md:items-start gap-2 md:gap-1 text-[11px] flex-wrap">
+          <!-- CỘT 4: THỜI GIAN & HẠN THỰC HIỆN (TRÊN 1 DÒNG RÕ RÀNG) -->
+          <div class="flex flex-row md:flex-col items-center md:items-start justify-start gap-2 md:gap-1.5 text-[11px] flex-wrap md:flex-nowrap min-w-0">
             ${dateStr ? `
-              <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600">
+              <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
                 <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
                 <span class="text-slate-400 font-medium">Ghi nhận:</span>
-                <span>${dateStr}</span>
+                <span class="text-slate-700 font-bold">${dateStr}</span>
               </span>
             ` : ''}
             ${dueDateBadge}
           </div>
 
           <!-- CỘT 5: TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
-          <div class="shrink-0 md:flex md:justify-center">
+          <div class="shrink-0 flex items-center md:justify-center">
             ${statusHtml}
           </div>
 
           <!-- CỘT 6: THAO TÁC -->
           <div class="flex items-center justify-end md:justify-center gap-1.5 shrink-0">
-            <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs transition cursor-pointer" title="Chỉnh sửa chi tiết">
+            <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
-            <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 text-xs transition cursor-pointer" title="Xóa mục này">
+            <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -24786,16 +24898,30 @@ function renderPersonalWorkspaceUI() {
         </button>
       </div>
     ` : '';
+
     container.innerHTML = activeFilterBannerHtml + `
-      <div class="hidden md:grid md:grid-cols-[60px_112px_minmax(0,1fr)_200px_150px_72px] gap-4 pl-5 pr-4 pb-1 text-[10.5px] font-black uppercase tracking-wider text-slate-400 select-none">
-        <span></span>
+      <div class="hidden md:flex items-center justify-between gap-3 px-3.5 py-2 bg-white border border-slate-200/90 rounded-xl shadow-2xs mb-1 text-[11px]">
+        <div class="flex items-center gap-1.5 text-slate-600 font-bold">
+          <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
+          <span>Danh sách công việc (<b class="text-slate-900 font-num">${items.length}</b> mục)</span>
+        </div>
+        <div class="flex items-center gap-2.5 flex-wrap text-[10.5px] font-semibold text-slate-600">
+          <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Mức cảnh báo hạn:</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Quá hạn / Hôm nay</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 text-orange-900 border border-orange-200"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Còn 1-2 ngày (Sắp hết hạn)</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Còn 3-5 ngày</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200"><span class="w-2 h-2 rounded-full bg-sky-400"></span>Còn &gt; 5 ngày</span>
+        </div>
+      </div>
+      <div class="hidden md:grid md:grid-cols-[64px_112px_minmax(240px,1fr)_290px_150px_76px] md:gap-3.5 pl-4 pr-3.5 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none">
+        <span class="text-center">Chọn</span>
         <span>Phân loại</span>
         <span>Nội dung công việc</span>
-        <span>Thời gian</span>
+        <span>Thời gian &amp; Hạn thực hiện</span>
         <span class="text-center">Trạng thái</span>
         <span class="text-center">Thao tác</span>
       </div>
-      <div class="flex flex-col space-y-2.5 w-full">
+      <div class="flex flex-col space-y-2 w-full pt-0.5">
         ${rowsHtml}
       </div>
     `;
@@ -24816,8 +24942,25 @@ function renderPersonalWorkspaceUI() {
       typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-teal-50 text-teal-900 border border-teal-200"><i class="fa-solid fa-comment text-teal-500 text-[9px]"></i><span>Ý kiến</span></span>`;
     }
 
+    let cardDueBadge = '';
+    let cardBorderClass = it.isImportant ? 'border-amber-300 ring-1 ring-amber-300' : 'border-slate-200';
+    if (it.type === 'plan' && it.dueDate) {
+      const t = calculatePlanTimelineStatus(it);
+      cardDueBadge = `
+        <div class="pt-1">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num ${t.badgeClass}">
+            <i class="${t.icon} text-[10px] shrink-0"></i>
+            <span class="whitespace-nowrap">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+          </span>
+        </div>
+      `;
+      if (t.rowTintClass && !it.selectedForReport) {
+        cardBorderClass = t.rowTintClass;
+      }
+    }
+
     cardsHtml += `
-      <div class="bg-white border ${it.isImportant ? 'border-amber-300 ring-1 ring-amber-300' : 'border-slate-200'} hover:border-amber-400 p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
+      <div class="bg-white border ${cardBorderClass} hover:border-amber-400 p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 flex-wrap">
@@ -24833,9 +24976,10 @@ function renderPersonalWorkspaceUI() {
           </div>
           <h4 class="font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
           ${it.content ? `<p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+          ${cardDueBadge}
         </div>
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span class="text-[11px] text-slate-400 font-num">${it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '')}</span>
+          <span class="text-[11px] text-slate-500 font-semibold font-num"><i class="fa-regular fa-calendar text-slate-400 mr-1"></i>Ghi nhận: ${it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '')}</span>
           <div class="flex items-center gap-1">
             <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer">
               <i class="fa-regular fa-pen-to-square"></i>
@@ -25584,7 +25728,8 @@ function openLeadershipReportPreviewModal() {
       list.innerHTML = itemsArr.map((it, idx) => {
         let tag = '';
         if (badgeType === 'plan' && it.dueDate) {
-          tag = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200">Hạn: ${formatVNDate(it.dueDate)}</span>`;
+          const tl = calculatePlanTimelineStatus(it);
+          tag = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none font-bold border whitespace-nowrap font-num ${tl.badgeClass}"><i class="${tl.icon} text-[9.5px] shrink-0"></i><span class="whitespace-nowrap">${tl.label} (Hạn: ${formatVNDate(it.dueDate)})</span></span>`;
         }
         return `
           <div class="flex items-start justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
@@ -26677,7 +26822,8 @@ function renderLeadershipReportsBoxUI() {
     } else if (it.type === 'plan') {
       typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-sky-50 text-sky-900 border border-sky-200/90 shrink-0"><i class="fa-solid fa-calendar-days text-sky-500 text-[9.5px]"></i><span>Kế hoạch</span></span>';
       if (it.dueDate) {
-        dueBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50/80 text-sky-800 border border-sky-200/70 font-num shrink-0"><i class="fa-regular fa-calendar-check text-sky-600 text-[9px]"></i><span>Hạn: ' + formatVNDate(it.dueDate) + '</span></span>';
+        const tl = calculatePlanTimelineStatus(it);
+        dueBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] leading-none font-bold border whitespace-nowrap font-num shrink-0 ' + tl.badgeClass + '"><i class="' + tl.icon + ' text-[9px] shrink-0"></i><span class="whitespace-nowrap">' + tl.label + ' (Hạn: ' + formatVNDate(it.dueDate) + ')</span></span>';
       }
     } else if (it.type === 'proposal') {
       typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-purple-50 text-purple-900 border border-purple-200/90 shrink-0"><i class="fa-solid fa-lightbulb text-purple-500 text-[9.5px]"></i><span>Đề xuất</span></span>';
