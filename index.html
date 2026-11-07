@@ -23954,38 +23954,42 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } else {
           listEl.innerHTML = displayItems.map((it, idx) => {
             let tag = '';
+            let accent = 'bg-amber-400';
+            const tagBase = 'inline-flex items-center gap-1 px-2 py-px rounded-md text-[10.5px] leading-4 font-semibold whitespace-nowrap border shrink-0 ';
             if (it.type === 'adhoc') {
-              tag = '<span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80 shrink-0">⚡ Phát sinh</span>';
+              accent = 'bg-amber-400';
+              tag = '<span class="' + tagBase + 'bg-amber-50 text-amber-800 border-amber-200">⚡ Phát sinh</span>';
             } else if (it.type === 'plan') {
               const tl = it.dueDate ? calculatePlanTimelineStatus(it) : null;
               let dueText = it.dueDate ? (tl ? tl.label + ' (Hạn: ' + formatVNDate(it.dueDate) + ')' : 'Hạn: ' + formatVNDate(it.dueDate)) : 'Kế hoạch';
-              let dueStyle = tl ? tl.badgeClass : 'bg-sky-100/90 text-sky-900 border-sky-200/80';
+              let dueStyle = tl ? tl.badgeClass : 'bg-sky-50 text-sky-800 border-sky-200';
               let dueIcon = tl ? tl.icon : 'fa-regular fa-calendar text-sky-600';
-              tag = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap ' + dueStyle + ' border shrink-0"><i class="' + dueIcon + ' text-[10.5px]"></i><span>' + dueText + '</span></span>';
+              if (tl && tl.accentClass) accent = tl.accentClass; else accent = 'bg-sky-400';
+              tag = '<span class="' + tagBase + dueStyle + '"><i class="' + dueIcon + ' text-[10px]"></i><span>' + dueText + '</span></span>';
             } else if (it.type === 'proposal') {
-              tag = '<span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200/80 shrink-0">💡 Đề xuất</span>';
+              accent = 'bg-purple-400';
+              tag = '<span class="' + tagBase + 'bg-purple-50 text-purple-800 border-purple-200">💡 Đề xuất</span>';
             } else {
-              tag = '<span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-teal-100/90 text-teal-900 border border-teal-200/80 shrink-0">💬 Phản ánh</span>';
+              accent = 'bg-teal-400';
+              tag = '<span class="' + tagBase + 'bg-teal-50 text-teal-800 border-teal-200">💬 Phản ánh</span>';
             }
 
-            // Bố cục thẻ cân đối: [STT] Tiêu đề (tối đa 2 dòng) ⭐ → Nhãn hạn → Ghi chú → Chân thẻ
+            // Bố cục thẻ: [STT] Tiêu đề nổi bật ........ ⭐ [Nhãn hạn gọn] → Ghi chú → Chân thẻ
             return (
-              '<div class="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-400 transition-all shadow-2xs hover:shadow-sm flex flex-col gap-2.5 cursor-pointer group select-none min-h-[132px]" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);" title="Bấm vào để xem và cập nhật mục này trong Sổ tay">' +
-              // Hàng 1: số thứ tự + tiêu đề + sao
-              '<div class="flex items-start gap-2.5">' +
-              '<span class="w-6 h-6 rounded-lg bg-slate-100 group-hover:bg-amber-100 text-slate-500 group-hover:text-amber-700 font-black text-[11px] flex items-center justify-center shrink-0 transition-colors">' + (idx + 1) + '</span>' +
-              '<div class="flex-1 min-w-0 pt-0.5">' +
-              '<div class="font-bold text-[13px] leading-snug text-slate-800 group-hover:text-amber-950 line-clamp-2 break-words transition-colors">' + escapeHtml(it.title) + '</div>' +
-              '</div>' +
+              '<div class="relative overflow-hidden pl-4 pr-3.5 py-3 rounded-2xl bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-400 transition-all shadow-2xs hover:shadow-sm flex flex-col gap-1.5 cursor-pointer group select-none" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);" title="Bấm vào để xem và cập nhật mục này trong Sổ tay">' +
+              '<span class="absolute left-0 top-0 bottom-0 w-1 ' + accent + '"></span>' +
+              // Hàng 1: STT + tiêu đề (nổi bật) + sao + nhãn hạn
+              '<div class="flex items-start gap-2">' +
+              '<span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 font-black text-[11px] flex items-center justify-center shrink-0">' + (idx + 1) + '</span>' +
+              '<div class="flex-1 min-w-0 font-extrabold text-[14px] leading-snug text-slate-900 group-hover:text-amber-900 line-clamp-2 break-words pt-px">' + escapeHtml(it.title) + '</div>' +
               (it.isImportant ? '<span class="text-amber-500 shrink-0 text-sm leading-none pt-1" title="Mục quan trọng ưu tiên">⭐</span>' : '') +
+              '<div class="shrink-0 pt-0.5">' + tag + '</div>' +
               '</div>' +
-              // Hàng 2: nhãn hạn / phân loại (thẳng hàng với tiêu đề)
-              '<div class="pl-[34px] flex items-center flex-wrap gap-1.5">' + tag + '</div>' +
-              // Hàng 3: ghi chú (luôn chừa chỗ để các thẻ đều nhau)
-              '<div class="pl-[34px] text-[11.5px] leading-relaxed line-clamp-2 ' + (it.content ? 'text-slate-500' : 'text-slate-300 italic') + '">' + (it.content ? escapeHtml(it.content) : 'Không có ghi chú') + '</div>' +
+              // Ghi chú (chỉ hiện khi có)
+              (it.content ? '<div class="pl-8 text-xs text-slate-600 leading-relaxed line-clamp-2">' + escapeHtml(it.content) + '</div>' : '') +
               // Chân thẻ
-              '<div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-400 mt-auto">' +
-              '<span class="flex items-center gap-1.5"><i class="fa-regular fa-calendar-days text-[11px]"></i> ' + (it.date ? formatVNDate(it.date) : 'Đang theo dõi') + '</span>' +
+              '<div class="flex items-center justify-between pt-1.5 mt-auto border-t border-slate-100 text-[11px] text-slate-400">' +
+              '<span class="flex items-center gap-1.5 pl-8"><i class="fa-regular fa-calendar-days text-[11px]"></i> ' + (it.date ? formatVNDate(it.date) : 'Đang theo dõi') + '</span>' +
               '<span class="text-amber-600 font-bold group-hover:underline flex items-center gap-1">Xem &amp; Cập nhật <i class="fa-solid fa-angle-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i></span>' +
               '</div>' +
               '</div>'
