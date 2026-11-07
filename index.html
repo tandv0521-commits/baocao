@@ -22779,7 +22779,7 @@ function generateSingleReportWordHtml(rep) {
         ${planList.length > 0 ? planList.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''} ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
+              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -23043,6 +23043,10 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
 
   let sectionsHtml = '';
 
+  const formatWordStaffLabel = (name) => name
+    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857; margin-left: 4px;">(${escapeHtml(name)})</span>`
+    : '';
+
   // 1. Việc phát sinh (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
   sectionsHtml += `
     <div style="margin-top: 18px; margin-bottom: 8px;">
@@ -23053,7 +23057,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allAdhoc.length > 0 ? allAdhoc.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
+              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -23080,7 +23084,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allPlan.length > 0 ? allPlan.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span> ${it.dueDate ? `<span style="font-size: 10pt; font-weight: normal; color: #0369a1; margin-left: 8px;">(Thời hạn: ${formatVNDate(it.dueDate)})</span>` : ''}
+              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -23107,7 +23111,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allProp.length > 0 ? allProp.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
+              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -23134,7 +23138,7 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
         ${allFeed.length > 0 ? allFeed.map((it, idx) => `
           <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:bold;">${escapeHtml(it.staffName)}</span>
+              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
             </div>
             ${it.content ? `
               <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
@@ -28214,14 +28218,11 @@ function generateSingleReportPrintHtml(rep) {
         </div>
         <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
           ${planList.map((it, idx) => `
-            <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-              <div style="min-width: 0; flex: 1;">
-                <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;font-size:10pt;">⭐</span>' : ''}
-                </div>
-                ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 3px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
+            <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 14px;">
+              <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
+                ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;font-size:10pt;">⭐</span>' : ''}
               </div>
-              ${it.dueDate ? `<div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; white-space: nowrap;">Hạn: ${formatVNDate(it.dueDate)}</div>` : ''}
+              ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 3px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -28764,6 +28765,10 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
 
   let sectionsHtml = '';
 
+  const formatPrintStaffLabel = (name) => name
+    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857; margin-left: 4px;">(${escapeHtml(name)})</span>`
+    : '';
+
   // 1. Việc phát sinh
   if (allAdhoc.length > 0) {
     sectionsHtml += `
@@ -28775,7 +28780,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allAdhoc.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
+                ${idx + 1}. ${escapeHtml(it.title)}${formatPrintStaffLabel(it.staffName)}
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
@@ -28794,14 +28799,11 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
         </div>
         <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
           ${allPlan.map((it, idx) => `
-            <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-              <div style="min-width: 0; flex: 1;">
-                <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                  ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
-                </div>
-                ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
+            <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
+              <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
+                ${idx + 1}. ${escapeHtml(it.title)}${formatPrintStaffLabel(it.staffName)}
               </div>
-              ${it.dueDate ? `<div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; padding: 3px 10px; border-radius: 20px; white-space: nowrap;">Hạn: ${formatVNDate(it.dueDate)}</div>` : ''}
+              ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -28820,7 +28822,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allProp.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
+                ${idx + 1}. ${escapeHtml(it.title)}${formatPrintStaffLabel(it.staffName)}
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
@@ -28841,7 +28843,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
           ${allFeed.map((it, idx) => `
             <div style="background: #fafafa; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px 14px;">
               <div style="font-size: 11pt; font-weight: 700; color: #0f172a;">
-                ${idx + 1}. ${escapeHtml(it.title)} &mdash; <span style="color:#047857;font-weight:700;">${escapeHtml(it.staffName)}</span>
+                ${idx + 1}. ${escapeHtml(it.title)}${formatPrintStaffLabel(it.staffName)}
               </div>
               ${it.content ? `<div style="font-size: 10pt; color: #475569; margin-top: 4px; line-height: 1.45;">${escapeHtml(it.content)}</div>` : ''}
             </div>
