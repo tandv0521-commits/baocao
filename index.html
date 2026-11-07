@@ -102,14 +102,14 @@
   <meta name="application-name" content="Báo Cáo Công Việc - Ban DVKH">
   <meta name="theme-color" content="#059669">
 
-  <!-- Google Fonts: Inter, Montserrat, Plus Jakarta Sans (Tối ưu tiếng Việt 100%, chuẩn doanh nghiệp hiện đại) -->
+  <!-- Google Fonts: Be Vietnam Pro & Inter (Thiết kế chuẩn tiếng Việt 100%, dấu thanh rõ nét, dễ đọc) -->
   <!-- Tối ưu kết nối sớm tới Supabase và Google Fonts -->
   <link rel="preconnect" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
     rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -221,9 +221,45 @@
       }
     }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    body,
+    button,
+    input,
+    select,
+    textarea {
+      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1, "zero" 0;
+    }
+
+    /* ================= CHUẨN HÓA FONT CHỮ TIẾNG VIỆT TOÀN CHƯƠNG TRÌNH =================
+       - Khắc phục triệt để lỗi font-black (900) quá dày làm bết/dính dấu tiếng Việt (ắ, ở, ệ, ầ)
+       - Cân chỉnh độ đậm 600-700 sắc nét, giãn cách chữ và chiều cao dòng thoáng mắt */
+    .font-black {
+      font-weight: 700 !important;
+    }
+
+    .text-xl.font-black,
+    .text-2xl.font-black,
+    .text-3xl.font-black,
+    .sm\:text-xl.font-black,
+    .sm\:text-2xl.font-black {
+      font-weight: 800 !important;
+    }
+
+    .font-extrabold {
+      font-weight: 700 !important;
+    }
+
+    .tracking-tight,
+    .tracking-tighter {
+      letter-spacing: -0.005em !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.38;
     }
 
     /* ================= FONT CHỮ SỐ CHUẨN DOANH NGHIỆP =================
@@ -275,10 +311,10 @@
     }
 
     .font-november-editorial {
-      font-family: 'Montserrat', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+      font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
       font-style: normal !important;
-      font-weight: 800 !important;
-      letter-spacing: -0.015em;
+      font-weight: 700 !important;
+      letter-spacing: -0.01em;
       color: #ffffff !important;
       line-height: 1.4 !important;
       padding: 3px 0 !important;
@@ -288,25 +324,25 @@
 
     .font-november-hero-title,
     .font-november-hero-line {
-      font-family: 'Montserrat', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+      font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
       font-style: normal !important;
-      font-weight: 800 !important;
+      font-weight: 700 !important;
       letter-spacing: -0.005em;
       color: #ffffff !important;
-      line-height: 1.15 !important;
+      line-height: 1.25 !important;
       padding: 1px 0 !important;
       text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(16, 185, 129, 0.35);
       display: inline-block;
     }
 
     .font-november-badge-modern {
-      font-family: 'Montserrat', 'Inter', sans-serif !important;
-      font-weight: 800 !important;
-      letter-spacing: 0.12em;
+      font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.08em;
     }
 
     .font-november-sub-clean {
-      font-family: 'Inter', sans-serif !important;
+      font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
       letter-spacing: 0.01em;
     }
 
@@ -1088,9 +1124,10 @@
     #consolidateAssessmentModal,
     #leaderFeedbackModal,
     #confirmSelectReportedItemModal {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
 
     /* ================= ĐỒNG BỘ HIỆU ỨNG NÚT "X" ĐÓNG BẢNG / MODAL TOÀN CHƯƠNG TRÌNH ================= */
@@ -23956,8 +23993,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } else {
           listEl.innerHTML = displayItems.map((it, idx) => {
             // Chỉ dùng màu cho việc khẩn cấp (quá hạn / đến hạn hôm nay = đỏ; còn ≤ 2 ngày = cam). Còn lại trung tính.
-            const tagBase = 'inline-flex items-center gap-1 px-2 py-px rounded-md text-[11px] leading-4 whitespace-nowrap border shrink-0 ';
-            const neutralTag = 'bg-slate-50 text-slate-500 border-slate-200 font-medium';
+            const tagBase = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums ';
+            const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/90 font-medium';
             let tag = '';
             if (it.type === 'plan') {
               if (it.dueDate) {
@@ -23966,9 +24003,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 const _today = new Date(); _today.setHours(0, 0, 0, 0);
                 const _due = new Date(parseInt(_p[0], 10), parseInt(_p[1], 10) - 1, parseInt(_p[2], 10));
                 const diffDays = Math.round((_due.getTime() - _today.getTime()) / 86400000);
-                let cls = neutralTag, icon = 'fa-regular fa-clock';
-                if (diffDays <= 0) { cls = 'bg-rose-50 text-rose-600 border-rose-200 font-semibold'; icon = 'fa-solid fa-triangle-exclamation'; }
-                else if (diffDays <= 2) { cls = 'bg-amber-50 text-amber-700 border-amber-200 font-semibold'; icon = 'fa-solid fa-hourglass-half'; }
+                let cls = neutralTag, icon = 'fa-regular fa-clock text-slate-400';
+                if (diffDays <= 0) { cls = 'bg-rose-50 text-rose-700 border-rose-200 font-semibold'; icon = 'fa-solid fa-triangle-exclamation text-rose-500'; }
+                else if (diffDays <= 2) { cls = 'bg-amber-50 text-amber-800 border-amber-200/90 font-semibold'; icon = 'fa-solid fa-hourglass-half text-amber-600'; }
                 const lbl = (tl && tl.label) ? tl.label : 'Hạn';
                 tag = '<span class="' + tagBase + cls + '"><i class="' + icon + ' text-[10px]"></i><span>' + lbl + ' · ' + formatVNDate(it.dueDate) + '</span></span>';
               } else {
@@ -23983,17 +24020,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
             // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú
             return (
-              '<div class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-400 transition-colors cursor-pointer group select-none" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
+              '<div class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-50/40 border border-slate-200/90 hover:border-amber-400 transition-all cursor-pointer group select-none shadow-2xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
               '<div class="flex items-center gap-2">' +
-              '<span class="w-5 shrink-0 text-xs font-bold text-slate-400 text-right">' + (idx + 1) + '.</span>' +
-              '<div class="flex-1 min-w-0 truncate font-bold text-[14px] text-slate-900 group-hover:text-amber-800" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
+              '<span class="w-5 shrink-0 text-xs font-semibold text-slate-400 text-right font-num tabular-nums">' + (idx + 1) + '.</span>' +
+              '<div class="flex-1 min-w-0 truncate font-semibold text-[13.5px] sm:text-[14px] text-slate-800 group-hover:text-amber-900 leading-snug" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
               (it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0" title="Mục quan trọng"></i>' : '') +
               tag +
               '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-amber-500 shrink-0"></i>' +
               '</div>' +
-              '<div class="pl-7 mt-0.5 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0">' +
-              '<span class="shrink-0 text-slate-400">' + dateText + '</span>' +
-              (it.content ? '<span class="text-slate-300">•</span><span class="truncate" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
+              '<div class="pl-7 mt-1 flex items-center gap-1.5 text-[12px] text-slate-600 min-w-0 leading-normal">' +
+              '<span class="shrink-0 text-slate-500 font-medium font-num tabular-nums">' + dateText + '</span>' +
+              (it.content ? '<span class="text-slate-300">•</span><span class="truncate text-slate-600" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
               '</div>' +
               '</div>'
             );
@@ -24011,8 +24048,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
       if (moreNoteEl) {
         if (pendingItems.length > 12) {
-          moreNoteEl.className = 'text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl';
-          moreNoteEl.innerHTML = 'Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...';
+          moreNoteEl.className = 'text-center text-xs text-slate-600 font-medium py-2 bg-slate-100/80 rounded-xl border border-slate-200/60';
+          moreNoteEl.innerHTML = 'Và còn <b class="text-slate-900 font-bold font-num">' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...';
         } else {
           moreNoteEl.className = 'hidden';
           moreNoteEl.innerHTML = '';
@@ -26002,9 +26039,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         `;
             if (it.dueDate) {
               dueDateBadge = `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
-              <i class="${t.icon} text-[10.5px] shrink-0 not-italic"></i>
-              <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-medium ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
+              <i class="${t.icon} text-[10.5px] shrink-0"></i>
+              <span class="whitespace-nowrap font-medium">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
             </span>
           `;
             }
@@ -26190,9 +26227,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const t = calculatePlanTimelineStatus(it);
           cardDueBadge = `
         <div class="pt-1">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num font-normal italic ${t.badgeClass}">
-            <i class="${t.icon} text-[10px] shrink-0 not-italic"></i>
-            <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap font-num font-medium ${t.badgeClass}">
+            <i class="${t.icon} text-[10px] shrink-0"></i>
+            <span class="whitespace-nowrap font-medium">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
           </span>
         </div>
       `;
@@ -31986,8 +32023,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <i class="fa-solid fa-bell"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm sm:text-base leading-tight tracking-tight">Nhắc Nhở Công Việc Cần Làm</h3>
-            <p class="text-[11px] sm:text-xs text-amber-100 mt-0.5">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn
+            <h3 class="font-bold text-base sm:text-[17px] leading-snug tracking-normal text-white">Nhắc Nhở Công Việc Cần Làm</h3>
+            <p class="text-xs text-amber-50/95 font-normal mt-0.5 leading-normal">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn
               cần ưu tiên xử lý</p>
           </div>
         </div>
@@ -32001,11 +32038,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <div class="p-4 sm:p-5 space-y-3 overflow-y-auto custom-scroll flex-1">
 
         <!-- DÒNG LỜI CHÀO & HƯỚNG DẪN -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-slate-600">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[13px] text-slate-700 leading-relaxed">
           <div>Xin chào <b id="pwReminderUserGreeting" class="text-slate-900 font-bold">Nhân sự</b>! Dưới đây là các đầu
             việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:</div>
-          <div class="text-[11px] text-amber-700 font-semibold flex items-center gap-1 shrink-0"><i
-              class="fa-solid fa-hand-pointer text-[10px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
+          <div class="text-xs text-amber-700 font-semibold flex items-center gap-1.5 shrink-0"><i
+              class="fa-solid fa-hand-pointer text-[11px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
         </div>
 
         <!-- 3 Ô THỐNG KÊ NỔI BẬT, RÕ RÀNG, CHUYÊN NGHIỆP (PHẦN KHOANH ĐỎ) -->
@@ -32015,12 +32052,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               <i class="fa-solid fa-hourglass-half"></i>
             </div>
             <div class="min-w-0">
-              <div class="text-[10.5px] font-black text-amber-900 uppercase tracking-wider truncate">Chưa làm</div>
-              <div class="text-[10px] text-amber-700/80 font-semibold hidden sm:block">Phát sinh &amp; kế hoạch</div>
+              <div class="text-[11.5px] sm:text-xs font-bold text-amber-950 uppercase tracking-wide truncate">Chưa làm</div>
+              <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Phát sinh &amp; kế hoạch</div>
             </div>
-            <div class="ml-auto text-base sm:text-lg font-black text-amber-950 whitespace-nowrap font-mono flex items-baseline gap-1">
-              <span id="pwReminderCountPending">0</span>
-              <span class="text-[11px] font-bold text-amber-700">việc</span>
+            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
+              <span id="pwReminderCountPending" class="text-lg sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
+              <span class="text-xs font-semibold text-amber-800">việc</span>
             </div>
           </div>
           <div class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50/70 border-2 border-rose-300 flex items-center gap-3 shadow-xs hover:shadow-sm transition-all">
@@ -32028,12 +32065,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               <i class="fa-solid fa-calendar-xmark"></i>
             </div>
             <div class="min-w-0">
-              <div class="text-[10.5px] font-black text-rose-900 uppercase tracking-wider truncate">Đến hạn / Quá hạn</div>
-              <div class="text-[10px] text-rose-700/80 font-semibold hidden sm:block">Ưu tiên xử lý</div>
+              <div class="text-[11.5px] sm:text-xs font-bold text-rose-950 uppercase tracking-wide truncate">Đến hạn / Quá hạn</div>
+              <div class="text-[10.5px] text-rose-800/80 font-medium hidden sm:block">Ưu tiên xử lý</div>
             </div>
-            <div class="ml-auto text-base sm:text-lg font-black text-rose-950 whitespace-nowrap font-mono flex items-baseline gap-1">
-              <span id="pwReminderCountDue">0</span>
-              <span class="text-[11px] font-bold text-rose-700">kế hoạch</span>
+            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
+              <span id="pwReminderCountDue" class="text-lg sm:text-xl font-extrabold text-rose-950 font-num tabular-nums">0</span>
+              <span class="text-xs font-semibold text-rose-800">kế hoạch</span>
             </div>
           </div>
           <div class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-100/60 via-yellow-50 to-amber-50 border-2 border-amber-400 flex items-center gap-3 shadow-xs hover:shadow-sm transition-all">
@@ -32041,12 +32078,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               <i class="fa-solid fa-star"></i>
             </div>
             <div class="min-w-0">
-              <div class="text-[10.5px] font-black text-amber-900 uppercase tracking-wider truncate">Quan trọng</div>
-              <div class="text-[10px] text-amber-800/80 font-semibold hidden sm:block">Đánh dấu gắn sao</div>
+              <div class="text-[11.5px] sm:text-xs font-bold text-amber-950 uppercase tracking-wide truncate">Quan trọng</div>
+              <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Đánh dấu gắn sao</div>
             </div>
-            <div class="ml-auto text-base sm:text-lg font-black text-amber-950 whitespace-nowrap font-mono flex items-baseline gap-1">
-              <span id="pwReminderCountImportant">0</span>
-              <span class="text-[11px] font-bold text-amber-800">mục</span>
+            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
+              <span id="pwReminderCountImportant" class="text-lg sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
+              <span class="text-xs font-semibold text-amber-800">mục</span>
             </div>
           </div>
         </div>
@@ -32068,11 +32105,11 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <div
         class="px-5 sm:px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
         <button type="button" onclick="closePersonalTaskReminderModal()"
-          class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs">
+          class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition cursor-pointer shadow-2xs">
           Đóng &amp; Bắt đầu làm việc
         </button>
         <button type="button" onclick="openPersonalWorkspaceFromReminder()"
-          class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs sm:text-sm font-black shadow-xs transition flex items-center gap-2 cursor-pointer active:scale-95">
+          class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs sm:text-[13px] font-bold shadow-xs transition flex items-center gap-2 cursor-pointer active:scale-95">
           <i class="fa-solid fa-book-bookmark text-xs sm:text-sm"></i>
           <span>Vào Sổ Tay Công Việc</span>
         </button>
