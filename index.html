@@ -4993,7 +4993,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
   <!-- ================= 4. MODAL HỘP THƯ BÁO CÁO LÃNH ĐẠO & LỊCH SỬ GỬI (GIAO DIỆN DÒNG CÔNG VIỆC GIỐNG SỔ TAY, 4 TAB CHUẨN, THÔNG TIN NHÂN VIÊN GỬI & TÍCH CHỌN TỔNG HỢP) ================= -->
   <div id="leadershipReportsBoxModal" class="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div id="leadershipReportsBoxDialog" class="bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-5xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
+    <div id="leadershipReportsBoxDialog" class="bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
       
       <!-- HEADER HỘP THƯ HIỆN ĐẠI, SANG TRỌNG -->
       <div class="px-5 sm:px-6 py-4 border-b border-slate-200/80 bg-gradient-to-r from-emerald-50/50 via-white to-teal-50/30 flex items-center justify-between gap-3 flex-shrink-0">
@@ -5020,68 +5020,61 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         </div>
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG 5 TAB & CÔNG CỤ TÌM KIẾM HIỆN ĐẠI -->
-      <div class="px-4 sm:px-6 py-3 bg-white border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs flex-shrink-0">
+      <!-- THANH ĐIỀU HƯỚNG 5 TAB & CÔNG CỤ TÌM KIẾM TRÊN 1 DÒNG HIỆN ĐẠI -->
+      <div class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200/80 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 text-xs flex-shrink-0">
         
-        <!-- 5 TAB LỌC CÔNG VIỆC -->
-        <div id="rpBoxTabsContainer" class="flex items-center gap-1.5 overflow-x-auto py-0.5 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <!-- 5 TAB LỌC CÔNG VIỆC: HIỂN THỊ ĐẦY ĐỦ TRÊN 1 DÒNG, KHÔNG BỊ ẨN -->
+        <div id="rpBoxTabsContainer" class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap py-0.5 shrink-0">
           <!-- 1. Tất cả -->
-          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="rp-box-tab-btn px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
+          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
             <i class="fa-solid fa-layer-group text-xs"></i>
             <span>Tất cả</span>
-            <span id="rpBoxCount_all" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-emerald-800/90 text-emerald-50">0</span>
+            <span id="rpBoxCount_all" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-emerald-800/90 text-emerald-50">0</span>
           </button>
 
           <!-- 2. Việc phát sinh -->
-          <button type="button" id="rpBoxTab_adhoc" onclick="switchRpBoxTab('adhoc')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <button type="button" id="rpBoxTab_adhoc" onclick="switchRpBoxTab('adhoc')" class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
             <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
             <span>Việc phát sinh</span>
-            <span id="rpBoxCount_adhoc" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-amber-50 text-amber-800 border border-amber-200">0</span>
+            <span id="rpBoxCount_adhoc" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-amber-50 text-amber-800 border border-amber-200">0</span>
           </button>
 
           <!-- 3. Lịch & Kế hoạch -->
-          <button type="button" id="rpBoxTab_plan" onclick="switchRpBoxTab('plan')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <button type="button" id="rpBoxTab_plan" onclick="switchRpBoxTab('plan')" class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
             <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
             <span>Lịch &amp; Kế hoạch</span>
-            <span id="rpBoxCount_plan" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
+            <span id="rpBoxCount_plan" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
           </button>
 
           <!-- 4. Đề xuất & Sáng kiến -->
-          <button type="button" id="rpBoxTab_proposal" onclick="switchRpBoxTab('proposal')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <button type="button" id="rpBoxTab_proposal" onclick="switchRpBoxTab('proposal')" class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
             <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
             <span>Đề xuất</span>
-            <span id="rpBoxCount_proposal" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-purple-50 text-purple-800 border border-purple-200">0</span>
+            <span id="rpBoxCount_proposal" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-purple-50 text-purple-800 border border-purple-200">0</span>
           </button>
 
           <!-- 5. Ý kiến / Phản ánh -->
-          <button type="button" id="rpBoxTab_feedback" onclick="switchRpBoxTab('feedback')" class="rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <button type="button" id="rpBoxTab_feedback" onclick="switchRpBoxTab('feedback')" class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
             <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
             <span>Ý kiến / Phản ánh</span>
-            <span id="rpBoxCount_feedback" class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-teal-50 text-teal-800 border border-teal-200">0</span>
+            <span id="rpBoxCount_feedback" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-teal-50 text-teal-800 border border-teal-200">0</span>
           </button>
         </div>
 
-        <!-- CÔNG CỤ TÌM KIẾM, BỘ LỌC BỘ PHẬN & LÀM MỚI -->
-        <div class="flex items-center gap-2 flex-wrap shrink-0 ml-auto">
+        <!-- CÔNG CỤ TÌM KIẾM & LÀM MỚI (ĐÃ BỎ CHỌN TẤT CẢ BỘ PHẬN THEO YÊU CẦU) -->
+        <div class="flex items-center gap-2 shrink-0 lg:ml-auto w-full lg:w-auto justify-end">
           <!-- Ô tìm kiếm từ khóa trong hộp thư -->
-          <div class="relative w-40 sm:w-52">
+          <div class="relative flex-1 lg:flex-initial lg:w-56">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()" placeholder="Tìm việc, nhân viên..." class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 focus:bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition font-medium" />
           </div>
 
-          <!-- Bộ lọc bộ phận cho Quản lý & Ban Lãnh Đạo -->
-          <div id="rpBoxLeaderDeptFilterWrapper" class="hidden flex items-center gap-1.5">
-            <select id="rpBoxFilterDept" onchange="renderLeadershipReportsBoxUI()" class="bg-slate-50/80 hover:bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer transition">
-              <option value="ALL">Tất cả bộ phận</option>
-            </select>
-          </div>
-
           <!-- Nút Làm mới -->
-          <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-200 flex items-center justify-center transition cursor-pointer shadow-2xs" title="Làm mới & tải báo cáo mới nhất">
+          <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-200 flex items-center justify-center transition cursor-pointer shadow-2xs shrink-0" title="Làm mới & tải báo cáo mới nhất">
             <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-emerald-600 text-xs"></i>
           </button>
 
-          <span id="rpBoxReportsCountBadge" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-black font-num shrink-0 shadow-2xs">0 đầu việc</span>
+          <span id="rpBoxReportsCountBadge" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-black font-num shrink-0 whitespace-nowrap shadow-2xs">0 đầu việc</span>
         </div>
 
       </div>
@@ -26010,9 +26003,9 @@ function switchRpBoxTab(tab) {
     const btn = document.getElementById('rpBoxTab_' + t);
     if (btn) {
       if (t === tab) {
-        btn.className = 'rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer transition ' + (boxStyles[t] || 'bg-emerald-600 text-white font-bold');
+        btn.className = 'rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer transition ' + (boxStyles[t] || 'bg-emerald-600 text-white font-bold');
       } else {
-        btn.className = 'rp-box-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 border border-transparent transition flex items-center gap-1.5 shrink-0 cursor-pointer';
+        btn.className = 'rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer';
       }
     }
   });
