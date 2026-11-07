@@ -22740,118 +22740,49 @@ function generateSingleReportWordHtml(rep) {
         ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
         : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
 
-  let sectionsHtml = '';
+  const renderSectionItemsHtml = (list) => {
+    if (!list || list.length === 0) {
+      return `
+        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 14pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+          (Không có nội dung ghi nhận trong kỳ báo cáo)
+        </div>
+      `;
+    }
+    return list.map((it, idx) => `
+      <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4;">
+          ${idx + 1}. ${escapeHtml(it.title)}
+        </div>
+        ${it.content ? `
+          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 14pt;">
+            ${escapeHtml(it.content)}
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  };
 
-  // 1. Việc phát sinh (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
-        I. CÔNG VIỆC PHÁT SINH TRONG THÁNG
-      </div>
-      <div style="margin-top: 8px;">
-        ${adhocList.length > 0 ? adhocList.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+  let sectionsHtml = `
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(adhocList)}</div>
     </div>
-  `;
-
-  // 2. Kế hoạch (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
-        II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC
-      </div>
-      <div style="margin-top: 8px;">
-        ${planList.length > 0 ? planList.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(planList)}</div>
     </div>
-  `;
-
-  // 3. Đề xuất (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
-        III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ
-      </div>
-      <div style="margin-top: 8px;">
-        ${propList.length > 0 ? propList.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(propList)}</div>
     </div>
-  `;
-
-  // 4. Ý kiến phản ánh (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
-        IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN
-      </div>
-      <div style="margin-top: 8px;">
-        ${feedList.length > 0 ? feedList.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span style="color:#d97706;">⭐</span>' : ''}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(feedList)}</div>
     </div>
   `;
 
   const now = new Date();
-  const dateStr = rep.displayDate || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+  const dateOnlyStr = (rep.displayDate ? String(rep.displayDate).split(' ')[0] : '') || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
 
   return `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -22870,145 +22801,143 @@ function generateSingleReportWordHtml(rep) {
       <style>
         @page Section1 {
           size: 210mm 297mm;
-          margin: 20mm 20mm 20mm 20mm;
+          margin: 20mm 20mm 20mm 25mm;
           mso-header-margin: 10mm;
           mso-footer-margin: 10mm;
         }
         div.Section1 { page: Section1; }
         body {
-          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Times New Roman', serif;
           font-size: 11.5pt;
           line-height: 1.45;
           color: #000000;
         }
-        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
+        .header-box {
+          text-align: center;
+          margin-bottom: 14pt;
+          padding-bottom: 10pt;
+          border-bottom: 1.5pt solid #047857;
+        }
+        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; }
+        .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; }
+        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10pt; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 5pt; }
+        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; }
 
         .info-card {
           width: 100%;
           border-collapse: collapse;
-          background-color: transparent;
-          border: none;
-          margin-bottom: 18px;
+          margin-bottom: 10pt;
         }
-        .info-card td { padding: 4px 6px; vertical-align: top; border: none; background-color: transparent; }
-        .info-label { font-size: 10pt; color: #475569; }
-        .info-val { font-size: 11.5pt; font-weight: bold; color: #000000; margin-top: 2px; }
-
+        .info-card td { padding: 3pt 4pt; vertical-align: top; border: none; font-size: 11pt; }
+        .sec-heading {
+          font-size: 11.5pt;
+          font-weight: bold;
+          color: #0f172a;
+          text-transform: uppercase;
+          border-bottom: 1pt solid #94a3b8;
+          padding-bottom: 3pt;
+        }
         .sig-table {
           width: 100%;
           border-collapse: collapse;
-          margin-top: 35px;
+          margin-top: 28pt;
           page-break-inside: avoid;
         }
-        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
+        .sig-table td { text-align: center; vertical-align: top; border: none; padding: 0 4pt; }
         .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
-        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
-        .sig-space { height: 60px; }
+        .sig-sub { font-size: 10pt; font-style: italic; color: #475569; margin-top: 2pt; }
         .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
       </style>
     </head>
     <body>
       <div class="Section1">
-        <!-- HEADER DOANH NGHIỆP TRANG TRỌNG -->
         <div class="header-box">
           <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
           <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
           <div class="doc-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">${recipientText}</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
+          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateOnlyStr}</div>
         </div>
 
-        <!-- THÔNG TIN NHÂN SỰ SẠCH SẼ (KHÔNG VIỀN, KHÔNG NỀN) -->
         <table class="info-card">
           <tr>
-            <td style="width: 35%;">
-              <div class="info-label">Người báo cáo:</div>
-              <div class="info-val">${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
+            <td style="width: 36%;">
+              <span style="color: #475569;">Họ và tên:</span> <b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b>
             </td>
-            <td style="width: 35%;">
-              <div class="info-label">Bộ phận / Tổ kho:</div>
-              <div class="info-val">${escapeHtml(rep.senderDepartment || 'Bộ phận')}</div>
+            <td style="width: 36%;">
+              <span style="color: #475569;">Bộ phận:</span> <b>${escapeHtml(rep.senderDepartment || 'Bộ phận')}</b>
             </td>
-            <td style="width: 30%;">
-              <div class="info-label">Chức vụ / Vị trí:</div>
-              <div class="info-val" style="color: #047857;">${escapeHtml(rep.senderRole || 'Nhân viên')}</div>
+            <td style="width: 28%;">
+              <span style="color: #475569;">Chức vụ:</span> <b style="color: #047857;">${escapeHtml(rep.senderRole || 'Nhân viên')}</b>
             </td>
           </tr>
         </table>
 
-        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
         ${sectionsHtml}
 
-        <!-- LỜI NHẮN / Ý KIẾN THÊM -->
         ${rep.notes ? `
-          <div style="margin-top: 18px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-bottom: 4px;">
+          <div style="margin-top: 14pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-bottom: 3pt;">
               Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:
             </div>
-            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
+            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-left: 14pt;">
               ${escapeHtml(rep.notes)}
             </div>
           </div>
         ` : ''}
 
         ${rep.managerFeedback ? `
-          <div style="margin-top: 14px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 4px;">
+          <div style="margin-top: 12pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 3pt;">
               Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(rep.forwardedBy || 'Quản lý')}):
             </div>
-            <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; padding-left: 20px;">
+            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-left: 14pt;">
               ${escapeHtml(rep.managerFeedback)}
             </div>
           </div>
         ` : ''}
 
         ${rep.leaderFeedback ? `
-          <div style="margin-top: 14px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 4px;">
+          <div style="margin-top: 12pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 3pt;">
               Ý KIẾN CHỈ ĐẠO CỦA BAN GIÁM ĐỐC:
             </div>
-            <div style="font-size: 10.5pt; color: #047857; font-weight: bold; line-height: 1.45; padding-left: 20px;">
+            <div style="font-size: 11pt; color: #047857; font-weight: bold; line-height: 1.45; margin-left: 14pt;">
               ${escapeHtml(rep.leaderFeedback)}
             </div>
           </div>
         ` : ''}
 
-        <!-- CHỮ KÝ 3 BÊN -->
         <table class="sig-table">
           <tr>
-            <td colspan="3" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
-              Hải Phòng, ngày ${now.getDate()} tháng ${now.getMonth()+1} năm ${now.getFullYear()}
+            <td colspan="3" style="text-align: right; font-size: 10.5pt; font-style: italic; color: #334155; padding-bottom: 6pt;">
+              Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth()+1).padStart(2, '0')} năm ${now.getFullYear()}
             </td>
           </tr>
           <tr>
-            <td class="sig-title">NGƯỜI LẬP BÁO CÁO</td>
-            <td class="sig-title">QUẢN LÝ BỘ PHẬN</td>
-            <td class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO</td>
-          </tr>
-          <tr>
-            <td class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td class="sig-sub">(Ký duyệt)</td>
-          </tr>
-          <tr>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-          </tr>
-          <tr>
-            <td class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
-            <td class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
-            <td class="sig-name">Lê Thị Kim Oanh</td>
+            <td style="width: 33.33%;">
+              <div class="sig-title">NGƯỜI LẬP BÁO CÁO</div>
+              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+              <div style="height: 55pt;">&nbsp;</div>
+              <div class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
+            </td>
+            <td style="width: 33.33%;">
+              <div class="sig-title">QUẢN LÝ BỘ PHẬN</div>
+              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+              <div style="height: 55pt;">&nbsp;</div>
+              <div class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</div>
+            </td>
+            <td style="width: 33.33%;">
+              <div class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO</div>
+              <div class="sig-sub">(Ký duyệt)</div>
+              <div style="height: 55pt;">&nbsp;</div>
+              <div class="sig-name">Lê Thị Kim Oanh</div>
+            </td>
           </tr>
         </table>
       </div>
-    
-  </body>
+    </body>
     </html>
   `;
 }
@@ -23027,7 +22956,6 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
 
     const its = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
     its.forEach(it => {
-      // Ưu tiên họ tên gốc của người thực hiện / phụ trách đầu việc (chỉ hiển thị họ tên)
       const authorName = it.staffName || it.senderFullName || defaultAuthor;
       const authorDept = it.staffDept || it.senderDepartment || defaultDept;
       const authorRole = it.staffRole || it.senderRole || defaultRole;
@@ -23041,122 +22969,57 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
     });
   });
 
-  let sectionsHtml = '';
-
   const formatWordStaffLabel = (name) => name
-    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857; margin-left: 4px;">(${escapeHtml(name)})</span>`
+    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857;">- ${escapeHtml(name)}</span>`
     : '';
 
-  // 1. Việc phát sinh (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #d97706; padding-bottom: 4px;">
-        I. CÔNG VIỆC PHÁT SINH TRONG THÁNG ${allAdhoc.length > 0 ? `(${allAdhoc.length} việc)` : ''}
-      </div>
-      <div style="margin-top: 8px;">
-        ${allAdhoc.length > 0 ? allAdhoc.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
+  const renderConsolidatedSectionItemsHtml = (list) => {
+    if (!list || list.length === 0) {
+      return `
+        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 14pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+          (Không có nội dung ghi nhận trong kỳ báo cáo)
+        </div>
+      `;
+    }
+    return list.map((it, idx) => `
+      <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4;">
+          ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
+        </div>
+        ${it.content ? `
+          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 14pt;">
+            ${escapeHtml(it.content)}
           </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
+        ` : ''}
       </div>
-    </div>
-  `;
+    `).join('');
+  };
 
-  // 2. Kế hoạch (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0284c7; padding-bottom: 4px;">
-        II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC ${allPlan.length > 0 ? `(${allPlan.length} kế hoạch)` : ''}
-      </div>
-      <div style="margin-top: 8px;">
-        ${allPlan.length > 0 ? allPlan.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+  let sectionsHtml = `
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
+      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allAdhoc)}</div>
     </div>
-  `;
-
-  // 3. Đề xuất (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #7e22ce; padding-bottom: 4px;">
-        III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ ${allProp.length > 0 ? `(${allProp.length} đề xuất)` : ''}
-      </div>
-      <div style="margin-top: 8px;">
-        ${allProp.length > 0 ? allProp.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
+      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allPlan)}</div>
     </div>
-  `;
-
-  // 4. Ý kiến phản ánh (Luôn hiển thị đủ mục, để trống nếu không có dữ liệu)
-  sectionsHtml += `
-    <div style="margin-top: 18px; margin-bottom: 8px;">
-      <div style="font-size: 11.5pt; font-weight: bold; color: #000000; text-transform: uppercase; border-bottom: 1.5pt solid #0f766e; padding-bottom: 4px;">
-        IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN ${allFeed.length > 0 ? `(${allFeed.length} ý kiến)` : ''}
-      </div>
-      <div style="margin-top: 8px;">
-        ${allFeed.length > 0 ? allFeed.map((it, idx) => `
-          <div style="margin-top: 6px; margin-bottom: 10px; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; line-height: 1.4;">
-              ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
-            </div>
-            ${it.content ? `
-              <div style="font-size: 10.5pt; color: #334155; line-height: 1.45; margin-top: 2px; padding-left: 20px;">
-                ${escapeHtml(it.content)}
-              </div>
-            ` : ''}
-          </div>
-        `).join('') : `
-          <div style="margin-top: 6px; margin-bottom: 12px; min-height: 24px; padding: 6px 12px; font-size: 10pt; color: #94a3b8; font-style: italic; background-color: #f8fafc; border: 1pt dashed #cbd5e1; border-radius: 4px;">
-            (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
-          </div>
-        `}
-      </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
+      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allProp)}</div>
+    </div>
+    <div style="margin-top: 14pt; margin-bottom: 8pt;">
+      <div class="sec-heading">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
+      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allFeed)}</div>
     </div>
   `;
 
   const now = new Date();
   const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+  const totalTasks = allAdhoc.length + allPlan.length + allProp.length + allFeed.length;
+  const signerName = (reportsList.length === 1 && reportsList[0].senderFullName)
+    ? reportsList[0].senderFullName
+    : (currentUser?.fullName || 'Quản lý bộ phận');
 
   return `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -23175,77 +23038,99 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
       <style>
         @page Section1 {
           size: 210mm 297mm;
-          margin: 20mm 20mm 20mm 20mm;
+          margin: 20mm 20mm 20mm 25mm;
           mso-header-margin: 10mm;
           mso-footer-margin: 10mm;
         }
         div.Section1 { page: Section1; }
         body {
-          font-family: 'Times New Roman', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Times New Roman', serif;
           font-size: 11.5pt;
           line-height: 1.45;
           color: #000000;
         }
-        .header-box { text-align: center; margin-bottom: 18px; border-bottom: 2pt solid #047857; padding-bottom: 12px; }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .corp-main { font-size: 12pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2px; }
-        .doc-title { font-size: 15pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10px; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 6px; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3px; }
+        .header-box {
+          text-align: center;
+          margin-bottom: 14pt;
+          padding-bottom: 10pt;
+          border-bottom: 1.5pt solid #047857;
+        }
+        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; }
+        .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; }
+        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10pt; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 5pt; }
+        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; }
 
+        .info-card {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 10pt;
+        }
+        .info-card td { padding: 3pt 4pt; vertical-align: top; border: none; font-size: 11pt; }
+        .sec-heading {
+          font-size: 11.5pt;
+          font-weight: bold;
+          color: #0f172a;
+          text-transform: uppercase;
+          border-bottom: 1pt solid #94a3b8;
+          padding-bottom: 3pt;
+        }
         .sig-table {
           width: 100%;
           border-collapse: collapse;
-          margin-top: 35px;
+          margin-top: 28pt;
           page-break-inside: avoid;
         }
-        .sig-table td { text-align: center; vertical-align: top; width: 33.33%; border: none; background: transparent; }
+        .sig-table td { text-align: center; vertical-align: top; border: none; padding: 0 6pt; }
         .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; }
-        .sig-sub { font-size: 9.5pt; font-style: italic; color: #475569; }
-        .sig-space { height: 60px; }
+        .sig-sub { font-size: 10pt; font-style: italic; color: #475569; margin-top: 2pt; }
         .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; }
       </style>
     </head>
     <body>
       <div class="Section1">
-        <!-- HEADER DOANH NGHIỆP TRANG TRỌNG -->
         <div class="header-box">
           <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
           <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
-          <div class="doc-title">BÁO CÁO CÔNG VIỆC TỔNG HỢP &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
+          <div class="doc-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
           <div class="period-date">Bộ phận: ${escapeHtml(deptName)} &bull; Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
         </div>
 
-        <div style="font-size: 11pt; color: #334155; margin-bottom: 16px; font-style: italic;">
-          Tổng hợp từ <b>${reportsList.length}</b> báo cáo của <b>${staffSet.size}</b> nhân sự bộ phận ${escapeHtml(deptName)}.
-        </div>
-
-        <!-- CÁC PHẦN DANH MỤC CÔNG VIỆC CHUẨN VĂN BẢN (KHÔNG ĐÓNG KHUNG, KHÔNG NỀN) -->
-        ${sectionsHtml}
-
-        <!-- CHỮ KÝ 2 BÊN -->
-        <table class="sig-table">
+        <table class="info-card">
           <tr>
-            <td colspan="3" style="text-align: right; font-style: italic; color: #475569; padding-bottom: 10px;">
-              Hải Phòng, ngày ${now.getDate()} tháng ${now.getMonth()+1} năm ${now.getFullYear()}
+            <td style="width: 36%;">
+              <span style="color: #475569;">Đơn vị báo cáo:</span> <b>${escapeHtml(deptName)}</b>
+            </td>
+            <td style="width: 36%;">
+              <span style="color: #475569;">Người tổng hợp:</span> <b>${escapeHtml(signerName)}</b>
+            </td>
+            <td style="width: 28%;">
+              <span style="color: #475569;">Tổng số:</span> <b style="color: #047857;">${totalTasks} đầu việc (${staffSet.size} nhân sự)</b>
             </td>
           </tr>
+        </table>
+
+        ${sectionsHtml}
+
+        <table class="sig-table">
           <tr>
-            <td style="width: 50%; text-align: center;" class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</td>
-            <td style="width: 50%; text-align: center;" class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</td>
-          </tr>
-          <tr>
-            <td style="text-align: center;" class="sig-sub">(Ký, ghi rõ họ tên)</td>
-            <td style="text-align: center;" class="sig-sub">(Ký duyệt)</td>
-          </tr>
-          <tr>
-            <td class="sig-space"></td>
-            <td class="sig-space"></td>
-          </tr>
-          <tr>
-            <td style="text-align: center;" class="sig-name">${escapeHtml(currentUser?.fullName || 'Quản lý bộ phận')}</td>
-            <td style="text-align: center;" class="sig-name">Lê Thị Kim Oanh</td>
+            <td style="width: 50%; text-align: center;">
+              <div style="font-size: 10.5pt; line-height: 1.4;">&nbsp;</div>
+              <div class="sig-title" style="margin-top: 2pt;">QUẢN LÝ TỔNG HỢP BÁO CÁO</div>
+              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+              <div style="height: 55pt;">&nbsp;</div>
+              <div class="sig-name">${escapeHtml(signerName)}</div>
+            </td>
+            <td style="width: 50%; text-align: center;">
+              <div style="font-size: 10.5pt; font-style: italic; color: #334155; line-height: 1.4;">
+                Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth()+1).padStart(2, '0')} năm ${now.getFullYear()}
+              </div>
+              <div class="sig-title" style="margin-top: 2pt;">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</div>
+              <div class="sig-sub">(Ký duyệt)</div>
+              <div style="height: 55pt;">&nbsp;</div>
+              <div class="sig-name">Lê Thị Kim Oanh</div>
+            </td>
           </tr>
         </table>
       </div>
@@ -28766,7 +28651,7 @@ function generateConsolidatedReportsPrintHtml(reportsList, deptName, m, y) {
   let sectionsHtml = '';
 
   const formatPrintStaffLabel = (name) => name
-    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857; margin-left: 4px;">(${escapeHtml(name)})</span>`
+    ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857;">- ${escapeHtml(name)}</span>`
     : '';
 
   // 1. Việc phát sinh
