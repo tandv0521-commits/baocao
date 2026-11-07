@@ -23949,6 +23949,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const listEl = document.getElementById('pwReminderItemsList');
       if (listEl) {
         const displayItems = pendingItems.slice(0, 12);
+        // Số hàng mỗi cột = nửa số việc (làm tròn lên) → cột trái đầy trước, phần còn lại sang cột phải
+        listEl.style.setProperty('--pw-rows', Math.max(1, Math.ceil(displayItems.length / 2)));
         if (displayItems.length === 0) {
           listEl.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-slate-400 italic">Hiện không có công việc nào tồn đọng. Chúc bạn một ngày làm việc hiệu quả!</div>';
         } else {
@@ -23997,9 +23999,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             );
           }).join('');
 
-          if (pendingItems.length > 12) {
-            listEl.innerHTML += '<div class="col-span-full text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl">Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...</div>';
-          }
+        }
+      }
+
+      // Ghi chú "còn N việc khác" nằm NGOÀI lưới để không phá cách xếp 2 cột dọc
+      let moreNoteEl = document.getElementById('pwReminderMoreNote');
+      if (!moreNoteEl && listEl) {
+        moreNoteEl = document.createElement('div');
+        moreNoteEl.id = 'pwReminderMoreNote';
+        listEl.insertAdjacentElement('afterend', moreNoteEl);
+      }
+      if (moreNoteEl) {
+        if (pendingItems.length > 12) {
+          moreNoteEl.className = 'text-center text-xs text-slate-500 italic py-2 bg-slate-100/80 rounded-xl';
+          moreNoteEl.innerHTML = 'Và còn <b>' + (pendingItems.length - 12) + '</b> công việc khác trong sổ tay cá nhân...';
+        } else {
+          moreNoteEl.className = 'hidden';
+          moreNoteEl.innerHTML = '';
         }
       }
 
@@ -32012,6 +32028,12 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         </div>
 
         <!-- DANH SÁCH CÔNG VIỆC BỐ TRÍ DẠNG LƯỚI 2 CỘT RỘNG RÃI (XEM NHIỀU HƠN, KHÔNG PHẢI CUỘN NHIỀU) -->
+        <style>
+          /* Màn hình rộng: xếp 2 cột theo chiều dọc (cột trái 1→6, cột phải 7→12) */
+          @media (min-width: 768px) {
+            #pwReminderItemsList { grid-auto-flow: column; grid-template-rows: repeat(var(--pw-rows, 6), auto); }
+          }
+        </style>
         <div id="pwReminderItemsList" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
           <!-- Render danh sách việc cần làm linh hoạt -->
         </div>
