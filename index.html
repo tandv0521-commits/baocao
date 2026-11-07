@@ -102,14 +102,14 @@
   <meta name="application-name" content="Báo Cáo Công Việc - Ban DVKH">
   <meta name="theme-color" content="#059669">
 
-  <!-- Google Fonts: Be Vietnam Pro & Inter (Thiết kế chuẩn tiếng Việt 100%, dấu thanh rõ nét, dễ đọc) -->
+  <!-- Google Fonts: Inter, Montserrat, Plus Jakarta Sans (Tối ưu tiếng Việt 100%, chuẩn doanh nghiệp hiện đại) -->
   <!-- Tối ưu kết nối sớm tới Supabase và Google Fonts -->
   <link rel="preconnect" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://pyyjgtzwvkphoxcjvgpl.supabase.co">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap"
     rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -221,45 +221,9 @@
       }
     }
 
-    body,
-    button,
-    input,
-    select,
-    textarea {
-      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-      font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1, "zero" 0;
-    }
-
-    /* ================= CHUẨN HÓA FONT CHỮ TIẾNG VIỆT TOÀN CHƯƠNG TRÌNH =================
-       - Khắc phục triệt để lỗi font-black (900) quá dày làm bết/dính dấu tiếng Việt (ắ, ở, ệ, ầ)
-       - Cân chỉnh độ đậm 600-700 sắc nét, giãn cách chữ và chiều cao dòng thoáng mắt */
-    .font-black {
-      font-weight: 700 !important;
-    }
-
-    .text-xl.font-black,
-    .text-2xl.font-black,
-    .text-3xl.font-black,
-    .sm\:text-xl.font-black,
-    .sm\:text-2xl.font-black {
-      font-weight: 800 !important;
-    }
-
-    .font-extrabold {
-      font-weight: 700 !important;
-    }
-
-    .tracking-tight,
-    .tracking-tighter {
-      letter-spacing: -0.005em !important;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      line-height: 1.38;
     }
 
     /* ================= FONT CHỮ SỐ CHUẨN DOANH NGHIỆP =================
@@ -311,10 +275,10 @@
     }
 
     .font-november-editorial {
-      font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+      font-family: 'Montserrat', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
       font-style: normal !important;
-      font-weight: 700 !important;
-      letter-spacing: -0.01em;
+      font-weight: 800 !important;
+      letter-spacing: -0.015em;
       color: #ffffff !important;
       line-height: 1.4 !important;
       padding: 3px 0 !important;
@@ -324,25 +288,25 @@
 
     .font-november-hero-title,
     .font-november-hero-line {
-      font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+      font-family: 'Montserrat', 'Plus Jakarta Sans', 'Inter', sans-serif !important;
       font-style: normal !important;
-      font-weight: 700 !important;
+      font-weight: 800 !important;
       letter-spacing: -0.005em;
       color: #ffffff !important;
-      line-height: 1.25 !important;
+      line-height: 1.15 !important;
       padding: 1px 0 !important;
       text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(16, 185, 129, 0.35);
       display: inline-block;
     }
 
     .font-november-badge-modern {
-      font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.08em;
+      font-family: 'Montserrat', 'Inter', sans-serif !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.12em;
     }
 
     .font-november-sub-clean {
-      font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
+      font-family: 'Inter', sans-serif !important;
       letter-spacing: 0.01em;
     }
 
@@ -1116,7 +1080,6 @@
     #personalWorkspaceEntryCard,
     #leadershipReportsBoxModal,
     #leadershipReportPreviewModal,
-    #personalTaskReminderModal,
     #confirmReReportModal,
     #confirmSendToInboxModal,
     #confirmDeletePersonalItemModal,
@@ -1124,10 +1087,19 @@
     #consolidateAssessmentModal,
     #leaderFeedbackModal,
     #confirmSelectReportedItemModal {
-      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Chuẩn hóa riêng font chữ cho Bảng Nhắc Nhở Công Việc Cần Làm (#personalTaskReminderModal) */
+    #personalTaskReminderModal,
+    #personalTaskReminderModal button {
+      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
+      font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1, "zero" 0;
     }
 
     /* ================= ĐỒNG BỘ HIỆU ỨNG NÚT "X" ĐÓNG BẢNG / MODAL TOÀN CHƯƠNG TRÌNH ================= */
@@ -26039,9 +26011,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         `;
             if (it.dueDate) {
               dueDateBadge = `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-medium ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
-              <i class="${t.icon} text-[10.5px] shrink-0"></i>
-              <span class="whitespace-nowrap font-medium">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
+              <i class="${t.icon} text-[10.5px] shrink-0 not-italic"></i>
+              <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
             </span>
           `;
             }
@@ -26227,9 +26199,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const t = calculatePlanTimelineStatus(it);
           cardDueBadge = `
         <div class="pt-1">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap font-num font-medium ${t.badgeClass}">
-            <i class="${t.icon} text-[10px] shrink-0"></i>
-            <span class="whitespace-nowrap font-medium">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num font-normal italic ${t.badgeClass}">
+            <i class="${t.icon} text-[10px] shrink-0 not-italic"></i>
+            <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
           </span>
         </div>
       `;
