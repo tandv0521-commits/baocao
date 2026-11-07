@@ -23965,8 +23965,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } else {
           listEl.innerHTML = displayItems.map((it, idx) => {
             // Chỉ dùng màu cho việc khẩn cấp (quá hạn / đến hạn hôm nay = đỏ; còn ≤ 2 ngày = cam). Còn lại trung tính.
-            const tagBase = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums ';
-            const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/90 font-medium';
+            // Định dạng tag gọn gàng, in nghiêng vừa vặn để dành tối đa không gian hiển thị tiêu đề công việc
+            const tagBase = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic ';
+            const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/80 font-normal';
             let tag = '';
             if (it.type === 'plan') {
               if (it.dueDate) {
@@ -23976,16 +23977,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 const _due = new Date(parseInt(_p[0], 10), parseInt(_p[1], 10) - 1, parseInt(_p[2], 10));
                 const diffDays = Math.round((_due.getTime() - _today.getTime()) / 86400000);
                 let cls = neutralTag, icon = 'fa-regular fa-clock text-slate-400';
-                if (diffDays <= 0) { cls = 'bg-rose-50 text-rose-700 border-rose-200 font-semibold'; icon = 'fa-solid fa-triangle-exclamation text-rose-500'; }
-                else if (diffDays <= 2) { cls = 'bg-amber-50 text-amber-800 border-amber-200/90 font-semibold'; icon = 'fa-solid fa-hourglass-half text-amber-600'; }
+                if (diffDays <= 0) { cls = 'bg-rose-50 text-rose-700 border-rose-200/90 font-medium'; icon = 'fa-solid fa-triangle-exclamation text-rose-500'; }
+                else if (diffDays <= 2) { cls = 'bg-amber-50 text-amber-800 border-amber-200/90 font-medium'; icon = 'fa-solid fa-hourglass-half text-amber-600'; }
                 const lbl = (tl && tl.label) ? tl.label : 'Hạn';
-                tag = '<span class="' + tagBase + cls + '"><i class="' + icon + ' text-[10px]"></i><span>' + lbl + ' · ' + formatVNDate(it.dueDate) + '</span></span>';
+                tag = '<span class="' + tagBase + cls + '"><i class="' + icon + ' text-[9px] not-italic"></i><span class="italic">' + lbl + ' · ' + formatVNDate(it.dueDate) + '</span></span>';
               } else {
-                tag = '<span class="' + tagBase + neutralTag + '">Kế hoạch</span>';
+                tag = '<span class="' + tagBase + neutralTag + '"><span class="italic">Kế hoạch</span></span>';
               }
             } else {
               const typeLabel = it.type === 'adhoc' ? 'Phát sinh' : (it.type === 'proposal' ? 'Đề xuất' : 'Phản ánh');
-              tag = '<span class="' + tagBase + neutralTag + '">' + typeLabel + '</span>';
+              tag = '<span class="' + tagBase + neutralTag + '"><span class="italic">' + typeLabel + '</span></span>';
             }
 
             const dateText = it.date ? formatVNDate(it.date) : 'Đang theo dõi';
@@ -31984,7 +31985,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
   <div id="personalTaskReminderModal" onclick="if(event.target===this)closePersonalTaskReminderModal();"
     class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in duration-200">
     <div
-      class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full max-h-[92vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
+      class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl w-full max-h-[94vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
 
       <!-- HEADER THIẾT KẾ RỘNG RÃI, TRANG TRỌNG -->
       <div
