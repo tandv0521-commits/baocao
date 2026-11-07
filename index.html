@@ -22049,6 +22049,10 @@ async function fetchPersonalTasksFromSupabase(isSilentSync = false) {
       const key = getPersonalWorkspaceStorageKey(currentUser);
       localStorage.setItem(key, JSON.stringify(localData));
 
+      if (typeof syncPersonalTasksIntoSharedReports === 'function') {
+        syncPersonalTasksIntoSharedReports(true);
+      }
+
       // CẬP NHẬT ĐỒNG BỘ TOÀN DIỆN MỌI THÀNH PHẦN GIAO DIỆN LIÊN QUAN:
       renderPersonalWorkspaceUI();
       updatePersonalWorkspaceEntryCardStats();
@@ -22241,6 +22245,9 @@ async function fetchLeadershipReportsFromSupabase(showToastAlert = false) {
 
       const mergedList = Array.from(mergedMap.values());
       saveLeadershipReportsShared(mergedList);
+      if (typeof syncPersonalTasksIntoSharedReports === 'function') {
+        syncPersonalTasksIntoSharedReports(true);
+      }
       populateRpBoxDeptFilter();
       renderLeadershipReportsBoxUI();
       updateInboxUnreadBadgeCount(mergedList);
@@ -26477,9 +26484,101 @@ function executeSendManagerSelectedTasksToInbox() {
   showToast(`📋 Đã sao chép thành công ${selectedItems.length} đầu việc vào hộp thư (Đầu việc ở sổ tay vẫn giữ nguyên vẹn)!`);
 }
 
+// Đồng bộ trạng thái, hạn thực hiện, nội dung mới nhất từ Sổ tay công việc sang Hộp thư báo cáo
+function syncPersonalTasksIntoSharedReports(pushToCloud = false) {
+  try {
+    const sharedReports = getLeadershipReportsShared();
+    if (!Array.isArray(sharedReports) || sharedReports.length === 0) return;
+
+    const myPwItems = currentUser ? (getPersonalWorkspaceData(currentUser).items || []) : [];
+    let anyChanged = false;
+
+    sharedReports.forEach(r => {
+      if (!r) return;
+      const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
+      if (!Array.isArray(rItems) || rItems.length === 0) return;
+
+      let senderPwItems = [];
+      if (currentUser && isSenderOfReport(currentUser, r)) {
+        senderPwItems = myPwItems;
+      } else {
+        try {
+          const rawById = r.senderId ? localStorage.getItem('ops_personal_workspace_final_v1_' + r.senderId) : null;
+          const rawByUser = (!rawById && r.senderUsername) ? localStorage.getItem('ops_personal_workspace_final_v1_' + r.senderUsername) : null;
+          const raw = rawById || rawByUser;
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.items)) {
+              senderPwItems = parsed.items;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!senderPwItems || senderPwItems.length === 0) return;
+
+      let reportChanged = false;
+      rItems.forEach(it => {
+        if (!it) return;
+        let liveTask = senderPwItems.find(x => x && x.id && it.id && String(x.id) === String(it.id));
+        if (!liveTask) {
+          const itTitle = String(it.title || '').trim().toLowerCase();
+          liveTask = senderPwItems.find(x => x && x.type === it.type && String(x.title || '').trim().toLowerCase() === itTitle);
+        }
+        if (liveTask) {
+          const liveDone = !!(liveTask.isCompleted || liveTask.is_completed);
+          if (
+            it.status !== liveTask.status ||
+            !!it.isCompleted !== liveDone ||
+            it.title !== liveTask.title ||
+            it.content !== liveTask.content ||
+            (liveTask.date && it.date !== liveTask.date) ||
+            (liveTask.dueDate !== undefined && it.dueDate !== liveTask.dueDate) ||
+            !!it.isImportant !== !!liveTask.isImportant
+          ) {
+            it.status = liveTask.status;
+            it.isCompleted = liveDone;
+            it.is_completed = liveDone;
+            it.title = liveTask.title;
+            it.content = liveTask.content;
+            if (liveTask.date) it.date = liveTask.date;
+            if (liveTask.dueDate !== undefined) it.dueDate = liveTask.dueDate;
+            it.isImportant = !!liveTask.isImportant;
+            if (liveTask.feedbackResponse) it.feedbackResponse = liveTask.feedbackResponse;
+            if (liveTask.updatedAt) it.updatedAt = liveTask.updatedAt;
+            reportChanged = true;
+            anyChanged = true;
+          }
+        }
+      });
+
+      if (reportChanged && pushToCloud && currentUser && isSenderOfReport(currentUser, r)) {
+        saveLeadershipReportToSupabase(r);
+      }
+    });
+
+    if (anyChanged) {
+      saveLeadershipReportsShared(sharedReports);
+    }
+  } catch (err) {
+    console.warn("Lỗi đồng bộ Sổ tay -> Hộp thư:", err);
+  }
+}
+
+function togglePersonalItemStatusFromInbox(itemId, reportId) {
+  if (!currentUser || !itemId) return;
+  const data = getPersonalWorkspaceData(currentUser);
+  const existsInPw = (data.items || []).some(it => String(it.id) === String(itemId));
+  if (existsInPw) {
+    togglePersonalItemStatus(itemId);
+    renderLeadershipReportsBoxUI();
+  }
+}
+
 // Trích xuất tất cả đầu việc từ các báo cáo kèm thông tin bảo mật và người nhận
 function getAllRpBoxTaskEntries() {
   if (!currentUser) return [];
+  syncPersonalTasksIntoSharedReports(true);
   const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
   let reports = getLeadershipReportsShared();
 
@@ -26546,7 +26645,8 @@ function getAllRpBoxTaskEntries() {
   return entries;
 }
 
-// Sắp xếp các đầu việc trong Hộp thư: Kế hoạch (sắp hết hạn lên trước) -> Phát sinh -> Đề xuất -> Ý kiến; việc hoàn thành đẩy cuối
+// Sắp xếp các đầu việc trong Hộp thư đồng nhất 100% với Sổ tay công việc:
+// Việc chưa hoàn thành lên trước (việc đã hoàn thành đẩy về cuối); Kế hoạch (sắp hết hạn lên trước) -> Phát sinh -> Đề xuất -> Ý kiến
 function sortRpBoxTaskEntries(entries) {
   const typeOrder = {
     'plan': 1,      // 1. Kế hoạch
@@ -26556,9 +26656,9 @@ function sortRpBoxTaskEntries(entries) {
   };
 
   return entries.sort((a, b) => {
-    // 1. Việc chưa hoàn thành luôn ưu tiên lên trước; việc đã xong hoàn thành đẩy cuối
-    const aDone = a.item.status === 'done' || a.item.status === 'completed' || a.item.isCompleted;
-    const bDone = b.item.status === 'done' || b.item.status === 'completed' || b.item.isCompleted;
+    // 1. Việc chưa hoàn thành luôn ưu tiên lên trước; việc đã xong hoàn thành BẮT BUỘC ĐẨY VỀ CUỐI CÙNG (đồng nhất với sortPersonalWorkspaceItemsList)
+    const aDone = isPersonalTaskFinished(a.item);
+    const bDone = isPersonalTaskFinished(b.item);
     if (!aDone && bDone) return -1;
     if (aDone && !bDone) return 1;
 
@@ -26576,16 +26676,19 @@ function sortRpBoxTaskEntries(entries) {
       if (dueA && !dueB) return -1;
       if (!dueA && dueB) return 1;
       if (dueA && dueB && dueA !== dueB) return dueA.localeCompare(dueB);
+
+      if (a.item.isImportant && !b.item.isImportant) return -1;
+      if (!a.item.isImportant && b.item.isImportant) return 1;
     }
+
+    if (a.item.isImportant && !b.item.isImportant) return -1;
+    if (!a.item.isImportant && b.item.isImportant) return 1;
 
     const dateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
     const dateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
     if (dateA && dateB && dateA !== dateB) {
       return dateA.localeCompare(dateB); // Tăng dần: việc cũ lên trên
     }
-
-    if (a.item.isImportant && !b.item.isImportant) return -1;
-    if (!a.item.isImportant && b.item.isImportant) return 1;
 
     return (a.entryKey || '').localeCompare(b.entryKey || '');
   });
@@ -26673,7 +26776,7 @@ function updateRpBoxMultiSelectBar(visibleEntries = []) {
   }
 }
 
-// Render giao diện danh sách từng dòng công việc giống Sổ tay công việc hoặc Lịch sử báo cáo
+// Render giao diện danh sách từng dòng công việc ĐỒNG NHẤT 100% VỚI BẢNG SỔ TAY CÔNG VIỆC
 function renderLeadershipReportsBoxUI() {
   if (!currentUser) return;
   const container = document.getElementById('rpBoxReportsList');
@@ -26770,7 +26873,7 @@ function renderLeadershipReportsBoxUI() {
     });
   }
 
-  // 4. Sắp xếp: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+  // 4. Sắp xếp đồng nhất với Sổ tay: Việc chưa xong lên trước, Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
   sortRpBoxTaskEntries(filteredEntries);
 
   // 5. Cập nhật huy hiệu tổng số đầu việc
@@ -26793,148 +26896,225 @@ function renderLeadershipReportsBoxUI() {
     return;
   }
 
-  container.innerHTML = filteredEntries.map((entry, eIdx) => {
+  const headerHtml =
+    '<div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
+      '<div class="flex items-center gap-3 flex-1 min-w-0">' +
+        '<span class="w-[52px] shrink-0 text-center">' + (isManagerOrAbove ? 'Chọn' : 'STT') + '</span>' +
+        '<span class="w-[94px] shrink-0">Phân loại</span>' +
+        '<span class="flex-1 min-w-0">Nội dung công việc</span>' +
+      '</div>' +
+      '<div class="flex items-center justify-end gap-3 shrink-0">' +
+        '<span class="w-[254px] shrink-0">Thời gian &amp; Hạn thực hiện</span>' +
+        '<span class="w-[132px] shrink-0 text-center">Trạng thái</span>' +
+      '</div>' +
+    '</div>';
+
+  const rowsHtml = filteredEntries.map((entry, eIdx) => {
     const it = entry.item;
     const isChecked = rpBoxSelectedTaskKeys.has(entry.entryKey);
     const isOwn = (entry.senderUsername === currentUser.username || String(entry.senderId) === String(currentUser.id));
 
-    // 1. Huy hiệu loại công việc chuẩn xác, luôn rõ tên loại
+    // 1. Huy hiệu Phân loại đồng bộ 100% với Sổ tay công việc (w-[94px])
     let typeBadge = '';
-    let dueBadge = '';
     if (it.type === 'adhoc') {
-      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-amber-50 text-amber-900 border border-amber-200/90 shrink-0"><i class="fa-solid fa-bolt text-amber-500 text-[9.5px]"></i><span>Phát sinh</span></span>';
+      typeBadge = '<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>';
     } else if (it.type === 'plan') {
-      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-sky-50 text-sky-900 border border-sky-200/90 shrink-0"><i class="fa-solid fa-calendar-days text-sky-500 text-[9.5px]"></i><span>Kế hoạch</span></span>';
-      if (it.dueDate) {
-        const tl = calculatePlanTimelineStatus(it);
-        dueBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] leading-none font-normal italic border whitespace-nowrap font-num shrink-0 ' + tl.badgeClass + '"><i class="' + tl.icon + ' text-[9px] shrink-0 not-italic"></i><span class="whitespace-nowrap font-normal italic">' + tl.label + ' (Hạn: ' + formatVNDate(it.dueDate) + ')</span></span>';
-      }
+      typeBadge = '<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>';
     } else if (it.type === 'proposal') {
-      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-purple-50 text-purple-900 border border-purple-200/90 shrink-0"><i class="fa-solid fa-lightbulb text-purple-500 text-[9.5px]"></i><span>Đề xuất</span></span>';
+      typeBadge = '<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>';
     } else {
-      typeBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-black bg-teal-50 text-teal-900 border border-teal-200/90 shrink-0"><i class="fa-solid fa-comment-dots text-teal-500 text-[9.5px]"></i><span>Ý kiến</span></span>';
+      typeBadge = '<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>';
     }
 
-    // 2. Huy hiệu Trạng thái công việc đồng bộ kích thước
+    // 2. Huy hiệu Trạng thái & Huy hiệu Thời hạn 1 dòng đồng bộ 100% với Sổ tay công việc
     let statusBadge = '';
+    let dueDateBadge = '';
     const st = it.status;
+    const clickToggleAttr = (isOwn && it.id) ? (' onclick="togglePersonalItemStatusFromInbox(\'' + escapeHtml(String(it.id)) + '\', \'' + escapeHtml(String(entry.reportId)) + '\')"') : '';
+    const interactiveCls = (isOwn && it.id) ? ' cursor-pointer' : '';
+
     if (it.type === 'adhoc') {
-      statusBadge = (st === 'done' || it.isCompleted)
-        ? '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Đã làm</span></span>'
-        : '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/90 shadow-2xs whitespace-nowrap"><i class="fa-regular fa-clock text-amber-600 text-[10px]"></i><span>Chưa làm</span></span>';
+      const isDone = (st === 'done' || it.isCompleted || it.is_completed);
+      statusBadge =
+        '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ' +
+        (isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300') + '">' +
+          '<i class="fa-solid ' + (isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600') + '"></i>' +
+          '<span>' + (isDone ? 'Đã làm' : 'Chưa làm') + '</span>' +
+        '</button>';
     } else if (it.type === 'plan') {
-      statusBadge = (st === 'completed' || it.isCompleted)
-        ? '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Hoàn thành</span></span>'
-        : '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-spinner text-sky-600 text-[10px]"></i><span>Đang tiến hành</span></span>';
+      const isCompleted = (st === 'completed' || it.isCompleted === true || it.is_completed === true);
+      const t = calculatePlanTimelineStatus(it);
+
+      let statusBtnStyle = 'bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200';
+      let statusIconStyle = 'fa-clock text-sky-500';
+      if (isCompleted) {
+        statusBtnStyle = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200';
+        statusIconStyle = 'fa-circle-check text-emerald-500';
+      } else if (t.code === 'overdue' || t.code === 'duetoday') {
+        statusBtnStyle = 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200';
+        statusIconStyle = 'fa-clock text-rose-500';
+      } else if (t.isDueSoon) {
+        statusBtnStyle = 'bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200';
+        statusIconStyle = 'fa-clock text-orange-500';
+      }
+
+      statusBadge =
+        '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ' + statusBtnStyle + '">' +
+          '<i class="fa-solid ' + statusIconStyle + '"></i>' +
+          '<span>' + (isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành') + '</span>' +
+        '</button>';
+
+      if (it.dueDate) {
+        dueDateBadge =
+          '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ' + t.badgeClass + '" title="' + t.label + ' - Hạn thực hiện: ' + formatVNDate(it.dueDate) + '">' +
+            '<i class="' + t.icon + ' text-[10.5px] shrink-0 not-italic"></i>' +
+            '<span class="whitespace-nowrap font-normal italic">' + t.label + ' (Hạn: ' + formatVNDate(it.dueDate) + ')</span>' +
+          '</span>';
+      }
     } else if (it.type === 'proposal') {
-      statusBadge = (st === 'approved_executed' || it.isCompleted)
-        ? '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Đã duyệt</span></span>'
-        : '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200/90 shadow-2xs whitespace-nowrap"><i class="fa-regular fa-hourglass-half text-purple-600 text-[10px]"></i><span>Chờ duyệt</span></span>';
+      const isApproved = (st === 'approved_executed' || st === 'approved' || it.isCompleted);
+      statusBadge =
+        '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ' +
+        (isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200') + '">' +
+          '<i class="fa-solid ' + (isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600') + '"></i>' +
+          '<span>' + (isApproved ? 'Đã duyệt' : 'Chưa duyệt') + '</span>' +
+        '</button>';
     } else {
-      if (st === 'resolved' || it.isCompleted) {
-        statusBadge = '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Đã giải quyết</span></span>';
+      if (st === 'resolved' || st === 'processed' || it.isCompleted) {
+        statusBadge =
+          '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300">' +
+            '<i class="fa-solid fa-circle-check text-emerald-600"></i>' +
+            '<span>Đã giải quyết</span>' +
+          '</button>';
       } else if (st === 'acknowledged') {
-        statusBadge = '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200/90 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-inbox text-sky-600 text-[10px]"></i><span>Đã tiếp nhận</span></span>';
+        statusBadge =
+          '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300">' +
+            '<i class="fa-solid fa-inbox text-sky-600"></i>' +
+            '<span>Đã tiếp nhận</span>' +
+          '</button>';
       } else {
-        statusBadge = '<span class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-xl text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/90 shadow-2xs whitespace-nowrap"><i class="fa-regular fa-clock text-amber-600 text-[10px]"></i><span>Chờ tiếp nhận</span></span>';
+        statusBadge =
+          '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300">' +
+            '<i class="fa-solid fa-clock text-amber-600"></i>' +
+            '<span>Chờ tiếp nhận</span>' +
+          '</button>';
       }
     }
 
-    // 3. Cột bên trái: Checkbox (cho Quản lý) hoặc Số thứ tự (cho Nhân viên)
+    // 3. Cột 1 (52px): Checkbox + STT (cho Quản lý) hoặc STT + Ngôi sao (cho Nhân viên)
     let leftActionCol = '';
     if (isManagerOrAbove) {
-      leftActionCol = '<div class="flex items-center gap-2 pt-0.5 shrink-0">' +
+      leftActionCol = '<div class="flex items-center gap-1.5 w-[52px] shrink-0 pt-0.5 md:pt-0">' +
         '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + entry.entryKey + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" title="Tích chọn để đưa vào báo cáo tổng hợp" />' +
-        '<span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-black text-[11px] flex items-center justify-center font-num">' + (eIdx + 1) + '</span>' +
+        '<span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-black text-[11px] flex items-center justify-center font-num shrink-0">' + (eIdx + 1) + '</span>' +
       '</div>';
     } else {
-      leftActionCol = '<div class="pt-0.5 shrink-0">' +
-        '<span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center justify-center font-black text-xs shadow-2xs font-num" title="Đầu việc số ' + (eIdx + 1) + '">' + (eIdx + 1) + '</span>' +
+      leftActionCol = '<div class="flex items-center gap-1.5 w-[52px] shrink-0 pt-0.5 md:pt-0">' +
+        '<span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center justify-center font-black text-[11px] shadow-2xs font-num shrink-0" title="Đầu việc số ' + (eIdx + 1) + '">' + (eIdx + 1) + '</span>' +
+        '<span class="w-5 h-5 flex items-center justify-center text-xs ' + (it.isImportant ? 'text-amber-500' : 'text-slate-200') + '"><i class="fa-solid fa-star"></i></span>' +
       '</div>';
     }
 
-    // 4. Cụm thông tin Người gửi / Người nhận & Thời gian (Đặt gọn bên phải)
-    let senderOrRecipientBadge = '';
+    // 4. Huy hiệu Người gửi / Người nhận gắn gọn cạnh tiêu đề (giống huy hiệu Đã gửi báo cáo trong Sổ tay)
+    let senderOrRecipientPill = '';
     if (isManagerOrAbove) {
-      senderOrRecipientBadge = '<div class="flex items-center gap-1.5 flex-wrap justify-start md:justify-end">' +
-        '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50/90 text-emerald-950 border border-emerald-200/80 font-bold text-[11px] shadow-2xs">' +
-          '<i class="fa-solid fa-user text-emerald-600 text-[9.5px]"></i>' +
+      senderOrRecipientPill =
+        '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0 shadow-2xs">' +
+          '<i class="fa-solid fa-user text-emerald-600 text-[9px]"></i>' +
           '<span>' + escapeHtml(entry.senderFullName) + '</span>' +
           '<span class="text-emerald-300">•</span>' +
           '<span class="text-emerald-700 font-semibold">' + escapeHtml(entry.senderDepartment) + '</span>' +
         '</span>' +
-        (isOwn ? '<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">Việc của bạn</span>' : '') +
-      '</div>';
+        (isOwn ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Việc của bạn</span>' : '');
     } else {
-      senderOrRecipientBadge = '<div class="flex items-center gap-1.5 justify-start md:justify-end">' +
-        '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-indigo-50/90 text-indigo-900 border border-indigo-200/80 font-bold text-[11px] shadow-2xs">' +
-          '<i class="fa-solid fa-paper-plane text-indigo-600 text-[9.5px]"></i>' +
+      senderOrRecipientPill =
+        '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs" title="Ngày gửi: ' + escapeHtml(entry.displayDate || '') + '">' +
+          '<i class="fa-solid fa-paper-plane text-indigo-600 text-[9px]"></i>' +
           '<span>Gửi đến: <b>' + escapeHtml(entry.recipientFullName || 'Quản lý bộ phận') + '</b></span>' +
-        '</span>' +
-      '</div>';
+        '</span>';
     }
 
-    const timeInfoHtml = '<div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium font-num justify-start md:justify-end">' +
-      '<i class="fa-regular fa-clock text-[10px]"></i>' +
-      '<span>' + escapeHtml(entry.displayDate || 'Đã gửi') + '</span>' +
-      '<span class="text-slate-300">•</span>' +
-      '<span class="text-slate-500 font-semibold">Kỳ ' + entry.periodMonth + '/' + entry.periodYear + '</span>' +
-    '</div>';
+    // 5. Ngày ghi nhận (ưu tiên ngày ghi nhận của công việc giống hệt Sổ tay)
+    const fallbackDate = entry.displayDate ? String(entry.displayDate).split(' ')[0] : '';
+    const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : fallbackDate);
 
-    // Lọc bỏ ghi chú tự động mặc định khi Quản lý sao chép vào hộp thư để giao diện sạch gọn
+    // 6. Kẻ viền xanh với công việc đã hoàn thành, viền xám nhẹ với công việc chưa xong (đồng nhất 100% với Sổ tay)
+    const isFinished = isPersonalTaskFinished(it);
+    let rowSurfaceClass = isFinished
+      ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
+      : 'bg-white border-slate-200/80 hover:border-slate-300';
+    if (isChecked) {
+      rowSurfaceClass = 'bg-emerald-50/30 border-emerald-500 ring-1 ring-emerald-500/30';
+    }
+    const leftCompletedBarHtml = isFinished
+      ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
+      : '';
+
+    // Lọc bỏ ghi chú tự động mặc định khi Quản lý sao chép vào hộp thư
     const rawNote = (entry.reportNotes || '').trim();
     const isAutoMgrNote = rawNote.includes('Đầu việc của Quản lý gửi vào hộp thư') || rawNote.includes('Bản sao đầu việc của Quản lý');
     const validStaffNote = (!isAutoMgrNote && rawNote) ? rawNote : '';
 
     return (
-      '<div class="group relative bg-white border ' + (isChecked ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-500/30' : 'border-slate-200/90 hover:border-emerald-300') + ' rounded-2xl p-3.5 sm:px-4 sm:py-3.5 shadow-2xs hover:shadow-md transition-all duration-200">' +
-        '<div class="flex flex-col md:flex-row md:items-center justify-between gap-3">' +
-          
-          '<!-- VÙNG TRÁI: CHECKBOX/STT + LOẠI VIỆC + TIÊU ĐỀ & NỘI DUNG CHI TIẾT -->' +
-          '<div class="flex items-start gap-3 min-w-0 flex-1">' +
-            leftActionCol +
-            '<div class="min-w-0 flex-1 space-y-1.5">' +
-              '<div class="flex items-center gap-2 flex-wrap">' +
-                typeBadge +
-                (it.isImportant ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><i class="fa-solid fa-star text-amber-500 text-[9px]"></i>Quan trọng</span>' : '') +
-                '<h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug break-words">' + escapeHtml(it.title) + '</h4>' +
-                dueBadge +
+      '<div class="group relative ' + rowSurfaceClass + ' hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 border shadow-2xs">' +
+        leftCompletedBarHtml +
+
+        '<!-- KHỐI TRÁI & GIỮA (RỘNG TỐI ĐA): CHỌN/STT + PHÂN LOẠI + NỘI DUNG CÔNG VIỆC -->' +
+        '<div class="flex items-start md:items-center gap-3 flex-1 min-w-0">' +
+          leftActionCol +
+
+          '<div class="flex items-center w-[94px] shrink-0">' +
+            typeBadge +
+          '</div>' +
+
+          '<div class="flex-1 min-w-0 space-y-1">' +
+            '<div class="flex items-center gap-2 flex-wrap">' +
+              '<div class="font-bold text-slate-900 text-sm leading-snug break-words">' +
+                escapeHtml(it.title) +
               '</div>' +
-              (it.content ? (
-                '<div class="pl-2.5 border-l-2 border-slate-200 text-xs text-slate-600 leading-relaxed break-words">' +
-                  escapeHtml(it.content) +
-                '</div>'
-              ) : '') +
-              (validStaffNote ? (
-                '<div class="inline-flex items-center gap-1.5 text-[11px] text-amber-900 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/80">' +
-                  '<i class="fa-regular fa-comment-dots text-amber-600 text-[10px]"></i>' +
-                  '<span><b>Ghi chú gửi kèm:</b> ' + escapeHtml(validStaffNote) + '</span>' +
-                '</div>'
-              ) : '') +
-              (entry.managerFeedback ? (
-                '<div class="inline-flex items-center gap-1.5 text-[11px] text-sky-900 bg-sky-50/80 px-2.5 py-1 rounded-lg border border-sky-200/80">' +
-                  '<i class="fa-solid fa-user-tie text-sky-600 text-[10px]"></i>' +
-                  '<span><b>Ý kiến Quản lý:</b> ' + escapeHtml(entry.managerFeedback) + '</span>' +
-                '</div>'
-              ) : '') +
+              '<div class="inline-flex items-center gap-1.5 flex-wrap">' +
+                senderOrRecipientPill +
+              '</div>' +
             '</div>' +
+            (it.content ? '<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">' + escapeHtml(it.content) + '</p>' : '') +
+            (validStaffNote ? (
+              '<div class="inline-flex items-center gap-1.5 text-[11px] text-amber-900 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-200/80">' +
+                '<i class="fa-regular fa-comment-dots text-amber-600 text-[10px]"></i>' +
+                '<span><b>Ghi chú gửi kèm:</b> ' + escapeHtml(validStaffNote) + '</span>' +
+              '</div>'
+            ) : '') +
+            (entry.managerFeedback ? (
+              '<div class="inline-flex items-center gap-1.5 text-[11px] text-sky-900 bg-sky-50/80 px-2.5 py-1 rounded-lg border border-sky-200/80">' +
+                '<i class="fa-solid fa-user-tie text-sky-600 text-[10px]"></i>' +
+                '<span><b>Ý kiến Quản lý:</b> ' + escapeHtml(entry.managerFeedback) + '</span>' +
+              '</div>'
+            ) : '') +
           '</div>' +
-
-          '<!-- VÙNG PHẢI: NGƯỜI GỬI / NGƯỜI NHẬN + THỜI GIAN + TRẠNG THÁI -->' +
-          '<div class="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2.5 md:pt-0 border-t md:border-t-0 border-slate-100">' +
-            '<div class="flex flex-col items-start md:items-end gap-1">' +
-              senderOrRecipientBadge +
-              timeInfoHtml +
-            '</div>' +
-            '<div class="shrink-0">' +
-              statusBadge +
-            '</div>' +
-          '</div>' +
-
         '</div>' +
+
+        '<!-- KHỐI PHẢI (ĐỒNG NHẤT 100% VỚI BẢNG SỔ TAY): THỜI GIAN & HẠN THỰC HIỆN + TRẠNG THÁI -->' +
+        '<div class="flex items-center justify-between md:justify-end gap-2.5 md:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">' +
+          '<div class="flex flex-col items-start justify-center gap-1 text-[11px] md:w-[254px] shrink-0">' +
+            (dateStr ? (
+              '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">' +
+                '<i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>' +
+                '<span class="text-slate-400 font-medium">Ghi nhận:</span>' +
+                '<span class="text-slate-700 font-bold">' + escapeHtml(dateStr) + '</span>' +
+              '</span>'
+            ) : '') +
+            dueDateBadge +
+          '</div>' +
+
+          '<div class="w-[132px] shrink-0 flex items-center justify-center">' +
+            statusBadge +
+          '</div>' +
+        '</div>' +
+
       '</div>'
     );
   }).join('');
+
+  container.innerHTML = headerHtml + '<div class="flex flex-col space-y-2 w-full pt-0.5">' + rowsHtml + '</div>';
 }
 
 // Biến tạm lưu trữ thông tin khi Quản lý mở bảng tổng hợp báo cáo
