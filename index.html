@@ -22743,18 +22743,18 @@ function generateSingleReportWordHtml(rep) {
   const renderSectionItemsHtml = (list) => {
     if (!list || list.length === 0) {
       return `
-        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 14pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
           (Không có nội dung ghi nhận trong kỳ báo cáo)
         </div>
       `;
     }
     return list.map((it, idx) => `
       <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4; margin-left: 12pt;">
           ${idx + 1}. ${escapeHtml(it.title)}
         </div>
         ${it.content ? `
-          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 14pt;">
+          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 26pt;">
             ${escapeHtml(it.content)}
           </div>
         ` : ''}
@@ -22764,19 +22764,19 @@ function generateSingleReportWordHtml(rep) {
 
   let sectionsHtml = `
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
       <div style="margin-top: 6pt;">${renderSectionItemsHtml(adhocList)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
       <div style="margin-top: 6pt;">${renderSectionItemsHtml(planList)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #7e22ce;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
       <div style="margin-top: 6pt;">${renderSectionItemsHtml(propList)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
       <div style="margin-top: 6pt;">${renderSectionItemsHtml(feedList)}</div>
     </div>
   `;
@@ -22976,18 +22976,18 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
   const renderConsolidatedSectionItemsHtml = (list) => {
     if (!list || list.length === 0) {
       return `
-        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 14pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
           (Không có nội dung ghi nhận trong kỳ báo cáo)
         </div>
       `;
     }
     return list.map((it, idx) => `
       <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4;">
+        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4; margin-left: 12pt;">
           ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
         </div>
         ${it.content ? `
-          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 14pt;">
+          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 26pt;">
             ${escapeHtml(it.content)}
           </div>
         ` : ''}
@@ -22997,19 +22997,19 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
 
   let sectionsHtml = `
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
       <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allAdhoc)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
       <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allPlan)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #7e22ce;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
       <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allProp)}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
+      <div class="sec-heading" style="border-bottom: 0.75pt solid #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
       <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allFeed)}</div>
     </div>
   `;
@@ -23099,13 +23099,13 @@ function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
 
         <table class="info-card">
           <tr>
-            <td style="width: 36%;">
+            <td style="width: 34%;">
               <span style="color: #475569;">Đơn vị báo cáo:</span> <b>${escapeHtml(deptName)}</b>
             </td>
-            <td style="width: 36%;">
+            <td style="width: 32%;">
               <span style="color: #475569;">Người tổng hợp:</span> <b>${escapeHtml(signerName)}</b>
             </td>
-            <td style="width: 28%;">
+            <td style="width: 34%;">
               <span style="color: #475569;">Tổng số:</span> <b style="color: #047857;">${totalTasks} đầu việc (${staffSet.size} nhân sự)</b>
             </td>
           </tr>
