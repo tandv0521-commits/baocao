@@ -227,6 +227,12 @@
       letter-spacing: -0.01em;
     }
     .hidden { display: none !important; }
+    @media (min-width: 768px) {
+      .pw-desktop-flex { display: flex !important; }
+    }
+    @media (max-width: 767px) {
+      .pw-desktop-flex { display: none !important; }
+    }
     #btnClearStaffSearch:not(.hidden) { display: flex !important; }
 
     /* ================= TYPOGRAPHY HIỆN ĐẠI, KHỎE KHOẮN, ĐẲNG CẤP DOANH NGHIỆP ================= */
@@ -24697,16 +24703,16 @@ function renderPersonalWorkspaceUI() {
   if (pwViewMode === 'table') {
     let rowsHtml = '';
     items.forEach((it, idx) => {
-      // 1. Phân loại & Icon đồng bộ kích thước
+      // 1. Phân loại & Icon đồng bộ kích thước gọn gàng
       let typeBadge = '';
       if (it.type === 'adhoc') {
-        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
       } else if (it.type === 'plan') {
-        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
       } else if (it.type === 'proposal') {
-        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
       } else if (it.type === 'feedback') {
-        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap min-w-[96px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
+        typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
       }
 
       // 2. Trạng thái & Huy hiệu thời hạn 1 dòng (có phân tầng màu cảnh báo)
@@ -24717,7 +24723,7 @@ function renderPersonalWorkspaceUI() {
       if (it.type === 'adhoc') {
         const isDone = (it.status === 'done');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
             <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
             <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
           </button>
@@ -24741,7 +24747,7 @@ function renderPersonalWorkspaceUI() {
         }
 
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
             <i class="fa-solid ${statusIconStyle}"></i>
             <span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span>
           </button>
@@ -24757,7 +24763,7 @@ function renderPersonalWorkspaceUI() {
       } else if (it.type === 'proposal') {
         const isApproved = (it.status === 'approved_executed');
         statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
             <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600'}"></i>
             <span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span>
           </button>
@@ -24766,21 +24772,21 @@ function renderPersonalWorkspaceUI() {
         const st = it.status || 'pending';
         if (st === 'resolved' || st === 'processed') {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
               <i class="fa-solid fa-circle-check text-emerald-600"></i>
               <span>Đã giải quyết</span>
             </button>
           `;
         } else if (st === 'acknowledged') {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
               <i class="fa-solid fa-inbox text-sky-600"></i>
               <span>Đã tiếp nhận</span>
             </button>
           `;
         } else {
           statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[144px] inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
               <i class="fa-solid fa-clock text-amber-600"></i>
               <span>Chờ tiếp nhận</span>
             </button>
@@ -24790,7 +24796,7 @@ function renderPersonalWorkspaceUI() {
 
       // 3. Ngôi sao quan trọng
       const starBtn = `
-        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}">
+        <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer w-6 h-6 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}">
           <i class="fa-solid fa-star"></i>
         </button>
       `;
@@ -24825,62 +24831,63 @@ function renderPersonalWorkspaceUI() {
 
       const transferBadgesHtml = getPersonalTaskTransferBadgeHtml(it, currentUser);
       rowsHtml += `
-        <div class="group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl pl-4 pr-3.5 py-3 transition-all duration-200 flex flex-col gap-2.5 md:grid md:grid-cols-[64px_112px_minmax(240px,1fr)_290px_150px_76px] md:items-center md:gap-3.5 border shadow-2xs">
+        <div class="group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 border shadow-2xs">
           <span class="absolute left-0 top-2.5 bottom-2.5 w-1.5 rounded-r-full ${accentColor}"></span>
 
-          <!-- CỘT 1: CHỌN BÁO CÁO + QUAN TRỌNG -->
-          <div class="flex items-center justify-between md:justify-center gap-1.5 shrink-0">
-            <div class="flex items-center gap-1.5">
+          <!-- KHỐI TRÁI & GIỮA (CHIẾM TOÀN BỘ KHÔNG GIAN RỘNG TỐI ĐA): CHỌN + PHÂN LOẠI + NỘI DUNG CÔNG VIỆC -->
+          <div class="flex items-start md:items-center gap-3 flex-1 min-w-0">
+            <!-- CỘT 1 (48px): CHỌN BÁO CÁO + QUAN TRỌNG -->
+            <div class="flex items-center gap-1.5 w-[48px] shrink-0 pt-0.5 md:pt-0">
               ${checkBtn}
               ${starBtn}
             </div>
-            <div class="md:hidden">
+
+            <!-- CỘT 2 (94px): PHÂN LOẠI -->
+            <div class="flex items-center w-[94px] shrink-0">
               ${typeBadge}
             </div>
-          </div>
 
-          <!-- CỘT 2: PHÂN LOẠI (Desktop) -->
-          <div class="hidden md:flex items-center shrink-0">
-            ${typeBadge}
-          </div>
-
-          <!-- CỘT 3: TIÊU ĐỀ, NỘI DUNG, DẤU HIỆU ĐÃ GỬI -->
-          <div class="min-w-0 space-y-1 pr-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
-                ${escapeHtml(it.title)}
+            <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA): TIÊU ĐỀ, NỘI DUNG CHI TIẾT, DẤU HIỆU ĐÃ GỬI -->
+            <div class="flex-1 min-w-0 space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
+                  ${escapeHtml(it.title)}
+                </div>
+                ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
               </div>
-              ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
+              ${it.content ? `<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">${escapeHtml(it.content)}</p>` : ''}
+              ${fbSnippet}
             </div>
-            ${it.content ? `<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">${escapeHtml(it.content)}</p>` : ''}
-            ${fbSnippet}
           </div>
 
-          <!-- CỘT 4: THỜI GIAN & HẠN THỰC HIỆN (TRÊN 1 DÒNG RÕ RÀNG) -->
-          <div class="flex flex-row md:flex-col items-center md:items-start justify-start gap-2 md:gap-1.5 text-[11px] flex-wrap md:flex-nowrap min-w-0">
-            ${dateStr ? `
-              <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
-                <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
-                <span class="text-slate-400 font-medium">Ghi nhận:</span>
-                <span class="text-slate-700 font-bold">${dateStr}</span>
-              </span>
-            ` : ''}
-            ${dueDateBadge}
-          </div>
+          <!-- KHỐI PHẢI (CỐ ĐỊNH GỌN GÀNG SÁT LỀ PHẢI): THỜI GIAN & HẠN + TRẠNG THÁI + THAO TÁC -->
+          <div class="flex items-center justify-between md:justify-end gap-2.5 md:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <!-- CỘT 4 (254px): THỜI GIAN & HẠN THỰC HIỆN (GỌN GÀNG TRÊN 1 DÒNG) -->
+            <div class="flex flex-col items-start justify-center gap-1 text-[11px] md:w-[254px] shrink-0">
+              ${dateStr ? `
+                <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
+                  <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
+                  <span class="text-slate-400 font-medium">Ghi nhận:</span>
+                  <span class="text-slate-700 font-bold">${dateStr}</span>
+                </span>
+              ` : ''}
+              ${dueDateBadge}
+            </div>
 
-          <!-- CỘT 5: TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
-          <div class="shrink-0 flex items-center md:justify-center">
-            ${statusHtml}
-          </div>
+            <!-- CỘT 5 (132px): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
+            <div class="w-[132px] shrink-0 flex items-center justify-center">
+              ${statusHtml}
+            </div>
 
-          <!-- CỘT 6: THAO TÁC -->
-          <div class="flex items-center justify-end md:justify-center gap-1.5 shrink-0">
-            <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
-              <i class="fa-regular fa-pen-to-square"></i>
-            </button>
-            <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
+            <!-- CỘT 6 (68px): THAO TÁC -->
+            <div class="w-[68px] flex items-center justify-end gap-1 shrink-0">
+              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
+              <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -24900,7 +24907,7 @@ function renderPersonalWorkspaceUI() {
     ` : '';
 
     container.innerHTML = activeFilterBannerHtml + `
-      <div class="hidden md:flex items-center justify-between gap-3 px-3.5 py-2 bg-white border border-slate-200/90 rounded-xl shadow-2xs mb-1 text-[11px]">
+      <div class="pw-desktop-flex items-center justify-between gap-3 px-3.5 py-2 bg-white border border-slate-200/90 rounded-xl shadow-2xs mb-1 text-[11px]">
         <div class="flex items-center gap-1.5 text-slate-600 font-bold">
           <i class="fa-solid fa-list-check text-emerald-600 text-xs"></i>
           <span>Danh sách công việc (<b class="text-slate-900 font-num">${items.length}</b> mục)</span>
@@ -24913,13 +24920,17 @@ function renderPersonalWorkspaceUI() {
           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200"><span class="w-2 h-2 rounded-full bg-sky-400"></span>Còn &gt; 5 ngày</span>
         </div>
       </div>
-      <div class="hidden md:grid md:grid-cols-[64px_112px_minmax(240px,1fr)_290px_150px_76px] md:gap-3.5 pl-4 pr-3.5 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none">
-        <span class="text-center">Chọn</span>
-        <span>Phân loại</span>
-        <span>Nội dung công việc</span>
-        <span>Thời gian &amp; Hạn thực hiện</span>
-        <span class="text-center">Trạng thái</span>
-        <span class="text-center">Thao tác</span>
+      <div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="w-[48px] shrink-0 text-center">Chọn</span>
+          <span class="w-[94px] shrink-0">Phân loại</span>
+          <span class="flex-1 min-w-0">Nội dung công việc</span>
+        </div>
+        <div class="flex items-center justify-end gap-3 shrink-0">
+          <span class="w-[254px] shrink-0">Thời gian &amp; Hạn thực hiện</span>
+          <span class="w-[132px] shrink-0 text-center">Trạng thái</span>
+          <span class="w-[68px] shrink-0 text-center">Thao tác</span>
+        </div>
       </div>
       <div class="flex flex-col space-y-2 w-full pt-0.5">
         ${rowsHtml}
