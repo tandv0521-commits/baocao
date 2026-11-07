@@ -8608,14 +8608,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const text = document.getElementById('toastMsg');
       if (!toast || !box || !text) return;
 
-      text.innerText = msg;
+      let displayMsg = msg;
+      const isLiveSync = (typeof msg === 'string' && msg.startsWith('⚡'));
+
       if (isError) {
         box.className = "bg-white/98 border border-rose-200 text-rose-900 px-3 py-1 rounded-full shadow-sm flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150";
         if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-600 text-[9px]";
         if (iconBox) iconBox.className = "w-4 h-4 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0";
         text.className = "text-[11px] sm:text-xs font-medium text-rose-900 whitespace-nowrap";
-      } else if (typeof msg === 'string' && msg.startsWith('⚡')) {
-        // Thông báo đồng bộ thời gian thực: Thon gọn, viền mảnh hổ phách, chữ vừa vặn tinh tế
+      } else if (isLiveSync) {
+        // Tách bỏ emoji ⚡ ở đầu text để chỉ hiển thị duy nhất 1 tia sét ở icon tròn
+        displayMsg = msg.replace(/^⚡s*/, '');
         box.className = "bg-white/98 border border-amber-300/80 text-slate-800 px-3.5 py-1 rounded-full shadow-sm shadow-amber-950/5 flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150";
         if (icon) icon.className = "fa-solid fa-bolt text-amber-500 text-[10px]";
         if (iconBox) iconBox.className = "w-4 h-4 rounded-full bg-amber-100/90 text-amber-700 flex items-center justify-center shrink-0";
@@ -8627,13 +8630,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         text.className = "text-[11px] sm:text-xs font-medium text-slate-700 whitespace-nowrap";
       }
 
+      text.innerText = displayMsg;
+
       toast.classList.remove('translate-y-[-80px]', 'translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
       toast.classList.add('translate-y-0', 'opacity-100');
       if (window._toastTimeout) clearTimeout(window._toastTimeout);
       window._toastTimeout = setTimeout(() => {
         toast.classList.add('translate-y-[-80px]', 'opacity-0', 'pointer-events-none');
         toast.classList.remove('translate-y-0', 'opacity-100');
-      }, (typeof msg === 'string' && msg.startsWith('⚡')) ? 3800 : 2800);
+      }, isLiveSync ? 3800 : 2800);
     }
 
     function switchLoginTab(tab) {
