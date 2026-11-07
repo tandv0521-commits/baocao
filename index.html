@@ -25991,18 +25991,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const t = calculatePlanTimelineStatus(it);
             planTimeline = t;
 
-            let statusBtnStyle = 'bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200';
-            let statusIconStyle = 'fa-clock text-sky-500';
-            if (isCompleted) {
-              statusBtnStyle = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200';
-              statusIconStyle = 'fa-circle-check text-emerald-500';
-            } else if (t.code === 'overdue' || t.code === 'duetoday') {
-              statusBtnStyle = 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200';
-              statusIconStyle = 'fa-clock text-rose-500';
-            } else if (t.isDueSoon) {
-              statusBtnStyle = 'bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200';
-              statusIconStyle = 'fa-clock text-orange-500';
-            }
+            // Đồng bộ màu sắc trạng thái "Đang tiến hành" thành 1 màu xanh dương chuyên nghiệp đồng nhất 100%
+            let statusBtnStyle = isCompleted
+              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+              : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300';
+            let statusIconStyle = isCompleted
+              ? 'fa-circle-check text-emerald-600'
+              : 'fa-clock text-sky-600';
 
             statusHtml = `
           <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
@@ -28203,18 +28198,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const isCompleted = (st === 'completed' || it.isCompleted === true || it.is_completed === true);
           const t = calculatePlanTimelineStatus(it);
 
-          let statusBtnStyle = 'bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200';
-          let statusIconStyle = 'fa-clock text-sky-500';
-          if (isCompleted) {
-            statusBtnStyle = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200';
-            statusIconStyle = 'fa-circle-check text-emerald-500';
-          } else if (t.code === 'overdue' || t.code === 'duetoday') {
-            statusBtnStyle = 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200';
-            statusIconStyle = 'fa-clock text-rose-500';
-          } else if (t.isDueSoon) {
-            statusBtnStyle = 'bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200';
-            statusIconStyle = 'fa-clock text-orange-500';
-          }
+          // Đồng bộ màu sắc trạng thái "Đang tiến hành" thành 1 màu xanh dương chuyên nghiệp đồng nhất 100%
+          let statusBtnStyle = isCompleted
+            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+            : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300';
+          let statusIconStyle = isCompleted
+            ? 'fa-circle-check text-emerald-600'
+            : 'fa-clock text-sky-600';
 
           statusBadge =
             '<button type="button"' + clickToggleAttr + ' class="' + interactiveCls + ' w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ' + statusBtnStyle + '">' +
