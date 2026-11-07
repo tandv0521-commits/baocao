@@ -11399,12 +11399,81 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
+    // ================= TRẠNG THÁI TRỐNG GỌN CHO TÀI KHOẢN NHÂN SỰ (QUẢN LÝ, NHÂN VIÊN, THỦ KHO, KHO CHÍNH...) =================
+    // Khi chưa được phân công đầu việc: ẩn hẳn khung bảng ma trận (tiêu đề cột, cột ngày, tổng cộng...) và chỉ hiện 1 dải thông báo gọn
+    function restoreMatrixFromCompactEmpty() {
+      const card = document.getElementById('matrixCard');
+      if (!card || card.dataset.compactEmpty !== '1') return;
+      card.dataset.compactEmpty = '';
+      card.classList.remove('flex-none');
+      card.classList.add('flex-1');
+      const banner = document.getElementById('matrixStaffEmptyBanner');
+      if (banner) banner.classList.add('hidden');
+      const tc = document.getElementById('tableScrollContainer');
+      if (tc) tc.classList.remove('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.remove('hidden');
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.remove('hidden');
+    }
+
+    function renderMatrixStaffCompactEmpty(opts) {
+      const card = document.getElementById('matrixCard');
+      const tc = document.getElementById('tableScrollContainer');
+      if (!card || !tc) return;
+
+      const u = opts.u || {};
+      const dept = opts.dept || '';
+      const isPhuKho = !!opts.isPhuKho;
+
+      let banner = document.getElementById('matrixStaffEmptyBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'matrixStaffEmptyBanner';
+        card.insertBefore(banner, tc);
+      }
+
+      const periodText = 'Tháng ' + currentSelectedMonth + '/' + currentSelectedYear;
+      const title = isPhuKho ? 'Chưa phân công công việc cá nhân' : 'Chưa được phân công công việc';
+      const desc = isPhuKho
+        ? 'Bộ phận <b class="text-slate-700">' + escapeHtml(dept) + '</b> chưa phân công đầu việc cá nhân cho bạn (công việc chung do Kho chính phụ trách báo cáo).'
+        : 'Chào <b class="text-slate-700">' + escapeHtml(u.fullName || u.username || '') + '</b>, bạn chưa có đầu việc nào trong kỳ báo cáo này.';
+
+      banner.className = 'flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 bg-gradient-to-r from-amber-50/80 via-white to-white';
+      banner.innerHTML =
+        '<div class="flex items-center gap-3 min-w-0 flex-1">' +
+          '<div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">' +
+            '<i class="fa-solid fa-clipboard-user"></i>' +
+          '</div>' +
+          '<div class="min-w-0">' +
+            '<div class="text-sm font-black text-slate-800 leading-tight">' + title + '</div>' +
+            '<div class="text-xs text-slate-500 leading-relaxed mt-0.5">' + desc + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-2 flex-wrap shrink-0">' +
+          (dept ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-600"><i class="fa-solid fa-building text-slate-400 text-[10px]"></i>' + escapeHtml(dept) + '</span>' : '') +
+          '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-600 font-num"><i class="fa-regular fa-calendar text-slate-400 text-[10px]"></i>' + periodText + '</span>' +
+          '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800"><i class="fa-solid fa-headset text-amber-600 text-[10px]"></i>Liên hệ Quản trị viên / Trưởng bộ phận</span>' +
+        '</div>';
+
+      card.dataset.compactEmpty = '1';
+      card.classList.remove('flex-1');
+      card.classList.add('flex-none');
+      tc.classList.add('hidden');
+      const legendBar = document.getElementById('matrixSymbolLegendBar');
+      if (legendBar) legendBar.classList.add('hidden');
+      const dateNavGroup = document.getElementById('matrixDateNavGroup');
+      if (dateNavGroup) dateNavGroup.classList.add('hidden');
+    }
+
+
     // ================= RENDER BẢNG MA TRẬN, ẨN SỐ 0 & PHÂN QUYỀN NHẬP TRỰC TIẾP =================
     function renderMatrixTable(data) {
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
       tbody.innerHTML = '';
       todayColThElement = null;
+      restoreMatrixFromCompactEmpty();
 
       theadRow.innerHTML = `
         <th class="col-fixed-tt py-3.5 px-2 text-center border-r">TT</th>
@@ -11456,6 +11525,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const isLead = isShared && isWarehouseLead(u, dept);
         const isPhuKho = isStaffUser && isShared && !isLead;
 
+        // Tài khoản nhân sự (Quản lý, Nhân viên, Thủ kho, Kho chính...): thông báo gọn, ẩn khung bảng ma trận
+        if (isStaffUser) {
+          renderMatrixStaffCompactEmpty({ u, dept, isPhuKho, isLead });
+          return;
+        }
+
+        // Admin / Ban Giám Đốc: giữ nguyên hiển thị cũ
         tbody.innerHTML = `
           <tr>
             <td colspan="${data.dayCols.length + 4}" class="py-12 px-4 text-center">
@@ -11463,24 +11539,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 <div class="w-12 h-12 rounded-2xl bg-white border border-amber-200 text-amber-500 flex items-center justify-center mx-auto mb-2.5 shadow-2xs">
                   <i class="fa-solid fa-clipboard-user text-xl"></i>
                 </div>
-                <h4 class="text-sm sm:text-base font-black text-amber-950">
-                  ${isPhuKho ? 'Chưa phân công công việc cá nhân' : (isStaffUser ? 'Tài khoản chưa được phân công công việc' : 'Chưa có danh mục công việc nào cho lựa chọn này')}
-                </h4>
-                <p class="text-xs text-amber-800/90 mt-1 leading-relaxed">
-                  ${isPhuKho 
-                    ? `Chào <b>${escapeHtml(u.fullName)}</b>! Bộ phận <b>${escapeHtml(dept)}</b> chưa phân công đầu việc cá nhân cho bạn (công việc chung do Kho chính phụ trách báo cáo).`
-                    : (isStaffUser 
-                      ? `Chào <b>${escapeHtml(u.fullName)}</b>! Bạn hiện chưa được thiết lập danh mục đầu việc nào trong kỳ báo cáo Tháng ${currentSelectedMonth}/${currentSelectedYear}.`
-                      : 'Vui lòng chọn bộ phận hoặc nhân sự khác để xem danh mục công việc.'
-                    )
-                  }
-                </p>
-                ${isStaffUser ? `
-                  <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-200 text-[11px] font-bold text-amber-900 shadow-2xs">
-                    <i class="fa-solid fa-headset text-amber-600"></i>
-                    <span>Liên hệ Quản trị viên / Trưởng bộ phận</span>
-                  </div>
-                ` : ''}
+                <h4 class="text-sm sm:text-base font-black text-amber-950">Chưa có danh mục công việc nào cho lựa chọn này</h4>
+                <p class="text-xs text-amber-800/90 mt-1 leading-relaxed">Vui lòng chọn bộ phận hoặc nhân sự khác để xem danh mục công việc.</p>
               </div>
             </td>
           </tr>
@@ -24657,56 +24717,58 @@ function renderPersonalWorkspaceUI() {
       const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
       const isReportSelected = !!it.selectedForReport;
+      const accentColor = it.type === 'adhoc' ? 'bg-amber-400' : (it.type === 'plan' ? 'bg-sky-400' : (it.type === 'proposal' ? 'bg-purple-400' : 'bg-teal-400'));
+      const transferBadgesHtml = getPersonalTaskTransferBadgeHtml(it, currentUser);
       rowsHtml += `
-        <div class="group relative ${isReportSelected ? 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-300/60 shadow-xs' : (it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/70 bg-gradient-to-r from-amber-50/20 via-white to-white shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300')} hover:shadow-md rounded-2xl p-3.5 sm:p-4 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-          <!-- VÙNG TRÁI: CHECKBOX + STAR + PHÂN LOẠI + TIÊU ĐỀ & NỘI DUNG -->
-          <div class="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <div class="flex items-center gap-1 pt-0.5 shrink-0">
-              ${checkBtn}
-              ${starBtn}
-            </div>
+        <div class="group relative ${isReportSelected ? 'bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-300/60' : (it.isImportant ? 'border-amber-300 ring-1 ring-amber-300/60 bg-amber-50/30' : 'bg-white border-slate-200 hover:border-slate-300')} hover:shadow-md rounded-2xl pl-5 pr-4 py-3.5 transition-all duration-200 flex flex-col gap-2.5 md:grid md:grid-cols-[60px_112px_minmax(0,1fr)_200px_150px_72px] md:items-center md:gap-4 border shadow-2xs">
+          <span class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full ${accentColor}"></span>
 
-            <div class="min-w-0 flex-1 space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                ${typeBadge}
-                <span class="font-bold text-slate-900 text-xs sm:text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
-                  ${escapeHtml(it.title)}
-                </span>
-                ${getPersonalTaskTransferBadgeHtml(it, currentUser)}
-              </div>
-
-              ${it.content ? `<p class="text-xs text-slate-500 leading-relaxed break-words pl-0.5 font-normal">${escapeHtml(it.content)}</p>` : ''}
-              ${fbSnippet}
-            </div>
+          <!-- CỘT 1: CHỌN BÁO CÁO + QUAN TRỌNG -->
+          <div class="flex items-center gap-1 shrink-0">
+            ${checkBtn}
+            ${starBtn}
           </div>
 
-          <!-- VÙNG PHẢI: NGÀY THÁNG / HẠN CHÓT + NÚT TRẠNG THÁI + NÚT THAO TÁC -->
-          <div class="flex items-center justify-between md:justify-end gap-2.5 sm:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-            <!-- Ngày ghi nhận / Hạn chót -->
-            <div class="flex flex-col items-start md:items-end text-[11px] text-slate-500 shrink-0 space-y-0.5">
-              ${dateStr ? `
-                <span class="inline-flex items-center gap-1 font-medium font-num text-slate-500">
-                  <i class="fa-regular fa-calendar text-[10.5px] text-slate-400"></i>
-                  <span>${dateStr}</span>
-                </span>
-              ` : ''}
-              ${dueDateBadge}
-            </div>
+          <!-- CỘT 2: PHÂN LOẠI -->
+          <div class="shrink-0">
+            ${typeBadge}
+          </div>
 
-            <!-- Nút trạng thái 1-chạm -->
-            <div class="shrink-0">
-              ${statusHtml}
+          <!-- CỘT 3: TIÊU ĐỀ, NỘI DUNG, DẤU HIỆU ĐÃ GỬI -->
+          <div class="min-w-0 space-y-1">
+            <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
+              ${escapeHtml(it.title)}
             </div>
+            ${it.content ? `<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">${escapeHtml(it.content)}</p>` : ''}
+            ${transferBadgesHtml ? `<div class="flex items-center gap-1.5 flex-wrap pt-0.5">${transferBadgesHtml}</div>` : ''}
+            ${fbSnippet}
+          </div>
 
-            <!-- Nút Sửa & Xóa -->
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
-                <i class="fa-regular fa-pen-to-square"></i>
-              </button>
-              <button type="button" onclick="deletePersonalItem('${it.id}')" class="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
-                <i class="fa-regular fa-trash-can"></i>
-              </button>
-            </div>
+          <!-- CỘT 4: THỜI GIAN (NGÀY GHI NHẬN + HẠN CHÓT) -->
+          <div class="flex flex-row md:flex-col items-center md:items-start gap-2 md:gap-1 text-[11px] flex-wrap">
+            ${dateStr ? `
+              <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600">
+                <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
+                <span class="text-slate-400 font-medium">Ghi nhận:</span>
+                <span>${dateStr}</span>
+              </span>
+            ` : ''}
+            ${dueDateBadge}
+          </div>
+
+          <!-- CỘT 5: TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
+          <div class="shrink-0 md:flex md:justify-center">
+            ${statusHtml}
+          </div>
+
+          <!-- CỘT 6: THAO TÁC -->
+          <div class="flex items-center justify-end md:justify-center gap-1.5 shrink-0">
+            <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs transition cursor-pointer" title="Chỉnh sửa chi tiết">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 text-xs transition cursor-pointer" title="Xóa mục này">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
           </div>
         </div>
       `;
@@ -24725,6 +24787,14 @@ function renderPersonalWorkspaceUI() {
       </div>
     ` : '';
     container.innerHTML = activeFilterBannerHtml + `
+      <div class="hidden md:grid md:grid-cols-[60px_112px_minmax(0,1fr)_200px_150px_72px] gap-4 pl-5 pr-4 pb-1 text-[10.5px] font-black uppercase tracking-wider text-slate-400 select-none">
+        <span></span>
+        <span>Phân loại</span>
+        <span>Nội dung công việc</span>
+        <span>Thời gian</span>
+        <span class="text-center">Trạng thái</span>
+        <span class="text-center">Thao tác</span>
+      </div>
       <div class="flex flex-col space-y-2.5 w-full">
         ${rowsHtml}
       </div>
