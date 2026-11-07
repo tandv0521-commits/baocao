@@ -26153,9 +26153,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
           const isFinished = isPersonalTaskFinished(it);
+          // Hiệu ứng rê chuột vào từng dòng: Đổ màu sáng nhẹ dịu mắt (hổ phách nhạt / ngọc bích nhạt) để dễ quan sát
           const rowSurfaceClass = isFinished
-            ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
-            : 'bg-white border-slate-200/80 hover:border-slate-300';
+            ? 'bg-emerald-50/20 border-emerald-300 hover:bg-emerald-50/60 hover:border-emerald-400'
+            : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90';
           const leftCompletedBarHtml = isFinished
             ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
             : '';
@@ -26181,7 +26182,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA): TIÊU ĐỀ, NỘI DUNG CHI TIẾT, DẤU HIỆU ĐÃ GỬI -->
             <div class="flex-1 min-w-0 space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <div class="font-semibold text-slate-800 hover:text-amber-800 text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
+                <div class="font-semibold text-slate-800 group-hover:text-amber-900 text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
                   ${escapeHtml(it.title)}
                 </div>
                 ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
@@ -28371,11 +28372,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // 6. Kẻ viền xanh với công việc đã hoàn thành, viền xám nhẹ với công việc chưa xong (đồng nhất 100% với Sổ tay)
         const isFinished = isPersonalTaskFinished(it);
+        // Hiệu ứng rê chuột vào từng dòng trong hộp thư / báo cáo
         let rowSurfaceClass = isFinished
-          ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
-          : 'bg-white border-slate-200/80 hover:border-slate-300';
+          ? 'bg-emerald-50/20 border-emerald-300 hover:bg-emerald-50/60 hover:border-emerald-400'
+          : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90';
         if (isChecked) {
-          rowSurfaceClass = 'bg-emerald-50/30 border-emerald-500 ring-1 ring-emerald-500/30';
+          rowSurfaceClass = 'bg-emerald-50/40 border-emerald-500 ring-1 ring-emerald-500/30 hover:bg-emerald-50/70';
         }
         const leftCompletedBarHtml = isFinished
           ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
