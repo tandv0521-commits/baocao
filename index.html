@@ -24814,25 +24814,18 @@ function renderPersonalWorkspaceUI() {
 
       const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
-      const isReportSelected = !!it.selectedForReport;
-      let accentColor = it.type === 'adhoc' ? 'bg-amber-400' : (it.type === 'plan' ? 'bg-sky-400' : (it.type === 'proposal' ? 'bg-purple-400' : 'bg-teal-400'));
-      if (planTimeline && planTimeline.accentClass) {
-        accentColor = planTimeline.accentClass;
-      }
-
-      let rowSurfaceClass = 'bg-white border-slate-200/90 hover:border-slate-300';
-      if (isReportSelected) {
-        rowSurfaceClass = 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-300/60';
-      } else if (planTimeline && planTimeline.rowTintClass) {
-        rowSurfaceClass = planTimeline.rowTintClass + ' hover:shadow-md';
-      } else if (it.isImportant) {
-        rowSurfaceClass = 'border-amber-300 ring-1 ring-amber-200/70 bg-amber-50/25';
-      }
+      const isFinished = isPersonalTaskFinished(it);
+      const rowSurfaceClass = isFinished
+        ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
+        : 'bg-white border-slate-200/80 hover:border-slate-300';
+      const leftCompletedBarHtml = isFinished
+        ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
+        : '';
 
       const transferBadgesHtml = getPersonalTaskTransferBadgeHtml(it, currentUser);
       rowsHtml += `
-        <div class="group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 border shadow-2xs">
-          <span class="absolute left-0 top-2.5 bottom-2.5 w-1.5 rounded-r-full ${accentColor}"></span>
+        <div class="group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 border shadow-2xs">
+          ${leftCompletedBarHtml}
 
           <!-- KHỐI TRÁI & GIỮA (CHIẾM TOÀN BỘ KHÔNG GIAN RỘNG TỐI ĐA): CHỌN + PHÂN LOẠI + NỘI DUNG CÔNG VIỆC -->
           <div class="flex items-start md:items-center gap-3 flex-1 min-w-0">
@@ -24954,7 +24947,10 @@ function renderPersonalWorkspaceUI() {
     }
 
     let cardDueBadge = '';
-    let cardBorderClass = it.isImportant ? 'border-amber-300 ring-1 ring-amber-300' : 'border-slate-200';
+    const isCardFinished = isPersonalTaskFinished(it);
+    const cardBorderClass = isCardFinished
+      ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
+      : 'bg-white border-slate-200/80 hover:border-slate-300';
     if (it.type === 'plan' && it.dueDate) {
       const t = calculatePlanTimelineStatus(it);
       cardDueBadge = `
@@ -24965,13 +24961,10 @@ function renderPersonalWorkspaceUI() {
           </span>
         </div>
       `;
-      if (t.rowTintClass && !it.selectedForReport) {
-        cardBorderClass = t.rowTintClass;
-      }
     }
 
     cardsHtml += `
-      <div class="bg-white border ${cardBorderClass} hover:border-amber-400 p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
+      <div class="border ${cardBorderClass} p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 flex-wrap">
