@@ -109,7 +109,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap"
     rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -1092,14 +1092,38 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Chuẩn hóa riêng font chữ cho Bảng Nhắc Nhở Công Việc Cần Làm (#personalTaskReminderModal) */
+    /* Chuẩn hóa riêng font chữ cho Bảng Nhắc Nhở Công Việc Cần Làm (#personalTaskReminderModal)
+       Sử dụng 'Plus Jakarta Sans' kết hợp 'Inter': Chữ tròn trịa, thanh thoát, mềm mại hiện đại chuẩn UI quốc tế */
     #personalTaskReminderModal,
-    #personalTaskReminderModal button {
-      font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    #personalTaskReminderModal button,
+    #personalTaskReminderModal input,
+    #personalTaskReminderModal select,
+    #personalTaskReminderModal span,
+    #personalTaskReminderModal div,
+    #personalTaskReminderModal p,
+    #personalTaskReminderModal h3,
+    #personalTaskReminderModal b {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
-      font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1, "zero" 0;
+    }
+
+    /* Đảm bảo Font Awesome bên trong Modal không bị ghi đè font */
+    #personalTaskReminderModal i[class*="fa-"],
+    #personalTaskReminderModal .fa,
+    #personalTaskReminderModal .fa-solid,
+    #personalTaskReminderModal .fa-regular,
+    #personalTaskReminderModal .fa-brands {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+
+    #personalTaskReminderModal .font-num,
+    #personalTaskReminderModal .tabular-nums {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
     }
 
     /* ================= ĐỒNG BỘ HIỆU ỨNG NÚT "X" ĐÓNG BẢNG / MODAL TOÀN CHƯƠNG TRÌNH ================= */
@@ -23966,7 +23990,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           listEl.innerHTML = displayItems.map((it, idx) => {
             // Chỉ dùng màu cho việc khẩn cấp (quá hạn / đến hạn hôm nay = đỏ; còn ≤ 2 ngày = cam). Còn lại trung tính.
             // Định dạng tag gọn gàng, in nghiêng vừa vặn để dành tối đa không gian hiển thị tiêu đề công việc
-            const tagBase = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic ';
+            const tagBase = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic font-medium ';
             const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/80 font-normal';
             let tag = '';
             if (it.type === 'plan') {
@@ -23991,19 +24015,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
             const dateText = it.date ? formatVNDate(it.date) : 'Đang theo dõi';
 
-            // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú
+            // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú (Thiết kế thanh thoát, hiện đại)
             return (
-              '<div class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-50/40 border border-slate-200/90 hover:border-amber-400 transition-all cursor-pointer group select-none shadow-2xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
+              '<div class="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-amber-50/30 border border-slate-200/80 hover:border-amber-300 transition-all duration-150 cursor-pointer group select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
               '<div class="flex items-center gap-2">' +
-              '<span class="w-5 shrink-0 text-xs font-semibold text-slate-400 text-right font-num tabular-nums">' + (idx + 1) + '.</span>' +
-              '<div class="flex-1 min-w-0 truncate font-semibold text-[13.5px] sm:text-[14px] text-slate-800 group-hover:text-amber-900 leading-snug" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
-              (it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0" title="Mục quan trọng"></i>' : '') +
+              '<span class="w-5 shrink-0 text-[11.5px] font-medium text-slate-400 text-right font-num tabular-nums">' + (idx + 1) + '.</span>' +
+              '<div class="flex-1 min-w-0 truncate font-semibold text-[13.5px] text-slate-800 group-hover:text-amber-800 leading-snug tracking-[-0.01em]" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
+              (it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0 drop-shadow-2xs" title="Mục quan trọng"></i>' : '') +
               tag +
-              '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-amber-500 shrink-0"></i>' +
+              '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-amber-500 shrink-0 transition-transform group-hover:translate-x-0.5"></i>' +
               '</div>' +
-              '<div class="pl-7 mt-1 flex items-center gap-1.5 text-[12px] text-slate-600 min-w-0 leading-normal">' +
-              '<span class="shrink-0 text-slate-500 font-medium font-num tabular-nums">' + dateText + '</span>' +
-              (it.content ? '<span class="text-slate-300">•</span><span class="truncate text-slate-600" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
+              '<div class="pl-7 mt-1 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0 leading-normal font-normal">' +
+              '<span class="shrink-0 text-slate-400 font-num tabular-nums">' + dateText + '</span>' +
+              (it.content ? '<span class="text-slate-300">•</span><span class="truncate text-slate-500" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
               '</div>' +
               '</div>'
             );
