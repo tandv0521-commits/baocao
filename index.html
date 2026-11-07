@@ -2287,11 +2287,7 @@
             </div>
 
             <!-- BADGE CHỈ BÁO REALTIME (MẶC ĐỊNH ẨN HOÀN TOÀN, CHỈ HIỆN 3 GIÂY KHI CÓ ĐỒNG NGHIỆP CẬP NHẬT) -->
-            <div id="matrixRealtimeSyncBadge"
-              class="hidden items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 ring-2 ring-amber-300/70 text-[10px] sm:text-[11px] font-bold shadow-xs transition-all duration-300 shrink-0">
-              <span id="matrixRealtimeSyncDot" class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-              <span id="matrixRealtimeSyncText"></span>
-            </div>
+            <!-- ĐÃ LOẠI BỎ THÔNG BÁO Ở GÓC MÀN HÌNH ĐỂ TRÁNH LẶP LẠI (CHỈ DÙNG THÔNG BÁO NỔI TRÊN MÀN HÌNH) -->
 
             <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
               <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
@@ -6543,8 +6539,7 @@
   </div>
 
   <!-- TOAST THÔNG BÁO DOANH NGHIỆP HIỆN ĐẠI (NỀN TRẮNG SỨ SANG TRỌNG, THẨM MỸ CAO) -->
-  <div id="toastNotification"
-    class="fixed top-5 inset-x-4 sm:inset-x-auto sm:right-6 z-[130] flex justify-center sm:justify-end transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none select-none">
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-[130] w-auto max-w-[92vw] flex justify-center transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none select-none">
     <div id="toastBox"
       class="bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(0,0,0,0.12),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl">
       <div id="toastIconBox"
@@ -8618,6 +8613,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         box.className = "bg-white/95 border border-rose-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(244,63,94,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
         if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-600 text-sm";
         if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs";
+      } else if (typeof msg === 'string' && msg.startsWith('⚡')) {
+        box.className = "bg-gradient-to-r from-amber-50/95 via-white to-amber-50/95 border-2 border-amber-400 text-amber-950 px-5 py-3 rounded-2xl shadow-[0_16px_40px_-6px_rgba(245,158,11,0.25),0_6px_16px_-2px_rgba(0,0,0,0.08)] ring-4 ring-amber-300/40 flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
+        if (icon) icon.className = "fa-solid fa-bolt-lightning text-amber-500 text-base animate-bounce";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0 shadow-xs";
       } else {
         box.className = "bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(16,185,129,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
         if (icon) icon.className = "fa-solid fa-circle-check text-emerald-600 text-sm";
@@ -8630,7 +8629,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       window._toastTimeout = setTimeout(() => {
         toast.classList.add('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
         toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 3500);
+      }, (typeof msg === 'string' && msg.startsWith('⚡')) ? 4500 : 3500);
     }
 
     function switchLoginTab(tab) {
@@ -14163,47 +14162,28 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME: TOAST NỔI BẬT + NHÃN NHÁY SÁNG THANH CÔNG CỤ
     let _lastLiveSyncToastTime = 0;
     function showLiveSyncIndicator(senderName = '', targetMonth = null, targetYear = null) {
-      // 1. Phân quyền: Nhân viên bình thường không thấy nháy sáng (số liệu vẫn tự động nhảy ngầm)
+      // 1. Phân quyền: Chỉ Ban Giám Đốc, Quản lý & Admin mới nhận thông báo nổi; Nhân viên bình thường không thấy
       if (!canUserSeeLiveSyncNotification(currentUser)) {
         return;
       }
 
-      // 2. Bỏ qua nếu từ hệ thống/máy chủ
+      // 2. Bỏ qua nếu không có tên hoặc từ hệ thống máy chủ
       if (!senderName || ['máy chủ', 'hệ thống', 'hệ thống phân công'].includes(String(senderName).toLowerCase())) {
         return;
       }
 
       const displayName = resolveStaffFullName(senderName);
-      const shortName = displayName.length > 20 ? displayName.substring(0, 20) + '...' : displayName;
+      const shortName = displayName.length > 22 ? displayName.substring(0, 22) + '...' : displayName;
       const periodStr = (targetMonth && targetYear) ? ` (Tháng ${targetMonth}/${targetYear})` : '';
 
-      // 3. Hiện Toast nổi bật trên màn hình để Admin/Quản lý nhận biết tức thì dù đang ở bất kỳ vị trí nào
+      // 3. HIỆN DUY NHẤT THÔNG BÁO NỔI (TOAST ALERT) NGAY TRÊN MÀN HÌNH
+      // Đã loại bỏ thông báo nháy sáng ở góc màn hình / thanh công cụ ma trận để tránh lặp lại quá nhiều
       const now = Date.now();
       if (now - _lastLiveSyncToastTime > 1500) {
         _lastLiveSyncToastTime = now;
         if (typeof showToast === 'function') {
           showToast(`⚡ ${shortName} vừa cập nhật báo cáo công việc${periodStr}!`, false);
         }
-      }
-
-      // 4. Nháy sáng nhãn chỉ báo trên thanh công cụ ma trận
-      const badge = document.getElementById('matrixRealtimeSyncBadge');
-      const badgeText = document.getElementById('matrixRealtimeSyncText');
-      const badgeDot = document.getElementById('matrixRealtimeSyncDot');
-
-      if (badge && badgeText && badgeDot) {
-        badge.classList.remove('hidden');
-        badge.classList.add('inline-flex', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
-        badgeDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
-        badgeText.innerText = `⚡ ${shortName} vừa cập nhật báo cáo${periodStr}`;
-
-        if (window._syncBadgeTimer) clearTimeout(window._syncBadgeTimer);
-        window._syncBadgeTimer = setTimeout(() => {
-          badge.classList.add('hidden');
-          badge.classList.remove('inline-flex', 'bg-amber-100', 'text-amber-900', 'border-amber-300', 'ring-2', 'ring-amber-300/70', 'shadow-xs', 'scale-[1.03]');
-          badgeText.innerText = "";
-          window._syncBadgeTimer = null;
-        }, 4000);
       }
     }
 
