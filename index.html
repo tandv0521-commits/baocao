@@ -5129,13 +5129,13 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
     </div>
   </div>
 
-  <!-- TOAST THÔNG BÁO DOANH NGHIỆP HIỆN ĐẠI -->
+  <!-- TOAST THÔNG BÁO DOANH NGHIỆP HIỆN ĐẠI (NỀN TRẮNG SỨ SANG TRỌNG, THẨM MỸ CAO) -->
   <div id="toastNotification" class="fixed top-5 inset-x-4 sm:inset-x-auto sm:right-6 z-[130] flex justify-center sm:justify-end transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none select-none">
-    <div id="toastBox" class="bg-slate-900/95 border border-emerald-400/50 text-white px-4 py-3 rounded-2xl shadow-2xl shadow-emerald-950/60 flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl">
-      <div id="toastIconBox" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+    <div id="toastBox" class="bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(0,0,0,0.12),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl">
+      <div id="toastIconBox" class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
       </div>
-      <span id="toastMsg" class="font-semibold leading-snug">Thông báo</span>
+      <span id="toastMsg" class="font-bold text-slate-800 leading-snug">Thông báo</span>
     </div>
   </div>
 
@@ -7178,13 +7178,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       text.innerText = msg;
       if (isError) {
-        box.className = "bg-slate-900/95 border border-rose-400/50 text-white px-4 py-3 rounded-2xl shadow-2xl shadow-rose-950/60 flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
-        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-400 text-sm";
-        if (iconBox) iconBox.className = "w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center shrink-0";
+        box.className = "bg-white/95 border border-rose-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(244,63,94,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
+        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-600 text-sm";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs";
       } else {
-        box.className = "bg-slate-900/95 border border-emerald-400/50 text-white px-4 py-3 rounded-2xl shadow-2xl shadow-emerald-950/60 flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
-        if (icon) icon.className = "fa-solid fa-circle-check text-emerald-400 text-sm";
-        if (iconBox) iconBox.className = "w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0";
+        box.className = "bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(16,185,129,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
+        if (icon) icon.className = "fa-solid fa-circle-check text-emerald-600 text-sm";
+        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs";
       }
 
       toast.classList.remove('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
@@ -29454,22 +29454,22 @@ function exportPersonalWorkspaceToExcel() {
     function showLiveLoginToast(log) {
       const toastContainer = document.getElementById('toastContainer') || document.body;
       const toast = document.createElement('div');
-      toast.className = 'fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 bg-slate-900/95 text-white rounded-2xl shadow-2xl border border-emerald-500/50 backdrop-blur-md animate-in slide-in-from-bottom-5 duration-300 pointer-events-auto max-w-sm';
+      toast.className = 'fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3.5 bg-white/95 text-slate-800 rounded-2xl shadow-[0_12px_35px_-4px_rgba(0,0,0,0.12),0_4px_12px_-2px_rgba(0,0,0,0.06)] border border-slate-200/90 backdrop-blur-xl animate-in slide-in-from-bottom-5 duration-300 pointer-events-auto max-w-sm';
       toast.innerHTML = `
-        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
-          <i class="fa-solid fa-bolt-lightning text-sm animate-pulse"></i>
+        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
+          <i class="fa-solid fa-bolt-lightning text-sm text-emerald-600 animate-pulse"></i>
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-black text-white flex items-center gap-1.5 truncate">
+          <p class="text-xs font-black text-slate-800 flex items-center gap-1.5 truncate">
             <span>${escapeHtml(log.full_name || log.username)}</span>
-            <span class="text-[10px] font-mono text-emerald-400">(@${escapeHtml(log.username)})</span>
+            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">@${escapeHtml(log.username)}</span>
           </p>
-          <p class="text-[11px] text-slate-300 truncate">
-            <span class="text-emerald-400 font-semibold">${escapeHtml(log.status || 'Đăng nhập')}</span> • ${escapeHtml(log.device_type || 'Thiết bị')} (${escapeHtml(log.ip_address || 'IP')})
+          <p class="text-[11px] text-slate-500 truncate mt-0.5">
+            <span class="text-emerald-700 font-bold">${escapeHtml(log.status || 'Đăng nhập')}</span> • ${escapeHtml(log.device_type || 'Thiết bị')} (${escapeHtml(log.ip_address || 'IP')})
           </p>
         </div>
-        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-1 text-xs shrink-0 cursor-pointer">
-          <i class="fa-solid fa-xmark"></i>
+        <button onclick="this.parentElement.remove()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0">
+          <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       `;
       toastContainer.appendChild(toast);
