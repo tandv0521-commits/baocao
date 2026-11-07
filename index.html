@@ -6538,15 +6538,15 @@
     </div>
   </div>
 
-  <!-- TOAST THÔNG BÁO DOANH NGHIỆP HIỆN ĐẠI (NỀN TRẮNG SỨ SANG TRỌNG, THẨM MỸ CAO) -->
-  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-[130] w-auto max-w-[92vw] flex justify-center transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none select-none">
+  <!-- TOAST THÔNG BÁO DOANH NGHIỆP HIỆN ĐẠI (SLIM PILL CAPSULE) -->
+  <div id="toastNotification" class="fixed top-2.5 left-1/2 -translate-x-1/2 z-[130] w-auto max-w-[95vw] flex justify-center transform transition-all duration-300 translate-y-[-80px] opacity-0 pointer-events-none select-none">
     <div id="toastBox"
-      class="bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(0,0,0,0.12),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl">
+      class="bg-white/95 border border-slate-200 text-slate-700 px-3 py-1 rounded-full shadow-sm flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md">
       <div id="toastIconBox"
-        class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+        class="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+        <i id="toastIcon" class="fa-solid fa-check text-[9px] text-emerald-600"></i>
       </div>
-      <span id="toastMsg" class="font-bold text-slate-800 leading-snug">Thông báo</span>
+      <span id="toastMsg" class="text-[11px] sm:text-xs font-medium text-slate-700 whitespace-nowrap">Thông báo</span>
     </div>
   </div>
 
@@ -8610,26 +8610,30 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       text.innerText = msg;
       if (isError) {
-        box.className = "bg-white/95 border border-rose-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(244,63,94,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
-        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-600 text-sm";
-        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs";
+        box.className = "bg-white/98 border border-rose-200 text-rose-900 px-3 py-1 rounded-full shadow-sm flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150";
+        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-rose-600 text-[9px]";
+        if (iconBox) iconBox.className = "w-4 h-4 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0";
+        text.className = "text-[11px] sm:text-xs font-medium text-rose-900 whitespace-nowrap";
       } else if (typeof msg === 'string' && msg.startsWith('⚡')) {
-        box.className = "bg-gradient-to-r from-amber-50/95 via-white to-amber-50/95 border-2 border-amber-400 text-amber-950 px-5 py-3 rounded-2xl shadow-[0_16px_40px_-6px_rgba(245,158,11,0.25),0_6px_16px_-2px_rgba(0,0,0,0.08)] ring-4 ring-amber-300/40 flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
-        if (icon) icon.className = "fa-solid fa-bolt-lightning text-amber-500 text-base animate-bounce";
-        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0 shadow-xs";
+        // Thông báo đồng bộ thời gian thực: Thon gọn, viền mảnh hổ phách, chữ vừa vặn tinh tế
+        box.className = "bg-white/98 border border-amber-300/80 text-slate-800 px-3.5 py-1 rounded-full shadow-sm shadow-amber-950/5 flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150";
+        if (icon) icon.className = "fa-solid fa-bolt text-amber-500 text-[10px]";
+        if (iconBox) iconBox.className = "w-4 h-4 rounded-full bg-amber-100/90 text-amber-700 flex items-center justify-center shrink-0";
+        text.className = "text-[11.5px] sm:text-xs font-medium text-slate-800 whitespace-nowrap";
       } else {
-        box.className = "bg-white/95 border border-emerald-300/90 text-slate-800 px-4 py-3 rounded-2xl shadow-[0_12px_35px_-4px_rgba(16,185,129,0.15),0_4px_12px_-2px_rgba(0,0,0,0.06)] flex items-center gap-3 text-xs sm:text-sm backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200";
-        if (icon) icon.className = "fa-solid fa-circle-check text-emerald-600 text-sm";
-        if (iconBox) iconBox.className = "w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs";
+        box.className = "bg-white/98 border border-slate-200 text-slate-700 px-3 py-1 rounded-full shadow-sm flex items-center gap-2 text-[11px] sm:text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150";
+        if (icon) icon.className = "fa-solid fa-check text-emerald-600 text-[9px]";
+        if (iconBox) iconBox.className = "w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0";
+        text.className = "text-[11px] sm:text-xs font-medium text-slate-700 whitespace-nowrap";
       }
 
-      toast.classList.remove('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-[-80px]', 'translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
       toast.classList.add('translate-y-0', 'opacity-100');
       if (window._toastTimeout) clearTimeout(window._toastTimeout);
       window._toastTimeout = setTimeout(() => {
-        toast.classList.add('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
+        toast.classList.add('translate-y-[-80px]', 'opacity-0', 'pointer-events-none');
         toast.classList.remove('translate-y-0', 'opacity-100');
-      }, (typeof msg === 'string' && msg.startsWith('⚡')) ? 4500 : 3500);
+      }, (typeof msg === 'string' && msg.startsWith('⚡')) ? 3800 : 2800);
     }
 
     function switchLoginTab(tab) {
@@ -14173,16 +14177,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const displayName = resolveStaffFullName(senderName);
-      const shortName = displayName.length > 22 ? displayName.substring(0, 22) + '...' : displayName;
-      const periodStr = (targetMonth && targetYear) ? ` (Tháng ${targetMonth}/${targetYear})` : '';
+      const shortName = displayName.length > 20 ? displayName.substring(0, 20) + '...' : displayName;
+      const periodStr = targetMonth ? ` (T${targetMonth})` : '';
 
-      // 3. HIỆN DUY NHẤT THÔNG BÁO NỔI (TOAST ALERT) NGAY TRÊN MÀN HÌNH
-      // Đã loại bỏ thông báo nháy sáng ở góc màn hình / thanh công cụ ma trận để tránh lặp lại quá nhiều
+      // 3. Hiện duy nhất Thông báo nổi thon gọn nhẹ nhàng ngay trên đỉnh màn hình
       const now = Date.now();
       if (now - _lastLiveSyncToastTime > 1500) {
         _lastLiveSyncToastTime = now;
         if (typeof showToast === 'function') {
-          showToast(`⚡ ${shortName} vừa cập nhật báo cáo công việc${periodStr}!`, false);
+          showToast(`⚡ ${shortName} vừa cập nhật báo cáo${periodStr}`, false);
         }
       }
     }
