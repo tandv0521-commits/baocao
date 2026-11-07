@@ -1109,10 +1109,7 @@
       }
     }
 
-    /* Chuẩn hóa font chữ và định dạng giao diện sổ tay, hộp thư báo cáo */
-    #personalWorkspacePageView,
-    #personalWorkspaceEntryCard,
-    #personalItemEditModal,
+    /* Chuẩn hóa font chữ và định dạng giao diện các hộp thoại báo cáo */
     #leadershipReportsBoxModal,
     #leadershipReportPreviewModal,
     #confirmReReportModal,
@@ -1125,6 +1122,35 @@
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Chuẩn hóa font chữ Sổ tay công việc & Bảng danh sách công việc:
+       Sử dụng 'Plus Jakarta Sans' kết hợp 'Inter': Nét chữ tròn trịa, thanh thoát, hiện đại, cực kỳ dễ nhìn */
+    #personalWorkspacePageView,
+    #personalWorkspaceEntryCard,
+    #personalItemEditModal,
+    #personalWorkspacePageView .pw-desktop-flex,
+    #personalWorkspacePageView #pwItemsList {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Đảm bảo Font Awesome bên trong Sổ tay không bị ghi đè font */
+    #personalWorkspacePageView i[class*="fa-"],
+    #personalWorkspacePageView .fa,
+    #personalWorkspacePageView .fa-solid,
+    #personalWorkspacePageView .fa-regular {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+
+    #personalWorkspacePageView .font-num,
+    #personalWorkspacePageView .tabular-nums {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
     }
 
     /* Chuẩn hóa riêng font chữ cho Bảng Nhắc Nhở Công Việc Cần Làm (#personalTaskReminderModal)
@@ -26155,12 +26181,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA): TIÊU ĐỀ, NỘI DUNG CHI TIẾT, DẤU HIỆU ĐÃ GỬI -->
             <div class="flex-1 min-w-0 space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <div class="font-bold text-slate-900 text-sm cursor-pointer hover:text-amber-800 transition leading-snug break-words" onclick="openPersonalItemEditModal('${it.id}')">
+                <div class="font-semibold text-slate-800 hover:text-amber-800 text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
                   ${escapeHtml(it.title)}
                 </div>
                 ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
               </div>
-              ${it.content ? `<p class="text-xs text-slate-600 leading-relaxed break-words font-normal">${escapeHtml(it.content)}</p>` : ''}
+              ${it.content ? `<p class="text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
               ${fbSnippet}
             </div>
           </div>
@@ -26212,16 +26238,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     ` : '';
 
         container.innerHTML = activeFilterBannerHtml + `
-      <div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none">
+      <div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2.5 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 border border-slate-200/90 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-slate-600 select-none shadow-2xs">
         <div class="flex items-center gap-3 flex-1 min-w-0">
-          <span class="w-[48px] shrink-0 text-center">Chọn</span>
-          <span class="w-[94px] shrink-0">Phân loại</span>
-          <span class="flex-1 min-w-0">Nội dung công việc</span>
+          <span class="w-[48px] shrink-0 text-center text-slate-500 font-bold">Chọn</span>
+          <span class="w-[94px] shrink-0 text-slate-500 font-bold">Phân loại</span>
+          <span class="flex-1 min-w-0 text-slate-700 font-extrabold">Nội dung công việc</span>
         </div>
         <div class="flex items-center justify-end gap-3 shrink-0">
-          <span class="w-[254px] shrink-0">Thời gian &amp; Hạn thực hiện</span>
-          <span class="w-[132px] shrink-0 text-center">Trạng thái</span>
-          <span class="w-[68px] shrink-0 text-center">Thao tác</span>
+          <span class="w-[254px] shrink-0 text-slate-500 font-bold">Thời gian &amp; Hạn thực hiện</span>
+          <span class="w-[132px] shrink-0 text-center text-slate-500 font-bold">Trạng thái</span>
+          <span class="w-[68px] shrink-0 text-center text-slate-500 font-bold">Thao tác</span>
         </div>
       </div>
       <div class="flex flex-col space-y-2 w-full pt-0.5">
