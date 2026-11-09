@@ -2594,15 +2594,15 @@
 
         <!-- HEADER TRANG SỔ TAY -->
         <div
-          class="px-4 sm:px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
-          <div class="flex items-center gap-3 min-w-0">
+          class="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div
-              class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-amber-500/30 flex-shrink-0">
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-sm shadow-amber-500/30 flex-shrink-0">
               <i class="fa-solid fa-book-bookmark"></i>
             </div>
             <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-slate-900 font-black text-sm sm:text-base leading-tight">Sổ Tay Công Việc &amp; Kế Hoạch
+              <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h3 class="text-slate-900 font-black text-[13.5px] sm:text-base leading-tight">Sổ Tay Công Việc &amp; Kế Hoạch
                   Cá Nhân</h3>
                 <span
                   class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Trang
@@ -2615,7 +2615,7 @@
                   <span id="pwSyncCloudText">Đồng bộ Supabase Cloud</span>
                 </button>
               </div>
-              <p class="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+              <p class="text-[11px] text-slate-500 font-medium leading-snug sm:truncate mt-0.5">
                 Họ tên: <span id="pwUserFullName" class="font-bold text-slate-800">---</span> •
                 Bộ phận: <span id="pwUserDept" class="text-slate-600 font-semibold">---</span> •
                 Chức vụ: <span id="pwUserRole" class="text-emerald-700 font-bold">---</span>
@@ -2623,10 +2623,10 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 flex-wrap">
+          <div class="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 flex-shrink-0">
             <!-- Nút Thêm Công Việc mới -->
             <button type="button" onclick="openAddPersonalItemModal()"
-              class="px-3 sm:px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-xs shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer"
+              class="px-2.5 sm:px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-xs shadow-amber-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               title="Thêm công việc / kế hoạch / đề xuất mới vào sổ tay">
               <i class="fa-solid fa-plus text-xs"></i>
               <span>Thêm Công Việc</span>
@@ -2634,7 +2634,7 @@
 
             <!-- Nút Hộp thư báo cáo / Lịch sử gửi -->
             <button type="button" onclick="openLeadershipReportsBoxModal()"
-              class="relative px-3 sm:px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              class="relative px-2.5 sm:px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
               title="Xem lịch sử các lần đẩy báo cáo & hộp thư tiếp nhận">
               <i class="fa-solid fa-inbox text-slate-600 text-xs"></i>
               <span id="pwInboxBtnText">Hộp thư báo cáo</span>
@@ -2644,125 +2644,124 @@
           </div>
         </div>
 
-        <!-- THANH THỐNG KÊ NHANH 5 NHÓM MỤC -->
-        <div class="px-4 sm:px-6 py-2 bg-slate-50 border-b border-slate-200 flex-shrink-0">
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs flex-shrink-0">
+        <!-- THANH THỐNG KÊ NHANH 5 NHÓM MỤC (Gọn gàng 2 hàng cân đối trên Mobile: 3 thẻ trên + 2 thẻ dưới; giữ nguyên 5 cột trên Desktop) -->
+        <div class="px-3 sm:px-6 py-2 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+          <div class="grid grid-cols-6 sm:grid-cols-5 gap-1.5 sm:gap-2 text-xs flex-shrink-0">
             <!-- 1. Việc phát sinh -->
             <div id="pwSummaryCard_adhoc" onclick="clickPersonalSummaryCard('adhoc')"
-              class="bg-white border border-slate-200/90 hover:border-amber-400 p-2.5 sm:p-3 rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
+              class="col-span-2 sm:col-span-1 bg-white border border-slate-200/90 hover:border-amber-400 px-2 py-1.5 sm:p-3 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
               title="Bấm để lọc việc phát sinh trong tháng">
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-center justify-between gap-1 sm:gap-1.5 mb-0.5 sm:mb-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
                   <span
-                    class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center text-[11px] shrink-0 group-hover:scale-105 transition"><i
+                    class="w-[18px] h-[18px] sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center text-[9.5px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-bolt"></i></span>
                   <span
-                    class="text-[10px] sm:text-[11px] text-slate-500 font-extrabold uppercase tracking-wide truncate">Phát
+                    class="text-[9.5px] sm:text-[11px] text-slate-600 sm:text-slate-500 font-extrabold uppercase tracking-tight sm:tracking-wide truncate">Phát
                     sinh</span>
                 </div>
                 <span
-                  class="text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num">Tổng
+                  class="text-[8.5px] sm:text-[10px] text-slate-500 font-bold bg-slate-100 px-1 sm:px-1.5 py-0.5 rounded sm:rounded-md border border-slate-200/60 shrink-0 font-num leading-none">Tổng
                   <span id="pwStatAdhocCount">0</span></span>
               </div>
-              <div class="flex items-baseline gap-1.5 pt-0.5">
+              <div class="flex items-baseline gap-1 sm:gap-1.5 pt-0.5">
                 <span id="pwStatAdhocPending"
-                  class="text-xl sm:text-2xl font-black text-amber-600 font-num tracking-tight leading-none">0</span>
-                <span class="text-[11px] font-bold text-amber-900/80 uppercase tracking-wider">chưa xong</span>
+                  class="text-[15px] sm:text-2xl font-black text-amber-600 font-num tracking-tight leading-none">0</span>
+                <span class="text-[9.5px] sm:text-[11px] font-bold text-amber-900/80 uppercase tracking-wide sm:tracking-wider whitespace-nowrap">chưa xong</span>
               </div>
             </div>
 
             <!-- 2. Kế hoạch / Lịch làm việc -->
             <div id="pwSummaryCard_plan" onclick="clickPersonalSummaryCard('plan')"
-              class="bg-white border border-slate-200/90 hover:border-sky-400 p-2.5 sm:p-3 rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
+              class="col-span-2 sm:col-span-1 bg-white border border-slate-200/90 hover:border-sky-400 px-2 py-1.5 sm:p-3 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
               title="Bấm để lọc lịch & kế hoạch">
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-center justify-between gap-1 sm:gap-1.5 mb-0.5 sm:mb-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
                   <span
-                    class="w-6 h-6 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center text-[11px] shrink-0 group-hover:scale-105 transition"><i
+                    class="w-[18px] h-[18px] sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center text-[9.5px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-calendar-days"></i></span>
                   <span
-                    class="text-[10px] sm:text-[11px] text-slate-500 font-extrabold uppercase tracking-wide truncate">Kế
+                    class="text-[9.5px] sm:text-[11px] text-slate-600 sm:text-slate-500 font-extrabold uppercase tracking-tight sm:tracking-wide truncate">Kế
                     hoạch</span>
                 </div>
                 <span
-                  class="text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num">Tổng
+                  class="text-[8.5px] sm:text-[10px] text-slate-500 font-bold bg-slate-100 px-1 sm:px-1.5 py-0.5 rounded sm:rounded-md border border-slate-200/60 shrink-0 font-num leading-none">Tổng
                   <span id="pwStatPlanCount">0</span></span>
               </div>
-              <div class="flex items-baseline gap-1.5 pt-0.5">
+              <div class="flex items-baseline gap-1 sm:gap-1.5 pt-0.5">
                 <span id="pwStatPlanPending"
-                  class="text-xl sm:text-2xl font-black text-sky-600 font-num tracking-tight leading-none">0</span>
-                <span class="text-[11px] font-bold text-sky-900/80 uppercase tracking-wider">chưa xong</span>
+                  class="text-[15px] sm:text-2xl font-black text-sky-600 font-num tracking-tight leading-none">0</span>
+                <span class="text-[9.5px] sm:text-[11px] font-bold text-sky-900/80 uppercase tracking-wide sm:tracking-wider whitespace-nowrap">chưa xong</span>
               </div>
             </div>
 
             <!-- 3. Đề xuất -->
             <div id="pwSummaryCard_proposal" onclick="clickPersonalSummaryCard('proposal')"
-              class="bg-white border border-slate-200/90 hover:border-purple-400 p-2.5 sm:p-3 rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
+              class="col-span-2 sm:col-span-1 bg-white border border-slate-200/90 hover:border-purple-400 px-2 py-1.5 sm:p-3 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
               title="Bấm để lọc sáng kiến & đề xuất kiến nghị">
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-center justify-between gap-1 sm:gap-1.5 mb-0.5 sm:mb-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
                   <span
-                    class="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center text-[11px] shrink-0 group-hover:scale-105 transition"><i
+                    class="w-[18px] h-[18px] sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center text-[9.5px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-lightbulb"></i></span>
                   <span
-                    class="text-[10px] sm:text-[11px] text-slate-500 font-extrabold uppercase tracking-wide truncate">Đề
+                    class="text-[9.5px] sm:text-[11px] text-slate-600 sm:text-slate-500 font-extrabold uppercase tracking-tight sm:tracking-wide truncate">Đề
                     xuất</span>
                 </div>
                 <span
-                  class="text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num">Tổng
+                  class="text-[8.5px] sm:text-[10px] text-slate-500 font-bold bg-slate-100 px-1 sm:px-1.5 py-0.5 rounded sm:rounded-md border border-slate-200/60 shrink-0 font-num leading-none">Tổng
                   <span id="pwStatProposalCount">0</span></span>
               </div>
-              <div class="flex items-baseline gap-1.5 pt-0.5">
+              <div class="flex items-baseline gap-1 sm:gap-1.5 pt-0.5">
                 <span id="pwStatProposalPending"
-                  class="text-xl sm:text-2xl font-black text-purple-600 font-num tracking-tight leading-none">0</span>
-                <span class="text-[11px] font-bold text-purple-900/80 uppercase tracking-wider">chưa duyệt</span>
+                  class="text-[15px] sm:text-2xl font-black text-purple-600 font-num tracking-tight leading-none">0</span>
+                <span class="text-[9.5px] sm:text-[11px] font-bold text-purple-900/80 uppercase tracking-wide sm:tracking-wider whitespace-nowrap">chưa duyệt</span>
               </div>
             </div>
 
             <!-- 4. Ý kiến & Phản ánh -->
             <div id="pwSummaryCard_feedback" onclick="clickPersonalSummaryCard('feedback')"
-              class="bg-white border border-slate-200/90 hover:border-teal-400 p-2.5 sm:p-3 rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
+              class="col-span-3 sm:col-span-1 bg-white border border-slate-200/90 hover:border-teal-400 px-2.5 py-1.5 sm:p-3 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
               title="Bấm để lọc ý kiến & phản ánh khó khăn">
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-center justify-between gap-1 sm:gap-1.5 mb-0.5 sm:mb-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
                   <span
-                    class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 border border-teal-200/60 flex items-center justify-center text-[11px] shrink-0 group-hover:scale-105 transition"><i
+                    class="w-[18px] h-[18px] sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-teal-50 text-teal-600 border border-teal-200/60 flex items-center justify-center text-[9.5px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-comment-dots"></i></span>
                   <span
-                    class="text-[10px] sm:text-[11px] text-slate-500 font-extrabold uppercase tracking-wide truncate">Ý
+                    class="text-[9.5px] sm:text-[11px] text-slate-600 sm:text-slate-500 font-extrabold uppercase tracking-tight sm:tracking-wide truncate">Ý
                     kiến / Phản ánh</span>
                 </div>
                 <span
-                  class="text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num">Tổng
+                  class="text-[8.5px] sm:text-[10px] text-slate-500 font-bold bg-slate-100 px-1 sm:px-1.5 py-0.5 rounded sm:rounded-md border border-slate-200/60 shrink-0 font-num leading-none">Tổng
                   <span id="pwStatFeedbackCount">0</span></span>
               </div>
-              <div class="flex items-baseline gap-1.5 pt-0.5">
+              <div class="flex items-baseline gap-1 sm:gap-1.5 pt-0.5">
                 <span id="pwStatFeedbackPending"
-                  class="text-xl sm:text-2xl font-black text-teal-600 font-num tracking-tight leading-none">0</span>
-                <span class="text-[11px] font-bold text-teal-900/80 uppercase tracking-wider">chưa xong</span>
+                  class="text-[15px] sm:text-2xl font-black text-teal-600 font-num tracking-tight leading-none">0</span>
+                <span class="text-[9.5px] sm:text-[11px] font-bold text-teal-900/80 uppercase tracking-wide sm:tracking-wider whitespace-nowrap">chưa xong</span>
               </div>
             </div>
 
             <!-- 5. Mục quan trọng (Ghim nhắc nhở) -->
             <div id="pwSummaryCard_important" onclick="clickPersonalSummaryCard('important')"
-              class="bg-gradient-to-r from-amber-50/90 to-orange-50/90 border border-amber-300 hover:border-amber-400 p-2.5 sm:p-3 rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
+              class="col-span-3 sm:col-span-1 bg-gradient-to-r from-amber-50/90 to-orange-50/90 border border-amber-300 hover:border-amber-400 px-2.5 py-1.5 sm:p-3 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group"
               title="Bấm để lọc các mục quan trọng đã đánh dấu ⭐">
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div class="flex items-center justify-between gap-1 sm:gap-1.5 mb-0.5 sm:mb-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
                   <span
-                    class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-[11px] shrink-0 group-hover:scale-110 transition shadow-xs"><i
+                    class="w-[18px] h-[18px] sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500 text-white flex items-center justify-center text-[9.5px] sm:text-[11px] shrink-0 group-hover:scale-110 transition shadow-xs"><i
                       class="fa-solid fa-star"></i></span>
-                  <span class="text-[10px] sm:text-[11px] text-amber-900 font-black uppercase tracking-wide truncate">⭐
-                    Quan trọng</span>
+                  <span class="text-[9.5px] sm:text-[11px] text-amber-900 font-black uppercase tracking-tight sm:tracking-wide truncate"><span class="hidden sm:inline">⭐ </span>Quan trọng</span>
                 </div>
                 <span
-                  class="text-[10px] text-amber-800 font-bold bg-amber-100/80 px-1.5 py-0.5 rounded-md border border-amber-200 shrink-0 font-num">Tổng
+                  class="text-[8.5px] sm:text-[10px] text-amber-800 font-bold bg-amber-100/80 px-1 sm:px-1.5 py-0.5 rounded sm:rounded-md border border-amber-200 shrink-0 font-num leading-none">Tổng
                   <span id="pwStatImportantCount">0</span></span>
               </div>
-              <div class="flex items-baseline gap-1.5 pt-0.5">
+              <div class="flex items-baseline gap-1 sm:gap-1.5 pt-0.5">
                 <span id="pwStatImportantPending"
-                  class="text-xl sm:text-2xl font-black text-rose-600 font-num tracking-tight leading-none">0</span>
-                <span class="text-[11px] font-bold text-rose-900 uppercase tracking-wider">chưa làm</span>
+                  class="text-[15px] sm:text-2xl font-black text-rose-600 font-num tracking-tight leading-none">0</span>
+                <span class="text-[9.5px] sm:text-[11px] font-bold text-rose-900 uppercase tracking-wide sm:tracking-wider whitespace-nowrap">chưa làm</span>
               </div>
             </div>
           </div>
@@ -2787,10 +2786,10 @@
 
         <!-- BỘ LỌC THEO TAB VÀ TÌM KIẾM -->
         <div
-          class="px-4 sm:px-6 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 bg-white">
-          <!-- 5 Tab lọc với thống kê tổng việc & số việc chưa xong -->
+          class="px-3 sm:px-6 py-2 border-b border-slate-200 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2 sm:gap-2.5 flex-shrink-0 bg-white">
+          <!-- 6 Tab lọc với thống kê tổng việc & số việc chưa xong -->
           <div
-            class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            class="flex items-center gap-1.5 overflow-x-auto py-0.5 sm:py-1 w-full sm:w-auto sm:flex-1 sm:min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <!-- 1. Tất cả -->
             <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')"
               class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold">
@@ -2825,7 +2824,7 @@
               <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
               <span>Lịch &amp; Kế hoạch</span>
               <span id="pwTabCount_plan"
-                class="px-2 py-0.5 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
+                class="px-2 py-0.5 rounded-xl text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
             </button>
 
             <!-- 5. Đề xuất -->
@@ -2848,9 +2847,9 @@
           </div>
 
           <!-- Các nút công cụ bổ trợ và tìm kiếm -->
-          <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto shrink-0">
             <!-- Chuyển đổi hiển thị Bảng / Thẻ -->
-            <div class="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs">
+            <div class="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs shrink-0">
               <button type="button" id="pwViewModeBtn_table" onclick="setPersonalWorkspaceViewMode('table')"
                 class="px-2.5 py-1 rounded-lg font-bold text-slate-700 hover:bg-white transition cursor-pointer shadow-2xs"
                 title="Xem dạng bảng dòng danh mục rộng rãi">
@@ -2865,23 +2864,23 @@
 
             <!-- Nút bật tắt lọc nhanh Quan trọng (⭐) -->
             <button type="button" id="pwFilterBtn_important" onclick="togglePersonalWorkspaceFilterImportant()"
-              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-600 flex items-center justify-center transition cursor-pointer border border-slate-200"
+              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0"
               title="Chỉ hiện các mục quan trọng (⭐)">
               <i class="fa-solid fa-star text-xs"></i>
             </button>
 
             <!-- Nút bật tắt lọc việc Đến hạn / Quá hạn -->
             <button type="button" id="pwFilterBtn_due" onclick="togglePersonalWorkspaceFilterDue()"
-              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200"
+              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0"
               title="Chỉ hiện kế hoạch đến hạn hoặc quá hạn">
               <i class="fa-solid fa-clock text-xs"></i>
             </button>
 
             <!-- Bộ lọc báo cáo & công việc theo tháng -->
-            <div class="relative flex items-center shrink-0">
+            <div class="relative flex items-center flex-1 sm:flex-initial min-w-[140px] shrink-0">
               <i class="fa-regular fa-calendar-days absolute left-2.5 text-amber-600 text-xs pointer-events-none"></i>
               <select id="pwMonthFilterSelect" onchange="onPersonalWorkspaceMonthFilterChange(this.value)"
-                class="pl-7 pr-6 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white text-xs font-bold text-slate-700 focus:border-amber-500 focus:outline-none transition shadow-2xs cursor-pointer appearance-none"
+                class="w-full sm:w-auto pl-7 pr-6 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white text-xs font-bold text-slate-700 focus:border-amber-500 focus:outline-none transition shadow-2xs cursor-pointer appearance-none"
                 title="Lọc công việc & báo cáo theo tháng">
                 <option value="ALL">Tất cả các tháng</option>
               </select>
@@ -2889,10 +2888,10 @@
             </div>
 
             <!-- Ô tìm kiếm từ khóa -->
-            <div class="relative w-48 sm:w-64">
+            <div class="relative w-full sm:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
               <input type="text" id="pwSearchInput" oninput="onPersonalWorkspaceSearchInput(this.value)"
-                placeholder="Tìm kiếm nội dung..."
+                placeholder="Tìm kiếm nội dung công việc..."
                 class="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-amber-500 focus:outline-none transition shadow-2xs font-medium" />
               <button type="button" id="pwSearchClearBtn" onclick="clearPersonalWorkspaceSearch()"
                 class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs">
@@ -2902,9 +2901,9 @@
           </div>
         </div>
 
-        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH (Đệm đáy pb-28 để thanh công cụ cố định không che nội dung) -->
+        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH (Đệm đáy pb-32 để thanh công cụ cố định không che nội dung) -->
         <div id="pwItemsScrollContainer"
-          class="flex-1 overflow-y-auto p-4 sm:p-5 pb-28 sm:pb-32 custom-scrollbar bg-slate-50/50 min-h-[500px]">
+          class="flex-1 overflow-y-auto p-3 sm:p-5 pb-32 sm:pb-32 custom-scrollbar bg-slate-50/50 min-h-[500px]">
           <div id="pwItemsList" class="flex-1 flex flex-col min-h-0 space-y-2">
             <!-- Render các mục công việc ở đây -->
           </div>
@@ -2912,41 +2911,41 @@
 
         <!-- THANH CÔNG CỤ TÍCH CHỌN & TẠO BÁO CÁO CỐ ĐỊNH CHÂN MÀN HÌNH (FIXED FOOTER) -->
         <div id="pwBottomStickyToolbar"
-          class="fixed bottom-0 left-0 right-0 z-40 px-4 sm:px-6 py-2.5 border-t border-slate-200/95 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-          <div class="w-full flex flex-wrap items-center justify-between gap-3">
-            <!-- Vùng trái: Chọn tất cả và Đã chọn 0 mục để tạo báo cáo (sát góc trái) -->
-            <div class="flex items-center gap-3">
+          class="fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-6 py-2.5 border-t border-slate-200/95 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+          <div class="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2 sm:gap-3">
+            <!-- Vùng trái: Chọn tất cả và Đã chọn 0 mục để tạo báo cáo -->
+            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
               <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
                 <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)"
                   class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
                 <span>Chọn tất cả</span>
               </label>
-              <span class="text-xs text-slate-300 font-bold">|</span>
-              <div id="pwSelectedSummaryText" class="text-xs text-slate-700 font-medium">
+              <span class="hidden sm:inline text-xs text-slate-300 font-bold">|</span>
+              <div id="pwSelectedSummaryText" class="text-[11.5px] sm:text-xs text-slate-600 sm:text-slate-700 font-medium bg-slate-100/80 sm:bg-transparent px-2.5 py-0.5 sm:p-0 rounded-full sm:rounded-none border border-slate-200/70 sm:border-0">
                 Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục để tạo báo cáo
               </div>
             </div>
 
-            <!-- Vùng phải: Nút Quay lại Trang công việc và Tạo báo cáo (sát góc phải) -->
-            <div class="flex items-center gap-2.5">
+            <!-- Vùng phải: Nút Quay lại Trang công việc và Tạo báo cáo (Cân đối 100% trên điện thoại, giữ nguyên góc phải trên Desktop) -->
+            <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <button type="button" onclick="closePersonalWorkspacePage()"
-                class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
-                <i class="fa-solid fa-arrow-left text-slate-500 text-xs"></i>
+                class="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 border border-slate-200/90 text-[12px] sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
+                <i class="fa-solid fa-arrow-left text-slate-500 text-xs shrink-0"></i>
                 <span>Quay lại Trang công việc</span>
               </button>
 
               <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
               <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()"
-                class="hidden px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer"
+                class="hidden flex-1 sm:flex-initial justify-center px-2.5 sm:px-4 py-2.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 title="Sao chép các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên (vẫn giữ nguyên trong sổ tay)">
-                <i class="fa-solid fa-inbox text-xs"></i>
+                <i class="fa-solid fa-inbox text-xs shrink-0"></i>
                 <span>Gửi vào hộp thư</span>
               </button>
 
               <!-- Nút Tạo Báo Cáo -->
               <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()"
-                class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-file-circle-check text-xs"></i>
+                class="flex-1 sm:flex-initial justify-center px-3.5 sm:px-5 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-md shadow-emerald-600/25 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-file-circle-check text-xs shrink-0"></i>
                 <span id="pwBtnPushReportBottomText">Tạo báo cáo</span>
               </button>
             </div>
@@ -25906,11 +25905,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const impBtn = document.getElementById('pwFilterBtn_important');
       if (impBtn) {
-        impBtn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+        impBtn.className = "w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0";
       }
       const dueBtn = document.getElementById('pwFilterBtn_due');
       if (dueBtn) {
-        dueBtn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+        dueBtn.className = "w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0";
       }
 
       updatePersonalWorkspaceTabButtonsUI(tab);
@@ -25924,9 +25923,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const btn = document.getElementById('pwFilterBtn_important');
         if (btn) {
           if (pwFilterImportantOnly) {
-            btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-amber-400 bg-amber-50 text-amber-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+            btn.className = "w-8 h-8 rounded-xl border border-amber-400 bg-amber-100 text-amber-700 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0";
           } else {
-            btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+            btn.className = "w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0";
           }
         }
         updateSummaryCardsActiveState(pwFilterImportantOnly ? 'important' : pwCurrentTab);
@@ -25935,9 +25934,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const btn = document.getElementById('pwFilterBtn_due');
         if (btn) {
           if (pwFilterDueOrOverdue) {
-            btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-rose-400 bg-rose-50 text-rose-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+            btn.className = "w-8 h-8 rounded-xl border border-rose-400 bg-rose-100 text-rose-700 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0";
           } else {
-            btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-800 transition flex items-center gap-1 cursor-pointer shadow-2xs";
+            btn.className = "w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 flex items-center justify-center transition cursor-pointer border border-slate-200 shrink-0";
           }
         }
       }
@@ -25949,7 +25948,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         switchPersonalWorkspaceTab('plan');
         pwFilterDueOrOverdue = true;
         const btn = document.getElementById('pwFilterBtn_due');
-        if (btn) btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold border border-rose-400 bg-rose-50 text-rose-900 transition flex items-center gap-1 cursor-pointer shadow-xs";
+        if (btn) btn.className = "w-8 h-8 rounded-xl border border-rose-400 bg-rose-100 text-rose-700 flex items-center justify-center transition cursor-pointer shadow-xs shrink-0";
         renderPersonalWorkspaceUI();
       } else if (quickType === 'important') {
         clickPersonalSummaryCard('important');
@@ -26430,13 +26429,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           // 1. Phân loại & Icon đồng bộ kích thước gọn gàng
           let typeBadge = '';
           if (it.type === 'adhoc') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i><span>Phát sinh</span></span>`;
+            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-bolt text-amber-500 text-[9.5px] md:text-[10px]"></i><span>Phát sinh</span></span>`;
           } else if (it.type === 'plan') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i><span>Kế hoạch</span></span>`;
+            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[9.5px] md:text-[10px]"></i><span>Kế hoạch</span></span>`;
           } else if (it.type === 'proposal') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[10px]"></i><span>Đề xuất</span></span>`;
+            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[9.5px] md:text-[10px]"></i><span>Đề xuất</span></span>`;
           } else if (it.type === 'feedback') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap w-[94px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[10px]"></i><span>Ý kiến</span></span>`;
+            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[9.5px] md:text-[10px]"></i><span>Ý kiến</span></span>`;
           }
 
           // 2. Trạng thái & Huy hiệu thời hạn 1 dòng (có phân tầng màu cảnh báo)
@@ -26447,7 +26446,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (it.type === 'adhoc') {
             const isDone = (it.status === 'done');
             statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})">
             <i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
             <span>${isDone ? 'Đã làm' : 'Chưa làm'}</span>
           </button>
@@ -26466,15 +26465,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               : 'fa-clock text-sky-600';
 
             statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})">
             <i class="fa-solid ${statusIconStyle}"></i>
             <span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span>
           </button>
         `;
             if (it.dueDate) {
               dueDateBadge = `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
-              <i class="${t.icon} text-[10.5px] shrink-0 not-italic"></i>
+            <span class="inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
+              <i class="${t.icon} text-[9.5px] md:text-[10.5px] shrink-0 not-italic"></i>
               <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
             </span>
           `;
@@ -26482,7 +26481,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           } else if (it.type === 'proposal') {
             const isApproved = (it.status === 'approved_executed');
             statusHtml = `
-          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
+          <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})">
             <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600'}"></i>
             <span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span>
           </button>
@@ -26491,21 +26490,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const st = it.status || 'pending';
             if (st === 'resolved' || st === 'processed') {
               statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)">
               <i class="fa-solid fa-circle-check text-emerald-600"></i>
               <span>Đã giải quyết</span>
             </button>
           `;
             } else if (st === 'acknowledged') {
               statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)">
               <i class="fa-solid fa-inbox text-sky-600"></i>
               <span>Đã tiếp nhận</span>
             </button>
           `;
             } else {
               statusHtml = `
-            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
+            <button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Trạng thái: Chờ tiếp nhận (Nhấp để chuyển sang: Đã tiếp nhận)">
               <i class="fa-solid fa-clock text-amber-600"></i>
               <span>Chờ tiếp nhận</span>
             </button>
@@ -26544,63 +26543,61 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
           const transferBadgesHtml = getPersonalTaskTransferBadgeHtml(it, currentUser);
           rowsHtml += `
-        <div class="group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 border shadow-2xs">
+        <div class="group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-2xs">
           ${leftCompletedBarHtml}
 
-          <!-- KHỐI TRÁI & GIỮA (CHIẾM TOÀN BỘ KHÔNG GIAN RỘNG TỐI ĐA): CHỌN + PHÂN LOẠI + NỘI DUNG CÔNG VIỆC -->
-          <div class="flex items-start md:items-center gap-3 flex-1 min-w-0">
-            <!-- CỘT 1 (48px): CHỌN BÁO CÁO + QUAN TRỌNG -->
-            <div class="flex items-center gap-1.5 w-[48px] shrink-0 pt-0.5 md:pt-0">
-              ${checkBtn}
-              ${starBtn}
-            </div>
-
-            <!-- CỘT 2 (94px): PHÂN LOẠI -->
-            <div class="flex items-center w-[94px] shrink-0">
-              ${typeBadge}
-            </div>
-
-            <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA): TIÊU ĐỀ, NỘI DUNG CHI TIẾT, DẤU HIỆU ĐÃ GỬI -->
-            <div class="flex-1 min-w-0 space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <div class="font-semibold text-slate-800 group-hover:text-amber-900 text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
-                  ${escapeHtml(it.title)}
-                </div>
-                ${transferBadgesHtml ? `<div class="inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
-              </div>
-              ${it.content ? `<p class="text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
-              ${fbSnippet}
-            </div>
+          <!-- CỘT 1 (48px trên Desktop): CHỌN BÁO CÁO + QUAN TRỌNG -->
+          <div class="order-1 md:order-none flex items-center gap-1.5 md:w-[48px] shrink-0">
+            ${checkBtn}
+            ${starBtn}
           </div>
 
-          <!-- KHỐI PHẢI (CỐ ĐỊNH GỌN GÀNG SÁT LỀ PHẢI): THỜI GIAN & HẠN + TRẠNG THÁI + THAO TÁC -->
-          <div class="flex items-center justify-between md:justify-end gap-2.5 md:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-            <!-- CỘT 4 (254px): THỜI GIAN & HẠN THỰC HIỆN (GỌN GÀNG TRÊN 1 DÒNG) -->
-            <div class="flex flex-col items-start justify-center gap-1 text-[11px] md:w-[254px] shrink-0">
-              ${dateStr ? `
-                <span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
-                  <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
-                  <span class="text-slate-400 font-medium">Ghi nhận:</span>
-                  <span class="text-slate-700 font-bold">${dateStr}</span>
-                </span>
-              ` : ''}
-              ${dueDateBadge}
-            </div>
+          <!-- CỘT 2 (94px trên Desktop; trên Mobile hiển thị cùng huy hiệu Đã gửi báo cáo) -->
+          <div class="order-2 md:order-none flex items-center gap-1.5 flex-wrap flex-1 md:flex-initial md:w-[94px] min-w-0 shrink-0">
+            ${typeBadge}
+            ${transferBadgesHtml ? `<div class="inline-flex md:hidden items-center gap-1 flex-wrap">${transferBadgesHtml}</div>` : ''}
+          </div>
 
-            <!-- CỘT 5 (132px): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
-            <div class="w-[132px] shrink-0 flex items-center justify-center">
-              ${statusHtml}
+          <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA: Trên Mobile xuống dòng chiếm 100% chiều ngang để tiêu đề & nội dung không bị bó hẹp) -->
+          <div class="order-4 md:order-none w-full md:w-auto md:flex-1 min-w-0 space-y-0.5 md:space-y-1 pl-0.5 md:pl-0 md:pr-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="font-bold md:font-semibold text-slate-800 group-hover:text-amber-900 text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
+                ${escapeHtml(it.title)}
+              </div>
+              ${transferBadgesHtml ? `<div class="hidden md:inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
             </div>
+            ${it.content ? `<p class="text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
+            ${fbSnippet}
+          </div>
 
-            <!-- CỘT 6 (68px): THAO TÁC -->
-            <div class="w-[68px] flex items-center justify-end gap-1 shrink-0">
-              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
-                <i class="fa-regular fa-pen-to-square"></i>
-              </button>
-              <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
-                <i class="fa-regular fa-trash-can"></i>
-              </button>
-            </div>
+          <!-- ĐƯỜNG KẺ PHÂN CÁCH CHÂN THẺ TRÊN MOBILE -->
+          <div class="order-5 w-full border-t border-slate-100/90 md:hidden"></div>
+
+          <!-- CỘT 4 (254px trên Desktop): THỜI GIAN & HẠN THỰC HIỆN -->
+          <div class="order-6 md:order-none flex flex-col items-start justify-center gap-1 text-[11px] flex-1 min-w-0 md:flex-initial md:w-[254px] shrink-0">
+            ${dateStr ? `
+              <span class="inline-flex items-center gap-1 md:gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
+                <i class="fa-regular fa-calendar text-[10.5px] md:text-[11px] text-slate-400"></i>
+                <span class="text-slate-400 font-medium">Ghi nhận:</span>
+                <span class="text-slate-700 font-bold">${dateStr}</span>
+              </span>
+            ` : ''}
+            ${dueDateBadge}
+          </div>
+
+          <!-- CỘT 5 (132px trên Desktop): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
+          <div class="order-7 md:order-none shrink-0 flex items-center justify-end md:justify-center md:w-[132px]">
+            ${statusHtml}
+          </div>
+
+          <!-- CỘT 6 (68px trên Desktop; trên Mobile nằm gọn ở góc trên bên phải thẻ để không bao giờ bị tràn khuất) -->
+          <div class="order-3 md:order-none flex items-center justify-end gap-1 md:w-[68px] shrink-0">
+            <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button type="button" onclick="deletePersonalItem('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
           </div>
         </div>
       `;
