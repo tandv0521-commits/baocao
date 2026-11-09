@@ -2483,42 +2483,45 @@
 
           <!-- DÒNG 2: BẢNG NHỊP ĐỘ PHÁT SINH 1 DÒNG RIÊNG BIỆT (TỐI ƯU CÂN ĐỐI TRÊN MOBILE) -->
           <div id="activityRhythmCard"
-            class="w-full bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3.5 flex flex-col justify-between">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100 gap-2">
-              <div class="flex items-center gap-2 min-w-0 flex-1">
+            class="w-full bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col justify-between">
+            <!-- Dòng tiêu đề chính đồng bộ cân đối với bảng Thi Đua Bám Sát -->
+            <div class="flex items-center justify-between gap-2 pb-2 sm:pb-2.5 border-b border-slate-100">
+              <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
                 <span
-                  class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-sm shrink-0 shadow-2xs">
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs">
                   <i class="fa-solid fa-chart-column"></i>
                 </span>
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-1.5 flex-nowrap">
-                    <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Nhịp Độ
-                      Phát Sinh</h4>
-                    <span id="rhythmFilterSubjectBadge"
-                      class="hidden px-2 py-0.2 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-bold items-center gap-1 cursor-pointer shadow-2xs transition truncate shrink-0 max-w-[130px] sm:max-w-[180px]"
-                      onclick="resetMatrixFollowUpFilter()"
-                      title="Đang xem nhịp độ của đối tượng này. Nhấp để xem lại nhịp độ toàn ban">
-                      <span id="rhythmFilterSubjectText" class="truncate">...</span>
-                      <i class="fa-solid fa-xmark text-amber-700 hover:text-rose-600 text-[10px] ml-0.5"></i>
-                    </span>
-                  </div>
-                  <p class="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">Xem diễn biến số liệu nhập vào
-                    qua từng ngày</p>
+                  <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Nhịp Độ
+                    Phát Sinh</h4>
+                  <p class="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">Diễn biến số liệu qua từng ngày</p>
                 </div>
               </div>
               <div class="shrink-0">
                 <span id="chartPeakDayBadge"
-                  class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200 font-num whitespace-nowrap shadow-2xs inline-block">
+                  class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200 font-num whitespace-nowrap shadow-2xs inline-flex items-center">
                   Chưa có phát sinh
                 </span>
               </div>
             </div>
 
-            <!-- Thanh chọn đầu việc & Chuyển đổi nhanh (Tối ưu 2 tầng gọn gàng trên mobile) -->
+            <!-- Dải hiển thị đối tượng nhân sự / bộ phận đang xem đầy đủ, không bị cắt chữ -->
+            <div id="rhythmFilterSubjectBadge"
+              class="hidden px-2.5 sm:px-3 py-1.5 bg-amber-50/70 hover:bg-amber-100/70 rounded-xl sm:rounded-2xl border border-amber-200/90 text-[10.5px] sm:text-[11px] font-semibold text-amber-950 items-center justify-between gap-2 cursor-pointer transition shadow-2xs"
+              onclick="resetMatrixFollowUpFilter()"
+              title="Đang xem nhịp độ của đối tượng này. Nhấp để xem lại toàn bộ">
+              <span id="rhythmFilterSubjectText" class="flex items-center gap-1.5 min-w-0 flex-1 truncate">...</span>
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 hover:text-rose-600 shrink-0 whitespace-nowrap bg-white/80 px-2 py-0.5 rounded-lg border border-amber-200/80">
+                <span>Đặt lại</span>
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </span>
+            </div>
+
+            <!-- Thanh chọn đầu việc & Thống kê cân đối 2 cột đều nhau trên điện thoại -->
             <div
-              class="bg-slate-50/80 border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full space-y-1.5 sm:space-y-0">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 w-full min-w-0">
-                <!-- Dropdown chọn đầu việc chiếm trọn dòng trên mobile -->
+              class="bg-slate-50/90 border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full space-y-2 sm:space-y-0">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
+                <!-- Dropdown chọn đầu việc + Nút điều hướng -->
                 <div class="flex items-center gap-1.5 w-full sm:flex-1 min-w-0">
                   <div class="relative flex-1 min-w-0">
                     <select id="rhythmTaskSelect" onchange="onRhythmTaskSelect(this.value)"
@@ -2526,29 +2529,29 @@
                       <!-- Tùy chọn sẽ nạp tự động bằng JS -->
                     </select>
                   </div>
-                  <div class="flex items-center gap-0.5 shrink-0">
+                  <div class="flex items-center gap-1 shrink-0">
                     <button type="button" onclick="navigateRhythmTask(-1)" title="Đầu việc trước"
-                      class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                      class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
                       <i class="fa-solid fa-chevron-left text-[10px]"></i>
                     </button>
                     <button type="button" onclick="navigateRhythmTask(1)" title="Đầu việc tiếp theo"
-                      class="w-7 h-7 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
+                      class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs shadow-2xs active:scale-95">
                       <i class="fa-solid fa-chevron-right text-[10px]"></i>
                     </button>
                   </div>
                 </div>
 
-                <!-- Thẻ thống kê nhanh 2 badge nằm ngang cân đối -->
+                <!-- 2 thẻ thống kê chia 2 cột cân xứng 50/50 trên mobile -->
                 <div id="rhythmTaskStatBadges"
-                  class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 text-[10.5px] font-bold">
+                  class="grid grid-cols-2 sm:flex items-center gap-1.5 w-full sm:w-auto shrink-0 text-[10.5px] sm:text-[11px] font-bold">
                   <span id="rhythmSelectedTaskTotal"
-                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
-                    <i class="fa-solid fa-calculator text-emerald-600 text-[9.5px]"></i>
+                    class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
                     <span>Tổng: 0 lượt</span>
                   </span>
                   <span id="rhythmSelectedTaskDays"
-                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center gap-1 whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-day text-sky-600 text-[9.5px]"></i>
+                    class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
                     <span>0/30 ngày</span>
                   </span>
                 </div>
@@ -2556,16 +2559,16 @@
             </div>
 
             <!-- Khung vẽ biểu đồ cột tương tác -->
-            <div class="w-full pt-1">
-              <!-- Nhãn trạng thái hiển thị trên đỉnh biểu đồ -->
-              <div class="flex items-center justify-between px-1 pb-1.5 text-xs gap-2">
-                <span id="rhythmChartViewingTaskTitle"
-                  class="font-black text-slate-800 truncate flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <div class="w-full pt-0.5">
+              <!-- Nhãn trạng thái hiển thị đầy đủ tên nhân sự & số đầu việc trên đỉnh biểu đồ -->
+              <div class="flex flex-wrap items-center justify-between px-1 pb-2 text-xs gap-x-2 gap-y-1">
+                <div id="rhythmChartViewingTaskTitle"
+                  class="font-black text-slate-800 flex items-center gap-1.5 min-w-0 flex-wrap leading-snug">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                   <span>Tổng hợp tất cả đầu việc</span>
-                </span>
-                <span id="rhythmChartScaleMode" class="text-[10px] text-slate-400 font-semibold font-num flex-shrink-0">
-                  Số liệu: Số lượng nhập vào
+                </div>
+                <span id="rhythmChartScaleMode" class="text-[10px] text-slate-400 font-semibold font-num shrink-0 ml-auto">
+                  Đơn vị: Số lượt việc/ngày
                 </span>
               </div>
 
@@ -15032,14 +15035,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (taskSelect) {
         const prevSelected = currentRhythmSelectedTaskKey;
         const isExec = isCurrentUserExecutiveOrManager();
+        const isSingleStaffScope = !!(data && data.queryStaff && data.queryStaff !== "TẤT CẢ");
         let allOptionLabel = (!isExec && currentUser)
-          ? `📊 [Tổng hợp] ${allTasks.length} đầu việc của bạn trong kỳ`
+          ? `📊 [Tổng hợp] ${allTasks.length} đầu việc (${currentUser.fullName || 'Của bạn'})`
           : `📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ`;
-        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
-          allOptionLabel = `📊 [Tổng hợp] ${allTasks.length} việc của ${data.queryStaff} (${data.queryDept || ''})`;
+        if (isSingleStaffScope) {
+          allOptionLabel = `📊 [Tổng hợp] ${allTasks.length} đầu việc • ${data.queryStaff}`;
         }
 
-        const taskSignature = `${allTasks.length}_${data && data.queryStaff ? data.queryStaff : ''}_${data && data.queryDept ? data.queryDept : ''}`;
+        const taskSignature = `${allTasks.length}_${data && data.queryStaff ? data.queryStaff : ''}_${data && data.queryDept ? data.queryDept : ''}_v2`;
         if (taskSelect.dataset.signature !== taskSignature) {
           taskSelect.dataset.signature = taskSignature;
           const selectFrag = document.createDocumentFragment();
@@ -15050,15 +15054,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (prevSelected === "ALL") allOpt.selected = true;
           selectFrag.appendChild(allOpt);
 
-          allTasks.forEach(t => {
+          allTasks.forEach((t, idx) => {
             const opt = document.createElement('option');
             opt.value = t.key;
-            if (t.isGroup) {
-              // BỘ PHẬN NHÓM GỘP: Không hiển thị họ tên thành viên / kho chính phụ, chỉ hiển thị [Kho ...] + Tên đầu việc
-              opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName}`;
+            let cleanStaff = (t.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+            if (isSingleStaffScope || (!isExec && currentUser)) {
+              opt.innerText = `📋 ${idx + 1}. ${t.taskName}`;
+            } else if (t.isGroup) {
+              opt.innerText = `📋 ${t.taskName} [${t.department || 'DVKH'}]`;
             } else {
-              let cleanStaff = (t.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
-              opt.innerText = `📋 [${t.department || 'DVKH'}] ${t.taskName} • ${cleanStaff || t.staffName}`;
+              opt.innerText = `📋 ${t.taskName} • ${cleanStaff || t.staffName}`;
             }
             if (t.key === prevSelected) opt.selected = true;
             selectFrag.appendChild(opt);
@@ -15076,6 +15081,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (prevSelected !== 'ALL' && !allTasks.some(t => t.key === prevSelected)) {
           currentRhythmSelectedTaskKey = 'ALL';
           taskSelect.value = 'ALL';
+        }
+      }
+
+      // Cập nhật dải hiển thị đối tượng nhân sự / bộ phận đang xem đầy đủ
+      const filterBadge = document.getElementById('rhythmFilterSubjectBadge');
+      const filterText = document.getElementById('rhythmFilterSubjectText');
+      if (filterBadge && filterText) {
+        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ" && !data.queryStaff.startsWith("SEARCH_")) {
+          filterText.innerHTML = `<i class="fa-solid fa-user text-amber-600 shrink-0"></i> <span class="truncate"><b>${escapeHtml(data.queryStaff)}</b>${data.queryDept ? ' • ' + escapeHtml(data.queryDept) : ''}</span>`;
+          filterBadge.classList.remove('hidden');
+          filterBadge.classList.add('flex');
+        } else if (data && data.queryDept && data.queryDept !== "TẤT CẢ") {
+          filterText.innerHTML = `<i class="fa-solid fa-building text-amber-600 shrink-0"></i> <span class="truncate">Bộ phận: <b>${escapeHtml(data.queryDept)}</b></span>`;
+          filterBadge.classList.remove('hidden');
+          filterBadge.classList.add('flex');
+        } else {
+          filterBadge.classList.add('hidden');
+          filterBadge.classList.remove('flex', 'inline-flex');
         }
       }
 
@@ -15126,11 +15149,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           // Cập nhật nhãn và thẻ thống kê đầu việc
           if (peakBadge) {
             if (activeDaysCount > 0 && peakDay) {
-              peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>Cao điểm: Ngày ${peakDay} (${peakValStr})`;
-              peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num flex items-center shadow-2xs";
+              peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>Cao điểm: ${peakDay} (${peakValStr})`;
+              peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap";
             } else {
               peakBadge.innerHTML = "Chưa có phát sinh";
-              peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num";
+              peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap";
             }
           }
 
@@ -15139,16 +15162,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               ? curTask.department
               : (curTask.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
             titleLabel.innerHTML = `
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-              <span class="truncate max-w-[280px] sm:max-w-md font-black text-slate-900" title="${escapeHtml(curTask.taskName)}">${escapeHtml(curTask.taskName)}</span>
-              <span class="text-[10px] text-slate-400 font-normal">(${escapeHtml(subLabel)})</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+              <span class="font-black text-slate-900 break-words" title="${escapeHtml(curTask.taskName)}">${escapeHtml(curTask.taskName)}</span>
+              ${subLabel ? `<span class="text-[11px] text-emerald-700 font-bold">• ${escapeHtml(subLabel)}</span>` : ''}
             `;
           }
 
           if (scaleModeLabel) {
             scaleModeLabel.innerText = curTask.isTextMode
-              ? "Chế độ: Ký hiệu quy chuẩn (X, Đ, C)"
-              : "Chế độ: Số liệu định lượng";
+              ? "Đơn vị: Ký hiệu (X, Đ, C)"
+              : "Đơn vị: Số liệu định lượng";
           }
 
           if (totalBadge) {
@@ -15159,7 +15182,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
 
           if (daysBadge) {
-            daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span><b class="text-sky-700 font-num">${activeDaysCount}/${dayCols.length}</b> ngày</span>`;
+            daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Có số liệu: <b class="text-sky-700 font-num">${activeDaysCount}/${dayCols.length}</b> ngày</span>`;
           }
 
           // Vẽ cột biểu đồ kèm SỐ LIỆU NHẬP VÀO hiển thị trực tiếp trên từng cột
@@ -15290,56 +15313,38 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (peakBadge) {
         if (maxCount > 0) {
-          peakBadge.innerHTML = `<i class="fa-solid fa-fire text-amber-500 mr-1"></i>Cao điểm: Ngày ${peakDay} (${maxCount} việc)`;
-          peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num flex items-center shadow-2xs";
+          peakBadge.innerHTML = `<i class="fa-solid fa-fire text-amber-500 mr-1"></i>Cao điểm: ${peakDay} (${maxCount} việc)`;
+          peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap";
         } else {
           peakBadge.innerHTML = "Chưa có phát sinh";
-          peakBadge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num";
+          peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap";
         }
       }
 
       if (titleLabel) {
         if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
           titleLabel.innerHTML = `
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 animate-pulse"></span>
-            <span class="font-black text-slate-900">Nhịp độ phát sinh: <span class="text-amber-800">${escapeHtml(data.queryStaff)}</span> • <span class="text-slate-500 font-normal">${escapeHtml(data.queryDept || '')}</span> (${allTasks.length} đầu việc)</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse"></span>
+            <span class="font-black text-slate-900">Nhịp độ: <span class="text-amber-800">${escapeHtml(data.queryStaff)}</span> <span class="text-emerald-700 font-bold">(${allTasks.length} đầu việc)</span></span>
           `;
         } else {
           const isExec = isCurrentUserExecutiveOrManager();
           if (!isExec && currentUser) {
             titleLabel.innerHTML = `
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-              <span class="font-black text-slate-900">Tổng hợp ${allTasks.length} đầu việc của ${escapeHtml(currentUser.fullName)}</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+              <span class="font-black text-slate-900">Nhịp độ: <span class="text-emerald-800">${escapeHtml(currentUser.fullName)}</span> <span class="text-slate-600 font-bold">(${allTasks.length} đầu việc)</span></span>
             `;
           } else {
             titleLabel.innerHTML = `
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
               <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
             `;
           }
         }
       }
 
-      // Cập nhật huy hiệu lọc trên thanh tiêu đề bảng Nhịp độ
-      const filterBadge = document.getElementById('rhythmFilterSubjectBadge');
-      const filterText = document.getElementById('rhythmFilterSubjectText');
-      if (filterBadge && filterText) {
-        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ" && !data.queryStaff.startsWith("SEARCH_")) {
-          filterText.innerHTML = `<i class="fa-solid fa-user text-amber-700"></i> ${escapeHtml(data.queryStaff)} • ${escapeHtml(data.queryDept || '')}`;
-          filterBadge.classList.remove('hidden');
-          filterBadge.classList.add('inline-flex');
-        } else if (data && data.queryDept && data.queryDept !== "TẤT CẢ") {
-          filterText.innerHTML = `<i class="fa-solid fa-building text-amber-700"></i> Bộ phận: ${escapeHtml(data.queryDept)}`;
-          filterBadge.classList.remove('hidden');
-          filterBadge.classList.add('inline-flex');
-        } else {
-          filterBadge.classList.add('hidden');
-          filterBadge.classList.remove('inline-flex');
-        }
-      }
-
       if (scaleModeLabel) {
-        scaleModeLabel.innerText = "Chỉ số: Số lượt đầu việc phát sinh/ngày";
+        scaleModeLabel.innerText = "Đơn vị: Số lượt việc/ngày";
       }
 
       if (totalBadge) {
@@ -15349,7 +15354,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (daysBadge) {
         let activeDays = 0;
         dayCols.forEach(dc => { if ((dailyMap[dc.label] || 0) > 0) activeDays++; });
-        daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span><b class="text-sky-700 font-num">${activeDays}/${dayCols.length}</b> ngày</span>`;
+        daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Có số liệu: <b class="text-sky-700 font-num">${activeDays}/${dayCols.length}</b> ngày</span>`;
       }
 
       let html = '';
