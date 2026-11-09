@@ -2797,16 +2797,7 @@
           <!-- 5 Tab lọc với thống kê tổng việc & số việc chưa xong -->
           <div
             class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            <!-- 0. Người gửi (danh sách người gửi báo cáo / chuyển vào hộp thư) -->
-          <button type="button" id="rpBoxTab_senders" onclick="switchRpBoxTab('senders')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-paper-plane text-indigo-500 text-xs"></i>
-            <span>Người gửi</span>
-            <span id="rpBoxCount_senders"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-indigo-50 text-indigo-800 border border-indigo-200">0</span>
-          </button>
-
-          <!-- 1. Tất cả -->
+            <!-- 1. Tất cả -->
             <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')"
               class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold">
               <i class="fa-solid fa-layer-group text-xs"></i>
@@ -6414,6 +6405,15 @@
 
         <!-- 5 TAB LỌC CÔNG VIỆC: HIỂN THỊ ĐẦY ĐỦ TRÊN 1 DÒNG, KHÔNG BỊ ẨN -->
         <div id="rpBoxTabsContainer" class="flex items-center gap-1.5 flex-wrap py-0.5 min-w-0">
+          <!-- 0. Người gửi (danh sách người gửi báo cáo / chuyển vào hộp thư) -->
+          <button type="button" id="rpBoxTab_senders" onclick="switchRpBoxTab('senders')"
+            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
+            <i class="fa-solid fa-paper-plane text-indigo-500 text-xs"></i>
+            <span>Người gửi</span>
+            <span id="rpBoxCount_senders"
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-indigo-50 text-indigo-800 border border-indigo-200">0</span>
+          </button>
+
           <!-- 1. Tất cả -->
           <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')"
             class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
@@ -27472,14 +27472,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (multiBar) multiBar.classList.add('hidden');
       } else if (roleInfo.isManager) {
         // QUẢN LÝ BỘ PHẬN:
-        if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận');
+        if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo";
         if (subTitleEl) subTitleEl.innerText = "Tiếp nhận các đầu việc do nhân viên gửi lên, tích chọn lọc để tổng hợp báo cáo chuyển Ban Lãnh đạo";
         if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
         if (btnHistory) btnHistory.classList.remove('hidden');
         populateRpBoxDeptFilter();
       } else {
         // BAN GIÁM ĐỐC / ADMIN:
-        if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
+        if (titleEl) titleEl.innerText = "Hộp Thư Tiếp Nhận Báo Cáo";
         if (subTitleEl) subTitleEl.innerText = "Tiếp nhận và tổng hợp các đầu việc từ các Quản lý bộ phận và nhân viên toàn ban";
         if (leaderDeptWrapper) leaderDeptWrapper.classList.remove('hidden');
         if (btnHistory) btnHistory.classList.remove('hidden');
@@ -28202,7 +28202,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         // CHẾ ĐỘ HỘP THƯ NHẬN VIỆC (DÀNH CHO QUẢN LÝ & BAN GIÁM ĐỐC):
         const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
         if (boxTitle) {
-          boxTitle.innerText = roleInfo.isManager ? ("Hộp Thư Tiếp Nhận Báo Cáo: " + (currentUser.department || 'Bộ phận')) : "Hộp Thư Tiếp Nhận Báo Cáo Toàn Ban (Ban Giám Đốc)";
+          boxTitle.innerText = "Hộp Thư Tiếp Nhận Báo Cáo";
         }
         if (boxSub) boxSub.innerText = "Tiếp nhận các đầu việc từ nhân sự, tích chọn lọc để tổng hợp báo cáo trình Ban Giám Đốc";
         if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
