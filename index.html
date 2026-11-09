@@ -2505,18 +2505,6 @@
               </div>
             </div>
 
-            <!-- Dải hiển thị đối tượng nhân sự / bộ phận đang xem đầy đủ, không bị cắt chữ -->
-            <div id="rhythmFilterSubjectBadge"
-              class="hidden px-2.5 sm:px-3 py-1.5 bg-amber-50/70 hover:bg-amber-100/70 rounded-xl sm:rounded-2xl border border-amber-200/90 text-[10.5px] sm:text-[11px] font-semibold text-amber-950 items-center justify-between gap-2 cursor-pointer transition shadow-2xs"
-              onclick="resetMatrixFollowUpFilter()"
-              title="Đang xem nhịp độ của đối tượng này. Nhấp để xem lại toàn bộ">
-              <span id="rhythmFilterSubjectText" class="flex items-center gap-1.5 min-w-0 flex-1 truncate">...</span>
-              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 hover:text-rose-600 shrink-0 whitespace-nowrap bg-white/80 px-2 py-0.5 rounded-lg border border-amber-200/80">
-                <span>Đặt lại</span>
-                <i class="fa-solid fa-xmark text-[10px]"></i>
-              </span>
-            </div>
-
             <!-- Thanh chọn đầu việc & Thống kê cân đối 2 cột đều nhau trên điện thoại -->
             <div
               class="bg-slate-50/90 border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-2xs max-w-full space-y-2 sm:space-y-0">
@@ -15080,24 +15068,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (prevSelected !== 'ALL' && !allTasks.some(t => t.key === prevSelected)) {
           currentRhythmSelectedTaskKey = 'ALL';
           taskSelect.value = 'ALL';
-        }
-      }
-
-      // Cập nhật dải hiển thị đối tượng nhân sự / bộ phận đang xem đầy đủ
-      const filterBadge = document.getElementById('rhythmFilterSubjectBadge');
-      const filterText = document.getElementById('rhythmFilterSubjectText');
-      if (filterBadge && filterText) {
-        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ" && !data.queryStaff.startsWith("SEARCH_")) {
-          filterText.innerHTML = `<i class="fa-solid fa-user text-amber-600 shrink-0"></i> <span class="truncate"><b>${escapeHtml(data.queryStaff)}</b>${data.queryDept ? ' • ' + escapeHtml(data.queryDept) : ''}</span>`;
-          filterBadge.classList.remove('hidden');
-          filterBadge.classList.add('flex');
-        } else if (data && data.queryDept && data.queryDept !== "TẤT CẢ") {
-          filterText.innerHTML = `<i class="fa-solid fa-building text-amber-600 shrink-0"></i> <span class="truncate">Bộ phận: <b>${escapeHtml(data.queryDept)}</b></span>`;
-          filterBadge.classList.remove('hidden');
-          filterBadge.classList.add('flex');
-        } else {
-          filterBadge.classList.add('hidden');
-          filterBadge.classList.remove('flex', 'inline-flex');
         }
       }
 
