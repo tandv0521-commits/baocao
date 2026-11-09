@@ -32770,16 +32770,15 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       <!-- HEADER THIẾT KẾ RỘNG RÃI, TRANG TRỌNG -->
       <div
-        class="px-5 sm:px-6 py-3.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white flex items-center justify-between flex-shrink-0 shadow-xs">
-        <div class="flex items-center gap-3">
+        class="px-4 sm:px-6 py-3 sm:py-3.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white flex items-center justify-between gap-2.5 flex-shrink-0 shadow-xs">
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div
-            class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-lg text-white font-bold shadow-inner shrink-0">
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-base sm:text-lg text-white font-bold shadow-inner shrink-0">
             <i class="fa-solid fa-bell"></i>
           </div>
-          <div>
-            <h3 class="font-bold text-base sm:text-[17px] leading-snug tracking-normal text-white">Nhắc Nhở Công Việc Cần Làm</h3>
-            <p class="text-xs text-amber-50/95 font-normal mt-0.5 leading-normal">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn
-              cần ưu tiên xử lý</p>
+          <div class="min-w-0">
+            <h3 class="font-bold text-[15px] sm:text-[17px] leading-snug tracking-normal text-white truncate">Nhắc Nhở Công Việc Cần Làm</h3>
+            <p class="text-[11px] sm:text-xs text-amber-50/95 font-normal mt-0.5 leading-snug">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn cần ưu tiên xử lý</p>
           </div>
         </div>
         <button type="button" onclick="closePersonalTaskReminderModal()"
@@ -32789,55 +32788,63 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- BODY MỞ RỘNG DIỆN TÍCH, KHÔNG GIAN THOÁNG ĐÃNG -->
-      <div class="p-4 sm:p-5 space-y-3 overflow-y-auto custom-scroll flex-1">
+      <div class="p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 overflow-y-auto custom-scroll flex-1">
 
         <!-- DÒNG LỜI CHÀO & HƯỚNG DẪN -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[13px] text-slate-700 leading-relaxed">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
           <div>Xin chào <b id="pwReminderUserGreeting" class="text-slate-900 font-bold">Nhân sự</b>! Dưới đây là các đầu
             việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:</div>
-          <div class="text-xs text-amber-700 font-semibold flex items-center gap-1.5 shrink-0"><i
-              class="fa-solid fa-hand-pointer text-[11px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
+          <div class="text-[11px] sm:text-xs text-amber-700 font-semibold flex items-center gap-1.5 shrink-0"><i
+              class="fa-solid fa-hand-pointer text-[10.5px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
         </div>
 
-        <!-- 3 Ô THỐNG KÊ NỔI BẬT, RÕ RÀNG, CHUYÊN NGHIỆP (PHẦN KHOANH ĐỎ) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-          <div class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/70 border-2 border-amber-300 flex items-center gap-3 shadow-xs hover:shadow-sm transition-all">
-            <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
+        <!-- 3 Ô THỐNG KÊ TRÊN CÙNG 1 DÒNG CẢ TRÊN ĐIỆN THOẠI VÀ MÁY TÍNH -->
+        <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-xs">
+          <!-- Thẻ 1: Chưa làm -->
+          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-amber-50 to-orange-50/70 border-2 border-amber-300 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
+            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
               <i class="fa-solid fa-hourglass-half"></i>
             </div>
-            <div class="min-w-0">
-              <div class="text-[11.5px] sm:text-xs font-bold text-amber-950 uppercase tracking-wide truncate">Chưa làm</div>
+            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
+              <div class="text-[10px] sm:text-xs font-extrabold text-amber-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight">Chưa làm</div>
               <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Phát sinh &amp; kế hoạch</div>
             </div>
-            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
-              <span id="pwReminderCountPending" class="text-lg sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
-              <span class="text-xs font-semibold text-amber-800">việc</span>
+            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
+              <span id="pwReminderCountPending" class="text-base sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
+              <span class="text-[10px] sm:text-xs font-semibold text-amber-800">việc</span>
             </div>
           </div>
-          <div class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50/70 border-2 border-rose-300 flex items-center gap-3 shadow-xs hover:shadow-sm transition-all">
-            <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
+
+          <!-- Thẻ 2: Đến hạn / Quá hạn -->
+          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-rose-50 to-pink-50/70 border-2 border-rose-300 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
+            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-500 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
               <i class="fa-solid fa-calendar-xmark"></i>
             </div>
-            <div class="min-w-0">
-              <div class="text-[11.5px] sm:text-xs font-bold text-rose-950 uppercase tracking-wide truncate">Đến hạn / Quá hạn</div>
+            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
+              <div class="text-[10px] sm:text-xs font-extrabold text-rose-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight" title="Đến hạn / Quá hạn">
+                <span class="sm:hidden">Đến / Quá hạn</span>
+                <span class="hidden sm:inline">Đến hạn / Quá hạn</span>
+              </div>
               <div class="text-[10.5px] text-rose-800/80 font-medium hidden sm:block">Ưu tiên xử lý</div>
             </div>
-            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
-              <span id="pwReminderCountDue" class="text-lg sm:text-xl font-extrabold text-rose-950 font-num tabular-nums">0</span>
-              <span class="text-xs font-semibold text-rose-800">kế hoạch</span>
+            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
+              <span id="pwReminderCountDue" class="text-base sm:text-xl font-extrabold text-rose-950 font-num tabular-nums">0</span>
+              <span class="text-[10px] sm:text-xs font-semibold text-rose-800">kế hoạch</span>
             </div>
           </div>
-          <div class="px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-100/60 via-yellow-50 to-amber-50 border-2 border-amber-400 flex items-center gap-3 shadow-xs hover:shadow-sm transition-all">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
+
+          <!-- Thẻ 3: Quan trọng -->
+          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-amber-100/60 via-yellow-50 to-amber-50 border-2 border-amber-400 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
+            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
               <i class="fa-solid fa-star"></i>
             </div>
-            <div class="min-w-0">
-              <div class="text-[11.5px] sm:text-xs font-bold text-amber-950 uppercase tracking-wide truncate">Quan trọng</div>
+            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
+              <div class="text-[10px] sm:text-xs font-extrabold text-amber-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight">Quan trọng</div>
               <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Đánh dấu gắn sao</div>
             </div>
-            <div class="ml-auto whitespace-nowrap flex items-baseline gap-1.5">
-              <span id="pwReminderCountImportant" class="text-lg sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
-              <span class="text-xs font-semibold text-amber-800">mục</span>
+            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
+              <span id="pwReminderCountImportant" class="text-base sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
+              <span class="text-[10px] sm:text-xs font-semibold text-amber-800">mục</span>
             </div>
           </div>
         </div>
@@ -32855,16 +32862,16 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
       </div>
 
-      <!-- FOOTER THIẾT KẾ GỌN GÀNG, ĐỦ NÚT ĐIỀU HƯỚNG -->
+      <!-- FOOTER THIẾT KẾ CÂN ĐỐI, 2 NÚT TRÊN 1 DÒNG, KÝ TỰ KHÔNG BỊ XUỐNG DÒNG -->
       <div
-        class="px-5 sm:px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0">
+        class="px-3 sm:px-6 py-2.5 sm:py-3 border-t border-slate-100 bg-slate-50 grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2 sm:gap-3 flex-shrink-0">
         <button type="button" onclick="closePersonalTaskReminderModal()"
-          class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 text-xs sm:text-[13px] font-semibold transition cursor-pointer shadow-2xs">
+          class="w-full sm:w-auto px-2 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 text-[11px] sm:text-[13px] font-bold sm:font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap inline-flex items-center justify-center">
           Đóng &amp; Bắt đầu làm việc
         </button>
         <button type="button" onclick="openPersonalWorkspaceFromReminder()"
-          class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs sm:text-[13px] font-bold shadow-xs transition flex items-center gap-2 cursor-pointer active:scale-95">
-          <i class="fa-solid fa-book-bookmark text-xs sm:text-sm"></i>
+          class="w-full sm:w-auto px-2 sm:px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-[11px] sm:text-[13px] font-bold shadow-xs transition inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 whitespace-nowrap">
+          <i class="fa-solid fa-book-bookmark text-[11px] sm:text-sm shrink-0"></i>
           <span>Vào Sổ Tay Công Việc</span>
         </button>
       </div>
