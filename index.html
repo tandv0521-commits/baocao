@@ -53,7 +53,7 @@
     if ('caches' in window) {
       caches.keys().then(function (keys) {
         keys.forEach(function (key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v74') {
+          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v137') {
             caches.delete(key);
           }
         });
@@ -247,9 +247,23 @@
       display: none !important;
     }
 
+    .pw-desktop-inline-flex {
+      display: none !important;
+    }
+
+    .pw-mobile-inline-flex {
+      display: inline-flex !important;
+    }
+
     @media (min-width: 768px) {
       .pw-desktop-flex {
         display: flex !important;
+      }
+      .pw-desktop-inline-flex {
+        display: inline-flex !important;
+      }
+      .pw-mobile-inline-flex {
+        display: none !important;
       }
     }
 
@@ -26129,11 +26143,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // 3. So khớp theo họ tên người thực hiện của item (staffName trong báo cáo tổng hợp)
         const itemStaff = removeAccents(String(item.staffName || item.staff_name || item.senderFullName || item.sender_fullname || '')).toLowerCase().trim();
-        if (itemStaff && myFullName) {
-          if (itemStaff === myFullName) return true;
-          if (typeof isStaffMatchedInCell === 'function' && isStaffMatchedInCell(user.fullName || user.full_name, item.staffName || item.staff_name || item.senderFullName)) return true;
-          // Nếu item đã có staffName rõ ràng mà KHÔNG khớp với user -> thuộc về nhân sự khác trong báo cáo tổng hợp
-          return false;
+        if (itemStaff) {
+          if (myFullName && (itemStaff === myFullName || (typeof isStaffMatchedInCell === 'function' && isStaffMatchedInCell(user.fullName || user.full_name, item.staffName || item.staff_name || item.senderFullName)))) return true;
+          if (myCleanU && itemStaff === myCleanU) return true;
+          // Nếu item có staffName mà không khớp họ tên hay username của user -> thuộc về nhân sự khác trong báo cáo tổng hợp
+          if (myFullName && itemStaff !== myFullName && (!myCleanU || itemStaff !== myCleanU)) return false;
         }
       }
 
@@ -26637,7 +26651,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <!-- CỘT 2 (94px trên Desktop; trên Mobile hiển thị cùng huy hiệu Đã gửi báo cáo) -->
           <div class="order-2 md:order-none flex items-center gap-1.5 flex-wrap flex-1 md:flex-initial md:w-[94px] min-w-0 shrink-0">
             ${typeBadge}
-            ${transferBadgesHtml ? `<div class="inline-flex md:hidden items-center gap-1 flex-wrap">${transferBadgesHtml}</div>` : ''}
+            ${transferBadgesHtml ? `<div class="pw-mobile-inline-flex items-center gap-1 flex-wrap">${transferBadgesHtml}</div>` : ''}
           </div>
 
           <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA: Trên Mobile xuống dòng chiếm 100% chiều ngang để tiêu đề & nội dung không bị bó hẹp) -->
@@ -26646,7 +26660,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <div class="font-bold md:font-semibold text-slate-800 group-hover:text-amber-900 text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
                 ${escapeHtml(it.title)}
               </div>
-              ${transferBadgesHtml ? `<div class="hidden md:inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
+              ${transferBadgesHtml ? `<div class="pw-desktop-inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
             </div>
             ${it.content ? `<p class="text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
             ${fbSnippet}
