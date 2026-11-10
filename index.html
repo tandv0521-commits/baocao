@@ -23504,6 +23504,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
 
           localData.items = Array.from(mergedMap.values());
+          if (typeof syncReportTransferStatusForPersonalTasks === 'function') {
+            syncReportTransferStatusForPersonalTasks(localData.items, currentUser);
+          }
           const key = getPersonalWorkspaceStorageKey(currentUser);
           localStorage.setItem(key, JSON.stringify(localData));
 
@@ -23714,6 +23717,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           saveLeadershipReportsShared(mergedList);
           if (typeof syncPersonalTasksIntoSharedReports === 'function') {
             syncPersonalTasksIntoSharedReports(true);
+          }
+          if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
+            const userWsData = getPersonalWorkspaceData(currentUser);
+            if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+              savePersonalWorkspaceData(userWsData, currentUser);
+              if (typeof renderPersonalWorkspaceUI === 'function') {
+                renderPersonalWorkspaceUI();
+              }
+            }
           }
           populateRpBoxDeptFilter();
           renderLeadershipReportsBoxUI();
@@ -26098,38 +26110,145 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
     }
 
+    // Kiểm tra xem một item bên trong báo cáo có phải là công việc của user không
+    function isReportItemBelongingToUser(user, rep, item) {
+      if (!user || !rep) return false;
+
+      const myId = String(user.id || '').trim();
+      const myCleanU = cleanReportUsername(user.username);
+      const myFullName = removeAccents(String(user.fullName || user.full_name || '')).toLowerCase().trim();
+
+      if (item) {
+        // 1. So khớp theo ID người tạo/sở hữu item
+        const itemUserId = String(item.userId || item.user_id || item.senderId || '').trim();
+        if (itemUserId && myId && itemUserId === myId) return true;
+
+        // 2. So khớp theo username của item
+        const itemU = cleanReportUsername(item.username || item.senderUsername);
+        if (itemU && myCleanU && itemU === myCleanU) return true;
+
+        // 3. So khớp theo họ tên người thực hiện của item (staffName trong báo cáo tổng hợp)
+        const itemStaff = removeAccents(String(item.staffName || item.staff_name || item.senderFullName || item.sender_fullname || '')).toLowerCase().trim();
+        if (itemStaff && myFullName) {
+          if (itemStaff === myFullName) return true;
+          if (typeof isStaffMatchedInCell === 'function' && isStaffMatchedInCell(user.fullName || user.full_name, item.staffName || item.staff_name || item.senderFullName)) return true;
+          // Nếu item đã có staffName rõ ràng mà KHÔNG khớp với user -> thuộc về nhân sự khác trong báo cáo tổng hợp
+          return false;
+        }
+      }
+
+      // 4. Nếu item không có thông tin sở hữu riêng, xét theo người gửi của báo cáo
+      return (typeof isSenderOfReport === 'function') ? isSenderOfReport(user, rep) : false;
+    }
+
+    // So khớp chính xác một đầu việc trong Sổ tay với một item trong Báo cáo
+    function isTaskMatchingReportItem(task, item) {
+      if (!task || !item) return false;
+
+      // 1. So khớp ID trực tiếp
+      if (task.id && item.id && String(task.id) === String(item.id)) return true;
+
+      // 2. So khớp sourceEntryKey (khi đầu việc được Quản lý tổng hợp từ hộp thư)
+      if (task.id && item.sourceEntryKey && String(item.sourceEntryKey).endsWith('_' + String(task.id))) return true;
+
+      // 3. So khớp tiêu đề chuẩn hóa và phân loại công việc
+      const titleA = String(task.title || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+      const titleB = String(item.title || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (titleA && titleB && titleA === titleB) {
+        if (!task.type || !item.type || task.type === item.type) return true;
+      }
+
+      return false;
+    }
+
     // Phục hồi và đồng bộ cờ trạng thái gửi báo cáo / gửi hộp thư từ leadership_reports (chống mất khi F5 / đổi máy)
     function syncReportTransferStatusForPersonalTasks(tasksList, user = currentUser) {
-      if (!Array.isArray(tasksList) || !user) return;
+      if (!Array.isArray(tasksList) || !user) return false;
+      let changed = false;
       try {
         const userReports = getLeadershipReportsShared();
-        const uId = String(user.id || '');
-        const uName = String(user.username || '');
+        if (!Array.isArray(userReports) || userReports.length === 0) return false;
 
         tasksList.forEach(task => {
+          if (!task) return;
           for (const rep of userReports) {
-            const isSender = (String(rep.senderId || '') === uId || String(rep.senderUsername || '') === uName);
-            if (!isSender) continue;
-
+            if (!rep) continue;
             const repItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-            const found = repItems.find(x => x && (x.id === task.id || (x.title === task.title && x.type === task.type)));
-            if (found) {
-              if (rep.reportType === 'manager_personal_tasks' || String(rep.id).startsWith('lr_mgr_inbox_')) {
-                task.copiedToInboxAt = task.copiedToInboxAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
-              } else {
-                task.isReported = true;
-                task.reportedAt = task.reportedAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
-                task.reportedReportId = rep.id;
+            if (!Array.isArray(repItems) || repItems.length === 0) continue;
+
+            for (const x of repItems) {
+              if (x && isReportItemBelongingToUser(user, rep, x) && isTaskMatchingReportItem(task, x)) {
+                // 1. Phục hồi cờ chuyển vào hộp thư (Quản lý sao chép việc vào hộp thư hoặc việc đã gom vào báo cáo tổng hợp)
+                if (!task.copiedToInboxAt && !task.sentToInboxAt) {
+                  const isInboxReport = (rep.reportType === 'manager_personal_tasks' || String(rep.id || '').startsWith('lr_mgr_inbox_'));
+                  const isSummaryReport = (rep.reportType === 'manager_summary' || String(rep.id || '').startsWith('lr_summary_'));
+                  if (isInboxReport || isSummaryReport) {
+                    task.copiedToInboxAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
+                    changed = true;
+                  }
+                }
+                // 2. Phục hồi cờ đã gửi báo cáo (chỉ tính báo cáo đã chuyển lãnh đạo thực sự, không tính nháp)
+                if (!task.isReported && !task.reportedAt) {
+                  const isDraftSummary = (rep.reportType === 'manager_summary' || String(rep.id || '').startsWith('lr_summary_')) &&
+                    (rep.isDraft || rep.status === 'draft_consolidated' || rep.targetLevel === 'manager_draft');
+                  if (!isDraftSummary && rep.reportType !== 'manager_personal_tasks' && !String(rep.id || '').startsWith('lr_mgr_inbox_')) {
+                    task.isReported = true;
+                    task.reportedAt = rep.forwardedAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
+                    task.reportedReportId = rep.id;
+                    changed = true;
+                  }
+                }
+                break;
               }
             }
           }
         });
-      } catch (e) { }
+      } catch (e) {
+        console.warn("Lỗi syncReportTransferStatusForPersonalTasks:", e);
+      }
+      return changed;
     }
 
     // Sinh HTML huy hiệu thông báo đã chuyển vào hộp thư hoặc đã gửi báo cáo
     function getPersonalTaskTransferBadgeHtml(it, user = currentUser) {
       if (!it) return '';
+
+      // Tự động đối chiếu và phục hồi các cờ còn thiếu từ leadership_reports nếu cần
+      if (user && (!it.copiedToInboxAt || !it.isReported)) {
+        try {
+          const userReports = getLeadershipReportsShared();
+          if (Array.isArray(userReports)) {
+            for (const rep of userReports) {
+              if (!rep) continue;
+              const repItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+              for (const x of repItems) {
+                if (x && isReportItemBelongingToUser(user, rep, x) && isTaskMatchingReportItem(it, x)) {
+                  // Kiểm tra chuyển hộp thư
+                  if (!it.copiedToInboxAt && !it.sentToInboxAt) {
+                    const isInboxReport = (rep.reportType === 'manager_personal_tasks' || String(rep.id || '').startsWith('lr_mgr_inbox_'));
+                    const isSummaryReport = (rep.reportType === 'manager_summary' || String(rep.id || '').startsWith('lr_summary_'));
+                    if (isInboxReport || isSummaryReport) {
+                      it.copiedToInboxAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
+                    }
+                  }
+                  // Kiểm tra gửi báo cáo
+                  if (!it.isReported && !it.reportedAt) {
+                    const isDraftSummary = (rep.reportType === 'manager_summary' || String(rep.id || '').startsWith('lr_summary_')) &&
+                      (rep.isDraft || rep.status === 'draft_consolidated' || rep.targetLevel === 'manager_draft');
+                    if (!isDraftSummary && rep.reportType !== 'manager_personal_tasks' && !String(rep.id || '').startsWith('lr_mgr_inbox_')) {
+                      it.isReported = true;
+                      it.reportedAt = rep.forwardedAt || rep.submissionDate || rep.displayDate || new Date().toISOString();
+                      it.reportedReportId = rep.id;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) { }
+      }
+
       let badges = '';
 
       // 1. Đã chuyển vào Hộp thư bộ phận (Dành cho Quản lý / Lãnh đạo)
@@ -26139,36 +26258,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // 2. Đã tạo báo cáo gửi Quản lý / Ban Giám Đốc (Dành cho Nhân viên & Quản lý)
       if (it.isReported || it.reportedAt) {
-        badges += `${badges ? ' ' : ''}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs" title="Công việc này đã gửi báo cáo lên cấp quản lý"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>`;
-      }
-
-      // 3. Nếu cả 2 cờ đều chưa gắn, đối chiếu trực tiếp từ leadership_reports để tự động phục hồi ngay lập tức
-      if (!badges && user) {
-        try {
-          const userReports = getLeadershipReportsShared();
-          const uId = String(user.id || '');
-          const uName = String(user.username || '');
-
-          for (const rep of userReports) {
-            const isSender = (String(rep.senderId || '') === uId || String(rep.senderUsername || '') === uName);
-            if (!isSender) continue;
-
-            const repItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-            const found = repItems.find(x => x && (x.id === it.id || (x.title === it.title && x.type === it.type)));
-            if (found) {
-              if (rep.reportType === 'manager_personal_tasks' || String(rep.id).startsWith('lr_mgr_inbox_')) {
-                it.copiedToInboxAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
-                badges += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs" title="Công việc này đã được chuyển vào Hộp thư bộ phận để tổng hợp"><i class="fa-solid fa-inbox text-[9px]"></i> Đã chuyển vào hộp thư</span>`;
-              } else {
-                it.isReported = true;
-                it.reportedAt = rep.submissionDate || rep.displayDate || new Date().toISOString();
-                it.reportedReportId = rep.id;
-                badges += `${badges ? ' ' : ''}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs" title="Công việc này đã gửi báo cáo lên cấp quản lý"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>`;
-              }
-              break;
-            }
-          }
-        } catch (e) { }
+        badges += `${badges ? ' ' : ''}<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs" title="Công việc này đã gửi báo cáo lên cấp quản lý / Ban Giám Đốc"><i class="fa-solid fa-paper-plane text-[9px]"></i> Đã gửi báo cáo</span>`;
       }
 
       return badges;
@@ -26181,7 +26271,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const data = getPersonalWorkspaceData(currentUser);
       // Đồng bộ và phục hồi cờ trạng thái gửi báo cáo / gửi hộp thư từ các báo cáo đã lưu
-      syncReportTransferStatusForPersonalTasks(data.items, currentUser);
+      const pwSyncChanged = syncReportTransferStatusForPersonalTasks(data.items, currentUser);
+      if (pwSyncChanged) {
+        savePersonalWorkspaceData(data, currentUser);
+      }
       let items = data.items || [];
 
       // Nạp danh sách tháng vào bộ lọc tháng của Sổ tay công việc
@@ -29285,6 +29378,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       saveLeadershipReportsShared(sharedReports);
       saveLeadershipReportToSupabase(summaryReport);
 
+      if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
+        const userWsData = getPersonalWorkspaceData(currentUser);
+        if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+          savePersonalWorkspaceData(userWsData, currentUser);
+          if (typeof renderPersonalWorkspaceUI === 'function') {
+            renderPersonalWorkspaceUI();
+          }
+        }
+      }
+
       rpBoxSelectedTaskKeys.clear();
       if (isDraft) {
         showToast("📝 Đã tạo nháp báo cáo tổng hợp và chuyển vào Lịch sử báo cáo!");
@@ -29645,6 +29748,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       saveLeadershipReportsShared(allReports);
       saveLeadershipReportToSupabase(rep);
+
+      if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
+        const userWsData = getPersonalWorkspaceData(currentUser);
+        if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+          savePersonalWorkspaceData(userWsData, currentUser);
+          if (typeof renderPersonalWorkspaceUI === 'function') {
+            renderPersonalWorkspaceUI();
+          }
+        }
+      }
 
       closeSendDraftToLeadershipModal();
       showToast("🎉 Đã gửi báo cáo tổng hợp đến " + recipient.fullName + " (" + recipient.role + ") thành công!");
