@@ -2865,10 +2865,10 @@
 
         <!-- BỘ LỌC THEO TAB VÀ TÌM KIẾM -->
         <div
-          class="px-3 sm:px-6 py-2 border-b border-slate-200 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2 sm:gap-2.5 flex-shrink-0 bg-white">
+          class="px-3 sm:px-6 py-2 border-b border-slate-200 flex flex-col 2xl:flex-row 2xl:flex-wrap items-stretch 2xl:items-center justify-between gap-2 sm:gap-2.5 flex-shrink-0 bg-white">
           <!-- 6 Tab lọc với thống kê tổng việc & số việc chưa xong -->
           <div
-            class="flex items-center gap-1.5 overflow-x-auto py-0.5 sm:py-1 w-full sm:w-auto sm:flex-1 sm:min-w-[280px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            class="flex flex-wrap items-center gap-1.5 py-0.5 sm:py-1 w-full 2xl:w-auto 2xl:flex-1 min-w-0 overflow-visible">
             <!-- 1. Tất cả -->
             <button type="button" id="pwTabBtn_all" onclick="switchPersonalWorkspaceTab('all')"
               class="pw-tab-btn px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-sm font-bold">
@@ -2926,7 +2926,7 @@
           </div>
 
           <!-- Các nút công cụ bổ trợ và tìm kiếm -->
-          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto shrink-0">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full 2xl:w-auto min-w-0 2xl:shrink-0">
             <!-- Chuyển đổi hiển thị Bảng / Thẻ -->
             <div class="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs shrink-0">
               <button type="button" id="pwViewModeBtn_table" onclick="setPersonalWorkspaceViewMode('table')"
@@ -2980,9 +2980,9 @@
           </div>
         </div>
 
-        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH (Đệm đáy pb-32 để thanh công cụ cố định không che nội dung) -->
+        <!-- KHUNG DANH SÁCH CÔNG VIỆC CHÍNH (Đệm đáy pb-44 / sm:pb-32 để thanh công cụ cố định không che nội dung) -->
         <div id="pwItemsScrollContainer"
-          class="flex-1 overflow-y-auto p-3 sm:p-5 pb-32 sm:pb-32 custom-scrollbar bg-slate-50/50 min-h-[500px]">
+          class="flex-1 overflow-y-auto p-3 sm:p-5 pb-44 sm:pb-32 custom-scrollbar bg-slate-50/50 min-h-[500px]">
           <div id="pwItemsList" class="flex-1 flex flex-col min-h-0 space-y-2">
             <!-- Render các mục công việc ở đây -->
           </div>
@@ -3005,28 +3005,30 @@
               </div>
             </div>
 
-            <!-- Vùng phải: Nút Quay lại Trang công việc và Tạo báo cáo (Cân đối 100% trên điện thoại, giữ nguyên góc phải trên Desktop) -->
-            <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+            <!-- Vùng phải: Nút Về trang công việc và Tạo báo cáo (Cân đối 100% trên điện thoại, giữ nguyên góc phải trên Desktop) -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <button type="button" onclick="closePersonalWorkspacePage()"
-                class="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 border border-slate-200/90 text-[12px] sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
+                class="w-full sm:w-auto sm:flex-initial min-h-[44px] sm:min-h-0 justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 border border-slate-200/90 text-[12px] sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
                 <i class="fa-solid fa-arrow-left text-slate-500 text-xs shrink-0"></i>
-                <span>Quay lại Trang công việc</span>
+                <span>Về trang công việc</span>
               </button>
 
-              <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
-              <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()"
-                class="hidden flex-1 sm:flex-initial justify-center px-2.5 sm:px-4 py-2.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                title="Sao chép các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên (vẫn giữ nguyên trong sổ tay)">
-                <i class="fa-solid fa-inbox text-xs shrink-0"></i>
-                <span>Gửi vào hộp thư</span>
-              </button>
+              <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+                <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
+                <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()"
+                  class="hidden flex-1 sm:flex-initial min-w-0 min-h-[44px] sm:min-h-0 justify-center px-2.5 sm:px-4 py-2.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  title="Sao chép các đầu việc cá nhân đã chọn vào Hộp thư chung của bộ phận để tổng hợp cùng nhân viên (vẫn giữ nguyên trong sổ tay)">
+                  <i class="fa-solid fa-inbox text-xs shrink-0"></i>
+                  <span>Gửi vào hộp thư</span>
+                </button>
 
-              <!-- Nút Tạo Báo Cáo -->
-              <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()"
-                class="flex-1 sm:flex-initial justify-center px-3.5 sm:px-5 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-md shadow-emerald-600/25 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                <i class="fa-solid fa-file-circle-check text-xs shrink-0"></i>
-                <span id="pwBtnPushReportBottomText">Tạo báo cáo</span>
-              </button>
+                <!-- Nút Tạo Báo Cáo -->
+                <button type="button" id="pwBtnPushReportBottom" onclick="openLeadershipReportPreviewModal()"
+                  class="flex-1 sm:flex-initial min-w-0 min-h-[44px] sm:min-h-0 justify-center px-3.5 sm:px-5 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-md shadow-emerald-600/25 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                  <i class="fa-solid fa-file-circle-check text-xs shrink-0"></i>
+                  <span id="pwBtnPushReportBottomText">Tạo báo cáo</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -24047,6 +24049,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let pwSearchKeyword = '';
     let pwViewMode = 'table'; // 'table' (Mặc định bảng rộng) hoặc 'card' (dạng thẻ)
     let pwIsFullscreen = false;
+    let pwMainWorkspaceScrollPosition = null;
 
     // 1. Kiểm tra trạng thái hoàn thành của công việc cá nhân
     function isPersonalTaskFinished(it) {
@@ -24074,10 +24077,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
+      if (typeof syncBodyScrollLock === 'function') syncBodyScrollLock();
+
       const mainView = document.getElementById('mainWorkspaceView');
       const pwPage = document.getElementById('personalWorkspacePageView');
       const appHeader = document.getElementById('mainAppHeader') || document.querySelector('header');
       const mainContent = document.getElementById('mainAppContent') || document.querySelector('main');
+
+      // Capture the current work page before hiding it; repeated opens keep the original position.
+      if (mainView && !mainView.classList.contains('hidden') && !mainView.hasAttribute('hidden') &&
+          pwPage && pwPage.classList.contains('hidden')) {
+        const table = document.getElementById('tableScrollContainer');
+        pwMainWorkspaceScrollPosition = {
+          left: window.scrollX || window.pageXOffset || 0,
+          top: window.scrollY || window.pageYOffset || 0,
+          tableLeft: table ? table.scrollLeft : 0,
+          tableTop: table ? table.scrollTop : 0
+        };
+      }
 
       // 1. Ẩn thanh header ứng dụng trên cùng
       if (appHeader) appHeader.classList.add('hidden');
@@ -24162,8 +24179,25 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         mainContent.classList.add('p-2', 'sm:p-5', 'space-y-3.5');
       }
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       updatePersonalWorkspaceEntryCardStats();
+
+      const savedScrollPosition = pwMainWorkspaceScrollPosition;
+      pwMainWorkspaceScrollPosition = null;
+      if (savedScrollPosition) {
+        const table = document.getElementById('tableScrollContainer');
+        if (table) {
+          table.scrollTo({
+            left: savedScrollPosition.tableLeft,
+            top: savedScrollPosition.tableTop,
+            behavior: 'instant'
+          });
+        }
+        window.scrollTo({
+          left: savedScrollPosition.left,
+          top: savedScrollPosition.top,
+          behavior: 'instant'
+        });
+      }
     }
 
     function openPersonalWorkspaceModal() {
