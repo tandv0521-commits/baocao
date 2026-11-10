@@ -1,15 +1,15 @@
 // Service Worker for Báo Cáo Ban DVKH - Nhựa Tiền Phong PWA
-const CACHE_NAME = 'baocao-dvkh-pwa-v149';
+const CACHE_NAME = 'baocao-dvkh-pwa-v151';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './favicon.png?v=149',
+  './favicon.png?v=151',
   './favicon.ico',
-  './favicon-v149.ico',
-  './icon-192.png?v=149',
-  './icon-512.png?v=149',
-  './apple-touch-icon.png?v=149',
+  './favicon.ico?v=151',
+  './icon-192.png?v=151',
+  './icon-512.png?v=151',
+  './apple-touch-icon.png?v=151',
   './tienphong_logo2.png',
   './banner_thang11_trianculture.jpg'
 ];
