@@ -49,50 +49,31 @@
       }
     });
 
-    // Dọn dẹp cache cũ và bảo toàn phiên bản Service Worker đang hoạt động
-    if ('caches' in window) {
-      caches.keys().then(function (keys) {
-        keys.forEach(function (key) {
-          if (key.startsWith('baocao-dvkh-pwa-') && key !== 'baocao-dvkh-pwa-v148') {
-            caches.delete(key);
-          }
-        });
-      });
-    }
-
-    // Đăng ký Service Worker siêu sớm để trình duyệt lập tức kích hoạt tính năng Cài đặt Ứng dụng & cập nhật cache mới
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).then(function (reg) {
-        if (reg) {
-          reg.update();
-          reg.addEventListener('updatefound', function () {
-            var newWorker = reg.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', function () {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  window.location.reload();
-                }
-              });
-            }
-          });
-        }
-      }).catch(function () { });
+    // Cache được dọn khi Service Worker mới kích hoạt, sau khi tải xong tài nguyên.
+    // file:// dùng trực tiếp các ảnh có phiên bản; Service Worker chỉ đăng ký qua HTTP(S).
+    if ('serviceWorker' in navigator && /^https?:$/.test(window.location.protocol)) {
+      var _hadSWController = Boolean(navigator.serviceWorker.controller);
       navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (!window._swRefreshing) {
+        if (_hadSWController && !window._swRefreshing) {
           window._swRefreshing = true;
           window.location.reload();
         }
+        _hadSWController = true;
       });
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
+        .then(function (reg) { return reg.update(); })
+        .catch(function () { });
     }
   </script>
 
   <!-- FAVICON & CẤU HÌNH BIỂU TƯỢNG ỨNG DỤNG DI ĐỘNG (PWA / MOBILE HOME SCREEN) -->
-  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon-v149.ico">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=149">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=149">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=149">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?v=149">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=149">
 
   <!-- CẤU HÌNH WEB APP TOÀN MÀN HÌNH CHO IOS (IPHONE/IPAD) & ANDROID -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -1395,10 +1376,10 @@
       <!-- 1. HEADER: LOGO CHÍNH THỨC & TÊN CÔNG TY TIỀN PHONG -->
       <div class="relative z-10 flex items-center gap-4">
         <div
-          class="w-20 h-14 bg-white rounded-2xl p-1.5 shadow-2xl shadow-emerald-950/60 flex items-center justify-center border-2 border-white/90 flex-shrink-0">
-          <img src="tienphong_logo2.png"
-            onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';"
-            alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+          class="w-16 h-16 bg-white rounded-2xl p-0.5 shadow-2xl shadow-emerald-950/60 flex items-center justify-center flex-shrink-0">
+          <img src="icon-512.png?v=149"
+            onerror="this.onerror=null; this.src='icon-192.png?v=149';"
+            alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
         </div>
         <div>
           <span
@@ -1596,10 +1577,10 @@
           class="block md:hidden mb-3 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-teal-900/70 to-amber-950/60 backdrop-blur-md text-white border border-emerald-300/40 shadow-md">
           <div class="flex items-center gap-2.5">
             <div
-              class="w-12 h-9 bg-white rounded-xl p-1 flex items-center justify-center flex-shrink-0 shadow-sm border border-white/80">
-              <img src="tienphong_logo2.png"
-                onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';"
-                alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+              class="w-11 h-11 bg-white rounded-xl p-0.5 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <img src="icon-512.png?v=149"
+                onerror="this.onerror=null; this.src='icon-192.png?v=149';"
+                alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
             </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-center justify-between gap-1">
@@ -1852,10 +1833,10 @@
         class="flex items-center gap-2.5 sm:gap-3 min-w-0 cursor-pointer group p-1 -m-1 rounded-2xl hover:bg-slate-50 transition">
         <!-- Logo chính thức của công ty Nhựa Tiền Phong thay thế cho logo tên -->
         <div
-          class="w-11 h-9 sm:w-14 sm:h-10 rounded-xl bg-white p-1 shadow-xs border border-emerald-300/80 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
-          <img src="tienphong_logo2.png"
-            onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';"
-            alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+          class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-0.5 shadow-xs flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+          <img src="icon-512.png?v=149"
+            onerror="this.onerror=null; this.src='icon-192.png?v=149';"
+            alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
           <span id="userAvatarChar" class="hidden"></span>
         </div>
         <div class="min-w-0">
@@ -5025,10 +5006,10 @@
         <div
           class="flex items-center gap-3 p-3.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white rounded-2xl border border-emerald-200">
           <div
-            class="w-16 h-12 rounded-2xl bg-white p-1 shadow-sm border border-emerald-300/80 flex items-center justify-center flex-shrink-0">
-            <img src="tienphong_logo2.png"
-              onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';"
-              alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+            class="w-14 h-14 rounded-2xl bg-white p-0.5 shadow-sm flex items-center justify-center flex-shrink-0">
+            <img src="icon-512.png?v=149"
+              onerror="this.onerror=null; this.src='icon-192.png?v=149';"
+              alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
             <span id="profileModalAvatar" class="hidden"></span>
           </div>
           <div class="min-w-0 flex-1">
@@ -5242,10 +5223,10 @@
         class="relative z-10 p-3.5 sm:p-5 pb-3 border-b border-white/15 flex items-center justify-between gap-4 shrink-0 bg-emerald-950/30 backdrop-blur-md">
         <div class="flex items-center gap-3 sm:gap-4">
           <div
-            class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-white/20 border-2 border-white/80 p-1.5 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/60 backdrop-blur-md">
-            <img src="tienphong_logo2.png"
-              onerror="this.onerror=null; this.src='https://nhuatienphong.vn/main/imgs/ntp/logo2.png';"
-              alt="Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+            class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-white/20 p-0.5 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-950/60 backdrop-blur-md">
+            <img src="icon-512.png?v=149"
+              onerror="this.onerror=null; this.src='icon-192.png?v=149';"
+              alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
           </div>
           <div>
             <div
@@ -5443,7 +5424,7 @@
       <div class="flex items-start gap-3.5 relative z-10 pr-8">
         <div
           class="relative w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-emerald-400/30 to-teal-600/30 p-0.5 border border-emerald-300/50 shadow-lg shadow-emerald-950/50 shrink-0 flex items-center justify-center overflow-hidden">
-          <img src="favicon.png" onerror="this.onerror=null; this.src='icon-192.png';" alt="App Icon"
+          <img src="icon-192.png?v=149" onerror="this.onerror=null; this.src='favicon.png?v=149';" alt="App Icon"
             class="w-full h-full object-cover rounded-[14px]" />
           <div
             class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#043d2e] flex items-center justify-center text-[8px] text-white">
@@ -5678,7 +5659,7 @@
     <div
       class="max-w-md mx-auto bg-slate-900/95 backdrop-blur-2xl text-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-emerald-400/40 relative">
       <div class="flex items-start gap-3">
-        <img src="icon-192.png" onerror="this.onerror=null; this.src='favicon.png';" alt="App"
+        <img src="icon-192.png?v=149" onerror="this.onerror=null; this.src='favicon.png?v=149';" alt="App"
           class="w-12 h-12 rounded-2xl border border-white/20 shadow-md shrink-0 object-cover" />
         <div class="flex-1 min-w-0 pr-6">
           <div class="flex items-center gap-1.5">
