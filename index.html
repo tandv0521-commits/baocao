@@ -6516,7 +6516,7 @@
           <button type="button" id="rpBoxTab_senders" onclick="switchRpBoxTab('senders')"
             class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
             <i class="fa-solid fa-paper-plane text-indigo-500 text-xs"></i>
-            <span>Người gửi</span>
+            <span id="rpBoxSendersTabLabel">Người gửi</span>
             <span id="rpBoxCount_senders"
               class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-indigo-50 text-indigo-800 border border-indigo-200">0</span>
           </button>
@@ -28206,7 +28206,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // Luôn mặc định mở vào Hộp thư nhận việc (tránh kẹt ở tab lịch sử)
       rpBoxViewMode = 'inbox';
-      if (!isManagerOrAbove && rpBoxActiveTab === 'senders') switchRpBoxTab('all');
 
       if (!isManagerOrAbove) {
         // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
@@ -28920,6 +28919,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const container = document.getElementById('rpBoxReportsList');
       if (!container) return;
 
+      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
+      if (!isManagerOrAbove) rpBoxViewMode = 'inbox';
+
       // Cập nhật danh sách tháng trên bộ lọc tháng của Hộp thư
       populateRpBoxMonthFilter();
 
@@ -28934,28 +28936,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const histBtnText = document.getElementById('rpBoxHistoryBtnText');
       const multiBar = document.getElementById('rpBoxMultiSelectBar');
 
-      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
       const tabsContainer = document.getElementById('rpBoxTabsContainer');
       const btnHistory = document.getElementById('btnToggleRpBoxHistory');
-      // Thẻ "Người gửi" chỉ dành cho Quản lý / Ban Giám Đốc (nhân viên không có thẻ này)
+      // Staff see their sent reports; management retains the sender overview.
       const sendersTabBtn = document.getElementById('rpBoxTab_senders');
+      const sendersTabLabel = document.getElementById('rpBoxSendersTabLabel');
       if (sendersTabBtn) {
-        if (isManagerOrAbove) {
-          sendersTabBtn.classList.remove('hidden');
-        } else {
-          sendersTabBtn.classList.add('hidden');
-          if (rpBoxActiveTab === 'senders') rpBoxActiveTab = 'all';
-        }
+        sendersTabBtn.classList.remove('hidden');
+        sendersTabBtn.title = isManagerOrAbove ? 'Xem các lượt gửi báo cáo vào hộp thư' : 'Xem các báo cáo bạn đã gửi';
       }
+      if (sendersTabLabel) sendersTabLabel.innerText = isManagerOrAbove ? 'Người gửi' : 'Đã gửi';
 
       // NẾU LÀ NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
       if (!isManagerOrAbove) {
-        rpBoxViewMode = 'inbox';
         if (btnHistory) btnHistory.classList.add('hidden');
         if (multiBar) multiBar.classList.add('hidden');
         if (tabsContainer) tabsContainer.classList.remove('hidden');
         if (boxTitle) boxTitle.innerText = "Lịch Sử Gửi Báo Cáo Của Bạn";
-        if (boxSub) boxSub.innerText = "Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo";
+        if (boxSub) boxSub.innerText = rpBoxActiveTab === 'senders' ? 'Danh sách từng lượt báo cáo bạn đã gửi cho Quản lý / Ban Lãnh đạo' : 'Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo';
       } else {
         // NẾU LÀ QUẢN LÝ / BAN GIÁM ĐỐC:
         if (btnHistory) btnHistory.classList.remove('hidden');
@@ -29340,12 +29338,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // Danh sách các lượt gửi (theo đúng phân quyền: gửi đến ai thì tài khoản đó mới thấy)
     function getRpBoxSenderRecords(ignoreMonthFilter = false) {
       if (!currentUser) return [];
+      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
       let reports = getLeadershipReportsShared().filter(r => r && (r.reportType !== 'manager_summary' || !isSenderOfReport(currentUser, r)));
       reports = reports.filter(r => canUserAccessReport(currentUser, r));
+      if (!isManagerOrAbove) {
+        reports = reports.filter(r => isSenderOfReport(currentUser, r));
+      }
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const selectedDept = deptSelect ? deptSelect.value : 'ALL';
-      if (selectedDept && selectedDept !== 'ALL') {
+      if (isManagerOrAbove && selectedDept && selectedDept !== 'ALL') {
         reports = reports.filter(r => isSameDept(r.senderDepartment, selectedDept) || isDeptEquivalent(r.senderDepartment, selectedDept));
       }
       if (!ignoreMonthFilter && typeof rpBoxFilterMonth !== 'undefined' && rpBoxFilterMonth !== 'ALL') {
@@ -29407,13 +29409,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function renderRpBoxSendersUI(container, records) {
+      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
       const searchInput = document.getElementById('rpBoxSearchInput');
       const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
       let filtered = records;
       if (keyword) {
         filtered = records.filter(rec => {
           const r = rec.report;
-          const hay = [r.senderFullName, r.senderUsername, r.senderDepartment, r.senderRole, r.recipientFullName]
+          const hay = [r.senderFullName, r.senderUsername, r.senderDepartment, r.senderRole, r.recipientFullName, r.recipientUsername, r.recipientRole, r.recipientDepartment]
             .map(x => String(x || '').toLowerCase()).join(' ');
           return hay.includes(keyword) || rec.titles.some(t => t.includes(keyword));
         });
@@ -29423,23 +29426,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (countBadge) countBadge.innerText = filtered.length + ' lượt gửi';
 
       if (filtered.length === 0) {
+        const hasFilter = !!keyword || (typeof rpBoxFilterMonth !== 'undefined' && rpBoxFilterMonth !== 'ALL');
+        const emptyTitle = isManagerOrAbove ? 'Chưa có ai gửi báo cáo vào hộp thư' : (hasFilter ? 'Không tìm thấy báo cáo phù hợp' : 'Bạn chưa gửi báo cáo nào');
+        const emptyHint = isManagerOrAbove ? 'Các lượt nhân sự gửi báo cáo hoặc Quản lý chuyển đầu việc vào hộp thư sẽ hiển thị tại đây.' : (hasFilter ? 'Thử đổi tháng hoặc từ khóa tìm kiếm để xem báo cáo đã gửi.' : 'Các báo cáo bạn gửi sẽ hiển thị tại đây, kèm người nhận, ngày giờ và file Word.');
         container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
           '<div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 border border-slate-200/80 flex items-center justify-center text-2xl mx-auto shadow-2xs">' +
           '<i class="fa-solid fa-paper-plane"></i>' +
           '</div>' +
           '<div class="space-y-1">' +
-          '<p class="text-sm font-black text-slate-700">Chưa có ai gửi báo cáo vào hộp thư</p>' +
-          '<p class="text-xs text-slate-400">Các lượt nhân sự gửi báo cáo hoặc Quản lý chuyển đầu việc vào hộp thư sẽ hiển thị tại đây.</p>' +
+          '<p class="text-sm font-black text-slate-700">' + emptyTitle + '</p>' +
+          '<p class="text-xs text-slate-400">' + emptyHint + '</p>' +
           '</div>' +
           '</div>';
         return;
       }
 
       const headerHtml =
-        '<div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
+        '<div class="hidden xl:flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
         '<div class="flex items-center gap-3 flex-1 min-w-0">' +
         '<span class="w-[28px] shrink-0 text-center">STT</span>' +
-        '<span class="flex-1 min-w-0">Người gửi &amp; nội dung gửi</span>' +
+        '<span class="flex-1 min-w-0">' + (isManagerOrAbove ? 'Người gửi &amp; nội dung gửi' : 'Báo cáo đã gửi &amp; người nhận') + '</span>' +
         '</div>' +
         '<div class="flex items-center justify-end gap-3 shrink-0">' +
         '<span class="w-[152px] shrink-0 text-center">Tổng hợp báo cáo</span>' +
@@ -29470,11 +29476,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const cornerIcon = isSummary ? 'fa-file-signature' : (isCopy ? 'fa-inbox' : 'fa-paper-plane');
         const actionText = isSummary ? 'đã gửi báo cáo tổng hợp' : (isCopy ? 'đã chuyển báo cáo vào hộp thư' : 'đã gửi báo cáo');
 
-        const recipientPill = (!isCopy && r.recipientFullName)
-          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0"><i class="fa-solid fa-paper-plane text-[9px]"></i><span>Gửi đến: ' + escapeHtml(r.recipientFullName) + '</span></span>'
+        const recipientName = r.recipientFullName || r.recipientUsername || [r.recipientRole, r.recipientDepartment].filter(Boolean).join(' - ') || 'Quản lý bộ phận';
+        const recipientPill = (!isCopy && (r.recipientFullName || !isManagerOrAbove))
+          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 max-w-full"><i class="fa-solid fa-paper-plane text-[9px] shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">Gửi đến: ' + escapeHtml(recipientName) + '</span></span>'
           : '';
         const deptPill = r.senderDepartment
-          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0"><i class="fa-solid fa-building text-[9px] text-slate-400"></i><span>' + escapeHtml(r.senderDepartment) + '</span></span>'
+          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0 max-w-full"><i class="fa-solid fa-building text-[9px] text-slate-400 shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">' + escapeHtml(r.senderDepartment) + '</span></span>'
           : '';
         const periodPill = (r.periodMonth && r.periodYear)
           ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0 font-num">Kỳ T' + r.periodMonth + '/' + r.periodYear + '</span>'
@@ -29484,7 +29491,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           : '';
 
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 shadow-2xs">' +
+          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs">' +
 
           '<div class="flex items-center gap-3 flex-1 min-w-0">' +
           '<span class="w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (idx + 1) + '</span>' +
@@ -29494,7 +29501,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '</div>' +
           '<div class="min-w-0 flex-1 space-y-1">' +
           '<div class="flex items-center gap-1.5 flex-wrap text-[13.5px] leading-snug">' +
-          '<b class="font-extrabold text-slate-900">' + escapeHtml(senderName) + '</b>' +
+          '<b class="font-extrabold text-slate-900 break-words [overflow-wrap:anywhere]">' + escapeHtml(isManagerOrAbove ? senderName : 'Bạn') + '</b>' +
           '<span class="text-slate-500 font-medium">' + actionText + '</span>' +
           '</div>' +
           '<div class="flex items-center gap-1.5 flex-wrap">' +
@@ -29508,13 +29515,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '</div>' +
           '</div>' +
 
-          '<div class="flex items-center justify-between md:justify-end gap-2.5 md:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">' +
+          '<div class="flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
           '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
           (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
-            '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="Đã tổng hợp tạo báo cáo (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' +
+            (isManagerOrAbove ? '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="Đã tổng hợp tạo báo cáo (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="Đã tổng hợp tạo báo cáo (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
             '<i class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
             '<span>Đã tạo báo cáo' + (rec.consolidated < rec.total ? ' (' + rec.consolidated + '/' + rec.total + ')' : '') + '</span>' +
-            '</button>'
+            (isManagerOrAbove ? '</button>' : '</span>')
           ) : (
             '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-400 border border-slate-200/90 whitespace-nowrap" title="Chưa tổng hợp tạo báo cáo">' +
             '<i class="fa-regular fa-clock text-[11px] text-slate-300"></i>' +
@@ -29522,11 +29529,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             '</span>'
           )) +
           '</div>' +
-          '<div class="flex flex-col items-start justify-center gap-1 text-[11px] md:w-[140px] shrink-0">' +
+          '<div class="flex flex-col items-start justify-center gap-1 text-[11px] xl:w-[140px] shrink-0">' +
           '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
           (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
           '</div>' +
-          '<button type="button" onclick="downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="md:w-[320px] shrink-0 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
+          '<button type="button" onclick="downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-full xl:w-[320px] basis-full xl:basis-auto shrink-0 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
           '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
           '<span class="truncate flex-1 min-w-0">' + escapeHtml(fileName) + '</span>' +
           '<i class="fa-solid fa-download text-blue-500 text-[11px] shrink-0"></i>' +
