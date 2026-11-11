@@ -3664,6 +3664,8 @@
         </button>
       </div>
 
+      <p class="text-[11px] text-slate-600 leading-relaxed flex-shrink-0">Chỉ phân công cho cấp dưới: Nhân viên / Thủ kho → Kho chính / Tổ trưởng / Trưởng nhóm → Quản lý → Phó Giám Đốc → Giám Đốc. Không giao việc cho bản thân hoặc người cùng cấp.</p>
+
       <!-- THANH TOOLBAR ĐIỀU KHIỂN SIÊU GỌN: CHỌN BỘ PHẬN + CHỌN NHÂN SỰ + TÌM KIẾM NHANH TRÊN CÙNG 1 HÀNG -->
       <div
         class="bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 border border-emerald-200/80 rounded-2xl p-2 sm:p-2.5 space-y-1.5 flex-shrink-0 relative z-30">
@@ -8010,19 +8012,158 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return norm.startsWith("kho") || d.includes("kho") || d.includes("to kho");
     }
 
+    // Work assignment hierarchy. Explicit roles take precedence over usernames.
+    function getWorkRoleLevel(user) {
+      if (!user) return 0;
+      const normalize = value => removeAccents(String(value || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const role = normalize(typeof user === 'string' ? user : user.role);
+      const key = role || normalize(user.username);
+      if (/^(admin|administrator|quantri|quantrivien|quantrihethong)$/.test(key)) return 5;
+      if (/^(phogiamdoc|phogd|pgd|deputydirector|vicedirector)$/.test(key)) return 4;
+      if (/^(giamdoc|gd|director|lanhdao|tonggiamdoc)$/.test(key)) return 5;
+      if (/^(quanly|ql|manager|truongphong|phophong)$/.test(key)) return 3;
+      if (/^(khochinh|totruong|truongnhom|truongkho|leader|teamleader)/.test(key)) return 2;
+      if (/^(nhanvien|thukho|phukho|bocxep|chuyenvien|staff|employee|user)$/.test(key)) return 1;
+      return 0;
+    }
+
+    function canManageWorkAssignments(actor = currentUser) {
+      return !!actor && getWorkRoleLevel(actor) >= 3 && !isAccountLockedOrPaused(actor.status);
+    }
+
+    function isSameWorkUser(left, right) {
+      if (!left || !right) return false;
+      if (left.id != null && right.id != null && String(left.id) === String(right.id)) return true;
+      const a = String(left.username || '').trim().toLowerCase();
+      const b = String(right.username || '').trim().toLowerCase();
+      return !!a && !!b && a === b;
+    }
+
+    function canAssignWorkToUser(target, actor = currentUser) {
+      return canManageWorkAssignments(actor) && !!target && !isSameWorkUser(actor, target)
+        && !isAccountLockedOrPaused(target.status) && getWorkRoleLevel(target) > 0
+        && getWorkRoleLevel(target) < getWorkRoleLevel(actor);
+    }
+
+    function isRealWorkAssignmentUser(user) {
+      if (!user || isAccountLockedOrPaused(user.status)) return false;
+      const username = String(user.username || '').toLowerCase();
+      const role = removeAccents(String(user.role || '')).toLowerCase();
+      const name = String(user.full_name || user.fullName || '');
+      return !username.startsWith('group_') && !username.startsWith('nhom_kho_')
+        && !role.includes('nhom gop') && !(/^1[.\s]/.test(name.trim()) && /\n\s*2[.\s]/.test(name));
+    }
+
+    function canAssignSharedWork(users, actor = currentUser) {
+      const members = (users || []).filter(isRealWorkAssignmentUser);
+      return members.length > 0 && members.every(user => canAssignWorkToUser(user, actor));
+    }
+
+    function getSharedWorkLead(users) {
+      return (users || []).filter(isRealWorkAssignmentUser).slice().sort((a, b) =>
+        getWorkRoleLevel(b) - getWorkRoleLevel(a)
+        || String(a.full_name || a.fullName || '').localeCompare(String(b.full_name || b.fullName || ''), 'vi'))[0] || null;
+    }
+
+    function getCachedWorkUser(id) {
+      if (id == null || id === '') return null;
+      const users = Object.values(globalInitData?.deptMap || {}).flat();
+      return users.find(user => String(user.id) === String(id)) || null;
+    }
+
+    function ensureWorkAssignmentAccess() {
+      if (canManageWorkAssignments()) return true;
+      showToast('Chỉ Quản lý trở lên được phân công công việc.', true);
+      return false;
+    }
+
+    async function getFreshWorkUser(id) {
+      if (id == null || id === '') throw new Error('Không xác định được tài khoản. Vui lòng đăng nhập lại.');
+      const result = await supabase.from('users').select('id, username, full_name, role, status, department_id').eq('id', id).limit(2);
+      if (result.error) throw result.error;
+      if (!result.data || result.data.length !== 1) throw new Error('Không tìm thấy tài khoản hợp lệ.');
+      return result.data[0];
+    }
+
+    async function getFreshWorkAssignmentActor() {
+      const actor = await getFreshWorkUser(currentUser?.id);
+      if (!canManageWorkAssignments(actor)) throw new Error('Chỉ Quản lý trở lên được thực hiện thao tác này.');
+      return actor;
+    }
+
+    async function resolveWorkAssignmentTarget(deptName, selectedId, shared, actor) {
+      const deptResult = await supabase.from('departments').select('id, name').eq('name', deptName).limit(2);
+      if (deptResult.error) throw deptResult.error;
+      if (!deptResult.data || deptResult.data.length !== 1) throw new Error('Bộ phận không hợp lệ. Vui lòng chọn lại.');
+      const department = deptResult.data[0];
+      const usersResult = await supabase.from('users').select('id, username, full_name, role, status, department_id').eq('department_id', department.id).limit(10000);
+      if (usersResult.error) throw usersResult.error;
+      const members = (usersResult.data || []).filter(isRealWorkAssignmentUser);
+      let user;
+      if (shared) {
+        if (!isSharedGroupDeptClient(deptName) || !canAssignSharedWork(members, actor))
+          throw new Error('Chỉ được phân công việc chung khi tất cả thành viên đều dưới cấp của bạn.');
+        user = getSharedWorkLead(members);
+      } else {
+        user = members.find(member => String(member.id) === String(selectedId));
+      }
+      if (!canAssignWorkToUser(user, actor)) throw new Error('Chỉ được phân công cho người dưới cấp; không chọn bản thân, người cùng cấp hoặc cấp trên.');
+      return { user, department, members, shared, scope: isSharedGroupDeptClient(deptName) ? (shared ? 'shared' : 'personal') : '' };
+    }
+
+    async function getCurrentWorkAssignmentTarget(actor) {
+      const select = document.getElementById('modalAssignStaffSelect');
+      const deptName = document.getElementById('modalAssignDeptSelect')?.value?.trim();
+      return resolveWorkAssignmentTarget(deptName, select?.selectedOptions[0]?.dataset?.userId,
+        select?.value === '__SHARED_GROUP__', actor);
+    }
+
+    async function validateWorkAssignmentTasks(taskIds, actor, expectedTarget = null) {
+      const ids = [...new Set((taskIds || []).filter(id => id != null && id !== '').map(String))];
+      if (!ids.length) return [];
+      const result = await supabase.from('tasks').select('id, assigned_user_id, department_id, guide, task_name, created_at').in('id', ids).limit(10000);
+      if (result.error) throw result.error;
+      const tasks = result.data || [];
+      if (tasks.length !== ids.length) throw new Error('Có công việc không còn tồn tại. Vui lòng mở lại danh sách.');
+      const owners = new Map();
+      const groups = new Map();
+      for (const task of tasks) {
+        const ownerId = String(task.assigned_user_id || '');
+        if (!owners.has(ownerId)) owners.set(ownerId, await getFreshWorkUser(task.assigned_user_id));
+        if (!canAssignWorkToUser(owners.get(ownerId), actor)) throw new Error('Bạn không có quyền thay đổi công việc của người cùng cấp hoặc cấp trên.');
+        const deptId = String(task.department_id || '');
+        const scope = parseTaskScope(task.guide || '');
+        if (expectedTarget) {
+          if (deptId !== String(expectedTarget.department.id)
+            || (expectedTarget.shared ? scope === 'personal'
+              : ownerId !== String(expectedTarget.user.id) || (expectedTarget.scope === 'personal' && scope !== 'personal')))
+            throw new Error('Danh sách công việc đã thay đổi. Vui lòng chọn lại người được phân công.');
+        }
+        if (!groups.has(deptId)) {
+          const [deptRes, membersRes] = await Promise.all([
+            supabase.from('departments').select('id, name').eq('id', task.department_id).limit(1),
+            supabase.from('users').select('id, username, full_name, role, status, department_id').eq('department_id', task.department_id).limit(10000)
+          ]);
+          if (deptRes.error) throw deptRes.error;
+          if (membersRes.error) throw membersRes.error;
+          if (!deptRes.data?.[0]) throw new Error('Không tìm thấy bộ phận của công việc.');
+          groups.set(deptId, { dept: deptRes.data[0], members: membersRes.data || [] });
+        }
+        const group = groups.get(deptId);
+        if (isSharedGroupDeptClient(group.dept.name) && scope !== 'personal' && !canAssignSharedWork(group.members, actor))
+          throw new Error('Bạn không có quyền thay đổi công việc chung của tổ có người cùng cấp hoặc cấp trên.');
+      }
+      return tasks;
+    }
+
+
     function isDeputyDirector(roleStr, usernameStr) {
-      if (!roleStr && !usernameStr) return false;
-      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      return r.includes("phogiamdoc") || r.includes("phogd") || r === "pgd" ||
-        u.includes("phogiamdoc") || u.includes("phogd") || u.startsWith("pgd.");
+      return getWorkRoleLevel({ role: roleStr, username: usernameStr }) === 4;
     }
 
     function isSystemAdmin(roleStr, usernameStr) {
-      if (!roleStr && !usernameStr) return false;
-      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      return r === "admin" || r.includes("quantri") || u === "admin" || u.includes("quantri");
+      const key = removeAccents(String(roleStr || usernameStr || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
+      return /^(admin|administrator|quantri|quantrivien|quantrihethong)$/.test(key);
     }
 
     /**
@@ -8035,12 +8176,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function isOnlyDirector(roleStr, usernameStr) {
-      if (!roleStr && !usernameStr) return false;
-      if (isDeputyDirector(roleStr, usernameStr)) return false;
-      if (isSystemAdmin(roleStr, usernameStr)) return false;
-      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      return r.includes("giamdoc") || r.includes("lanhdao") || u.includes("giamdoc") || u.includes("lanhdao");
+      return getWorkRoleLevel({ role: roleStr, username: usernameStr }) === 5 && !isSystemAdmin(roleStr, usernameStr);
     }
 
     function isDirectorOrAdmin(roleStr, usernameStr) {
@@ -8058,14 +8194,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function isAdminOrManager(roleStr, usernameStr) {
-      if (!roleStr && !usernameStr) return false;
-      if (isDeputyDirector(roleStr, usernameStr)) return true;
-      var r = removeAccents(String(roleStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      var u = removeAccents(String(usernameStr || "")).toLowerCase().replace(/[\s\-_]+/g, "");
-      return r.includes("admin") || r.includes("quantri") || r.includes("quanly") ||
-        r.includes("giamdoc") || r.includes("lanhdao") || r.includes("truongphong") ||
-        r.includes("phophong") || r.includes("leader") || r.includes("manager") || r === "ql" ||
-        u.includes("admin") || u.includes("quanly") || u.includes("manager") || u.includes("giamdoc");
+      return getWorkRoleLevel({ role: roleStr, username: usernameStr }) >= 3;
     }
 
     /**
@@ -11476,7 +11605,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (isAdminOrManager(currentUser.role, currentUser.username)) {
         container.classList.remove('hidden');
-        btnAssign.classList.remove('hidden');
+        if (btnAssign) btnAssign.classList.toggle('hidden', !canManageWorkAssignments(currentUser));
         if (btnUserManager) btnUserManager.classList.remove('hidden');
         if (btnDeptManager) btnDeptManager.classList.remove('hidden');
         if (adminSection) adminSection.classList.remove('hidden');
@@ -18445,7 +18574,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // ================= PHÂN CÔNG GIAO VIỆC TRÊN MÁY CHỦ =================
+    let assignModalOpenRequestId = 0;
     async function openAssignModal() {
+      if (!ensureWorkAssignmentAccess()) return;
+      const openRequestId = ++assignModalOpenRequestId;
+      ++assignStaffLoadRequestId;
+      modalAssignAllStaffCache = [];
+      modalAssignStaffCache = [];
+      modalAssignDeptCache = [];
+      const oldStaffSelect = document.getElementById('modalAssignStaffSelect');
+      if (oldStaffSelect) oldStaffSelect.innerHTML = '';
+      const oldEditor = document.getElementById('assignTasksListEditor');
+      if (oldEditor) oldEditor.innerHTML = '';
       if (currentPeriodLocked) {
         const mStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
         showToast(`Kỳ báo cáo Tháng ${mStr}/${currentSelectedYear} đã khóa sổ. Toàn bộ đầu việc và số liệu được bảo lưu nguyên vẹn. Để phân công công việc kỳ mới, vui lòng chuyển sang kỳ đang mở!`, true);
@@ -18463,14 +18603,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        if (openRequestId !== assignModalOpenRequestId || String(currentUser?.id) !== String(actor.id)) return;
+        currentUser = Object.freeze({ ...currentUser, role: actor.role, status: actor.status });
         const deptSelect = document.getElementById('modalAssignDeptSelect');
         if (deptSelect) {
           deptSelect.innerHTML = '<option value="">Đang tải danh sách...</option>';
         }
 
         // TẢI DỮ LIỆU BỘ PHẬN VÀ NHÂN SỰ MỚI NHẤT TRỰC TIẾP TỪ SUPABASE (KÈM VAI TRÒ VỪA CẬP NHẬT)
-        const { data: dbDepts } = await supabase.from('departments').select('*').order('name').limit(1000);
-        const { data: dbUsers } = await supabase.from('users').select('*').eq('status', 'Hoạt động').order('full_name').limit(10000);
+        const { data: dbDepts, error: dbDeptError } = await supabase.from('departments').select('*').order('name').limit(1000);
+        const { data: dbUsers, error: dbUserError } = await supabase.from('users').select('*').eq('status', 'Hoạt động').order('full_name').limit(10000);
+        if (openRequestId !== assignModalOpenRequestId) return;
+        if (!ensureWorkAssignmentAccess()) { closeAssignModal(); return; }
+        if (dbDeptError || dbUserError || !dbDepts || !dbUsers) {
+          throw dbDeptError || dbUserError || new Error('Không tải được danh sách nhân sự phân công.');
+        }
 
         if (dbDepts && dbUsers) {
           // Lọc bỏ tài khoản kỹ thuật nhóm gộp cũ
@@ -18506,21 +18654,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           globalInitData.deptMap = freshDeptMap;
 
           // XÂY DỰNG CACHE TOÀN BỘ NHÂN SỰ TOÀN CÔNG TY PHỤC VỤ TÌM KIẾM NHANH GỢI Ý TỰ ĐỘNG
-          const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-          modalAssignAllStaffCache = validUsers.filter(u => {
-            const r = removeAccents(u.role || "").toLowerCase();
-            const uname = removeAccents(u.username || "").toLowerCase();
-            // 1. Loại trừ tài khoản Admin
-            if (r.includes('admin') || uname.includes('admin') || r.includes('quantri')) return false;
-            // 2. Không phân công cho Giám Đốc tối cao (tự phân công)
-            if (isDirectorOrAdmin(u.role, u.username)) return false;
-            // 3. Phó Giám Đốc: Giám Đốc hoặc Admin CÓ QUYỀN giao việc cho Phó Giám Đốc!
-            if (isDeputyDirector(u.role, u.username)) {
-              return isAssignerDirector;
-            }
-            if (r === 'giam doc' || r.includes('tong giam doc')) return false;
-            return true;
-          }).map(u => {
+          modalAssignAllStaffCache = validUsers.filter(u => canAssignWorkToUser(u)).map(u => {
             const d = dbDepts.find(x => x.id === u.department_id);
             const dName = d ? d.name : "Chưa phân bộ phận";
             return {
@@ -18552,20 +18686,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (deptSelect) {
           deptSelect.innerHTML = '';
           if (globalInitData && globalInitData.departments) {
-            const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-            // Loại trừ bộ phận Giám đốc / Lãnh đạo cấp cao khỏi danh sách phân công,
-            // NGOẠI TRỪ khi người giao việc là Giám Đốc/Admin và trong bộ phận có Phó Giám Đốc!
             let depts = globalInitData.departments.filter(d => {
-              const dNorm = normalizeDeptKey(d);
-              if (dNorm.includes("giam doc") || dNorm.includes("ban giam")) {
-                if (isAssignerDirector) {
-                  const members = (globalInitData.deptMap && globalInitData.deptMap[d]) ? globalInitData.deptMap[d] : [];
-                  const hasDeputy = members.some(m => isDeputyDirector(m.role, m.username));
-                  return hasDeputy;
-                }
-                return false;
-              }
-              return true;
+              const members = globalInitData.deptMap?.[d] || [];
+              return members.some(member => canAssignWorkToUser(member));
             });
             depts.sort((a, b) => a.localeCompare(b, 'vi'));
 
@@ -18579,16 +18702,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             modalAssignDeptCache = depts;
             renderModalAssignDeptPicker(depts);
           }
-          const activeDept = deptSelect.value || (globalInitData && globalInitData.departments && globalInitData.departments[0]) || "";
+          const activeDept = deptSelect.value || "";
           updateModalAssignDeptUI(activeDept);
           onAssignDeptSelectChange(activeDept);
         }
       } catch (e) {
+        if (openRequestId !== assignModalOpenRequestId) return;
+        closeAssignModal();
         console.error("Lỗi nạp danh sách phân công:", e);
+        showToast("Không tải được danh sách phân công: " + e.message, true);
       }
     }
 
     function closeAssignModal() {
+      ++assignModalOpenRequestId;
+      ++assignStaffLoadRequestId;
       const modal = document.getElementById('assignModal');
       if (modal) modal.classList.add('hidden');
       const dm = document.getElementById('modalAssignDeptMenu');
@@ -18610,6 +18738,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // HÀM TÌM KIẾM NHANH TÊN NHÂN VIÊN VỚI GỢI Ý TỰ ĐỘNG (TOÀN BAN DVKH)
     function onModalAssignQuickSearchInput(query) {
+      if (!ensureWorkAssignmentAccess()) return;
       const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
       const resultsContainer = document.getElementById('modalAssignQuickSearchResults');
       const countEl = document.getElementById('modalAssignQuickSearchCount');
@@ -18628,7 +18757,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
 
-      const matches = modalAssignAllStaffCache.filter(st => {
+      const matches = modalAssignAllStaffCache.filter(st => canAssignWorkToUser(getCachedWorkUser(st.id) || st)).filter(st => {
         const normN = typeof removeAccents === 'function' ? removeAccents(st.fullName || '').toLowerCase() : (st.fullName || '').toLowerCase();
         const normU = (st.username || '').toLowerCase();
         const normR = typeof removeAccents === 'function' ? removeAccents(st.role || '').toLowerCase() : (st.role || '').toLowerCase();
@@ -18691,6 +18820,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function onModalAssignQuickSearchFocus() {
+      if (!ensureWorkAssignmentAccess()) return;
       const qInput = document.getElementById('modalAssignQuickStaffSearch');
       const val = qInput?.value || '';
       if (val.trim()) {
@@ -18699,9 +18829,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const dropdown = document.getElementById('modalAssignQuickSearchDropdown');
         const resultsContainer = document.getElementById('modalAssignQuickSearchResults');
         const countEl = document.getElementById('modalAssignQuickSearchCount');
-        if (modalAssignAllStaffCache && modalAssignAllStaffCache.length > 0 && resultsContainer) {
-          const sample = modalAssignAllStaffCache.slice(0, 15);
-          if (countEl) countEl.innerText = `${modalAssignAllStaffCache.length} nhân sự`;
+        const eligibleStaff = modalAssignAllStaffCache.filter(st => canAssignWorkToUser(getCachedWorkUser(st.id) || st));
+        if (eligibleStaff.length > 0 && resultsContainer) {
+          const sample = eligibleStaff.slice(0, 15);
+          if (countEl) countEl.innerText = `${eligibleStaff.length} nhân sự`;
           let html = '';
           sample.forEach((st, idx) => {
             const av = getStaffStyle(st.fullName, idx);
@@ -18745,6 +18876,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function clearModalAssignQuickSearch() {
+      if (!ensureWorkAssignmentAccess()) return;
       const inp = document.getElementById('modalAssignQuickStaffSearch');
       if (inp) {
         inp.value = '';
@@ -18757,8 +18889,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function selectQuickSearchStaff(staffId) {
-      const st = modalAssignAllStaffCache.find(x => x.id === staffId);
-      if (!st) return;
+      if (!ensureWorkAssignmentAccess()) return;
+      const st = modalAssignAllStaffCache.find(x => String(x.id) === String(staffId));
+      if (!st || !canAssignWorkToUser(getCachedWorkUser(st.id) || st)) {
+        showToast('Bạn chỉ được phân công cho nhân sự ở cấp thấp hơn mình.', true);
+        return;
+      }
 
       // 1. Cập nhật ô tìm kiếm nhanh
       const inp = document.getElementById('modalAssignQuickStaffSearch');
@@ -18784,11 +18920,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
         deptSelect.value = st.deptName;
         updateModalAssignDeptUI(st.deptName);
-        onAssignDeptSelectChange(st.deptName, st.fullName);
+        onAssignDeptSelectChange(st.deptName, st.fullName, st.id);
       }
     }
 
     function toggleModalAssignDeptPicker(e) {
+      if (!ensureWorkAssignmentAccess()) return;
       if (e) e.stopPropagation();
       const menu = document.getElementById('modalAssignDeptMenu');
       const chev = document.getElementById('modalAssignDeptChevron');
@@ -18817,6 +18954,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function filterModalAssignDeptList() {
+      if (!ensureWorkAssignmentAccess()) return;
       const term = (document.getElementById('modalAssignDeptSearchInput')?.value || '').toLowerCase();
       const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
       const filtered = modalAssignDeptCache.filter(d => {
@@ -18827,6 +18965,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function selectModalAssignDept(dept) {
+      if (!ensureWorkAssignmentAccess()) return;
+      if (!(globalInitData?.deptMap?.[dept] || []).some(u => canAssignWorkToUser(u))) {
+        showToast('Bộ phận này không có nhân sự thuộc quyền phân công của bạn.', true);
+        return;
+      }
       const sel = document.getElementById('modalAssignDeptSelect');
       if (sel) sel.value = dept;
       updateModalAssignDeptUI(dept);
@@ -18892,6 +19035,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function toggleModalAssignStaffPicker(e) {
+      if (!ensureWorkAssignmentAccess()) return;
       if (e) e.stopPropagation();
       const menu = document.getElementById('modalAssignStaffMenu');
       const chev = document.getElementById('modalAssignStaffChevron');
@@ -18920,6 +19064,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function filterModalAssignStaffList() {
+      if (!ensureWorkAssignmentAccess()) return;
       const term = (document.getElementById('modalAssignStaffSearchInput')?.value || '').toLowerCase();
       const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
       const filtered = modalAssignStaffCache.filter(st => {
@@ -18931,9 +19076,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       renderModalAssignStaffPicker(filtered);
     }
 
-    function selectModalAssignStaff(staffName) {
+    function selectModalAssignStaff(staffName, userId = null) {
+      if (!ensureWorkAssignmentAccess()) return;
+      const dept = document.getElementById('modalAssignDeptSelect')?.value || '';
+      const members = globalInitData?.deptMap?.[dept] || [];
+      const candidates = modalAssignStaffCache.filter(st => !st.isSharedScope && st.fullName === staffName
+        && (userId == null || String(st.id) === String(userId)));
+      const candidate = candidates.length === 1 ? candidates[0] : null;
+      const allowed = staffName === '__SHARED_GROUP__'
+        ? canAssignSharedWork(members)
+        : candidate && canAssignWorkToUser(getCachedWorkUser(candidate.id) || candidate);
+      if (!allowed) {
+        showToast('Bạn chỉ được phân công cho nhân sự ở cấp thấp hơn mình.', true);
+        return;
+      }
       const sel = document.getElementById('modalAssignStaffSelect');
-      if (sel) sel.value = staffName;
+      if (!sel) return;
+      const optionIndex = Array.from(sel.options).findIndex(opt => opt.value === staffName
+        && (staffName === '__SHARED_GROUP__' || String(opt.dataset.userId) === String(candidate.id)));
+      if (optionIndex < 0) return;
+      sel.selectedIndex = optionIndex;
       updateModalAssignStaffUI(staffName);
       const menu = document.getElementById('modalAssignStaffMenu');
       const chev = document.getElementById('modalAssignStaffChevron');
@@ -18961,7 +19123,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function renderModalAssignStaffPicker(staffList) {
       const container = document.getElementById('modalAssignStaffList');
       if (!container) return;
-      const currentVal = document.getElementById('modalAssignStaffSelect')?.value || '';
+      const currentSelect = document.getElementById('modalAssignStaffSelect');
+      const currentVal = currentSelect?.value || '';
+      const selectedId = currentSelect?.selectedOptions[0]?.dataset?.userId;
 
       if (!staffList || staffList.length === 0) {
         container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Chưa có nhân sự nào trong bộ phận này</div>';
@@ -18973,7 +19137,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       staffList.forEach((st, idx) => {
         const itemVal = st.isSharedScope ? '__SHARED_GROUP__' : st.fullName;
-        const isSelected = (itemVal === currentVal);
+        const isSelected = st.isSharedScope ? currentVal === '__SHARED_GROUP__'
+          : currentVal !== '__SHARED_GROUP__' && String(st.id) === String(selectedId);
 
         if (st.isSharedScope) {
           html += `
@@ -19000,7 +19165,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const isDeputy = st.isDeputy || (typeof isDeputyDirector === 'function' && isDeputyDirector(st.role, st.username));
         if (isDeputy) {
           html += `
-            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-purple-400 bg-purple-50/90 font-bold shadow-xs' : 'border-transparent hover:border-purple-200 hover:bg-purple-50/60'} border-l-4 border-l-purple-600 mb-1">
+            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}', ${st.id})" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-purple-400 bg-purple-50/90 font-bold shadow-xs' : 'border-transparent hover:border-purple-200 hover:bg-purple-50/60'} border-l-4 border-l-purple-600 mb-1">
               <div class="flex items-center gap-2 min-w-0">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
                   <i class="fa-solid fa-crown text-[10px]"></i>
@@ -19022,14 +19187,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (st.isPersonalScope) {
           const initial = escapeHtml((st.fullName || '').charAt(0));
           html += `
-            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-indigo-300 bg-indigo-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-indigo-500 mb-1">
+            <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}', ${st.id})" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-indigo-300 bg-indigo-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 border-l-indigo-500 mb-1">
               <div class="flex items-center gap-2 min-w-0">
                 <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
                   ${initial}
                 </div>
                 <div class="min-w-0">
                   <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-indigo-950">${escapeHtml(st.fullName)}</span>
-                  <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+                  <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}] @${st.username || ''}` : '@' + st.username)}</span>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
@@ -19045,14 +19210,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const bAccent = borderAccents[idx % borderAccents.length];
 
         html += `
-          <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}')" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
+          <div onclick="selectModalAssignStaff('${escapeHtml(st.fullName)}', ${st.id})" class="group flex items-center justify-between p-2 rounded-xl transition cursor-pointer border ${isSelected ? 'border-emerald-300 bg-emerald-50/90 font-bold shadow-xs' : 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'} border-l-4 ${bAccent} mb-1">
             <div class="flex items-center gap-2 min-w-0">
               <div class="w-6 h-6 rounded-full bg-gradient-to-br ${av.color.bg} ${av.color.text} flex items-center justify-center shrink-0 text-xs font-black shadow-2xs group-hover:scale-105 transition-transform">
                 ${av.initial}
               </div>
               <div class="min-w-0">
                 <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
-                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}] @${st.username || ''}` : '@' + st.username)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-2">
@@ -19084,7 +19249,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      const st = modalAssignStaffCache.find(x => x.fullName === staffName && !x.isSharedScope);
+      const selectedId = document.getElementById('modalAssignStaffSelect')?.selectedOptions[0]?.dataset?.userId;
+      const st = modalAssignStaffCache.find(x => x.fullName === staffName && !x.isSharedScope && String(x.id) === String(selectedId));
       if (!staffName || !st) {
         if (textEl) textEl.innerText = staffName || "Chọn nhân sự...";
         if (subText) subText.classList.add('hidden');
@@ -19132,119 +19298,77 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       renderModalAssignStaffPicker(modalAssignStaffCache);
     }
 
-    function onAssignDeptSelectChange(dept, targetStaffName = "") {
+    function onAssignDeptSelectChange(dept, targetStaffName = "", targetStaffId = null) {
+      if (!ensureWorkAssignmentAccess()) return;
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       if (!staffSelect) return;
       staffSelect.innerHTML = '';
-
-      const deptUsers = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[dept]) ? globalInitData.deptMap[dept] : [];
-
-      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-      // LOẠI TRỪ TUYỆT ĐỐI TÀI KHOẢN ADMIN & GIÁM ĐỐC TỐI CAO KHỎI PHÂN CÔNG CÔNG VIỆC
-      // (GIÁM ĐỐC VẪN CÓ QUYỀN GIAO VIỆC CHO PHÓ GIÁM ĐỐC)
-      const assignableUsers = deptUsers.filter(st => {
-        const r = removeAccents(st.role || "").toLowerCase();
-        const u = removeAccents(st.username || "").toLowerCase();
-        if (r.includes('admin') || u.includes('admin') || r.includes('quantri')) return false;
-
-        // Giám Đốc tối cao: Không tự nhận phân công công việc
-        if (isDirectorOrAdmin(st.role, st.username)) return false;
-
-        // Phó Giám Đốc: Giám Đốc hoặc Admin có quyền giao việc cho Phó Giám Đốc!
-        if (isDeputyDirector(st.role, st.username)) {
-          return isAssignerDirector;
-        }
-
-        if (r === 'giam doc' || r.includes('tong giam doc')) return false;
-        return true;
-      });
-
+      const deptUsers = globalInitData?.deptMap?.[dept] || [];
+      const assignableUsers = deptUsers.filter(st => canAssignWorkToUser(st));
       const isShared = isSharedGroupDeptClient(dept);
-      let selectedStaffVal = "";
-
-      if (isShared && assignableUsers.length > 0) {
-        // TỔ KHO / NHÓM GỘP: HỖ TRỢ PHÂN CÔNG VIỆC CHUNG VÀ VIỆC CÁ NHÂN RIÊNG CỦA TỪNG THÀNH VIÊN
-        const leadUser = assignableUsers.find(u => /chinh|truong|to truong|leader|quan ly/i.test(removeAccents(u.role || ""))) || assignableUsers[0];
-        const leadUserId = leadUser ? leadUser.id : (assignableUsers[0]?.id || 1);
-
-        const sharedGroupItem = {
-          id: leadUserId,
-          fullName: "🏢 Công việc chung của tổ kho",
-          role: `Kho chính (${leadUser?.fullName || 'Đại diện'}) phụ trách báo cáo chung`,
-          username: "shared_group",
+      const leadUser = isShared ? getSharedWorkLead(deptUsers) : null;
+      const canUseSharedScope = isShared && canAssignSharedWork(deptUsers) && leadUser?.id != null;
+      const personalItems = assignableUsers.map(st => ({
+        ...st,
+        isSharedScope: false,
+        isPersonalScope: isShared,
+        leadUserId: leadUser?.id ?? null
+      }));
+      modalAssignStaffCache = [...personalItems];
+      if (canUseSharedScope) {
+        modalAssignStaffCache.unshift({
+          id: leadUser.id,
+          fullName: '🏢 Công việc chung của tổ kho',
+          role: `${leadUser.role || 'Đại diện'} (${leadUser.fullName || leadUser.full_name || ''}) phụ trách báo cáo chung`,
+          username: 'shared_group',
           isSharedScope: true,
-          leadUserId: leadUserId
-        };
-
-        const personalItems = assignableUsers.map(st => ({
-          ...st,
-          isSharedScope: false,
-          isPersonalScope: true,
-          leadUserId: leadUserId
-        }));
-
-        modalAssignStaffCache = [sharedGroupItem, ...personalItems];
-
-        // 1. Option công việc chung
-        const optShared = document.createElement('option');
-        optShared.value = "__SHARED_GROUP__";
-        optShared.dataset.userId = leadUserId;
-        optShared.dataset.leadUserId = leadUserId;
-        optShared.dataset.scope = "shared";
-        optShared.innerText = `🏢 Công việc chung của tổ kho (Kho chính phụ trách)`;
-        staffSelect.appendChild(optShared);
-
-        // 2. Options việc cá nhân từng thành viên
-        personalItems.forEach(st => {
-          const opt = document.createElement('option');
-          opt.value = st.fullName;
-          opt.dataset.userId = st.id;
-          opt.dataset.leadUserId = leadUserId;
-          opt.dataset.role = st.role || "";
-          opt.dataset.scope = "personal";
-          const roleBadge = st.role ? ` — (${st.role})` : '';
-          opt.innerText = `👤 ${st.fullName}${roleBadge} — Việc cá nhân riêng`;
-          staffSelect.appendChild(opt);
+          leadUserId: leadUser.id
         });
-
-        // Xác định đối tượng cần chọn:
-        if (targetStaffName && targetStaffName !== "__SHARED_GROUP__") {
-          const matched = personalItems.find(p => p.fullName === targetStaffName);
-          selectedStaffVal = matched ? matched.fullName : "__SHARED_GROUP__";
-        } else {
-          selectedStaffVal = "__SHARED_GROUP__";
-        }
-
-      } else if (assignableUsers.length > 0) {
-        // BỘ PHẬN THƯỜNG:
-        modalAssignStaffCache = assignableUsers;
-        assignableUsers.forEach(st => {
-          const opt = document.createElement('option');
-          opt.value = st.fullName;
-          opt.dataset.userId = st.id;
-          opt.dataset.role = st.role || "";
-          opt.dataset.scope = "";
-          opt.innerText = st.fullName;
-          staffSelect.appendChild(opt);
-        });
-
-        if (targetStaffName && assignableUsers.some(u => u.fullName === targetStaffName)) {
-          selectedStaffVal = targetStaffName;
-        } else if (currentSelectedStaff !== "TẤT CẢ" && assignableUsers.some(u => u.fullName === currentSelectedStaff)) {
-          selectedStaffVal = currentSelectedStaff;
-        } else {
-          selectedStaffVal = assignableUsers[0].fullName;
-        }
-      } else {
-        modalAssignStaffCache = [];
-        const opt = document.createElement('option');
-        opt.value = "";
-        opt.innerText = "-- Chưa có nhân sự phân công trong bộ phận này --";
-        staffSelect.appendChild(opt);
-        selectedStaffVal = "";
+        const sharedOption = document.createElement('option');
+        sharedOption.value = '__SHARED_GROUP__';
+        sharedOption.dataset.userId = leadUser.id;
+        sharedOption.dataset.leadUserId = leadUser.id;
+        sharedOption.dataset.scope = 'shared';
+        sharedOption.innerText = '🏢 Công việc chung của tổ kho (Đại diện phụ trách)';
+        staffSelect.appendChild(sharedOption);
       }
-
+      personalItems.forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.fullName;
+        opt.dataset.userId = st.id;
+        if (leadUser?.id != null) opt.dataset.leadUserId = leadUser.id;
+        opt.dataset.role = st.role || '';
+        opt.dataset.scope = isShared ? 'personal' : '';
+        opt.innerText = isShared
+          ? `👤 ${st.fullName}${st.role ? ' — (' + st.role + ')' : ''} — Việc cá nhân riêng`
+          : st.fullName;
+        staffSelect.appendChild(opt);
+      });
+      let selectedStaffVal = '';
+      const requestedMatches = personalItems.filter(st => targetStaffId != null
+        ? String(st.id) === String(targetStaffId) && st.fullName === targetStaffName
+        : st.fullName === targetStaffName);
+      const requestedStaff = requestedMatches.length === 1 ? requestedMatches[0] : null;
+      if (requestedStaff) {
+        selectedStaffVal = requestedStaff.fullName;
+      } else if (canUseSharedScope) {
+        selectedStaffVal = '__SHARED_GROUP__';
+      } else if (personalItems.some(st => st.fullName === currentSelectedStaff)) {
+        selectedStaffVal = currentSelectedStaff;
+      } else {
+        selectedStaffVal = personalItems[0]?.fullName || '';
+      }
+      if (!selectedStaffVal) {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.innerText = '-- Không có nhân sự cấp dưới để phân công --';
+        staffSelect.appendChild(emptyOption);
+      }
       staffSelect.value = selectedStaffVal;
+      if (requestedStaff) {
+        staffSelect.selectedIndex = Array.from(staffSelect.options).findIndex(opt =>
+          opt.value !== '__SHARED_GROUP__' && String(opt.dataset.userId) === String(requestedStaff.id));
+      }
       renderModalAssignStaffPicker(modalAssignStaffCache);
       updateModalAssignStaffUI(selectedStaffVal);
       onAssignStaffSelectChange(selectedStaffVal);
@@ -19252,6 +19376,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     let assignStaffLoadRequestId = 0;
     async function onAssignStaffSelectChange(staffName) {
+      if (!ensureWorkAssignmentAccess()) return;
       const currentReqId = ++assignStaffLoadRequestId;
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
@@ -19259,6 +19384,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const deptVal = document.getElementById('modalAssignDeptSelect')?.value || "";
       const isShared = isSharedGroupDeptClient(deptVal);
       const isSharedScope = (staffName === "__SHARED_GROUP__");
+      const deptUsers = globalInitData?.deptMap?.[deptVal] || [];
 
       const noteEl = document.getElementById('modalAssignActiveStaffNote');
       if (noteEl) {
@@ -19280,7 +19406,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const staffSelect = document.getElementById('modalAssignStaffSelect');
       const selectedOpt = staffSelect ? staffSelect.selectedOptions[0] : null;
-      const targetUserId = selectedOpt?.dataset?.userId;
+      const selectedUser = deptUsers.find(st => String(st.id) === String(selectedOpt?.dataset?.userId) && st.fullName === staffName);
+      const allowed = isSharedScope
+        ? isShared && canAssignSharedWork(deptUsers)
+        : selectedUser && canAssignWorkToUser(selectedUser);
+      if (!allowed) {
+        container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Bạn chỉ được phân công cho nhân sự ở cấp thấp hơn mình.</p>';
+        return;
+      }
+      const targetUserId = isSharedScope ? getSharedWorkLead(deptUsers)?.id : selectedUser.id;
 
       container.innerHTML = `
         <div class="py-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
@@ -19291,21 +19425,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       try {
         let tasks = [];
-        let uId = targetUserId ? parseInt(targetUserId, 10) : null;
+        const uId = targetUserId ?? null;
 
         if (isSharedScope) {
           // LẤY CÔNG VIỆC CHUNG CỦA TỔ KHO:
-          const { data: deptInfo } = await supabase.from('departments').select('id').eq('name', deptVal).limit(1);
+          const { data: deptInfo, error: deptError } = await supabase.from('departments').select('id').eq('name', deptVal).limit(2);
           if (currentReqId !== assignStaffLoadRequestId) return;
-          const dId = deptInfo && deptInfo[0] ? deptInfo[0].id : null;
-
-          let query = supabase.from('tasks').select('*').limit(5000);
-          if (dId) {
-            query = query.eq('department_id', dId);
-          } else if (uId) {
-            query = query.eq('assigned_user_id', uId);
-          }
-          const { data: deptTasks, error: tErr } = await query;
+          if (deptError) throw deptError;
+          if (!deptInfo || deptInfo.length !== 1 || deptInfo[0].id == null)
+            throw new Error('Không xác định được bộ phận. Vui lòng chọn lại.');
+          const { data: deptTasks, error: tErr } = await supabase.from('tasks').select('*').eq('department_id', deptInfo[0].id).limit(5000);
           if (currentReqId !== assignStaffLoadRequestId) return;
           if (tErr) throw tErr;
 
@@ -19313,28 +19442,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           // VÀ CHỈ LẤY CÁC ĐẦU VIỆC CÓ HIỆU LỰC TRONG KỲ ĐANG XEM (currentSelectedMonth, currentSelectedYear)!
           tasks = (deptTasks || []).filter(t => {
             if (parseTaskScope(t.guide) === 'personal') return false;
+            if (!canAssignWorkToUser(getCachedWorkUser(t.assigned_user_id))) return false;
             return isTaskEffectiveInPeriod(t, currentSelectedYear, currentSelectedMonth);
           });
         } else {
           // LẤY CÔNG VIỆC CÁ NHÂN (HOẶC BỘ PHẬN THƯỜNG):
-          if (!uId) {
-            const { data: user, error: uErr } = await supabase
-              .from('users')
-              .select('id, role, username')
-              .eq('full_name', staffName)
-              .limit(1);
-
-            if (currentReqId !== assignStaffLoadRequestId) return;
-            if (uErr) throw uErr;
-            if (user && user[0]) {
-              const isDeputy = isDeputyDirector(user[0].role, user[0].username);
-              if (isDirectorOrAdmin(user[0].role, user[0].username) && !isDeputy) {
-                container.innerHTML = '<p class="empty-assign-msg text-xs text-amber-600 italic py-3 text-center">Tài khoản Quản trị/Giám đốc không tham gia nhận phân công công việc.</p>';
-                return;
-              }
-              uId = user[0].id;
-            }
-          }
 
           if (!uId) {
             if (currentReqId !== assignStaffLoadRequestId) return;
@@ -19463,6 +19575,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function moveAssignTaskRowUp(btn) {
+      if (!ensureWorkAssignmentAccess()) return;
       const row = btn.closest('.assign-task-row');
       if (!row || !row.previousElementSibling || !row.previousElementSibling.classList.contains('assign-task-row')) return;
       row.parentNode.insertBefore(row, row.previousElementSibling);
@@ -19470,6 +19583,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function moveAssignTaskRowDown(btn) {
+      if (!ensureWorkAssignmentAccess()) return;
       const row = btn.closest('.assign-task-row');
       if (!row || !row.nextElementSibling || !row.nextElementSibling.classList.contains('assign-task-row')) return;
       row.parentNode.insertBefore(row.nextElementSibling, row);
@@ -19502,6 +19616,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function addNewAssignTaskRow() {
+      if (!ensureWorkAssignmentAccess()) return;
       const container = document.getElementById('assignTasksListEditor');
       if (!container) return;
       const emptyMsg = container.querySelector('.empty-assign-msg');
@@ -19586,6 +19701,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function onAssignTaskNameInput(inputElem) {
+      if (!ensureWorkAssignmentAccess()) return;
       const row = inputElem.closest('.assign-task-row');
       if (!row) return;
       const orig = row.dataset.originalTaskName || "";
@@ -19605,6 +19721,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let transferTargetStaffCache = [];
 
     function openTransferTaskModal(btnElem) {
+      if (!ensureWorkAssignmentAccess()) return;
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể di chuyển hoặc sao chép đầu việc của kỳ này!", true);
         return;
@@ -19633,7 +19750,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const currentStaffSelect = document.getElementById('modalAssignStaffSelect');
       const currentStaffVal = currentStaffSelect?.value?.trim() || "";
       const currentSelectedOpt = currentStaffSelect?.selectedOptions[0];
-      const currentUserId = currentSelectedOpt?.dataset?.userId ? parseInt(currentSelectedOpt.dataset.userId, 10) : null;
+      const sourceMembers = globalInitData?.deptMap?.[currentDept] || [];
+      const sourceUser = sourceMembers.find(st => String(st.id) === String(currentSelectedOpt?.dataset?.userId) && st.fullName === currentStaffVal);
+      const sourceAllowed = currentStaffVal === '__SHARED_GROUP__'
+        ? isSharedGroupDeptClient(currentDept) && canAssignSharedWork(sourceMembers)
+        : sourceUser && canAssignWorkToUser(sourceUser);
+      if (!sourceAllowed) {
+        showToast('Bạn không có quyền điều chỉnh phân công của nhân sự này.', true);
+        return;
+      }
+      const currentUserId = currentStaffVal === '__SHARED_GROUP__' ? getSharedWorkLead(sourceMembers)?.id : sourceUser.id;
 
       pendingTransferTaskRowElem = row;
       pendingTransferTaskData = {
@@ -19672,15 +19798,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       updateTransferActionUI();
 
       // Nạp danh sách bộ phận đích
-      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
       const deptSelect = document.getElementById('transferTargetDeptSelect');
-      let depts = (globalInitData && globalInitData.departments) ? [...globalInitData.departments] : [];
-      depts = depts.filter(d => {
-        const dNorm = normalizeDeptKey(d);
-        if (dNorm.includes("giam doc") || dNorm.includes("ban giam")) {
-          return isAssignerDirector;
-        }
-        return true;
+      let depts = (globalInitData?.departments || []).filter(d => {
+        return (globalInitData?.deptMap?.[d] || []).some(st => canAssignWorkToUser(st));
       });
       depts.sort((a, b) => a.localeCompare(b, 'vi'));
       transferTargetDeptCache = depts;
@@ -19696,7 +19816,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       }
 
-      const selectedDept = currentDept || depts[0] || "";
+      const selectedDept = depts.includes(currentDept) ? currentDept : (depts[0] || "");
       if (deptSelect) deptSelect.value = selectedDept;
       updateTransferTargetDeptUI(selectedDept);
       renderTransferTargetDeptPicker(depts);
@@ -19724,6 +19844,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function updateTransferActionUI() {
+      if (!ensureWorkAssignmentAccess()) return;
       const actionType = document.querySelector('input[name="transferActionType"]:checked')?.value || 'move';
       const btnText = document.getElementById('btnConfirmTransferTaskText');
       const noticeText = document.getElementById('transferActionNoticeText');
@@ -19742,6 +19863,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= CUSTOM PICKER: BỘ PHẬN ĐÍCH =================
     function toggleTransferTargetDeptMenu(e) {
+      if (!ensureWorkAssignmentAccess()) return;
       if (e) e.stopPropagation();
       const menu = document.getElementById('transferTargetDeptMenu');
       const chev = document.getElementById('transferTargetDeptChevron');
@@ -19768,6 +19890,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function filterTransferTargetDeptList() {
+      if (!ensureWorkAssignmentAccess()) return;
       const term = (document.getElementById('transferTargetDeptSearchInput')?.value || '').toLowerCase();
       const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
       const filtered = transferTargetDeptCache.filter(d => {
@@ -19812,6 +19935,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function selectTransferTargetDept(deptName) {
+      if (!ensureWorkAssignmentAccess()) return;
+      if (!(globalInitData?.deptMap?.[deptName] || []).some(st => canAssignWorkToUser(st))) {
+        showToast('Bộ phận này không có nhân sự thuộc quyền phân công của bạn.', true);
+        return;
+      }
       const sel = document.getElementById('transferTargetDeptSelect');
       if (sel) sel.value = deptName;
       updateTransferTargetDeptUI(deptName);
@@ -19850,6 +19978,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= CUSTOM PICKER: NHÂN SỰ ĐÍCH =================
     function toggleTransferTargetStaffMenu(e) {
+      if (!ensureWorkAssignmentAccess()) return;
       if (e) e.stopPropagation();
       const currentDept = document.getElementById('transferTargetDeptSelect')?.value;
       if (!currentDept) {
@@ -19883,6 +20012,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function filterTransferTargetStaffList() {
+      if (!ensureWorkAssignmentAccess()) return;
       const term = (document.getElementById('transferTargetStaffSearchInput')?.value || '').toLowerCase();
       const normTerm = typeof removeAccents === 'function' ? removeAccents(term) : term;
       const filtered = transferTargetStaffCache.filter(st => {
@@ -19897,7 +20027,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function renderTransferTargetStaffPicker(staffList) {
       const container = document.getElementById('transferTargetStaffList');
       if (!container) return;
-      const currentVal = document.getElementById('transferTargetStaffSelect')?.value || '';
+      const currentSelect = document.getElementById('transferTargetStaffSelect');
+      const currentVal = currentSelect?.value || '';
+      const selectedId = currentSelect?.selectedOptions[0]?.dataset?.userId;
 
       if (!staffList || staffList.length === 0) {
         container.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">Không có nhân sự nào trong bộ phận này</div>';
@@ -19909,7 +20041,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       staffList.forEach((st, idx) => {
         const itemVal = st.isSharedScope ? '__SHARED_GROUP__' : st.fullName;
-        const isSelected = (itemVal === currentVal);
+        const isSelected = st.isSharedScope ? currentVal === '__SHARED_GROUP__'
+          : currentVal !== '__SHARED_GROUP__' && String(st.id) === String(selectedId);
 
         if (st.isSharedScope) {
           html += `
@@ -19943,7 +20076,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               </div>
               <div class="min-w-0">
                 <span class="block text-xs font-bold text-slate-800 truncate group-hover:text-emerald-950">${escapeHtml(st.fullName)}</span>
-                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}]` : '@' + st.username)}</span>
+                <span class="block text-[10px] text-slate-400 font-medium truncate">${escapeHtml(st.role ? `[${st.role}] @${st.username || ''}` : '@' + st.username)}</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-2">
@@ -19957,11 +20090,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function selectTransferTargetStaff(val, userId, fullName, isSharedScope = false, role = '') {
+      if (!ensureWorkAssignmentAccess()) return;
+      const deptName = document.getElementById('transferTargetDeptSelect')?.value || '';
+      const members = globalInitData?.deptMap?.[deptName] || [];
+      const candidate = members.find(st => String(st.id) === String(userId) && st.fullName === val);
+      const allowed = val === '__SHARED_GROUP__'
+        ? isSharedGroupDeptClient(deptName) && canAssignSharedWork(members)
+        : candidate && canAssignWorkToUser(candidate);
+      if (!allowed) {
+        showToast('Bạn chỉ được phân công cho nhân sự ở cấp thấp hơn mình.', true);
+        return;
+      }
       const sel = document.getElementById('transferTargetStaffSelect');
       if (sel) {
         sel.value = val;
         for (let i = 0; i < sel.options.length; i++) {
-          if (sel.options[i].value === val) {
+          if (sel.options[i].value === val && (val === '__SHARED_GROUP__' || String(sel.options[i].dataset.userId) === String(userId))) {
             sel.selectedIndex = i;
             break;
           }
@@ -20028,105 +20172,68 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function onTransferTargetDeptChange(targetDeptName) {
+      if (!ensureWorkAssignmentAccess()) return;
       const staffSelect = document.getElementById('transferTargetStaffSelect');
       const hint = document.getElementById('transferTargetHint');
       if (!staffSelect) return;
-
       staffSelect.innerHTML = '';
       transferTargetStaffCache = [];
-
-      if (!targetDeptName) {
-        staffSelect.innerHTML = '<option value="">-- Vui lòng chọn bộ phận trước --</option>';
-        updateTransferTargetStaffUI("", "");
-        return;
-      }
-
+      const members = globalInitData?.deptMap?.[targetDeptName] || [];
+      const eligibleStaff = members.filter(st => canAssignWorkToUser(st));
       const isShared = isSharedGroupDeptClient(targetDeptName);
-      const isAssignerDirector = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-      const rawStaffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
-      const staffList = rawStaffList.filter(st => {
-        const r = removeAccents(st.role || "").toLowerCase();
-        const u = removeAccents(st.username || "").toLowerCase();
-        if (r.includes('admin') || u.includes('admin')) return false;
-        if (isDirectorOrAdmin(st.role, st.username)) return false;
-        if (isDeputyDirector(st.role, st.username)) return isAssignerDirector;
-        return true;
-      });
-
-      if (isShared) {
-        // Nhóm gộp: Thêm option việc chung (KHÔNG CÓ EMOJI 📦)
-        const optGroup = document.createElement('option');
-        optGroup.value = "__SHARED_GROUP__";
-        optGroup.innerText = `Công việc chung của tổ kho (${targetDeptName})`;
-        staffSelect.appendChild(optGroup);
-
+      const lead = isShared ? getSharedWorkLead(members) : null;
+      const canUseSharedScope = isShared && canAssignSharedWork(members) && lead?.id != null;
+      if (canUseSharedScope) {
+        const groupOption = document.createElement('option');
+        groupOption.value = '__SHARED_GROUP__';
+        groupOption.dataset.userId = lead.id;
+        groupOption.dataset.scope = 'shared';
+        groupOption.innerText = `Công việc chung của tổ kho (${targetDeptName})`;
+        staffSelect.appendChild(groupOption);
         transferTargetStaffCache.push({
+          id: lead.id,
           fullName: `Công việc chung của tổ kho (${targetDeptName})`,
           role: 'Toàn bộ thành viên trong tổ',
           isSharedScope: true
         });
-
-        staffList.forEach(st => {
-          const opt = document.createElement('option');
-          opt.value = st.fullName;
-          opt.dataset.userId = st.id;
-          // KHÔNG CÓ EMOJI 👤:
-          opt.innerText = `${st.fullName}${st.role ? ' (' + st.role + ')' : ''}`;
-          staffSelect.appendChild(opt);
-
-          transferTargetStaffCache.push({
-            id: st.id,
-            fullName: st.fullName,
-            role: st.role || 'Nhân viên',
-            username: st.username,
-            isSharedScope: false
-          });
-        });
-
-        if (hint) hint.innerText = "Bộ phận nhóm gộp: Bạn có thể chọn chuyển/sao chép thành việc chung của tổ kho hoặc việc cá nhân của thành viên.";
-      } else {
-        if (staffList.length === 0) {
-          staffSelect.innerHTML = '<option value="">-- Bộ phận này chưa có nhân sự --</option>';
-        } else {
-          staffList.forEach(st => {
-            const opt = document.createElement('option');
-            opt.value = st.fullName;
-            opt.dataset.userId = st.id;
-            // KHÔNG CÓ EMOJI 👤:
-            opt.innerText = `${st.fullName}${st.role ? ' (' + st.role + ')' : ''}`;
-            staffSelect.appendChild(opt);
-
-            transferTargetStaffCache.push({
-              id: st.id,
-              fullName: st.fullName,
-              role: st.role || 'Nhân viên',
-              username: st.username,
-              isSharedScope: false
-            });
-          });
-        }
-        if (hint) hint.innerText = "Chọn nhân sự nhận đầu việc trong bộ phận này.";
       }
-
-      // Mặc định chọn nhân sự đầu tiên nếu có
-      if (transferTargetStaffCache.length > 0) {
-        const first = transferTargetStaffCache[0];
+      eligibleStaff.forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.fullName;
+        opt.dataset.userId = st.id;
+        opt.dataset.scope = isShared ? 'personal' : '';
+        opt.innerText = `${st.fullName}${st.role ? ' (' + st.role + ')' : ''}`;
+        staffSelect.appendChild(opt);
+        transferTargetStaffCache.push({ ...st, isSharedScope: false });
+      });
+      if (hint) hint.innerText = canUseSharedScope
+        ? 'Có thể chuyển/sao chép cho việc chung của tổ kho hoặc nhân sự cấp dưới.'
+        : 'Chỉ hiển thị nhân sự ở cấp thấp hơn bạn; không giao cho bản thân hoặc người cùng cấp.';
+      const first = transferTargetStaffCache[0];
+      if (first) {
         const val = first.isSharedScope ? '__SHARED_GROUP__' : first.fullName;
         staffSelect.value = val;
         updateTransferTargetStaffUI(val, first.fullName, first.isSharedScope, first.role);
       } else {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.innerText = targetDeptName ? '-- Không có nhân sự cấp dưới để phân công --' : '-- Vui lòng chọn bộ phận trước --';
+        staffSelect.appendChild(emptyOption);
         staffSelect.value = '';
-        updateTransferTargetStaffUI("", "");
+        updateTransferTargetStaffUI('', '');
       }
+      renderTransferTargetStaffPicker(transferTargetStaffCache);
     }
 
     async function executeTransferOrCopyTask() {
+      if (!ensureWorkAssignmentAccess()) return;
+      const transferData = pendingTransferTaskData ? { ...pendingTransferTaskData } : null;
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể thao tác!", true);
         return;
       }
 
-      if (!pendingTransferTaskData) {
+      if (!transferData) {
         showToast("Không tìm thấy thông tin đầu việc cần xử lý!", true);
         return;
       }
@@ -20151,12 +20258,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const isSharedScope = (targetStaffVal === "__SHARED_GROUP__");
       const assignScope = isShared ? (isSharedScope ? 'shared' : 'personal') : '';
 
-      // Kiểm tra nếu là "Di chuyển" mà đích lại trùng khớp nguồn:
-      if (actionType === 'move' && targetDeptName === pendingTransferTaskData.currentDept && targetStaffVal === pendingTransferTaskData.currentStaffVal) {
-        showToast("Không thể di chuyển đến chính nhân sự/bộ phận hiện tại!", true);
-        return;
-      }
-
       const btn = document.getElementById('btnConfirmTransferTask');
       if (btn) btn.disabled = true;
 
@@ -20167,28 +20268,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(20, 85, "Đang xử lý dữ liệu...", 15);
 
       try {
-        let targetUserId = null;
-        const targetOptUserId = targetOpt?.dataset?.userId ? parseInt(targetOpt.dataset.userId, 10) : null;
-
-        // Truy vấn song song phòng ban đích và nhân sự đích
-        const deptPromise = supabase.from('departments').select('id').eq('name', targetDeptName).limit(1);
-        const userPromise = (!isSharedScope && !targetOptUserId)
-          ? supabase.from('users').select('id').eq('full_name', targetStaffVal).limit(1)
-          : Promise.resolve({ data: null });
-
-        const [deptRes, userRes] = await Promise.all([deptPromise, userPromise]);
-        const targetDeptId = (deptRes.data && deptRes.data[0]) ? deptRes.data[0].id : 1;
-
-        if (!isSharedScope) {
-          if (targetOptUserId) {
-            targetUserId = targetOptUserId;
-          } else if (userRes.data && userRes.data[0]) {
-            targetUserId = userRes.data[0].id;
-          }
-        } else {
-          // Với việc chung tổ kho: gán user đại diện đầu tiên trong tổ hoặc null
-          const staffList = (globalInitData && globalInitData.deptMap && globalInitData.deptMap[targetDeptName]) ? globalInitData.deptMap[targetDeptName] : [];
-          if (staffList.length > 0) targetUserId = staffList[0].id;
+        if (!['move', 'copy'].includes(actionType)) throw new Error('Thao tác không hợp lệ.');
+        const actor = await getFreshWorkAssignmentActor();
+        const sourceTarget = await getCurrentWorkAssignmentTarget(actor);
+        await validateWorkAssignmentTasks([transferData.taskId], actor, sourceTarget);
+        const target = await resolveWorkAssignmentTarget(targetDeptName, targetOpt?.dataset?.userId, isSharedScope, actor);
+        const targetUserId = target.user.id;
+        const targetDeptId = target.department.id;
+        if (actionType === 'move' && String(sourceTarget.department.id) === String(targetDeptId)
+          && sourceTarget.shared === target.shared
+          && (target.shared || String(sourceTarget.user.id) === String(targetUserId))) {
+          throw new Error('Không thể di chuyển đến chính nhân sự/bộ phận hiện tại!');
         }
 
         // 3. Tính toán orderIndex cho task mới ở đích:
@@ -20202,7 +20292,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           nextOrder = existingTargetTasks.length + 1;
         }
 
-        const formattedGuide = formatTaskGuideWithOrderAndScope(pendingTransferTaskData.taskGuide, nextOrder, assignScope);
+        const formattedGuide = formatTaskGuideWithOrderAndScope(transferData.taskGuide, nextOrder, assignScope);
         const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
 
         if (actionType === 'copy') {
@@ -20212,7 +20302,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             .insert({
               department_id: targetDeptId,
               assigned_user_id: targetUserId,
-              task_name: pendingTransferTaskData.taskName,
+              task_name: transferData.taskName,
               guide: formattedGuide,
               created_at: new Date().toISOString()
             });
@@ -20221,7 +20311,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         } else {
           // ================== DI CHUYỂN (MOVE) ==================
-          const taskId = pendingTransferTaskData.taskId;
+          const taskId = transferData.taskId;
 
           if (taskId) {
             // Kiểm tra song song báo cáo kỳ trước và thông tin công việc
@@ -20269,7 +20359,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 .insert({
                   department_id: targetDeptId,
                   assigned_user_id: targetUserId,
-                  task_name: pendingTransferTaskData.taskName,
+                  task_name: transferData.taskName,
                   guide: formattedGuide,
                   created_at: new Date().toISOString()
                 })
@@ -20305,7 +20395,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               .insert({
                 department_id: targetDeptId,
                 assigned_user_id: targetUserId,
-                task_name: pendingTransferTaskData.taskName,
+                task_name: transferData.taskName,
                 guide: formattedGuide,
                 created_at: new Date().toISOString()
               });
@@ -20321,7 +20411,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
 
         finishProgressHud("Hoàn tất!", () => {
-          showToast(`Đã ${actionLabel.toLowerCase()} đầu việc "${pendingTransferTaskData.taskName}" sang cho ${targetLabel} thành công!`);
+          showToast(`Đã ${actionLabel.toLowerCase()} đầu việc "${transferData.taskName}" sang cho ${targetLabel} thành công!`);
           closeTransferTaskModal();
           cachedPreloadMatrix = null;
           fullPeriodMatrixCache = null;
@@ -20350,6 +20440,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= XỬ LÝ XÓA ĐẦU VIỆC VỚI BẢNG THÔNG BÁO HIỆN ĐẠI =================
     function deleteAssignTaskRow(btnElem) {
+      if (!ensureWorkAssignmentAccess()) return;
       const row = btnElem.closest('.assign-task-row');
       if (!row) return;
 
@@ -20376,6 +20467,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     async function proceedExecuteDeleteTask() {
+      if (!ensureWorkAssignmentAccess()) return;
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể xóa đầu việc của kỳ này!", true);
         return;
@@ -20386,6 +20478,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (btn) btn.disabled = true;
 
       try {
+        if (!taskId) throw new Error('Không xác định được công việc cần xóa.');
+        const actor = await getFreshWorkAssignmentActor();
+        const sourceTarget = await getCurrentWorkAssignmentTarget(actor);
+        await validateWorkAssignmentTasks([taskId], actor, sourceTarget);
         if (taskId) {
           const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
           const prevMonthDate = new Date(currentSelectedYear, currentSelectedMonth - 2, 1);
@@ -20448,6 +20544,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= LƯU PHÂN CÔNG CÔNG VIỆC: BẢO TOÀN NGUYÊN VẸN KỲ CŨ & BẢO LƯU VỊ TRÍ =================
     async function submitAdminAssign() {
+      if (!ensureWorkAssignmentAccess()) return;
       if (currentPeriodLocked) {
         showToast("Kỳ báo cáo này đã khóa sổ. Không thể sửa đổi phân công công việc của kỳ này!", true);
         return;
@@ -20504,30 +20601,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(20, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
-        let uId = selectedOpt?.dataset?.userId ? parseInt(selectedOpt.dataset.userId, 10) : null;
-
-        // Truy vấn đồng thời thông tin bộ phận và tài khoản nhân sự
-        const deptPromise = supabase.from('departments').select('id').eq('name', deptName).limit(1);
-        const userPromise = !isSharedScope
-          ? supabase.from('users').select('id, role, username').eq('full_name', staffName).limit(1)
-          : Promise.resolve({ data: null });
-
-        const [{ data: dept }, { data: user }] = await Promise.all([deptPromise, userPromise]);
-
-        // BẢO VỆ TUYỆT ĐỐI: Không cho phép phân công công việc cho Admin / Giám Đốc tối cao
-        // (Giám Đốc có quyền phân công cho Phó Giám Đốc)
-        if (user && user[0]) {
-          const isDeputy = isDeputyDirector(user[0].role, user[0].username);
-          if (isDirectorOrAdmin(user[0].role, user[0].username) && !isDeputy) {
-            hideProgressHud(100);
-            showToast("Không phân công công việc cho tài khoản Quản trị viên/Giám đốc!", true);
-            return;
+        const actor = await getFreshWorkAssignmentActor();
+        const target = await resolveWorkAssignmentTarget(deptName, selectedOpt?.dataset?.userId, isSharedScope, actor);
+        const uId = target.user.id;
+        const dId = target.department.id;
+        const existingTasks = await validateWorkAssignmentTasks(processedTasks.map(item => item.taskId), actor, target);
+        const existingById = new Map(existingTasks.map(task => [String(task.id), task]));
+        for (const item of processedTasks) {
+          if (item.taskId != null) {
+            const existing = existingById.get(String(item.taskId));
+            if (!existing) throw new Error('Công việc không hợp lệ. Vui lòng mở lại danh sách.');
+            item.origName = existing.task_name || '';
+            item.origOrder = parseTaskOrder(existing.guide || '', item.origOrder);
+            item.isRenamed = cleanNameStr(item.tName) !== cleanNameStr(item.origName);
+            item.isReordered = item.orderIndex !== item.origOrder;
           }
         }
-
-        const dId = dept && dept[0] ? dept[0].id : 1;
-        if (!uId && user && user[0]) uId = user[0].id;
-        if (!uId) uId = 1;
 
         const currentPeriodStartDate = `${currentSelectedYear}-${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}-01`;
 
@@ -20672,7 +20761,52 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // ================= QUẢN LÝ NHÂN SỰ, TÀI KHOẢN & ĐIỀU CHUYỂN =================
+    // Phân cấp quản trị nhân sự: lãnh đạo cao nhất giữ quyền quản trị tài khoản hiện có.
+    function canManagePersonnelUser(target, actor = currentUser) {
+      return !!target && canManageWorkAssignments(actor) &&
+        (getWorkRoleLevel(actor) >= 5 || (!isSameWorkUser(target, actor) &&
+          getWorkRoleLevel(target) > 0 && getWorkRoleLevel(target) < getWorkRoleLevel(actor)));
+    }
+
+    function filterPersonnelRoleOptions(select, selectedRole = '') {
+      if (!select) return;
+      const roles = ['Nhân viên', 'Thủ kho', 'Kho chính', 'Tổ trưởng', 'Trưởng nhóm', 'Quản lý', 'Phó Giám Đốc'];
+      if (selectedRole && !roles.includes(selectedRole)) roles.push(selectedRole);
+      select.innerHTML = '';
+      roles.forEach(role => {
+        const level = getWorkRoleLevel({ role, username: '' });
+        if (level < 1 || level >= getWorkRoleLevel(currentUser) || level >= 5) return;
+        const option = document.createElement('option');
+        option.value = role;
+        option.innerText = role;
+        select.appendChild(option);
+      });
+      select.value = Array.from(select.options).some(option => option.value === selectedRole)
+        ? selectedRole : (select.options[0]?.value || '');
+    }
+
+    async function getFreshPersonnelUserByUsername(username) {
+      if (!username) throw new Error('Không xác định được tài khoản nhân sự.');
+      const { data, error } = await supabase.from('users').select('*').eq('username', username).limit(1);
+      if (error) throw error;
+      if (!data || !data[0]) throw new Error('Hồ sơ nhân sự không còn tồn tại. Vui lòng tải lại danh sách.');
+      return data[0];
+    }
+
+    function assertPersonnelMutationAllowed(actor, target, nextRole = target?.role, nextUsername = target?.username) {
+      if (!canManagePersonnelUser(target, actor)) throw new Error('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.');
+      const nextTarget = { ...target, role: nextRole, username: nextUsername };
+      const nextLevel = getWorkRoleLevel(nextTarget);
+      if (getWorkRoleLevel(actor) < 5) {
+        if (!canManagePersonnelUser(nextTarget, actor)) throw new Error('Không được cấp vai trò ngang cấp hoặc cao hơn người đang thao tác.');
+      } else if (nextLevel >= 5 && (nextRole !== target.role || getWorkRoleLevel(target) < 5)) {
+        throw new Error('Vai trò Giám đốc chỉ được bàn giao qua chức năng Chuyển quyền.');
+      }
+      if (nextLevel < 1) throw new Error('Vai trò nhân sự không hợp lệ.');
+    }
+
     function openUserManagerModal() {
+      if (!canManageWorkAssignments()) { showToast('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.', true); return; }
       document.getElementById('userManagerModal').classList.remove('hidden');
       const btnLog = document.getElementById('btnUserModalLoginHistory');
       if (btnLog) {
@@ -20703,6 +20837,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      * 2. XẾP BẬC VAI TRÒ: Giám đốc ban -> Quản lý -> Bộ phận (A-Z) -> Họ và tên (A-Z)
      */
     async function loadAllUsersManagementData() {
+      if (!canManageWorkAssignments()) { showToast('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.', true); return; }
       const tbody = document.getElementById('userManagementTableBody');
       const loading = document.getElementById('loadingUsersBox');
 
@@ -21144,6 +21279,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           `;
         }
 
+        if (!canManagePersonnelUser(u)) {
+          actionBtns = '<span class="text-[11px] text-slate-400">Ngoài quyền quản trị</span>';
+        }
+
         const deptDisplay = (!u.dept || u.dept === 'Chưa phân' || u.dept === 'Chưa phân bổ' || u.dept === 'Chưa phân bộ phận')
           ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs inline-flex items-center gap-1"><i class="fa-solid fa-clock-rotate-left text-[9px]"></i>Chưa phân bộ phận</span>`
           : escapeHtml(u.dept);
@@ -21172,6 +21311,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!adminManageUsersCache || !adminManageUsersCache.users) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
       if (!user) return;
+      if (!canManagePersonnelUser(user)) { showToast('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.', true); return; }
 
       const errBox = document.getElementById('accEditErrorBox');
       if (errBox) errBox.classList.add('hidden');
@@ -21300,7 +21440,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             opt.innerText = currentRole;
             roleSel.appendChild(opt);
           }
-          roleSel.value = currentRole;
+          filterPersonnelRoleOptions(roleSel, currentRole);
         }
       }
 
@@ -21364,17 +21504,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (errBox) errBox.classList.add('hidden');
 
-      // BẢO VỆ TÀI KHOẢN ADMIN: Quản lý không có quyền thiết lập vai trò hay sửa cấu hình của Admin
-      const targetUser = adminManageUsersCache?.users?.find(u => u.username === origUsername);
-      const isTargetAdmin = isDirectorOrAdmin(targetUser?.role, origUsername);
-      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
-      if (isTargetAdmin && !isCurrAdmin) {
-        showToast("Tài khoản Quản lý chỉ được xem thông tin, không có quyền thiết lập vai trò cho Admin!", true);
+      let targetUser;
+      let finalRole;
+      try {
+        const actor = await getFreshWorkAssignmentActor();
+        targetUser = await getFreshPersonnelUserByUsername(origUsername);
+        const isTargetAdmin = getWorkRoleLevel(targetUser) >= 5;
+        finalRole = isTargetAdmin ? targetUser.role : roleSelVal;
+        assertPersonnelMutationAllowed(actor, targetUser, finalRole, newUsername);
+      } catch (error) {
+        showToast(error.message, true);
         return;
       }
-
-      // Vai trò: Tài khoản Giám đốc giữ nguyên tuyệt đối, không thay đổi qua form này
-      const finalRole = isTargetAdmin ? (targetUser?.role || 'Admin') : roleSelVal;
 
       if (!fullName || !newUsername) {
         showToast("Vui lòng điền đầy đủ họ tên và tên đăng nhập!", true);
@@ -21416,6 +21557,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        targetUser = await getFreshPersonnelUserByUsername(origUsername);
+        assertPersonnelMutationAllowed(actor, targetUser, finalRole, newUsername);
         const updatePayload = {
           full_name: fullName,
           username: newUsername,
@@ -21430,7 +21574,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const { error } = await supabase
           .from('users')
           .update(updatePayload)
-          .eq('username', origUsername);
+          .eq('id', targetUser.id);
 
         if (error) throw error;
 
@@ -21473,7 +21617,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function openTransferAdminModal(targetUsername) {
-      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      const isCurrAdmin = getWorkRoleLevel(currentUser) >= 5;
       if (!isCurrAdmin) {
         showToast("Chỉ Giám Đốc Ban hoặc Admin mới có quyền thực hiện chuyển giao quyền Giám Đốc!", true);
         return;
@@ -21512,7 +21656,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // Lọc tất cả nhân sự đang hoạt động (loại trừ Giám đốc hiện tại và tài khoản bị khóa)
         const candidates = adminManageUsersCache.users.filter(u => {
-          if (u.username === currentDirector.username) return false;
+          if (u.username === currentDirector.username || !canAssignWorkToUser(u)) return false;
           const st = removeAccents(u.status || "").toLowerCase();
           if (st.includes('khoa')) return false;
           return true;
@@ -21550,7 +21694,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     async function submitTransferAdminRole() {
-      const isCurrAdmin = isDirectorOrAdmin(currentUser?.role, currentUser?.username);
+      const isCurrAdmin = getWorkRoleLevel(currentUser) >= 5;
       if (!isCurrAdmin) {
         showToast("Bạn không có quyền thực hiện thao tác chuyển giao quyền này!", true);
         return;
@@ -21594,6 +21738,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(15, 80, "Cập nhật thẩm quyền hệ thống...", 25);
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        if (getWorkRoleLevel(actor) < 5) throw new Error('Chỉ Giám đốc hoặc Admin được chuyển giao quyền Giám đốc.');
+        const [freshDirector, freshSuccessor] = await Promise.all([
+          getFreshPersonnelUserByUsername(directorUsername), getFreshPersonnelUserByUsername(newStaffUsername)
+        ]);
+        if (!isOnlyDirector(freshDirector.role, '') || !canAssignWorkToUser(freshSuccessor, actor)) {
+          throw new Error('Thông tin Giám đốc hoặc nhân sự kế nhiệm không hợp lệ. Vui lòng tải lại danh sách.');
+        }
+        const formerLevel = getWorkRoleLevel({ role: formerRole, username: '' });
+        if (formerLevel < 1 || formerLevel >= 5) throw new Error('Vai trò sau bàn giao phải thấp hơn Giám đốc.');
+        const quotaCheck = await validateExecutiveRoleQuota(formerRole, freshDirector.username);
+        if (!quotaCheck.allowed) throw new Error(quotaCheck.message);
         // 1. Tìm department_id của Ban Giám Đốc
         let giamDocDeptId = 334;
         const gdDept = departmentsCache?.find(d => {
@@ -21935,6 +22091,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!adminManageUsersCache) return;
       const user = adminManageUsersCache.users.find(u => u.username === username);
       if (!user) return;
+      if (!canManagePersonnelUser(user)) { showToast('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.', true); return; }
 
       const isTargetAdmin = isDirectorOrAdmin(user.role, user.username);
       if (isTargetAdmin) {
@@ -21967,7 +22124,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           opt.innerText = currentRole;
           roleSelect.appendChild(opt);
         }
-        roleSelect.value = currentRole;
+        filterPersonnelRoleOptions(roleSelect, currentRole);
       }
 
       const st = removeAccents(user.status || "").toLowerCase();
@@ -22098,7 +22255,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const peers = adminManageUsersCache.users.filter(u =>
             isDeptEquivalent(u.dept, selectedDept) &&
             u.username !== currentEditingUsername &&
-            u.status === 'Hoạt động'
+            u.status === 'Hoạt động' && canManagePersonnelUser(u)
           );
 
           if (peers.length > 0) {
@@ -22183,6 +22340,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         role = "Quản lý";
       }
 
+      try {
+        const actor = await getFreshWorkAssignmentActor();
+        const target = await getFreshPersonnelUserByUsername(username);
+        assertPersonnelMutationAllowed(actor, target, role);
+      } catch (error) { showToast(error.message, true); return; }
+
       // KIỂM TRA HẠN NGẠCH VAI TRÒ (TỐI ĐA 1 GIÁM ĐỐC, 2 PHÓ GIÁM ĐỐC)
       const quotaCheck = await validateExecutiveRoleQuota(role, username);
       if (!quotaCheck.allowed) {
@@ -22251,11 +22414,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, isLock ? "Vô hiệu hóa tài khoản trên hệ thống..." : "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
+        const personnelActor = await getFreshWorkAssignmentActor();
+        const personnelActualWarehouse = isSharedGroupDeptClient(updateData.dept);
+        if (typeof updateData.isWarehouse !== 'boolean' || updateData.isWarehouse !== personnelActualWarehouse) {
+          throw new Error('Phân loại bộ phận đích đã thay đổi. Vui lòng mở lại điều chuyển nhân sự.');
+        }
         // Truy vấn song song thông tin người dùng hiện tại và phòng ban đích
         const [prevUserDataRes, deptDataRes] = await Promise.all([
           supabase
             .from('users')
-            .select('id, department_id, role')
+            .select('*')
             .eq('username', updateData.username)
             .limit(1),
           supabase
@@ -22265,6 +22433,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             .limit(1)
         ]);
 
+        if (prevUserDataRes.error) throw prevUserDataRes.error;
         if (deptDataRes.error) throw deptDataRes.error;
 
         const prevUserData = prevUserDataRes.data;
@@ -22274,6 +22443,91 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         const deptData = deptDataRes.data;
         const dId = deptData && deptData[0] ? deptData[0].id : null;
+
+        if (!prevUser || !dId) throw new Error('Không tìm thấy nhân sự hoặc bộ phận đích. Vui lòng tải lại danh sách.');
+        assertPersonnelMutationAllowed(personnelActor, prevUser, updateData.role);
+        const quotaCheck = await validateExecutiveRoleQuota(updateData.role, prevUser.username);
+        if (!quotaCheck.allowed) throw new Error(quotaCheck.message);
+
+        const copySourceId = updateData.copyFromUserId;
+        if (oldDeptId !== dId && copySourceId && !['warehouse_shared', 'keep_old', 'fresh_empty'].includes(String(copySourceId))) {
+          const copySource = await getFreshWorkUser(copySourceId);
+          if (!canManagePersonnelUser(copySource, personnelActor) || String(copySource.department_id) !== String(dId)) {
+            throw new Error('Không có quyền sao chép công việc từ nhân sự này trong bộ phận đích.');
+          }
+        }
+
+        // Xác minh toàn bộ người và đầu việc sẽ bị thay đổi trước lần ghi đầu tiên.
+        let personnelOtherMembers = [];
+        let personnelSharedTasks = [];
+        const personnelIsLeadUpdate = personnelActualWarehouse && /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || '')) && !isLock && !isPause;
+        if (personnelIsLeadUpdate) {
+          const [membersResult, tasksResult] = await Promise.all([
+            supabase.from('users').select('*').eq('department_id', dId).neq('id', currentUserId),
+            supabase.from('tasks').select('id, guide, assigned_user_id').eq('department_id', dId)
+          ]);
+          if (membersResult.error) throw membersResult.error;
+          if (tasksResult.error) throw tasksResult.error;
+          personnelOtherMembers = membersResult.data || [];
+          personnelSharedTasks = (tasksResult.data || []).filter(task => parseTaskScope(task.guide) !== 'personal' && !parseTaskValidUntil(task.guide));
+          const fallbackRole = document.getElementById('customRoleMemberTitleInput')?.value.trim() || 'Thủ kho';
+          for (const member of personnelOtherMembers.filter(member => /chinh|truong|leader/i.test(removeAccents(member.role || '')))) {
+            assertPersonnelMutationAllowed(personnelActor, member, fallbackRole);
+          }
+          if (getWorkRoleLevel(personnelActor) < 5) {
+            for (const member of personnelOtherMembers.filter(isRealWorkAssignmentUser)) {
+              if (!canManagePersonnelUser(member, personnelActor)) throw new Error('Không thể thay người phụ trách công việc chung có chính bạn hoặc nhân sự ngang cấp/cấp trên tham gia.');
+            }
+            const sharedOwners = [...new Set(personnelSharedTasks.map(task => task.assigned_user_id).filter(Boolean))];
+            for (const ownerId of sharedOwners) {
+              const owner = await getFreshWorkUser(ownerId);
+              if (!canManagePersonnelUser(owner, personnelActor)) throw new Error('Không có quyền thay đổi người phụ trách một đầu việc chung trong bộ phận này.');
+            }
+          }
+        }
+
+        // Nạp và kiểm tra nguồn trước cả cập nhật hồ sơ, để không có thao tác ghi dở dang khi bị từ chối quyền.
+        let personnelOldTasks = [];
+        if (oldDeptId && dId && oldDeptId !== dId && currentUserId && !isLock) {
+          const sourceTasksResult = await supabase.from('tasks')
+            .select('id, task_name, guide, mode, created_at, department_id, assigned_user_id')
+            .eq('assigned_user_id', currentUserId)
+            .neq('department_id', dId);
+          if (sourceTasksResult.error) throw sourceTasksResult.error;
+          personnelOldTasks = sourceTasksResult.data || [];
+
+          if (getWorkRoleLevel(personnelActor) < 5 && personnelOldTasks.length > 0) {
+            const sourceOwnerIds = [...new Set(personnelOldTasks.map(task => task.assigned_user_id).filter(Boolean))];
+            for (const ownerId of sourceOwnerIds) {
+              const owner = await getFreshWorkUser(ownerId);
+              if (!canManagePersonnelUser(owner, personnelActor)) throw new Error('Không có quyền điều chuyển công việc của người đang phụ trách.');
+            }
+
+            const possibleSharedTasks = personnelOldTasks.filter(task => parseTaskScope(task.guide) !== 'personal');
+            const sourceDeptIds = [...new Set(possibleSharedTasks.map(task => task.department_id).filter(Boolean))];
+            if (sourceDeptIds.length > 0) {
+              const sourceDeptsResult = await supabase.from('departments').select('id, name, is_shared_group').in('id', sourceDeptIds).limit(1000);
+              if (sourceDeptsResult.error) throw sourceDeptsResult.error;
+              const sourceDepts = sourceDeptsResult.data || [];
+              if (sourceDeptIds.some(id => !sourceDepts.some(dept => String(dept.id) === String(id)))) {
+                throw new Error('Không xác minh được bộ phận của các công việc nguồn. Vui lòng tải lại dữ liệu.');
+              }
+              const sharedSourceDeptIds = sourceDepts.filter(dept =>
+                dept.is_shared_group === true || isSharedGroupDeptClient(dept.name) ||
+                possibleSharedTasks.some(task => String(task.department_id) === String(dept.id) && parseTaskScope(task.guide) === 'shared')
+              ).map(dept => dept.id);
+              if (sharedSourceDeptIds.length > 0) {
+                const sourceMembersResult = await supabase.from('users').select('*').in('department_id', sharedSourceDeptIds).limit(10000);
+                if (sourceMembersResult.error) throw sourceMembersResult.error;
+                for (const member of (sourceMembersResult.data || []).filter(isRealWorkAssignmentUser)) {
+                  if (!canManagePersonnelUser(member, personnelActor)) {
+                    throw new Error('Không thể điều chuyển công việc chung có chính bạn hoặc nhân sự ngang cấp/cấp trên tham gia.');
+                  }
+                }
+              }
+            }
+          }
+        }
 
         const updatePayload = {
           full_name: updateData.fullName,
@@ -22290,7 +22544,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const { error } = await supabase
           .from('users')
           .update(updatePayload)
-          .eq('username', updateData.username);
+          .eq('id', currentUserId);
 
         if (error) throw error;
 
@@ -22305,11 +22559,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const prevPeriodTag = `${prevY}-${prevM < 10 ? '0' + prevM : prevM}`;
 
           // Lấy toàn bộ đầu việc của nhân sự tại bộ phận cũ (không thuộc bộ phận đích dId)
-          const { data: oldTasks } = await supabase
-            .from('tasks')
-            .select('id, task_name, guide, mode, created_at, department_id')
-            .eq('assigned_user_id', currentUserId)
-            .neq('department_id', dId);
+          const oldTasks = personnelOldTasks;
 
           if (oldTasks && oldTasks.length > 0) {
             const oldIds = oldTasks.map(t => t.id);
@@ -22344,7 +22594,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             }
 
             // 2. XỬ LÝ THEO LỰA CHỌN CỦA QUẢN TRỊ VIÊN ĐỐI VỚI BỘ PHẬN ĐÍCH:
-            if (updateData.isWarehouse) {
+            if (personnelActualWarehouse) {
               // =========================================================================
               // QUY TRÌNH CHUYỂN VÀO NHÓM KHO (NHÓM GỘP):
               // - Xóa các báo cáo trong kỳ hiện tại của các việc cũ
@@ -22461,12 +22711,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // QUY TẮC NHÓM KHO: 1 KHO CHỈ CÓ 1 KHO CHÍNH (ĐẨY NGƯỜI CŨ XUỐNG PHỤ KHO HOẶC DANH XƯNG THÀNH VIÊN)
         const isLeadRole = /chinh|truong|to truong|leader/i.test(removeAccents(updateData.role || ""));
-        if (updateData.isWarehouse && isLeadRole && currentUserId && dId && !isLock && !isPause) {
-          const { data: otherMembers } = await supabase
-            .from('users')
-            .select('id, role')
-            .eq('department_id', dId)
-            .neq('id', currentUserId);
+        if (personnelActualWarehouse && isLeadRole && currentUserId && dId && !isLock && !isPause) {
+          const otherMembers = personnelOtherMembers;
 
           if (otherMembers && otherMembers.length > 0) {
             const oldLeadIds = otherMembers
@@ -22483,7 +22729,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
 
           // CHỈ CẬP NHẬT assigned_user_id CHO CÁC CÔNG VIỆC CHUNG (SHARED) ĐANG HOẠT ĐỘNG CỦA TỔ KHO
-          const { data: deptTasks } = await supabase.from('tasks').select('id, guide').eq('department_id', dId);
+          const deptTasks = personnelSharedTasks;
           const activeSharedIds = (deptTasks || [])
             .filter(dt => parseTaskScope(dt.guide) !== 'personal' && !parseTaskValidUntil(dt.guide))
             .map(dt => dt.id);
@@ -22525,6 +22771,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let addDeptCache = [];
 
     function openAddUserModal() {
+      if (!canManageWorkAssignments()) { showToast('Chỉ Quản lý trở lên được quản trị nhân sự dưới cấp; không được sửa chính mình, người cùng cấp hoặc cấp trên.', true); return; }
       const modal = document.getElementById('addUserModal');
       if (modal) modal.classList.remove('hidden');
 
@@ -22534,7 +22781,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       document.getElementById('addFullNameInput').value = '';
       document.getElementById('addUsernameInput').value = '';
       document.getElementById('addPasswordInput').value = '123456';
-      document.getElementById('addRoleSelect').value = 'Nhân viên';
+      filterPersonnelRoleOptions(document.getElementById('addRoleSelect'), 'Nhân viên');
 
       const deptSelect = document.getElementById('addDeptSelect');
       deptSelect.innerHTML = '<option value="">-- Chưa phân bộ phận (Phân bổ sau) --</option>';
@@ -22728,6 +22975,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Ghi nhận vào cơ sở dữ liệu...", 15);
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        const newUser = { role, username, status: 'Hoạt động' };
+        if (!canAssignWorkToUser(newUser, actor) || getWorkRoleLevel(newUser) >= 5) {
+          throw new Error('Chỉ được tạo nhân sự có vai trò thấp hơn người đang thao tác.');
+        }
         let dId = null;
         if (dept) {
           const { data: dData } = await supabase.from('departments').select('id').eq('name', dept).limit(1);
