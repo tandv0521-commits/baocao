@@ -10633,8 +10633,53 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }, 80);
     }
 
+    function getDepartmentNameRoleLevel(name) {
+      const key = removeAccents(String(name || '')).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const directorKey = key.replace(/phogiamdoc|phogd|pgd/g, '');
+      if (directorKey.includes('giamdoc') || directorKey.includes('lanhdao') || /^(ban)?gd$/.test(directorKey) || key === 'bgd') return 5;
+      if (key.includes('phogiamdoc') || key.includes('phogd') || /^(ban)?pgd$/.test(key)) return 4;
+      return 0;
+    }
+
+    function canManageDepartment(department, actor = currentUser) {
+      if (!canManageWorkAssignments(actor) || !department || !Array.isArray(department.users)) return false;
+      const actorLevel = getWorkRoleLevel(actor);
+      if (actorLevel >= 5) return true;
+      if (getDepartmentNameRoleLevel(department.name || department.deptName) > actorLevel) return false;
+      return department.users.every(user => {
+        if (!user) return false;
+        const level = getWorkRoleLevel(user);
+        if (level > 0) return level <= actorLevel;
+        // Technical group accounts do not define the department's management rank.
+        const username = String(user.username || '').toLowerCase();
+        const role = removeAccents(String(user.role || '')).toLowerCase();
+        return username.startsWith('group_') || username.startsWith('nhom_kho_') || role.includes('nhom gop');
+      });
+    }
+
+    function assertDepartmentNameAllowed(name, actor) {
+      if (!canManageWorkAssignments(actor) || getDepartmentNameRoleLevel(name) > getWorkRoleLevel(actor)) {
+        throw new Error('Bạn không có quyền tạo hoặc đổi tên bộ phận của cấp cao hơn.');
+      }
+    }
+
+    async function getFreshManagedDepartment(deptName) {
+      const actor = await getFreshWorkAssignmentActor();
+      if (!deptName) throw new Error('Vui lòng chọn bộ phận hợp lệ.');
+      const result = await supabase.from('departments')
+        .select('id, name, is_shared_group, users(id, username, role, status)')
+        .eq('name', deptName).limit(2);
+      if (result.error) throw result.error;
+      if (!result.data || result.data.length !== 1) throw new Error('Không xác định được bộ phận. Vui lòng tải lại danh sách.');
+      const department = result.data[0];
+      if (!canManageDepartment(department, actor)) {
+        throw new Error('Bạn không có quyền sửa hoặc xóa bộ phận của cấp cao hơn.');
+      }
+      return { actor, department };
+    }
+
     async function openDeptManagerModal() {
-      if (!currentUser || !isAdminOrManager(currentUser.role, currentUser.username)) {
+      if (!canManageWorkAssignments()) {
         showToast("Bạn không có quyền quản lý bộ phận!", true);
         return;
       }
@@ -10658,16 +10703,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       loading.classList.remove('hidden');
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        if (String(currentUser?.id) !== String(actor.id)) return;
+        currentUser = Object.freeze({ ...currentUser, role: actor.role, status: actor.status });
         const { data: depts, error } = await supabase
           .from('departments')
-          .select('*, users(id, status)')
+          .select('*, users(id, username, role, status)')
           .order('name')
           .limit(1000);
 
         loading.classList.add('hidden');
         if (error) throw error;
 
-        const detailed = depts.map(d => {
+        const detailed = (depts || []).map(d => {
           const active = d.users ? d.users.filter(u => u.status === 'Hoạt động').length : 0;
           const paused = d.users ? d.users.filter(u => u.status === 'Tạm khóa').length : 0;
           return {
@@ -10675,7 +10723,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             deptName: d.name,
             isSharedGroup: d.is_shared_group,
             activeMembers: active,
-            pausedMembers: paused
+            pausedMembers: paused,
+            users: d.users
           };
         });
 
@@ -10719,6 +10768,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             </div>
           </div>
           <div class="flex items-center gap-1.5 ml-auto">
+            ${canManageDepartment(d) ? `
             <button type="button" onclick="openDeptEditModal('${escapeHtml(d.deptName)}', ${d.isSharedGroup})" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer" title="Đổi tên">
               <i class="fa-solid fa-pen-to-square text-[11px]"></i>
               <span>Sửa</span>
@@ -10727,6 +10777,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <i class="fa-solid fa-trash-can text-[11px]"></i>
               <span>Xóa</span>
             </button>
+            ` : `<span class="px-2.5 py-1.5 text-xs font-semibold text-slate-400" title="Bạn không có quyền sửa hoặc xóa bộ phận này">Chỉ xem</span>`}
           </div>
         `;
         container.appendChild(item);
@@ -10747,6 +10798,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Lưu vào cơ sở dữ liệu...", 15);
 
       try {
+        const actor = await getFreshWorkAssignmentActor();
+        assertDepartmentNameAllowed(dName, actor);
         const { error } = await supabase
           .from('departments')
           .insert([{ name: dName, is_shared_group: isSharedChk.checked }]);
@@ -10766,11 +10819,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function openDeptEditModal(deptName, isShared) {
+    async function openDeptEditModal(deptName, isShared) {
+      let managedDepartment;
+      try {
+        managedDepartment = (await getFreshManagedDepartment(deptName)).department;
+      } catch (error) { showToast(error.message, true); return; }
+      deptName = managedDepartment.name;
       document.getElementById('editDeptOldName').value = deptName;
       document.getElementById('editDeptOldNameDisplay').innerText = deptName;
       document.getElementById('editDeptNewNameInput').value = deptName;
-      document.getElementById('chkEditDeptIsShared').checked = !!isShared;
+      document.getElementById('chkEditDeptIsShared').checked = !!managedDepartment.is_shared_group;
       document.getElementById('deptEditModal').classList.remove('hidden');
       setTimeout(() => {
         const inp = document.getElementById('editDeptNewNameInput');
@@ -10796,10 +10854,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Cập nhật dữ liệu hệ thống...", 15);
 
       try {
+        const { actor, department } = await getFreshManagedDepartment(oldName);
+        assertDepartmentNameAllowed(newName, actor);
         const { error } = await supabase
           .from('departments')
           .update({ name: newName, is_shared_group: isShared })
-          .eq('name', oldName);
+          .eq('id', department.id);
 
         if (error) throw error;
 
@@ -10818,7 +10878,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function openDeptDeleteModal(deptName, activeMembers) {
+    async function openDeptDeleteModal(deptName, activeMembers) {
+      let managedDepartment;
+      try {
+        managedDepartment = (await getFreshManagedDepartment(deptName)).department;
+      } catch (error) { showToast(error.message, true); return; }
+      deptName = managedDepartment.name;
       document.getElementById('deleteDeptTargetName').value = deptName;
 
       const blockedBox = document.getElementById('deptDeleteBlockedBox');
@@ -10827,6 +10892,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const iconBox = document.getElementById('deptDeleteIconBox');
       const modalTitle = document.getElementById('deptDeleteModalTitle');
 
+      activeMembers = managedDepartment.users.filter(user => user.status === 'Hoạt động').length;
       if (activeMembers > 0) {
         blockedBox.classList.remove('hidden');
         allowedBox.classList.add('hidden');
@@ -10863,10 +10929,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Xử lý dữ liệu hệ thống...", 15);
 
       try {
+        const { department } = await getFreshManagedDepartment(deptName);
+        if (department.users.some(user => user.status === 'Hoạt động')) {
+          throw new Error('Bộ phận còn nhân sự đang hoạt động. Vui lòng điều chuyển nhân sự trước khi xóa.');
+        }
         const { error } = await supabase
           .from('departments')
           .delete()
-          .eq('name', deptName);
+          .eq('id', department.id);
 
         if (error) throw error;
 
@@ -12449,12 +12519,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function openRenameDeptModal() {
+    async function openRenameDeptModal() {
       const currentDept = document.getElementById('adminDeptSelect').value;
       if (!currentDept || currentDept === "TẤT CẢ") {
         showToast("Vui lòng chọn một bộ phận cụ thể để đổi tên!", true);
         return;
       }
+      try { await getFreshManagedDepartment(currentDept); }
+      catch (error) { showToast(error.message, true); return; }
       document.getElementById('renameDeptCurrentInput').value = currentDept;
       document.getElementById('renameDeptNewInput').value = currentDept;
       document.getElementById('renameDeptModal').classList.remove('hidden');
@@ -12482,10 +12554,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(25, 85, "Cập nhật cơ sở dữ liệu...", 15);
 
       try {
+        const { actor, department } = await getFreshManagedDepartment(oldDept);
+        assertDepartmentNameAllowed(newDept, actor);
         const { error } = await supabase
           .from('departments')
           .update({ name: newDept })
-          .eq('name', oldDept);
+          .eq('id', department.id);
 
         if (error) throw error;
 
@@ -23844,6 +23918,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         notes: r.notes || '',
         items: {
           tasks: taskItems,
+          isDraft: !!(r.isDraft || r.status === 'draft_consolidated' || r.targetLevel === 'manager_draft'),
+          createdAt: r.createdAt || r.submissionDate || '',
           managerFeedback: r.managerFeedback || '',
           forwardedBy: r.forwardedBy || '',
           forwardedAt: r.forwardedAt || '',
@@ -23857,7 +23933,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         },
         status: r.status || 'submitted_to_manager',
         leader_feedback: r.leaderFeedback || '',
-        updated_at: new Date().toISOString()
+        updated_at: r.updatedAt || new Date().toISOString()
       };
     }
 
@@ -23921,6 +23997,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         recipientFullName: recipientFullName,
         recipientRole: recipientRole,
         recipientDepartment: recipientDepartment,
+        isDraft: !!((itemsObj && !Array.isArray(itemsObj) && itemsObj.isDraft) || st === 'draft_consolidated' || targetLevel === 'manager_draft'),
+        createdAt: r.created_at || (itemsObj && itemsObj.createdAt) || r.submission_date || '',
+        updatedAt: r.updated_at || r.submission_date || '',
+        _cloudConfirmedAt: Date.now(),
         status: st,
         leaderFeedback: r.leader_feedback || ''
       };
@@ -24056,12 +24136,197 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       } catch (e) { }
     }
 
-    async function saveLeadershipReportToSupabase(reportPayload) {
-      if (!supabase) return;
+    const LEADERSHIP_REPORT_PENDING_KEY = 'ops_leadership_report_pending_writes_v1';
+    const _leadershipReportWriteInFlight = new Map();
+    const _leadershipReportDeleteContexts = new Map();
+    let _leadershipReportWriteSequence = 0;
+    let _leadershipReportWriteTimestamp = 0;
+    let _leadershipReportFetchGeneration = 0;
+
+    function getLeadershipReportSyncUserKey(user = currentUser) {
+      if (!user) return '';
+      return user.id !== undefined && user.id !== null && String(user.id).trim()
+        ? 'id:' + String(user.id) : 'user:' + cleanReportUsername(user.username);
+    }
+
+    function getLeadershipReportUpdatedTime(report) {
+      if (!report) return 0;
+      const value = report.updatedAt || report.updated_at || report.forwardedAt || report.submissionDate || report.createdAt;
+      const time = new Date(value || 0).getTime();
+      return Number.isFinite(time) ? time : 0;
+    }
+
+    function isLeadershipReportSyncAuthor(report, user = currentUser) {
+      if (!report || !user) return false;
+      const myId = String(user.id ?? '');
+      const senderId = String(report.senderId ?? '');
+      const myUsername = cleanReportUsername(user.username);
+      const senderUsername = cleanReportUsername(report.senderUsername);
+      return myId && senderId ? myId === senderId : !!(myUsername && senderUsername && myUsername === senderUsername);
+    }
+
+    function canSyncLeadershipReportWrite(report, user = currentUser) {
+      if (!report || report.id === undefined || report.id === null || !String(report.id).trim() || !user) return false;
+      const isAuthor = isLeadershipReportSyncAuthor(report, user);
+      const isSummary = typeof isRpBoxSummaryReport === 'function' ? isRpBoxSummaryReport(report)
+        : report.reportType === 'manager_summary' || String(report.id).startsWith('lr_summary_');
+      if (isSummary) {
+        const isDraft = !!(report.isDraft || report.status === 'draft_consolidated' || report.targetLevel === 'manager_draft');
+        return !!isAuthor || (!isDraft && isUserReportManagerOrLeadership(user) && isDirectRecipientOfReport(user, report) && canUserAccessReport(user, report));
+      }
+      return !!isAuthor || (isUserReportManagerOrLeadership(user) && canUserAccessReport(user, report));
+    }
+
+    function getPendingLeadershipReportWrites() {
       try {
-        const row = toSupabaseReportRow(reportPayload);
-        await supabase.from('leadership_reports').upsert(row);
-      } catch (e) { }
+        const raw = localStorage.getItem(LEADERSHIP_REPORT_PENDING_KEY);
+        const pending = raw ? JSON.parse(raw) : {};
+        return pending && typeof pending === 'object' && !Array.isArray(pending) ? pending : {};
+      } catch (error) { return {}; }
+    }
+
+    function removePendingLeadershipReportWrite(reportId) {
+      try {
+        const pending = getPendingLeadershipReportWrites();
+        const context = pending[String(reportId)]?.report || getLeadershipReportsShared().find(report => String(report.id) === String(reportId));
+        if (context) _leadershipReportDeleteContexts.set(String(reportId), JSON.parse(JSON.stringify(context)));
+        delete pending[String(reportId)];
+        localStorage.setItem(LEADERSHIP_REPORT_PENDING_KEY, JSON.stringify(pending));
+        return true;
+      } catch (error) { console.warn('Không thể cập nhật hàng đợi báo cáo:', error); return false; }
+    }
+
+    async function flushPendingLeadershipReportWrite(reportId) {
+      const id = String(reportId);
+      const active = _leadershipReportWriteInFlight.get(id);
+      if (active) {
+        const result = await active.promise;
+        const latest = getPendingLeadershipReportWrites()[id];
+        if (latest && latest.revision !== active.revision) return flushPendingLeadershipReportWrite(id);
+        return result && !latest;
+      }
+
+      const pending = getPendingLeadershipReportWrites()[id];
+      if (!pending) return !getDeletedLeadershipReportIds().has(id);
+      if (getDeletedLeadershipReportIds().has(id) && pending.operation !== 'delete') { removePendingLeadershipReportWrite(id); return false; }
+      if (!supabase || pending.userKey !== getLeadershipReportSyncUserKey() || !canSyncLeadershipReportWrite(pending.report)) return false;
+
+      const work = { revision: pending.revision, promise: null };
+      work.promise = (async () => {
+        try {
+          const result = pending.operation === 'delete'
+            ? await supabase.from('leadership_reports').delete().eq('id', id)
+            : await supabase.from('leadership_reports').upsert(toSupabaseReportRow(pending.report));
+          const error = result?.error;
+          if (error) throw error;
+          if (pending.operation !== 'delete' && getDeletedLeadershipReportIds().has(id)) {
+            const queue = getPendingLeadershipReportWrites();
+            if (queue[id]?.operation !== 'delete') {
+              queue[id] = { ...pending, operation: 'delete', revision: pending.revision + '_delete', enqueuedAt: Date.now() };
+              localStorage.setItem(LEADERSHIP_REPORT_PENDING_KEY, JSON.stringify(queue));
+            }
+            return false;
+          }
+          const latest = getPendingLeadershipReportWrites()[id];
+          if (pending.operation !== 'delete') {
+            const reports = getLeadershipReportsShared();
+            const report = reports.find(item => String(item.id) === id);
+            if (report) {
+              report._cloudConfirmedAt = Date.now();
+              saveLeadershipReportsShared(reports);
+            }
+          }
+          if (latest && latest.revision === pending.revision && !removePendingLeadershipReportWrite(id)) return false;
+          return true;
+        } catch (error) {
+          console.warn('Báo cáo đã lưu trên máy, đang chờ đồng bộ Cloud:', error);
+          return false;
+        }
+      })();
+      _leadershipReportWriteInFlight.set(id, work);
+      const result = await work.promise;
+      if (_leadershipReportWriteInFlight.get(id) === work) _leadershipReportWriteInFlight.delete(id);
+      const latest = getPendingLeadershipReportWrites()[id];
+      if (latest && latest.revision !== pending.revision) {
+        const flushed = await flushPendingLeadershipReportWrite(id);
+        return pending.operation !== 'delete' && getDeletedLeadershipReportIds().has(id) ? false : flushed;
+      }
+      return result;
+    }
+
+    async function deleteLeadershipReportFromSupabase(reportId, reportPayload = null) {
+      const id = String(reportId);
+      try {
+        const previous = getPendingLeadershipReportWrites()[id];
+        const report = reportPayload || previous?.report || _leadershipReportDeleteContexts.get(id) ||
+          getLeadershipReportsShared().find(item => String(item.id) === id);
+        if (!report || String(report.id) !== id || !canSyncLeadershipReportWrite(report)) return false;
+        const isSummary = typeof isRpBoxSummaryReport === 'function' ? isRpBoxSummaryReport(report)
+          : report.reportType === 'manager_summary' || String(report.id).startsWith('lr_summary_');
+        if (isSummary && !isLeadershipReportSyncAuthor(report)) return false;
+        addDeletedLeadershipReportId(id);
+        const queue = getPendingLeadershipReportWrites();
+        queue[id] = {
+          report: JSON.parse(JSON.stringify(report)),
+          operation: 'delete',
+          revision: Date.now() + '_delete_' + (++_leadershipReportWriteSequence) + '_' + Math.random().toString(36).slice(2),
+          userKey: getLeadershipReportSyncUserKey(),
+          enqueuedAt: Date.now()
+        };
+        localStorage.setItem(LEADERSHIP_REPORT_PENDING_KEY, JSON.stringify(queue));
+        const remaining = getLeadershipReportsShared().filter(item => String(item.id) !== id);
+        saveLeadershipReportsShared(remaining);
+      } catch (error) {
+        console.warn('Không thể lưu yêu cầu xóa báo cáo trên máy:', error);
+        return false;
+      }
+      return flushPendingLeadershipReportWrite(id);
+    }
+
+    async function replayPendingLeadershipReportWrites() {
+      const userKey = getLeadershipReportSyncUserKey();
+      if (!userKey) return false;
+      const pending = getPendingLeadershipReportWrites();
+      const ids = Object.keys(pending).filter(id => pending[id] && pending[id].userKey === userKey && canSyncLeadershipReportWrite(pending[id].report));
+      const results = await Promise.all(ids.map(id => flushPendingLeadershipReportWrite(id)));
+      return results.every(Boolean);
+    }
+
+    async function saveLeadershipReportToSupabase(reportPayload) {
+      if (!canSyncLeadershipReportWrite(reportPayload)) return false;
+      const id = String(reportPayload.id);
+      if (getDeletedLeadershipReportIds().has(id)) {
+        if (getPendingLeadershipReportWrites()[id]?.operation !== 'delete') removePendingLeadershipReportWrite(id);
+        return false;
+      }
+      try {
+        const reports = getLeadershipReportsShared();
+        const local = reports.find(report => String(report.id) === id);
+        if (local && getLeadershipReportUpdatedTime(local) > getLeadershipReportUpdatedTime(reportPayload)) return false;
+        const pending = getPendingLeadershipReportWrites();
+        const previous = pending[id];
+        if (previous && getLeadershipReportUpdatedTime(previous.report) > getLeadershipReportUpdatedTime(reportPayload)) return false;
+        const report = JSON.parse(JSON.stringify(reportPayload));
+        _leadershipReportWriteTimestamp = Math.max(Date.now(), _leadershipReportWriteTimestamp + 1, getLeadershipReportUpdatedTime(report) + 1);
+        report.updatedAt = new Date(_leadershipReportWriteTimestamp).toISOString();
+        reportPayload.updatedAt = report.updatedAt;
+        pending[id] = {
+          report,
+          operation: 'save',
+          revision: Date.now() + '_' + (++_leadershipReportWriteSequence) + '_' + Math.random().toString(36).slice(2),
+          userKey: getLeadershipReportSyncUserKey(),
+          enqueuedAt: Date.now()
+        };
+        // Durable before any await; a refresh or an older Cloud response cannot erase this revision.
+        localStorage.setItem(LEADERSHIP_REPORT_PENDING_KEY, JSON.stringify(pending));
+        const index = reports.findIndex(item => String(item.id) === id);
+        if (index < 0) reports.unshift(report); else reports[index] = report;
+        saveLeadershipReportsShared(reports);
+      } catch (error) {
+        console.warn('Không thể lưu hàng đợi báo cáo trên máy:', error);
+        return false;
+      }
+      return flushPendingLeadershipReportWrite(id);
     }
 
     function isSameDept(d1, d2) {
@@ -24184,66 +24449,95 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     async function fetchLeadershipReportsFromSupabase(showToastAlert = false) {
-      if (!supabase || !currentUser) return;
-      const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
-
+      if (!supabase || !currentUser) return false;
+      const generation = ++_leadershipReportFetchGeneration;
+      const user = currentUser;
+      const userKey = getLeadershipReportSyncUserKey(user);
+      const isCurrent = () => generation === _leadershipReportFetchGeneration && user === currentUser && userKey === getLeadershipReportSyncUserKey();
       const refreshIcon = document.getElementById('rpBoxRefreshIcon');
       if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
       try {
+        await replayPendingLeadershipReportWrites();
+        if (!isCurrent()) return false;
+        const fetchStartedAt = Date.now();
+        const roleInfo = getPersonalWorkspaceReportingRole(user);
         let query = supabase.from('leadership_reports').select('*').order('submission_date', { ascending: false });
-        if (roleInfo.isStaff) {
-          query = query.eq('sender_id', String(currentUser.id)).limit(100);
-        } else {
-          query = query.limit(500);
-        }
-
+        query = roleInfo.isStaff ? query.eq('sender_id', String(user.id)).limit(100) : query.limit(500);
         const { data, error } = await query;
-        if (error) {
-          console.warn("Lỗi tải leadership_reports từ Supabase:", error);
-          return;
-        }
+        if (!isCurrent()) return false;
+        if (error) throw error;
+        if (!Array.isArray(data)) return false;
 
-        if (Array.isArray(data)) {
-          const deletedIds = getDeletedLeadershipReportIds();
-          const cloudReports = data.map(fromSupabaseReportRow).filter(cr => !deletedIds.has(String(cr.id)));
-          const localReports = getLeadershipReportsShared().filter(lr => !deletedIds.has(String(lr.id)));
-
-          const mergedMap = new Map();
-          cloudReports.forEach(cr => mergedMap.set(cr.id, cr));
-          localReports.forEach(lr => {
-            if (!deletedIds.has(String(lr.id)) && !mergedMap.has(lr.id)) {
-              // Báo cáo tổng hợp mà trên Cloud không có -> nghĩa là đã bị xóa, không hồi sinh lại
-              if (lr.reportType === 'manager_summary') return;
-              mergedMap.set(lr.id, lr);
-            }
+        const deletedIds = getDeletedLeadershipReportIds();
+        const cloud = new Map(data.map(fromSupabaseReportRow).filter(report => report && !deletedIds.has(String(report.id))).map(report => [String(report.id), report]));
+        const pendingBeforeLookup = getPendingLeadershipReportWrites();
+        const beforeLookup = getLeadershipReportsShared().filter(report => report && !deletedIds.has(String(report.id)));
+        const candidates = beforeLookup.filter(report =>
+          (typeof isRpBoxSummaryReport === 'function' ? isRpBoxSummaryReport(report) : report.reportType === 'manager_summary') && canUserAccessReport(user, report) && !cloud.has(String(report.id)) &&
+          !pendingBeforeLookup[String(report.id)] && getLeadershipReportUpdatedTime(report) <= fetchStartedAt
+        );
+        const candidateSnapshots = new Map(candidates.map(report => [String(report.id), JSON.stringify(report)]));
+        const confirmedMissing = new Set();
+        let allLookupsSucceeded = true;
+        for (let offset = 0; offset < candidates.length; offset += 50) {
+          const ids = candidates.slice(offset, offset + 50).map(report => String(report.id));
+          const lookup = await supabase.from('leadership_reports').select('*').in('id', ids).limit(50);
+          if (!isCurrent()) return false;
+          if (lookup.error || !Array.isArray(lookup.data)) {
+            allLookupsSucceeded = false;
+            console.warn('Chưa xác minh được toàn bộ lịch sử báo cáo; giữ dữ liệu trên máy:', lookup.error);
+            continue;
+          }
+          const found = new Set();
+          lookup.data.map(fromSupabaseReportRow).forEach(report => {
+            const id = String(report.id);
+            found.add(id);
+            if (!getDeletedLeadershipReportIds().has(id)) cloud.set(id, report);
           });
+          ids.forEach(id => { if (!found.has(id)) confirmedMissing.add(id); });
+        }
+        if (!allLookupsSucceeded) confirmedMissing.clear();
+        if (!isCurrent()) return false;
 
-          const mergedList = Array.from(mergedMap.values());
-          saveLeadershipReportsShared(mergedList);
-          if (typeof syncPersonalTasksIntoSharedReports === 'function') {
-            syncPersonalTasksIntoSharedReports(true);
-          }
-          if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
-            const userWsData = getPersonalWorkspaceData(currentUser);
-            if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
-              savePersonalWorkspaceData(userWsData, currentUser);
-              if (typeof renderPersonalWorkspaceUI === 'function') {
-                renderPersonalWorkspaceUI();
-              }
-            }
-          }
-          populateRpBoxDeptFilter();
-          renderLeadershipReportsBoxUI();
-          updateInboxUnreadBadgeCount(mergedList);
-          if (showToastAlert) {
-            showToast(`🔄 Đã cập nhật ${data.length} báo cáo từ Supabase Cloud!`);
+        const pending = getPendingLeadershipReportWrites();
+        const latestDeletedIds = getDeletedLeadershipReportIds();
+        const merged = new Map([...cloud].filter(([id]) => !latestDeletedIds.has(id)));
+        const localReports = getLeadershipReportsShared();
+        localReports.forEach(report => {
+          if (!report) return;
+          const id = String(report.id);
+          if (latestDeletedIds.has(id)) return;
+          const cloudReport = merged.get(id);
+          const localChangedDuringLookup = candidateSnapshots.has(id) && candidateSnapshots.get(id) !== JSON.stringify(report);
+          if (!pending[id] && !localChangedDuringLookup && report._cloudConfirmedAt && confirmedMissing.has(id) && getLeadershipReportUpdatedTime(report) <= fetchStartedAt) return;
+          if (!cloudReport || pending[id] || getLeadershipReportUpdatedTime(report) > getLeadershipReportUpdatedTime(cloudReport)) merged.set(id, report);
+        });
+        Object.keys(pending).forEach(id => {
+          const entry = pending[id];
+          if (entry && entry.operation !== 'delete' && entry.userKey === userKey && canSyncLeadershipReportWrite(entry.report, user) && !latestDeletedIds.has(id)) merged.set(id, entry.report);
+        });
+        if (!isCurrent()) return false;
+        const mergedList = Array.from(merged.values());
+        saveLeadershipReportsShared(mergedList);
+        if (typeof syncPersonalTasksIntoSharedReports === 'function') syncPersonalTasksIntoSharedReports(true);
+        if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
+          const userWsData = getPersonalWorkspaceData(currentUser);
+          if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+            savePersonalWorkspaceData(userWsData, currentUser);
+            if (typeof renderPersonalWorkspaceUI === 'function') renderPersonalWorkspaceUI();
           }
         }
-      } catch (e) {
-        console.warn("Lỗi đồng bộ báo cáo:", e);
+        populateRpBoxDeptFilter();
+        renderLeadershipReportsBoxUI();
+        updateInboxUnreadBadgeCount(mergedList);
+        if (showToastAlert) showToast('🔄 Đã cập nhật ' + data.length + ' báo cáo từ Supabase Cloud!');
+        return true;
+      } catch (error) {
+        console.warn('Lỗi đồng bộ báo cáo; dữ liệu trên máy được giữ nguyên:', error);
+        return false;
       } finally {
-        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        if (refreshIcon && generation === _leadershipReportFetchGeneration) refreshIcon.classList.remove('fa-spin');
       }
     }
 
@@ -28510,22 +28804,162 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
+    function getRpBoxSourceEntryKey(report, item, index = 0) {
+      const reportId = report && report.id != null ? String(report.id) : '';
+      const itemId = item && item.id != null && String(item.id) !== '' ? String(item.id) : String(index);
+      return reportId + '_' + itemId;
+    }
+
+    function isRpBoxSummaryReport(report) {
+      return !!report && (report.reportType === 'manager_summary'
+        || String(report.id || '').startsWith('lr_summary_')
+        || report.status === 'draft_consolidated' || report.targetLevel === 'manager_draft');
+    }
+
+    function getRpBoxConsolidationItems(report) {
+      return Array.isArray(report?.items) ? report.items : (Array.isArray(report?.items?.tasks) ? report.items.tasks : []);
+    }
+
+    function getRpBoxConsolidationPeriod(report, item) {
+      const month = Number(report?.periodMonth);
+      const year = Number(report?.periodYear);
+      if (Number.isInteger(month) && month >= 1 && month <= 12 && Number.isInteger(year) && year >= 2000)
+        return month + '/' + year;
+      const parsed = parseMonthYearFromAnyDate(item?.date || item?.createdAt || item?.dueDate)
+        || parseMonthYearFromAnyDate(report?.submissionDate || report?.createdAt || report?.displayDate);
+      return parsed?.key || '';
+    }
+
+    function getRpBoxConsolidationIdentity(entity, sourceItem = false) {
+      if (!entity) return { id: '', username: '', name: '' };
+      const id = sourceItem
+        ? (entity.sourceSenderId ?? entity.sourceUserId ?? entity.userId ?? entity.user_id ?? entity.senderId)
+        : entity.senderId;
+      const username = sourceItem
+        ? (entity.sourceSenderUsername || entity.sourceUsername || entity.senderUsername || entity.username)
+        : entity.senderUsername;
+      const name = sourceItem
+        ? (entity.sourceSenderFullName || entity.sourceFullName || entity.staffName || entity.staff_name || entity.senderFullName)
+        : entity.senderFullName;
+      return {
+        id: id != null ? String(id).trim() : '',
+        username: cleanReportUsername(username),
+        name: removeAccents(String(name || '')).toLowerCase().trim().replace(/\s+/g, ' ')
+      };
+    }
+
+    function rpBoxConsolidationIdentityMatches(left, right) {
+      if (!left || !right) return false;
+      if (left.id && right.id) return left.id === right.id;
+      if (left.username && right.username) return left.username === right.username;
+      return !!left.name && !!right.name && left.name === right.name;
+    }
+
+    function buildRpBoxConsolidationIndex(reports = getLeadershipReportsShared(), user = currentUser) {
+      const deletedIds = typeof getDeletedLeadershipReportIds === 'function' ? getDeletedLeadershipReportIds() : new Set();
+      const liveReports = (Array.isArray(reports) ? reports : []).filter(report => report && report.id != null && !deletedIds.has(String(report.id)));
+      const summaries = liveReports.filter(isRpBoxSummaryReport);
+      const summariesById = new Map(summaries.map(report => [String(report.id), report]));
+      const bySourceKey = new Map();
+      const sourceEntriesByItemId = new Map();
+      const viewerIdentity = getRpBoxConsolidationIdentity({ senderId: user?.id, senderUsername: user?.username, senderFullName: user?.fullName || user?.full_name });
+      const canOpenSummary = summary => !!user && isSenderOfReport(user, summary)
+        && rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(summary));
+      const addReference = (key, summary) => {
+        if (!key) return;
+        const list = bySourceKey.get(String(key)) || [];
+        if (!list.some(existing => String(existing.id) === String(summary.id))) list.push(summary);
+        bySourceKey.set(String(key), list);
+      };
+      liveReports.filter(report => !isRpBoxSummaryReport(report)).forEach(report => {
+        getRpBoxConsolidationItems(report).forEach((item, itemIndex) => {
+          if (!item || item.id == null || String(item.id) === '') return;
+          const id = String(item.id);
+          const entries = sourceEntriesByItemId.get(id) || [];
+          entries.push({ report, item, index: itemIndex, key: getRpBoxSourceEntryKey(report, item, itemIndex) });
+          sourceEntriesByItemId.set(id, entries);
+        });
+      });
+      summaries.forEach(summary => {
+        getRpBoxConsolidationItems(summary).forEach(item => {
+          if (!item) return;
+          const explicitKey = item.sourceEntryKey != null ? String(item.sourceEntryKey).trim() : '';
+          if (explicitKey) {
+            addReference(explicitKey, summary);
+            return;
+          }
+          if (item.sourceReportId != null && item.sourceItemId != null && String(item.sourceItemId) !== '') {
+            addReference(getRpBoxSourceEntryKey({ id: item.sourceReportId }, { id: item.sourceItemId }), summary);
+            return;
+          }
+          // Older summaries did not persist their source report. Recover only a unique
+          // task ID + original sender identity + period; titles alone are not evidence.
+          const itemId = item.sourceItemId ?? item.id;
+          if (itemId == null || String(itemId) === '') return;
+          const identity = getRpBoxConsolidationIdentity(item, true);
+          const period = getRpBoxConsolidationPeriod(summary, item);
+          if (!period || !(identity.id || identity.username || identity.name)) return;
+          const candidates = (sourceEntriesByItemId.get(String(itemId)) || []).filter(entry =>
+            rpBoxConsolidationIdentityMatches(identity, getRpBoxConsolidationIdentity(entry.report))
+            && getRpBoxConsolidationPeriod(entry.report, entry.item) === period);
+          if (candidates.length === 1) addReference(candidates[0].key, summary);
+        });
+      });
+      return { bySourceKey, summariesById, sourceEntriesByItemId, user, canOpenSummary };
+    }
+
+    function resolveRpBoxConsolidationStatus(report, item, index, consolidationIndex) {
+      const state = consolidationIndex || buildRpBoxConsolidationIndex();
+      const key = getRpBoxSourceEntryKey(report, item, index);
+      const matches = [...(state.bySourceKey.get(key) || [])];
+      const linked = item?.consolidatedReportId != null ? state.summariesById.get(String(item.consolidatedReportId)) : null;
+      if (linked && !matches.some(summary => String(summary.id) === String(linked.id))) {
+        // A persisted direct link may disambiguate a resend in legacy summaries,
+        // but the live summary must still contain the matching task and sender.
+        const itemId = item?.id;
+        const matchingItems = getRpBoxConsolidationItems(linked).filter(source => {
+          if (!source) return false;
+          if (source.sourceEntryKey != null && String(source.sourceEntryKey).trim()) return String(source.sourceEntryKey) === key;
+          if (source.sourceReportId != null && source.sourceItemId != null)
+            return String(source.sourceReportId) === String(report?.id) && String(source.sourceItemId) === String(itemId);
+          if (itemId == null || String(source.sourceItemId ?? source.id) !== String(itemId)) return false;
+          const period = getRpBoxConsolidationPeriod(report, item);
+          return !!period && getRpBoxConsolidationPeriod(linked, source) === period
+            && rpBoxConsolidationIdentityMatches(getRpBoxConsolidationIdentity(source, true), getRpBoxConsolidationIdentity(report));
+        });
+        if (matchingItems.length === 1) matches.push(linked);
+      }
+      const draft = summary => !!(summary.isDraft || summary.status === 'draft_consolidated' || summary.targetLevel === 'manager_draft');
+      matches.sort((left, right) => Number(draft(left)) - Number(draft(right))
+        || Number(state.canOpenSummary(right)) - Number(state.canOpenSummary(left))
+        || (new Date(right.submissionDate || right.createdAt || 0).getTime() || 0) - (new Date(left.submissionDate || left.createdAt || 0).getTime() || 0)
+        || String(left.id).localeCompare(String(right.id)));
+      const summary = matches[0];
+      return summary ? {
+        isConsolidated: true,
+        consolidatedMode: draft(summary) ? 'draft' : 'sent',
+        consolidatedReportId: summary.id,
+        canOpenHistory: state.canOpenSummary(summary)
+      } : { isConsolidated: false, consolidatedMode: '', consolidatedReportId: '', canOpenHistory: false };
+    }
+
     // Quản lý key các đầu việc đã được gộp báo cáo (phân tách theo từng tài khoản)
     function getConsolidatedTaskKeys(user = currentUser) {
+      if (!user || (user.id == null && !user.username)) return new Set();
       try {
-        const uKey = user ? (user.id || user.username || 'default') : 'default';
-        const raw = localStorage.getItem('ops_consolidated_task_keys_' + uKey) || localStorage.getItem('ops_consolidated_task_keys_v1');
-        if (raw) return new Set(JSON.parse(raw));
-      } catch (e) { }
-      return new Set();
+        const userKey = user.id ?? user.username;
+        const raw = localStorage.getItem('ops_consolidated_task_keys_' + userKey);
+        const keys = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(keys) ? keys.filter(key => key != null && String(key) !== '').map(String) : []);
+      } catch (error) { return new Set(); }
     }
 
     function saveConsolidatedTaskKeys(keysSet, user = currentUser) {
+      if (!user || (user.id == null && !user.username)) return;
       try {
-        const uKey = user ? (user.id || user.username || 'default') : 'default';
-        localStorage.setItem('ops_consolidated_task_keys_' + uKey, JSON.stringify(Array.from(keysSet)));
-        localStorage.setItem('ops_consolidated_task_keys_v1', JSON.stringify(Array.from(keysSet)));
-      } catch (e) { }
+        const userKey = user.id ?? user.username;
+        localStorage.setItem('ops_consolidated_task_keys_' + userKey, JSON.stringify(Array.from(keysSet || []).map(String)));
+      } catch (error) { }
     }
 
     // Phân quyền quản lý báo cáo: Quản lý bộ phận, Ban Giám Đốc, Admin
@@ -28605,8 +29039,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // "Phần lịch sử báo cáo ở trong hộp thư.... CHỈ CỦA TÀI KHOẢN NÀO THÌ HIỂN THỊ TÀI KHOẢN ĐÓ"
       // Quản lý tổng hợp xong thì CHỈ tài khoản quản lý đó thấy trong lịch sử của họ.
       // Giám đốc, Admin và các tài khoản khác tuyệt đối KHÔNG thấy được báo cáo này.
-      if (r.reportType === 'manager_summary') {
-        if (isSenderOfReport(user, r)) return true;
+      if (isRpBoxSummaryReport(r)) {
+        const viewerIdentity = getRpBoxConsolidationIdentity({ senderId: user.id, senderUsername: user.username, senderFullName: user.fullName || user.full_name });
+        if (isSenderOfReport(user, r) && rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(r))) return true;
         // Bản nháp chỉ người lập thấy; báo cáo đã gửi lãnh đạo thì người nhận đích danh (Giám đốc / Phó Giám đốc được chọn) mới thấy
         const isDraftSummary = !!(r.isDraft || r.status === 'draft_consolidated' || r.targetLevel === 'manager_draft');
         if (!isDraftSummary && r.targetLevel === 'leadership' && isDirectRecipientOfReport(user, r)) return true;
@@ -28715,13 +29150,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const allReports = getLeadershipReportsShared();
 
       // Báo cáo tổng hợp là các báo cáo do Quản lý / Lãnh đạo tạo (manager_summary) hoặc đã chuyển Ban Lãnh đạo
-      let list = allReports.filter(r => r.reportType === 'manager_summary' || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership'));
+      let list = allReports.filter(r => r && (isRpBoxSummaryReport(r) || (r.items && r.items.length > 0 && r.status === 'forwarded_to_leadership')));
 
       // QUY TẮC BẢO MẬT & PHÂN QUYỀN RIÊNG TƯ TUYỆT ĐỐI THEO YÊU CẦU:
       // "Phần lịch sử báo cáo ở trong hộp thư.... CHỈ CỦA TÀI KHOẢN NÀO THÌ HIỂN THỊ TÀI KHOẢN ĐÓ.
       // Ví dụ tài khoản quản lý tổng hợp báo cáo xong di chuyển vào phần lịch sử thì CHỈ tài khoản quản lý đó thấy được,
       // tài khoản giám đốc, admin và các tài khoản khác TUYỆT ĐỐI KHÔNG THẤY ĐƯỢC."
-      list = list.filter(r => isSenderOfReport(currentUser, r));
+      const viewerIdentity = getRpBoxConsolidationIdentity({ senderId: currentUser.id, senderUsername: currentUser.username, senderFullName: currentUser.fullName || currentUser.full_name });
+      list = list.filter(r => isSenderOfReport(currentUser, r) && rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(r)));
 
       if (!ignoreMonthFilter && typeof rpBoxFilterMonth !== 'undefined' && rpBoxFilterMonth !== 'ALL') {
         list = list.filter(r => doesReportMatchMonthFilter(r, rpBoxFilterMonth));
@@ -28955,7 +29391,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       let reports = getLeadershipReportsShared();
 
       // Báo cáo tổng hợp của quản lý (manager_summary) không phải là đầu việc chờ tổng hợp, loại khỏi danh sách chờ
-      reports = reports.filter(r => r.reportType !== 'manager_summary');
+      reports = reports.filter(r => !isRpBoxSummaryReport(r));
 
       // LỌC CHẶT CHẼ: "Gửi đến ai - tài khoản nào thì tài khoản đó mới nhận thông tin"
       reports = reports.filter(r => canUserAccessReport(currentUser, r));
@@ -28969,37 +29405,27 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
 
-      const consolidatedKeys = getConsolidatedTaskKeys();
-      const myHistoryReports = isManagerOrAbove ? getConsolidatedReportsList() : [];
-      const historyReportMap = new Map();
-      myHistoryReports.forEach(hr => {
-        if (hr && hr.id) historyReportMap.set(String(hr.id), hr);
-      });
+      const consolidationIndex = buildRpBoxConsolidationIndex();
 
       const entries = [];
       reports.forEach(r => {
         const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
         rItems.forEach((it, idx) => {
-          const entryKey = r.id + '_' + (it.id || idx);
+          if (!it) return;
+          const entryKey = getRpBoxSourceEntryKey(r, it, idx);
 
           // BỎ QUA CÁC ĐẦU VIỆC MẪU NẾU CÓ
           if (typeof isSampleTaskItem === 'function' && isSampleTaskItem(it)) {
             return;
           }
 
-          const linkedHistRep = it.consolidatedReportId ? historyReportMap.get(String(it.consolidatedReportId)) : null;
-          const isConsolidated = !!(it.isConsolidated || consolidatedKeys.has(entryKey) || linkedHistRep);
-          const consolidatedMode = linkedHistRep
-            ? ((linkedHistRep.isDraft || linkedHistRep.status === 'draft_consolidated') ? 'draft' : 'sent')
-            : (it.consolidatedMode || (isConsolidated ? 'sent' : ''));
+          const consolidationStatus = resolveRpBoxConsolidationStatus(r, it, idx, consolidationIndex);
 
           const entryObj = {
             entryKey: entryKey,
             reportId: r.id,
             item: it,
-            isConsolidated: isConsolidated,
-            consolidatedMode: consolidatedMode,
-            consolidatedReportId: it.consolidatedReportId || '',
+            ...consolidationStatus,
             // Hiển thị chính xác họ tên người phụ trách đầu việc (chỉ hiển thị họ tên)
             senderId: r.senderId || null,
             senderFullName: it.staffName || r.senderFullName || r.senderUsername || 'Nhân sự',
@@ -29532,10 +29958,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           (isManagerOrAbove ? (
             '<div class="w-[112px] shrink-0 flex items-center justify-center">' +
             (entry.isConsolidated ? (
-              '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[112px] inline-flex items-center justify-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold transition shadow-2xs whitespace-nowrap cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300" title="' + (entry.consolidatedMode === 'draft' ? 'Đầu việc này đã tổng hợp tạo bản nháp báo cáo (Bấm để xem Lịch sử báo cáo)' : 'Đầu việc này đã tổng hợp tạo báo cáo (Bấm để xem Lịch sử báo cáo)') + '">' +
+              (entry.canOpenHistory ? '<button type="button" onclick="setRpBoxViewMode(\'history\')"' : '<span') +
+              ' class="w-full max-w-[112px] inline-flex items-center justify-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold transition shadow-2xs whitespace-nowrap bg-indigo-50 text-indigo-800 border border-indigo-300 ' + (entry.canOpenHistory ? 'hover:bg-indigo-100 cursor-pointer' : 'select-none') + '" title="' + (entry.consolidatedMode === 'draft' ? 'Đầu việc này đã tổng hợp tạo bản nháp báo cáo' : 'Đầu việc này đã tổng hợp tạo báo cáo') + (entry.canOpenHistory ? ' (Bấm để xem Lịch sử báo cáo)' : '') + '">' +
               '<i class="fa-solid fa-file-circle-check text-indigo-600 text-[10px] shrink-0"></i>' +
-              '<span>Đã tạo báo cáo</span>' +
-              '</button>'
+              '<span>' + (entry.consolidatedMode === 'draft' ? 'Đã tạo nháp' : 'Đã tạo báo cáo') + '</span>' +
+              (entry.canOpenHistory ? '</button>' : '</span>')
             ) : (
               '<span class="w-full max-w-[112px] inline-flex items-center justify-center gap-1 px-2 py-1 rounded-xl text-[11px] font-semibold bg-slate-50 text-slate-400 border border-slate-200/90 whitespace-nowrap select-none" title="Đầu việc này chưa được tổng hợp tạo báo cáo">' +
               '<i class="fa-regular fa-clock text-[10px] text-slate-300 shrink-0"></i>' +
@@ -29591,7 +30018,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function getRpBoxSenderRecords(ignoreMonthFilter = false) {
       if (!currentUser) return [];
       const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
-      let reports = getLeadershipReportsShared().filter(r => r && (r.reportType !== 'manager_summary' || !isSenderOfReport(currentUser, r)));
+      let reports = getLeadershipReportsShared().filter(r => r && (!isRpBoxSummaryReport(r) || !isSenderOfReport(currentUser, r)));
       reports = reports.filter(r => canUserAccessReport(currentUser, r));
       if (!isManagerOrAbove) {
         reports = reports.filter(r => isSenderOfReport(currentUser, r));
@@ -29606,13 +30033,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         reports = reports.filter(r => doesReportMatchMonthFilter(r, rpBoxFilterMonth));
       }
 
-      const consolidatedKeys = getConsolidatedTaskKeys();
+      const consolidationIndex = buildRpBoxConsolidationIndex();
       const records = [];
       reports.forEach(r => {
         const rawItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
         const counts = { adhoc: 0, plan: 0, proposal: 0, feedback: 0 };
         let total = 0;
         let consolidated = 0;
+        let draftConsolidated = 0;
+        let sentConsolidated = 0;
+        let canOpenHistory = false;
         const titles = [];
         rawItems.forEach((it, idx) => {
           if (!it) return;
@@ -29620,7 +30050,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           total++;
           if (counts[it.type] !== undefined) counts[it.type]++;
           if (it.title) titles.push(String(it.title).toLowerCase());
-          if (it.isConsolidated || consolidatedKeys.has(r.id + '_' + (it.id || idx))) consolidated++;
+          const status = resolveRpBoxConsolidationStatus(r, it, idx, consolidationIndex);
+          if (status.isConsolidated) {
+            consolidated++;
+            if (status.consolidatedMode === 'draft') draftConsolidated++; else sentConsolidated++;
+            if (status.canOpenHistory) canOpenHistory = true;
+          }
         });
         if (total === 0) return;
         const t = new Date(r.submissionDate || r.createdAt || 0).getTime();
@@ -29628,8 +30063,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           report: r,
           total: total,
           counts: counts,
-          consolidated: (r.reportType === 'manager_summary') ? 0 : consolidated,
-          isSummary: r.reportType === 'manager_summary',
+          consolidated: isRpBoxSummaryReport(r) ? 0 : consolidated,
+          draftConsolidated: draftConsolidated,
+          sentConsolidated: sentConsolidated,
+          consolidatedMode: sentConsolidated > 0 ? 'sent' : (draftConsolidated > 0 ? 'draft' : ''),
+          canOpenHistory: canOpenHistory,
+          isSummary: isRpBoxSummaryReport(r),
           titles: titles,
           time: isNaN(t) ? 0 : t
         });
@@ -29700,7 +30139,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         '<span class="flex-1 min-w-0">' + (isManagerOrAbove ? 'Người gửi &amp; nội dung gửi' : 'Báo cáo đã gửi &amp; người nhận') + '</span>' +
         '</div>' +
         '<div class="flex items-center justify-end gap-3 shrink-0">' +
-        '<span class="w-[152px] shrink-0 text-center">Tổng hợp báo cáo</span>' +
+        (isManagerOrAbove ? '<span class="w-[152px] shrink-0 text-center">Tổng hợp báo cáo</span>' : '') +
         '<span class="w-[140px] shrink-0">Ngày giờ gửi</span>' +
         '<span class="w-[320px] shrink-0">File báo cáo</span>' +
         '</div>' +
@@ -29729,7 +30168,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const actionText = isSummary ? 'đã gửi báo cáo tổng hợp' : (isCopy ? 'đã chuyển báo cáo vào hộp thư' : 'đã gửi báo cáo');
 
         const recipientName = r.recipientFullName || r.recipientUsername || [r.recipientRole, r.recipientDepartment].filter(Boolean).join(' - ') || 'Quản lý bộ phận';
-        const recipientPill = (!isCopy && (r.recipientFullName || !isManagerOrAbove))
+        const recipientPill = (!isCopy && !isManagerOrAbove)
           ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 max-w-full"><i class="fa-solid fa-paper-plane text-[9px] shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">Gửi đến: ' + escapeHtml(recipientName) + '</span></span>'
           : '';
         const deptPill = r.senderDepartment
@@ -29738,7 +30177,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const periodPill = (r.periodMonth && r.periodYear)
           ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0 font-num">Kỳ T' + r.periodMonth + '/' + r.periodYear + '</span>'
           : '';
-        const consolidatedPill = rec.consolidated > 0
+        const consolidatedPill = (isManagerOrAbove && rec.consolidated > 0)
           ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0"><i class="fa-solid fa-circle-check text-[9px]"></i><span>Đã tổng hợp <span class="font-num">' + rec.consolidated + '/' + rec.total + '</span></span></span>'
           : '';
 
@@ -29768,19 +30207,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '</div>' +
 
           '<div class="flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
-          '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
-          (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
-            (isManagerOrAbove ? '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="Đã tổng hợp tạo báo cáo (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="Đã tổng hợp tạo báo cáo (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
-            '<i class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
-            '<span>Đã tạo báo cáo' + (rec.consolidated < rec.total ? ' (' + rec.consolidated + '/' + rec.total + ')' : '') + '</span>' +
-            (isManagerOrAbove ? '</button>' : '</span>')
-          ) : (
-            '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-400 border border-slate-200/90 whitespace-nowrap" title="Chưa tổng hợp tạo báo cáo">' +
-            '<i class="fa-regular fa-clock text-[11px] text-slate-300"></i>' +
-            '<span>Chưa tổng hợp</span>' +
-            '</span>'
-          )) +
-          '</div>' +
+          (isManagerOrAbove ? (
+            '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
+            (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
+              (rec.canOpenHistory ? '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
+              '<i class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
+              '<span>' + (rec.consolidatedMode === 'draft' ? 'Đã tạo nháp' : 'Đã tạo báo cáo') + (rec.consolidated < rec.total ? ' (' + rec.consolidated + '/' + rec.total + ')' : '') + '</span>' +
+              (rec.canOpenHistory ? '</button>' : '</span>')
+            ) : (
+              '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-400 border border-slate-200/90 whitespace-nowrap" title="Chưa tổng hợp tạo báo cáo">' +
+              '<i class="fa-regular fa-clock text-[11px] text-slate-300"></i>' +
+              '<span>Chưa tổng hợp</span>' +
+              '</span>'
+            )) +
+            '</div>'
+          ) : '') +
           '<div class="flex flex-col items-start justify-center gap-1 text-[11px] xl:w-[140px] shrink-0">' +
           '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
           (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
@@ -29867,7 +30308,36 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function executeConsolidateSelectedTasksFromInbox(isDraft = false) {
+    function reconcileRpBoxConsolidationState(reports, user = currentUser) {
+      const index = buildRpBoxConsolidationIndex(reports, user);
+      const keys = new Set();
+      (reports || []).forEach(report => {
+        if (!report || isRpBoxSummaryReport(report)) return;
+        const items = Array.isArray(report.items) ? report.items : (report.items?.tasks || []);
+        items.forEach((item, position) => {
+          if (!item) return;
+          const state = resolveRpBoxConsolidationStatus(report, item, position, index);
+          if (state.isConsolidated) {
+            item.isConsolidated = true;
+            item.consolidatedReportId = state.consolidatedReportId;
+            item.consolidatedMode = state.consolidatedMode;
+            if (user && canUserAccessReport(user, report)) keys.add(getRpBoxSourceEntryKey(report, item, position));
+          } else {
+            delete item.isConsolidated;
+            delete item.consolidatedReportId;
+            delete item.consolidatedMode;
+          }
+        });
+      });
+      if (user) saveConsolidatedTaskKeys(keys, user);
+      return reports;
+    }
+
+    async function executeConsolidateSelectedTasksFromInbox(isDraft = false) {
+      if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) {
+        showToast('Bạn không có quyền tổng hợp báo cáo.', true);
+        return;
+      }
       if (!_pendingConsolidatePayload) {
         closeConsolidateAssessmentModal();
         return;
@@ -29893,6 +30363,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         it.consolidatedReportId = reportId;
         it.consolidatedMode = modeVal;
         it.sourceEntryKey = e.entryKey;
+        it.sourceReportId = e.reportId;
+        it.sourceItemId = e.item?.id ?? null;
+        it.sourceSenderId = e.senderId ?? null;
+        it.sourceSenderUsername = e.senderUsername || '';
+        it.sourceSenderFullName = e.senderFullName || '';
         return it;
       });
 
@@ -29904,6 +30379,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         senderDepartment: targetDept,
         senderRole: currentUser.role,
         submissionDate: now.toISOString(),
+        updatedAt: now.toISOString(),
         displayDate: String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
         periodMonth: m,
         periodYear: y,
@@ -29931,7 +30407,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       sharedReports.forEach(r => {
         const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
         rItems.forEach((it, idx) => {
-          const k = r.id + '_' + (it.id || idx);
+          const k = getRpBoxSourceEntryKey(r, it, idx);
           if (selectedKeySet.has(k)) {
             it.isConsolidated = true;
             it.consolidatedReportId = reportId;
@@ -29942,8 +30418,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // 3. Thêm báo cáo tổng hợp mới vào đầu danh sách và lưu trữ vào Lịch sử báo cáo
       sharedReports.unshift(summaryReport);
+      reconcileRpBoxConsolidationState(sharedReports);
       saveLeadershipReportsShared(sharedReports);
-      saveLeadershipReportToSupabase(summaryReport);
+      const cloudSave = saveLeadershipReportToSupabase(summaryReport);
 
       if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
         const userWsData = getPersonalWorkspaceData(currentUser);
@@ -29956,14 +30433,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       rpBoxSelectedTaskKeys.clear();
-      if (isDraft) {
-        showToast("📝 Đã tạo nháp báo cáo tổng hợp và chuyển vào Lịch sử báo cáo!");
-      } else {
-        showToast("🎉 Đã tạo Báo cáo Tổng hợp và gửi Ban Giám Đốc thành công!");
-      }
-
-      // Chuyển sang màn hình Lịch sử báo cáo
       setRpBoxViewMode('history');
+      const savedToCloud = await cloudSave;
+      if (!savedToCloud) {
+        showToast(isDraft
+          ? 'Đã lưu bản nháp trên thiết bị. Chưa đồng bộ được; chương trình sẽ thử lại khi có kết nối.'
+          : 'Đã lưu báo cáo trên thiết bị. Chưa gửi lên máy chủ; chương trình sẽ thử đồng bộ lại.', true);
+      } else {
+        showToast(isDraft ? '📝 Đã tạo nháp báo cáo tổng hợp và lưu vào Lịch sử báo cáo!'
+          : '🎉 Đã tạo Báo cáo Tổng hợp và gửi Ban Giám Đốc thành công!');
+      }
     }
 
     function getConsolidatedWordFileName(r) {
@@ -30272,7 +30751,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       _pendingSendDraftReportId = null;
     }
 
-    function confirmSendDraftToLeadership() {
+    async function confirmSendDraftToLeadership() {
       const reportId = _pendingSendDraftReportId;
       if (!reportId) { closeSendDraftToLeadershipModal(); return; }
 
@@ -30285,13 +30764,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const allReports = getLeadershipReportsShared();
       const rep = allReports.find(function (r) { return String(r.id) === String(reportId); });
-      if (!rep || !currentUser || !isSenderOfReport(currentUser, rep)) {
+      const viewerIdentity = getRpBoxConsolidationIdentity({ senderId: currentUser?.id, senderUsername: currentUser?.username, senderFullName: currentUser?.fullName || currentUser?.full_name });
+      if (!rep || !currentUser || !isSenderOfReport(currentUser, rep) || !rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(rep))) {
         closeSendDraftToLeadershipModal();
         showToast("Không tìm thấy dữ liệu báo cáo!", true);
         return;
       }
 
       const now = new Date();
+      rep.updatedAt = now.toISOString();
       rep.isDraft = false;
       rep.status = 'forwarded_to_leadership';
       rep.targetLevel = 'leadership';
@@ -30313,8 +30794,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       });
 
+      reconcileRpBoxConsolidationState(allReports);
       saveLeadershipReportsShared(allReports);
-      saveLeadershipReportToSupabase(rep);
+      const cloudSave = saveLeadershipReportToSupabase(rep);
 
       if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
         const userWsData = getPersonalWorkspaceData(currentUser);
@@ -30327,8 +30809,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       closeSendDraftToLeadershipModal();
-      showToast("🎉 Đã gửi báo cáo tổng hợp đến " + recipient.fullName + " (" + recipient.role + ") thành công!");
       setRpBoxViewMode('history');
+      const savedToCloud = await cloudSave;
+      showToast(savedToCloud
+        ? '🎉 Đã gửi báo cáo tổng hợp đến ' + recipient.fullName + ' (' + recipient.role + ') thành công!'
+        : 'Đã lưu thay đổi trên thiết bị. Báo cáo đang chờ đồng bộ để gửi đến lãnh đạo.', !savedToCloud);
     }
 
     // Tải file Word của 1 báo cáo tổng hợp theo ID
@@ -30441,60 +30926,29 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       _pendingDeleteReportId = null;
     }
 
-    function executeDeleteLeadershipReport() {
+    async function executeDeleteLeadershipReport() {
       const reportId = _pendingDeleteReportId;
-      if (!reportId) {
-        closeConfirmDeleteLeadershipReportModal();
+      if (!reportId) { closeConfirmDeleteLeadershipReportModal(); return; }
+      closeConfirmDeleteLeadershipReportModal();
+      const allReports = getLeadershipReportsShared();
+      const report = allReports.find(r => String(r.id) === String(reportId));
+      if (!report) return;
+      const viewerIdentity = getRpBoxConsolidationIdentity({ senderId: currentUser?.id, senderUsername: currentUser?.username, senderFullName: currentUser?.fullName || currentUser?.full_name });
+      if (!currentUser || !isSenderOfReport(currentUser, report) || !rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(report))) {
+        showToast('Bạn không có quyền xóa báo cáo của tài khoản khác!', true);
         return;
       }
-      closeConfirmDeleteLeadershipReportModal();
-
-      const allReports = getLeadershipReportsShared();
-      const rep = allReports.find(r => r.id === reportId);
-      if (!rep) return;
-
-      // 1. Ghi nhận ID đã xóa vào danh sách chặn vĩnh viễn (chống zombie loop)
       addDeletedLeadershipReportId(reportId);
-
-      // 2. Xóa vĩnh viễn trên Supabase Cloud
-      if (typeof supabase !== 'undefined' && supabase) {
-        supabase.from('leadership_reports').delete().eq('id', reportId).then(({ error }) => {
-          if (error) console.warn("Lỗi xóa báo cáo trên Supabase:", error);
-        }).catch(err => console.warn("Lỗi kết nối xóa báo cáo:", err));
-      }
-
-      // 3. Phục hồi các đầu việc bên trong quay lại trạng thái chưa tổng hợp ở Hộp thư
-      const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-      const consolidatedKeys = getConsolidatedTaskKeys();
-      items.forEach(it => {
-        if (it && it.sourceEntryKey) consolidatedKeys.delete(it.sourceEntryKey);
-      });
-
-      const remainingReports = allReports.filter(r => r.id !== reportId);
-      remainingReports.forEach(r => {
-        const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
-        rItems.forEach((it, idx) => {
-          const k = r.id + '_' + (it.id || idx);
-          if (it.consolidatedReportId === reportId) {
-            it.isConsolidated = false;
-            delete it.consolidatedReportId;
-            delete it.consolidatedMode;
-            consolidatedKeys.delete(k);
-          }
-        });
-      });
-
-      saveConsolidatedTaskKeys(consolidatedKeys);
+      removePendingLeadershipReportWrite(reportId);
+      const remainingReports = allReports.filter(r => String(r.id) !== String(reportId));
+      reconcileRpBoxConsolidationState(remainingReports);
       saveLeadershipReportsShared(remainingReports);
-
-      // 4. Nếu không còn báo cáo lịch sử nào, chuyển ngay về giao diện Hộp thư
-      const remainingHist = getConsolidatedReportsList();
-      if (remainingHist.length === 0) {
-        rpBoxViewMode = 'inbox';
-      }
-
+      if (getConsolidatedReportsList().length === 0) rpBoxViewMode = 'inbox';
       renderLeadershipReportsBoxUI();
-      showToast("🗑️ Đã xóa báo cáo và phục hồi các đầu việc về Hộp thư!");
+      const deletedFromCloud = await deleteLeadershipReportFromSupabase(reportId, report);
+      showToast(deletedFromCloud
+        ? '🗑️ Đã xóa báo cáo và cập nhật trạng thái các đầu việc theo báo cáo còn lại!'
+        : 'Đã xóa báo cáo trên thiết bị. Lệnh xóa đang chờ đồng bộ lên máy chủ.', !deletedFromCloud);
     }
 
     function exportSelectedTasksToWord() {
@@ -30592,8 +31046,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       showToast("📊 Đã xuất file Excel tổng hợp " + selectedEntries.length + " đầu việc!");
     }
 
-    function openManagerConsolidatedReportModal() {
-      if (!currentUser) return;
+    async function openManagerConsolidatedReportModal() {
+      if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) return;
       const m = currentSelectedMonth || (new Date().getMonth() + 1);
       const y = currentSelectedYear || new Date().getFullYear();
 
@@ -30602,8 +31056,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const sharedReports = getLeadershipReportsShared();
       const deptReports = sharedReports.filter(r =>
+        r && !isRpBoxSummaryReport(r) && canUserAccessReport(currentUser, r) &&
         (deptSelect && deptSelect.value === 'ALL' ? true : isSameDept(r.senderDepartment, targetDept)) &&
-        (r.periodMonth === m && r.periodYear === y)
+        (Number(r.periodMonth) === Number(m) && Number(r.periodYear) === Number(y))
       );
 
       if (deptReports.length === 0) {
@@ -30620,9 +31075,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       deptReports.forEach(rep => {
         staffNames.add(rep.senderFullName || rep.senderUsername);
-        (rep.items || []).forEach(it => {
+        const sourceItems = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
+        sourceItems.forEach((it, sourceIndex) => {
+          if (!it || (typeof isSampleTaskItem === 'function' && isSampleTaskItem(it))) return;
           const cloned = JSON.parse(JSON.stringify(it));
           cloned.staffName = rep.senderFullName || rep.senderUsername;
+          cloned.staffDept = rep.senderDepartment || '';
+          cloned.staffRole = rep.senderRole || '';
+          cloned.sourceEntryKey = getRpBoxSourceEntryKey(rep, it, sourceIndex);
+          cloned.sourceReportId = rep.id;
+          cloned.sourceItemId = it.id ?? null;
+          cloned.sourceSenderId = rep.senderId ?? null;
+          cloned.sourceSenderUsername = rep.senderUsername || '';
+          cloned.sourceSenderFullName = rep.senderFullName || '';
           consolidatedItems.push(cloned);
           if (it.type === 'adhoc') adhocCount++;
           else if (it.type === 'plan') planCount++;
@@ -30647,6 +31112,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         senderDepartment: targetDept,
         senderRole: currentUser.role,
         submissionDate: now.toISOString(),
+        updatedAt: now.toISOString(),
         displayDate: `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
         periodMonth: m,
         periodYear: y,
@@ -30668,11 +31134,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
 
       sharedReports.unshift(summaryReport);
+      reconcileRpBoxConsolidationState(sharedReports);
       saveLeadershipReportsShared(sharedReports);
-      saveLeadershipReportToSupabase(summaryReport);
+      const cloudSave = saveLeadershipReportToSupabase(summaryReport);
 
       renderLeadershipReportsBoxUI();
-      showToast(`🎉 Đã tạo Báo cáo Tổng hợp Bộ phận ${targetDept} và chuyển lên Ban Lãnh đạo thành công!`);
+      const savedToCloud = await cloudSave;
+      showToast(savedToCloud
+        ? '🎉 Đã tạo Báo cáo Tổng hợp Bộ phận ' + targetDept + ' và chuyển lên Ban Lãnh đạo thành công!'
+        : 'Đã lưu báo cáo tổng hợp trên thiết bị. Báo cáo đang chờ đồng bộ lên máy chủ.', !savedToCloud);
     }
 
     // 5. Ban Giám Đốc cho ý kiến chỉ đạo (Dùng Modal Hiện Đại)
