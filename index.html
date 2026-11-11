@@ -6607,7 +6607,7 @@
       <!-- THANH CHỌN ĐẦU VIỆC & NÚT HÀNH ĐỘNG TỔNG HỢP (DÀNH CHO QUẢN LÝ / NGƯỜI XEM) -->
       <div id="rpBoxMultiSelectBar"
         class="px-5 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white border-b border-emerald-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs flex-shrink-0">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5 flex-wrap">
           <label
             class="flex items-center gap-2 cursor-pointer font-bold text-slate-800 select-none hover:text-emerald-800 transition">
             <input type="checkbox" id="rpBoxSelectAllChk" onchange="toggleSelectAllRpTasks(this.checked)"
@@ -6617,6 +6617,41 @@
           <span class="text-slate-300">|</span>
           <span class="text-slate-600 font-medium">Đã chọn: <b id="rpBoxSelectedTasksCount"
               class="text-emerald-700 font-black font-num">0</b> đầu việc</span>
+          <span class="text-slate-300 hidden sm:inline">|</span>
+          <div class="inline-flex items-center gap-1.5 flex-wrap">
+            <button type="button" id="rpBoxFilterCons_all" onclick="setRpBoxConsolidationFilter('all')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-slate-800 text-white border-slate-800 shadow-2xs"
+              title="Hiển thị tất cả đầu việc">
+              <span>Tất cả</span>
+            </button>
+            <button type="button" id="rpBoxFilterCons_unconsolidated" onclick="setRpBoxConsolidationFilter('unconsolidated')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-amber-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
+              title="Chỉ hiển thị các đầu việc chưa tổng hợp (Bấm lần nữa để bỏ lọc)">
+              <i class="fa-regular fa-clock text-[10px] text-amber-500"></i>
+              <span>Chưa tổng hợp</span>
+              <span id="rpBoxCountCons_unconsolidated" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-amber-100 text-amber-800">0</span>
+            </button>
+            <button type="button" id="rpBoxFilterCons_draft" onclick="setRpBoxConsolidationFilter('draft')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-indigo-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
+              title="Chỉ hiển thị các đầu việc đã tạo nháp (Bấm lần nữa để bỏ lọc)">
+              <i class="fa-solid fa-file-pen text-[10px] text-indigo-500"></i>
+              <span>Đã tạo nháp</span>
+              <span id="rpBoxCountCons_draft" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-indigo-50 text-indigo-700">0</span>
+            </button>
+            <button type="button" id="rpBoxFilterCons_sent" onclick="setRpBoxConsolidationFilter('sent')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-emerald-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
+              title="Chỉ hiển thị các đầu việc đã tạo báo cáo (Bấm lần nữa để bỏ lọc)">
+              <i class="fa-solid fa-file-circle-check text-[10px] text-emerald-600"></i>
+              <span>Đã tạo báo cáo</span>
+              <span id="rpBoxCountCons_sent" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-emerald-50 text-emerald-700">0</span>
+            </button>
+            <button type="button" id="rpBoxBtnSelectUnconsolidated" onclick="selectUnconsolidatedRpTasks()"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300/90 inline-flex items-center gap-1 shadow-2xs active:scale-95"
+              title="Tích chọn nhanh toàn bộ đầu việc chưa tổng hợp trong danh sách hiện tại">
+              <i class="fa-solid fa-bolt-lightning text-[10px] text-amber-600"></i>
+              <span id="rpBoxBtnSelectUnconsolidatedText">Chọn nhanh chưa tổng hợp</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
@@ -6643,6 +6678,10 @@
           </button>
         </div>
       </div>
+
+      <!-- THANH BÁO ĐANG XEM ĐẦU VIỆC CỦA MỘT LƯỢT GỬI -->
+      <div id="rpBoxSourceBanner"
+        class="hidden px-5 sm:px-6 py-2 bg-indigo-50/80 border-b border-indigo-200/80 flex flex-wrap items-center justify-between gap-2 text-xs flex-shrink-0"></div>
 
       <!-- VÙNG DANH SÁCH CÁC DÒNG CÔNG VIỆC -->
       <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-2.5 custom-scroll bg-slate-50/70">
@@ -28651,10 +28690,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= HỘP THƯ TIẾP NHẬN BÁO CÁO & PHÊ DUYỆT THEO PHÂN CẤP (GIAO DIỆN DÒNG CÔNG VIỆC NHƯ SỔ TAY, 4 TAB CHUẨN) =================
     let rpBoxActiveTab = 'all'; // 'all', 'adhoc', 'plan', 'proposal', 'feedback'
+    let rpBoxConsolidationFilter = 'all'; // 'all', 'unconsolidated', 'draft', 'sent'
+    let rpBoxSourceReportFilter = ''; // ID lượt gửi đang được mở để xem các đầu việc bên trong
     let rpBoxSelectedTaskKeys = new Set();
 
     function switchRpBoxTab(tab) {
       rpBoxActiveTab = tab;
+      if (tab === 'senders') rpBoxSourceReportFilter = '';
       const tabs = ['senders', 'all', 'adhoc', 'plan', 'proposal', 'feedback'];
       const boxStyles = {
         senders: 'bg-indigo-600 text-white border border-indigo-600 shadow-xs font-bold',
@@ -28752,6 +28794,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // Luôn mặc định mở vào Hộp thư nhận việc (tránh kẹt ở tab lịch sử)
       rpBoxViewMode = 'inbox';
+      rpBoxConsolidationFilter = 'all';
+      rpBoxSourceReportFilter = '';
 
       if (!isManagerOrAbove) {
         // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
@@ -29509,6 +29553,117 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
     }
 
+    // Danh sách đầu việc theo phạm vi hiện tại: toàn bộ hộp thư hoặc chỉ một lượt gửi được chọn
+    function getRpBoxScopedEntries() {
+      if (!rpBoxSourceReportFilter) return getAllRpBoxTaskEntries();
+      // Đã chọn đích danh một lượt gửi nên bỏ qua bộ lọc tháng của danh sách chung
+      return getAllRpBoxTaskEntries(true).filter(e => String(e.reportId) === String(rpBoxSourceReportFilter));
+    }
+
+    function openRpBoxSenderRecordTasks(reportId) {
+      const rep = getLeadershipReportsShared().find(r => r && String(r.id) === String(reportId));
+      if (!rep || !canUserAccessReport(currentUser, rep) || isRpBoxSummaryReport(rep)) {
+        showToast('Không tìm thấy đầu việc của lượt gửi này!', true);
+        return;
+      }
+      rpBoxSourceReportFilter = String(rep.id);
+      rpBoxConsolidationFilter = 'all';
+      const searchInput = document.getElementById('rpBoxSearchInput');
+      if (searchInput) searchInput.value = '';
+      switchRpBoxTab('all');
+    }
+
+    function clearRpBoxSourceReportFilter(backToSenders) {
+      rpBoxSourceReportFilter = '';
+      switchRpBoxTab(backToSenders ? 'senders' : 'all');
+    }
+
+    function updateRpBoxSourceBanner() {
+      const banner = document.getElementById('rpBoxSourceBanner');
+      if (!banner) return;
+      let report = null;
+      if (rpBoxSourceReportFilter) {
+        report = getLeadershipReportsShared().find(r => r && String(r.id) === String(rpBoxSourceReportFilter)) || null;
+        if (!report || !canUserAccessReport(currentUser, report)) { rpBoxSourceReportFilter = ''; report = null; }
+      }
+      if (!report || rpBoxActiveTab === 'senders' || rpBoxViewMode === 'history') {
+        banner.classList.add('hidden');
+        banner.innerHTML = '';
+        return;
+      }
+      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
+      const who = isManagerOrAbove ? (report.senderFullName || report.senderUsername || 'Nhân sự') : 'Bạn';
+      const when = formatRpBoxSendDateTime(report);
+      const rawItems = Array.isArray(report.items) ? report.items : (report.items && report.items.tasks ? report.items.tasks : []);
+      const total = rawItems.filter(it => it && !(typeof isSampleTaskItem === 'function' && isSampleTaskItem(it))).length;
+      banner.innerHTML =
+        '<div class="flex items-center gap-2 flex-wrap min-w-0">' +
+        '<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] shrink-0"><i class="fa-solid fa-eye text-[10px]"></i>Đang xem lượt gửi</span>' +
+        '<span class="font-bold text-slate-800 break-words [overflow-wrap:anywhere]">' + escapeHtml(who) + '</span>' +
+        '<span class="text-slate-500 font-medium">· ' + escapeHtml(when.date || '---') + (when.time ? ' ' + escapeHtml(when.time) : '') + ' · <b class="font-num text-slate-700">' + total + '</b> đầu việc</span>' +
+        '</div>' +
+        '<div class="flex items-center gap-1.5 shrink-0">' +
+        '<button type="button" onclick="clearRpBoxSourceReportFilter(true)" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1 shadow-2xs"><i class="fa-solid fa-arrow-left text-[10px]"></i>Quay lại lượt gửi</button>' +
+        '<button type="button" onclick="clearRpBoxSourceReportFilter(false)" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1 shadow-2xs"><i class="fa-solid fa-xmark text-[10px]"></i>Xem tất cả</button>' +
+        '</div>';
+      banner.classList.remove('hidden');
+    }
+
+    function getRpBoxFilteredBaseEntries(allEntries = getRpBoxScopedEntries()) {
+      let entries = Array.isArray(allEntries) ? allEntries : [];
+      if (rpBoxActiveTab !== 'all') {
+        entries = entries.filter(e => e.item.type === rpBoxActiveTab);
+      }
+      const searchInput = document.getElementById('rpBoxSearchInput');
+      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      if (keyword) {
+        entries = entries.filter(e => {
+          const title = (e.item.title || '').toLowerCase();
+          const content = (e.item.content || '').toLowerCase();
+          const sender = (e.senderFullName || '').toLowerCase();
+          const dept = (e.senderDepartment || '').toLowerCase();
+          return title.includes(keyword) || content.includes(keyword) || sender.includes(keyword) || dept.includes(keyword);
+        });
+      }
+      return entries;
+    }
+
+    function applyRpBoxConsolidationFilter(entries, filterMode = (typeof rpBoxConsolidationFilter !== 'undefined' ? rpBoxConsolidationFilter : 'all')) {
+      const list = Array.isArray(entries) ? entries : [];
+      if (!isUserReportManagerOrLeadership(currentUser) || !filterMode || filterMode === 'all') return list;
+      if (filterMode === 'unconsolidated') return list.filter(e => !e.isConsolidated);
+      if (filterMode === 'draft') return list.filter(e => e.isConsolidated && e.consolidatedMode === 'draft');
+      if (filterMode === 'sent') return list.filter(e => e.isConsolidated && e.consolidatedMode !== 'draft');
+      return list;
+    }
+
+    function setRpBoxConsolidationFilter(filter = 'all') {
+      const current = typeof rpBoxConsolidationFilter !== 'undefined' ? rpBoxConsolidationFilter : 'all';
+      rpBoxConsolidationFilter = (current === filter && filter !== 'all') ? 'all' : filter;
+      renderLeadershipReportsBoxUI();
+    }
+
+    function selectUnconsolidatedRpTasks() {
+      if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) return;
+      const baseEntries = getRpBoxFilteredBaseEntries();
+      const unconsolidated = baseEntries.filter(e => !e.isConsolidated);
+      if (unconsolidated.length === 0) {
+        showToast('Tất cả đầu việc trong danh sách hiện tại đều đã được tổng hợp!', true);
+        return;
+      }
+      const allAlreadySelected = unconsolidated.every(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+      if (allAlreadySelected) {
+        unconsolidated.forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
+        renderLeadershipReportsBoxUI();
+        showToast('Đã bỏ chọn các đầu việc chưa tổng hợp.');
+      } else {
+        baseEntries.filter(e => e.isConsolidated).forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
+        unconsolidated.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
+        renderLeadershipReportsBoxUI();
+        showToast('⚡ Đã chọn nhanh ' + unconsolidated.length + ' đầu việc chưa tổng hợp!');
+      }
+    }
+
     function onRpTaskCheckboxChange(el) {
       const key = el.dataset.key;
       if (el.checked) {
@@ -29516,31 +29671,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       } else {
         rpBoxSelectedTaskKeys.delete(key);
       }
-      const allEntries = getAllRpBoxTaskEntries();
-      let visibleEntries = allEntries;
-      if (rpBoxActiveTab !== 'all') {
-        visibleEntries = visibleEntries.filter(e => e.item.type === rpBoxActiveTab);
-      }
+      const visibleEntries = applyRpBoxConsolidationFilter(getRpBoxFilteredBaseEntries());
       updateRpBoxMultiSelectBar(visibleEntries);
     }
 
     function toggleSelectAllRpTasks(checked) {
-      const allEntries = getAllRpBoxTaskEntries();
-      let visibleEntries = allEntries;
-      if (rpBoxActiveTab !== 'all') {
-        visibleEntries = visibleEntries.filter(e => e.item.type === rpBoxActiveTab);
-      }
-      const searchInput = document.getElementById('rpBoxSearchInput');
-      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
-      if (keyword) {
-        visibleEntries = visibleEntries.filter(e => {
-          const title = (e.item.title || '').toLowerCase();
-          const content = (e.item.content || '').toLowerCase();
-          const sender = (e.senderFullName || '').toLowerCase();
-          return title.includes(keyword) || content.includes(keyword) || sender.includes(keyword);
-        });
-      }
-
+      const visibleEntries = applyRpBoxConsolidationFilter(getRpBoxFilteredBaseEntries());
       if (checked) {
         visibleEntries.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
       } else {
@@ -29589,6 +29725,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (hasSelected) exportExcelBtn.classList.remove('hidden');
         else exportExcelBtn.classList.add('hidden');
       }
+      const quickSelectBtn = document.getElementById('rpBoxBtnSelectUnconsolidated');
+      const quickSelectText = document.getElementById('rpBoxBtnSelectUnconsolidatedText');
+      if (quickSelectBtn && quickSelectText) {
+        const unconsolidatedInView = (Array.isArray(visibleEntries) ? visibleEntries : []).filter(e => !e.isConsolidated);
+        const allUnconsSelected = unconsolidatedInView.length > 0 && unconsolidatedInView.every(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+        quickSelectText.innerText = allUnconsSelected ? 'Bỏ chọn chưa tổng hợp' : ('Chọn việc chưa tổng hợp' + (unconsolidatedInView.length > 0 ? ' (' + unconsolidatedInView.length + ')' : ''));
+      }
     }
 
     // Render giao diện danh sách từng dòng công việc ĐỒNG NHẤT 100% VỚI BẢNG SỔ TAY CÔNG VIỆC
@@ -29602,6 +29745,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // Cập nhật danh sách tháng trên bộ lọc tháng của Hộp thư
       populateRpBoxMonthFilter();
+      updateRpBoxSourceBanner();
 
       // Cập nhật số đếm trên nút Lịch sử báo cáo ở Header
       const historyReports = getConsolidatedReportsList();
@@ -29660,7 +29804,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (tabsContainer) tabsContainer.classList.remove('hidden');
       }
 
-      const allEntries = getAllRpBoxTaskEntries();
+      const allEntries = getRpBoxScopedEntries();
 
       // 1. Cập nhật số đếm trên 5 Tab
       const countAll = allEntries.length;
@@ -29691,13 +29835,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      // 2. Lọc theo Tab đang chọn
+      // 2. Lọc theo Tab đang chọn & từ khóa tìm kiếm
       let filteredEntries = allEntries;
       if (rpBoxActiveTab !== 'all') {
         filteredEntries = filteredEntries.filter(e => e.item.type === rpBoxActiveTab);
       }
-
-      // 3. Lọc theo từ khóa tìm kiếm
       const searchInput = document.getElementById('rpBoxSearchInput');
       const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
       if (keyword) {
@@ -29708,6 +29850,33 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const dept = (e.senderDepartment || '').toLowerCase();
           return title.includes(keyword) || content.includes(keyword) || sender.includes(keyword) || dept.includes(keyword);
         });
+      }
+
+      // 3. Cập nhật bộ đếm & lọc theo trạng thái tổng hợp (dành cho Quản lý trở lên)
+      const activeConsFilter = (isManagerOrAbove && typeof rpBoxConsolidationFilter !== 'undefined' && rpBoxConsolidationFilter) ? rpBoxConsolidationFilter : 'all';
+      if (isManagerOrAbove) {
+        const countUncons = filteredEntries.filter(e => !e.isConsolidated).length;
+        const countDraft = filteredEntries.filter(e => e.isConsolidated && e.consolidatedMode === 'draft').length;
+        const countSent = filteredEntries.filter(e => e.isConsolidated && e.consolidatedMode !== 'draft').length;
+        const elUncons = document.getElementById('rpBoxCountCons_unconsolidated');
+        const elDraft = document.getElementById('rpBoxCountCons_draft');
+        const elSent = document.getElementById('rpBoxCountCons_sent');
+        if (elUncons) elUncons.innerText = countUncons;
+        if (elDraft) elDraft.innerText = countDraft;
+        if (elSent) elSent.innerText = countSent;
+        const consBtnConfigs = {
+          all: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-slate-800 text-white border-slate-800 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-slate-100 text-slate-700 border-slate-200/90 shadow-2xs' },
+          unconsolidated: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-amber-500 text-white border-amber-500 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-amber-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' },
+          draft: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-indigo-600 text-white border-indigo-600 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-indigo-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' },
+          sent: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-emerald-600 text-white border-emerald-600 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-emerald-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' }
+        };
+        ['all', 'unconsolidated', 'draft', 'sent'].forEach(mode => {
+          const btn = document.getElementById('rpBoxFilterCons_' + mode);
+          if (btn) btn.className = (activeConsFilter === mode) ? consBtnConfigs[mode].active : consBtnConfigs[mode].inactive;
+        });
+        if (activeConsFilter === 'unconsolidated') filteredEntries = filteredEntries.filter(e => !e.isConsolidated);
+        else if (activeConsFilter === 'draft') filteredEntries = filteredEntries.filter(e => e.isConsolidated && e.consolidatedMode === 'draft');
+        else if (activeConsFilter === 'sent') filteredEntries = filteredEntries.filter(e => e.isConsolidated && e.consolidatedMode !== 'draft');
       }
 
       // 4. Sắp xếp đồng nhất với Sổ tay: Việc chưa xong lên trước, Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
@@ -29721,13 +29890,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       updateRpBoxMultiSelectBar(filteredEntries);
 
       if (filteredEntries.length === 0) {
+        const emptyConsTitle = activeConsFilter === 'unconsolidated' ? 'Tất cả đầu việc trong mục này đều đã được tổng hợp' : (activeConsFilter === 'draft' ? 'Chưa có đầu việc nào đang ở trạng thái Đã tạo nháp' : (activeConsFilter === 'sent' ? 'Chưa có đầu việc nào ở trạng thái Đã tạo báo cáo' : 'Chưa có đầu việc nào trong danh mục này'));
+        const emptyConsHint = activeConsFilter !== 'all' ? 'Bấm "Tất cả" trên thanh lọc trạng thái tổng hợp để xem lại toàn bộ đầu việc.' : 'Các đầu việc được gửi báo cáo hoặc chuyển vào hộp thư sẽ hiển thị tại đây.';
         container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
           '<div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 border border-slate-200/80 flex items-center justify-center text-2xl mx-auto shadow-2xs">' +
           '<i class="fa-solid fa-inbox"></i>' +
           '</div>' +
           '<div class="space-y-1">' +
-          '<p class="text-sm font-black text-slate-700">Chưa có đầu việc nào trong danh mục này</p>' +
-          '<p class="text-xs text-slate-400">Các đầu việc được gửi báo cáo hoặc chuyển vào hộp thư sẽ hiển thị tại đây.</p>' +
+          '<p class="text-sm font-black text-slate-700">' + emptyConsTitle + '</p>' +
+          '<p class="text-xs text-slate-400">' + emptyConsHint + '</p>' +
+          (activeConsFilter !== 'all' ? '<button type="button" onclick="setRpBoxConsolidationFilter(\'all\')" class="mt-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer">Xem tất cả đầu việc</button>' : '') +
           '</div>' +
           '</div>';
         return;
@@ -30182,7 +30354,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           : '';
 
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs">' +
+          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs' + (isSummary ? '' : ' cursor-pointer') + '"' +
+          (isSummary ? '' : ' onclick="openRpBoxSenderRecordTasks(\'' + escapeHtml(String(r.id)) + '\')" title="Bấm để xem các đầu việc của lượt gửi này"') + '>' +
 
           '<div class="flex items-center gap-3 flex-1 min-w-0">' +
           '<span class="w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (idx + 1) + '</span>' +
@@ -30202,6 +30375,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           typeChip(rec.counts.proposal, 'bg-purple-50 text-purple-800 border-purple-200', 'fa-lightbulb text-purple-500', 'Đề xuất') +
           typeChip(rec.counts.feedback, 'bg-teal-50 text-teal-800 border-teal-200', 'fa-comment-dots text-teal-500', 'Ý kiến / Phản ánh') +
           deptPill + recipientPill + periodPill + consolidatedPill +
+          (isSummary ? '' : '<span class="hidden group-hover:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0"><i class="fa-solid fa-eye text-[9px]"></i><span>Bấm để xem đầu việc</span></span>') +
           '</div>' +
           '</div>' +
           '</div>' +
@@ -30210,7 +30384,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           (isManagerOrAbove ? (
             '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
             (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
-              (rec.canOpenHistory ? '<button type="button" onclick="setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
+              (rec.canOpenHistory ? '<button type="button" onclick="event.stopPropagation();setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
               '<i class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
               '<span>' + (rec.consolidatedMode === 'draft' ? 'Đã tạo nháp' : 'Đã tạo báo cáo') + (rec.consolidated < rec.total ? ' (' + rec.consolidated + '/' + rec.total + ')' : '') + '</span>' +
               (rec.canOpenHistory ? '</button>' : '</span>')
@@ -30226,7 +30400,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
           (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
           '</div>' +
-          '<button type="button" onclick="downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-full xl:w-[320px] basis-full xl:basis-auto shrink-0 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
+          '<button type="button" onclick="event.stopPropagation();downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-full xl:w-[320px] basis-full xl:basis-auto shrink-0 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
           '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
           '<span class="truncate flex-1 min-w-0">' + escapeHtml(fileName) + '</span>' +
           '<i class="fa-solid fa-download text-blue-500 text-[11px] shrink-0"></i>' +
@@ -30244,6 +30418,139 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let _pendingConsolidatePayload = null;
 
     // Tổng hợp báo cáo từ các đầu việc đã được tích chọn (Mở Bảng Hiện Đại, Chuyên Nghiệp)
+    function isRpBoxDraftSummary(report) {
+      return isRpBoxSummaryReport(report) && !!(report.isDraft || report.status === 'draft_consolidated' || report.targetLevel === 'manager_draft');
+    }
+
+    // Chỉ các bản nháp do chính tài khoản đang đăng nhập lập mới được phép gộp thêm đầu việc
+    function getRpBoxOwnDraftSummaries(user = currentUser) {
+      if (!user) return [];
+      const viewer = getRpBoxConsolidationIdentity({ senderId: user.id, senderUsername: user.username, senderFullName: user.fullName || user.full_name });
+      const deletedIds = getDeletedLeadershipReportIds();
+      return getLeadershipReportsShared().filter(r => r && r.id != null && !deletedIds.has(String(r.id)) && isRpBoxDraftSummary(r)
+        && isSenderOfReport(user, r) && rpBoxConsolidationIdentityMatches(viewer, getRpBoxConsolidationIdentity(r)))
+        .sort((a, b) => getLeadershipReportUpdatedTime(b) - getLeadershipReportUpdatedTime(a));
+    }
+
+    function describeRpBoxDraftOption(draft) {
+      const when = formatRpBoxSendDateTime(draft);
+      const period = (draft.periodMonth && draft.periodYear) ? ' · Tháng ' + draft.periodMonth + '/' + draft.periodYear : '';
+      return 'Bản nháp ' + (when.date || '---') + (when.time ? ' ' + when.time : '') + period + ' · ' + getRpBoxConsolidationItems(draft).length + ' đầu việc';
+    }
+
+    function refreshConsolidateDraftTargetUI() {
+      const wrap = document.getElementById('csModalDraftTargetWrap');
+      const select = document.getElementById('csModalDraftTarget');
+      if (!wrap || !select) return;
+      const drafts = getRpBoxOwnDraftSummaries();
+      select.innerHTML = '<option value="">Tạo báo cáo tổng hợp mới</option>' +
+        drafts.map(d => '<option value="' + escapeHtml(String(d.id)) + '">' + escapeHtml(describeRpBoxDraftOption(d)) + '</option>').join('');
+      select.value = '';
+      if (drafts.length > 0) wrap.classList.remove('hidden'); else wrap.classList.add('hidden');
+      onConsolidateDraftTargetChange();
+    }
+
+    function onConsolidateDraftTargetChange() {
+      const select = document.getElementById('csModalDraftTarget');
+      const draftId = select ? select.value : '';
+      const draft = draftId ? getRpBoxOwnDraftSummaries().find(d => String(d.id) === String(draftId)) : null;
+      const createButtons = document.getElementById('csModalCreateButtons');
+      const mergeButtons = document.getElementById('csModalMergeButtons');
+      const hint = document.getElementById('csModalDraftTargetHint');
+      const inputEl = document.getElementById('csModalAssessmentInput');
+      if (createButtons) { if (draft) createButtons.classList.add('hidden'); else createButtons.classList.remove('hidden'); }
+      if (mergeButtons) { if (draft) mergeButtons.classList.remove('hidden'); else mergeButtons.classList.add('hidden'); }
+      if (draft) {
+        const existing = new Set(getRpBoxConsolidationItems(draft).map(it => it && it.sourceEntryKey != null ? String(it.sourceEntryKey) : '').filter(Boolean));
+        const selected = (_pendingConsolidatePayload && _pendingConsolidatePayload.selectedEntries) || [];
+        const fresh = selected.filter(e => !existing.has(String(e.entryKey))).length;
+        if (hint) hint.innerText = 'Sẽ thêm ' + fresh + ' đầu việc mới vào bản nháp' + (selected.length - fresh > 0 ? ' (bỏ qua ' + (selected.length - fresh) + ' đầu việc đã có sẵn)' : '') + '. Bản nháp vẫn chưa gửi Ban Giám Đốc.';
+        if (inputEl) inputEl.value = draft.managerFeedback || draft.notes || '';
+      } else {
+        if (hint) hint.innerText = 'Chọn một bản nháp để gộp thêm các đầu việc vừa tích chọn thay vì tạo báo cáo mới.';
+        if (inputEl && _pendingConsolidatePayload) inputEl.value = _pendingConsolidatePayload.defaultNote || '';
+      }
+    }
+
+    async function executeMergeIntoSelectedDraft() {
+      if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) {
+        showToast('Bạn không có quyền tổng hợp báo cáo.', true);
+        return;
+      }
+      if (!_pendingConsolidatePayload) {
+        closeConsolidateAssessmentModal();
+        return;
+      }
+      const select = document.getElementById('csModalDraftTarget');
+      const draftId = select ? select.value : '';
+      if (!draftId) {
+        showToast('Vui lòng chọn bản nháp cần gộp thêm đầu việc!', true);
+        return;
+      }
+      const { selectedEntries, defaultNote } = _pendingConsolidatePayload;
+      const inputEl = document.getElementById('csModalAssessmentInput');
+      const note = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : defaultNote;
+
+      const sharedReports = getLeadershipReportsShared();
+      const draft = sharedReports.find(r => r && String(r.id) === String(draftId));
+      const viewer = getRpBoxConsolidationIdentity({ senderId: currentUser.id, senderUsername: currentUser.username, senderFullName: currentUser.fullName || currentUser.full_name });
+      if (!draft || !isRpBoxDraftSummary(draft) || !isSenderOfReport(currentUser, draft)
+        || !rpBoxConsolidationIdentityMatches(viewer, getRpBoxConsolidationIdentity(draft))) {
+        closeConsolidateAssessmentModal();
+        showToast('Không tìm thấy bản nháp hợp lệ hoặc bạn không có quyền chỉnh sửa bản nháp này!', true);
+        return;
+      }
+
+      const list = getRpBoxConsolidationItems(draft);
+      if (!Array.isArray(draft.items)) draft.items = list;
+      const existing = new Set(list.map(it => it && it.sourceEntryKey != null ? String(it.sourceEntryKey) : '').filter(Boolean));
+      const fresh = selectedEntries.filter(e => !existing.has(String(e.entryKey)));
+      closeConsolidateAssessmentModal();
+      if (fresh.length === 0) {
+        showToast('Các đầu việc đã chọn đều đã có trong bản nháp này.', true);
+        return;
+      }
+
+      fresh.forEach(e => {
+        const it = JSON.parse(JSON.stringify(e.item));
+        it.staffName = e.senderFullName;
+        it.staffDept = e.senderDepartment;
+        it.staffRole = e.senderRole;
+        it.isConsolidated = true;
+        it.consolidatedReportId = draft.id;
+        it.consolidatedMode = 'draft';
+        it.sourceEntryKey = e.entryKey;
+        it.sourceReportId = e.reportId;
+        it.sourceItemId = e.item?.id ?? null;
+        it.sourceSenderId = e.senderId ?? null;
+        it.sourceSenderUsername = e.senderUsername || '';
+        it.sourceSenderFullName = e.senderFullName || '';
+        list.push(it);
+      });
+      draft.notes = note;
+      draft.managerFeedback = note;
+      draft.updatedAt = new Date().toISOString();
+
+      reconcileRpBoxConsolidationState(sharedReports);
+      saveLeadershipReportsShared(sharedReports);
+      const cloudSave = saveLeadershipReportToSupabase(draft);
+
+      if (typeof syncReportTransferStatusForPersonalTasks === 'function') {
+        const userWsData = getPersonalWorkspaceData(currentUser);
+        if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+          savePersonalWorkspaceData(userWsData, currentUser);
+          if (typeof renderPersonalWorkspaceUI === 'function') renderPersonalWorkspaceUI();
+        }
+      }
+
+      rpBoxSelectedTaskKeys.clear();
+      setRpBoxViewMode('history');
+      const savedToCloud = await cloudSave;
+      const skipped = selectedEntries.length - fresh.length;
+      const summaryText = 'Đã gộp thêm ' + fresh.length + ' đầu việc vào bản nháp' + (skipped > 0 ? ' (bỏ qua ' + skipped + ' đầu việc đã có sẵn)' : '') + '.';
+      showToast(savedToCloud ? '📝 ' + summaryText : summaryText + ' Đã lưu trên thiết bị, chương trình sẽ thử đồng bộ lại.', !savedToCloud);
+    }
+
     function consolidateSelectedTasksFromInbox() {
       if (!currentUser) return;
       const allEntries = getAllRpBoxTaskEntries();
@@ -30290,6 +30597,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const inputEl = document.getElementById('csModalAssessmentInput');
       if (inputEl) inputEl.value = defaultNote;
+      refreshConsolidateDraftTargetUI();
 
       const modal = document.getElementById('consolidateAssessmentModal');
       if (modal) modal.classList.remove('hidden');
@@ -30453,6 +30761,87 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc';
     }
 
+    function getRpBoxHistoryExpandedSet() {
+      const g = typeof globalThis !== 'undefined' ? globalThis : window;
+      if (!(g._rpBoxHistoryExpandedDraftIds instanceof Set)) {
+        g._rpBoxHistoryExpandedDraftIds = new Set();
+      }
+      return g._rpBoxHistoryExpandedDraftIds;
+    }
+
+    function toggleRpBoxHistoryDraftExpand(reportId) {
+      if (reportId == null) return;
+      const expandedSet = getRpBoxHistoryExpandedSet();
+      const key = String(reportId);
+      if (expandedSet.has(key)) expandedSet.delete(key);
+      else expandedSet.add(key);
+      renderLeadershipReportsBoxUI();
+    }
+
+    async function removeTaskFromRpBoxDraft(reportId, itemIndex) {
+      if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) {
+        showToast('Bạn không có quyền chỉnh sửa bản nháp báo cáo.', true);
+        return false;
+      }
+      const deletedIds = getDeletedLeadershipReportIds();
+      if (reportId == null || deletedIds.has(String(reportId))) {
+        showToast('Không tìm thấy bản nháp báo cáo hoặc bản nháp đã bị xóa!', true);
+        return false;
+      }
+      const sharedReports = getLeadershipReportsShared();
+      const draft = sharedReports.find(r => r && String(r.id) === String(reportId));
+      const viewer = getRpBoxConsolidationIdentity({
+        senderId: currentUser.id,
+        senderUsername: currentUser.username,
+        senderFullName: currentUser.fullName || currentUser.full_name
+      });
+      if (!draft || !isRpBoxDraftSummary(draft) || draft.status === 'forwarded_to_leadership'
+        || !isSenderOfReport(currentUser, draft)
+        || !rpBoxConsolidationIdentityMatches(viewer, getRpBoxConsolidationIdentity(draft))) {
+        showToast('Chỉ bản nháp chưa gửi của chính bạn mới được phép bớt đầu việc!', true);
+        return false;
+      }
+      const rawItems = getRpBoxConsolidationItems(draft);
+      const idx = Number(itemIndex);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= rawItems.length) {
+        showToast('Không tìm thấy đầu việc cần bỏ khỏi bản nháp!', true);
+        return false;
+      }
+      if (rawItems.length <= 1) {
+        showToast('Bản nháp phải giữ ít nhất 1 đầu việc. Hãy dùng nút Xóa nếu muốn hủy toàn bộ bản nháp.', true);
+        return false;
+      }
+
+      const list = rawItems.slice();
+      const [removedItem] = list.splice(idx, 1);
+      draft.items = list;
+      const nextTs = Math.max(Date.now(), getLeadershipReportUpdatedTime(draft) + 1);
+      draft.updatedAt = new Date(nextTs).toISOString();
+
+      reconcileRpBoxConsolidationState(sharedReports);
+      saveLeadershipReportsShared(sharedReports);
+      const cloudSave = saveLeadershipReportToSupabase(draft);
+
+      if (typeof syncReportTransferStatusForPersonalTasks === 'function') {
+        const userWsData = getPersonalWorkspaceData(currentUser);
+        if (syncReportTransferStatusForPersonalTasks(userWsData.items, currentUser)) {
+          savePersonalWorkspaceData(userWsData, currentUser);
+          if (typeof renderPersonalWorkspaceUI === 'function') renderPersonalWorkspaceUI();
+        }
+      }
+
+      setRpBoxViewMode('history');
+      const savedToCloud = await cloudSave;
+      const removedTitle = (removedItem && removedItem.title) ? removedItem.title : 'đầu việc';
+      showToast(
+        savedToCloud
+          ? '↩️ Đã bỏ "' + removedTitle + '" khỏi bản nháp và trả về trạng thái Chưa tổng hợp.'
+          : 'Đã bỏ "' + removedTitle + '" khỏi bản nháp trên thiết bị. Chương trình sẽ đồng bộ lại.',
+        !savedToCloud
+      );
+      return true;
+    }
+
     function renderRpBoxHistoryUI(container, historyReports) {
       const searchInput = document.getElementById('rpBoxSearchInput');
       const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -30508,15 +30897,31 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '<i class="fa-solid ' + icon + ' text-[9px]"></i><span class="font-num">' + n + '</span></span>';
       };
 
+      const expandedSet = getRpBoxHistoryExpandedSet();
+      const viewerIdentity = currentUser
+        ? getRpBoxConsolidationIdentity({ senderId: currentUser.id, senderUsername: currentUser.username, senderFullName: currentUser.fullName || currentUser.full_name })
+        : null;
+      const typeMetaMap = {
+        adhoc: { label: 'Phát sinh', cls: 'bg-amber-50 text-amber-800 border-amber-200', icon: 'fa-bolt text-amber-500' },
+        plan: { label: 'Kế hoạch', cls: 'bg-sky-50 text-sky-800 border-sky-200', icon: 'fa-calendar-days text-sky-500' },
+        proposal: { label: 'Đề xuất', cls: 'bg-purple-50 text-purple-800 border-purple-200', icon: 'fa-lightbulb text-purple-500' },
+        feedback: { label: 'Ý kiến', cls: 'bg-teal-50 text-teal-800 border-teal-200', icon: 'fa-comment-dots text-teal-500' }
+      };
+
       const rowsHtml = filtered.map((rep, rIdx) => {
-        const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
-        const canManage = currentUser && isSenderOfReport(currentUser, rep);
+        const items = getRpBoxConsolidationItems(rep);
+        const canManage = !!(currentUser && isSenderOfReport(currentUser, rep)
+          && rpBoxConsolidationIdentityMatches(viewerIdentity, getRpBoxConsolidationIdentity(rep)));
         const creatorName = rep.senderFullName || rep.senderUsername || (currentUser && currentUser.fullName) || 'Quản lý';
         const nameParts = String(creatorName).trim().split(/\s+/);
         const initial = (nameParts[nameParts.length - 1] || '?').charAt(0).toUpperCase();
         const when = formatRpBoxSendDateTime(rep);
         const fileName = getConsolidatedWordFileName(rep);
-        const isDraft = !!(rep.isDraft || rep.status === 'draft_consolidated' || rep.targetLevel === 'manager_draft');
+        const isDraft = isRpBoxDraftSummary(rep) && rep.status !== 'forwarded_to_leadership';
+        const canEditDraft = canManage && isDraft;
+        const repIdStr = String(rep.id ?? '');
+        const repIdAttr = escapeHtml(repIdStr);
+        const isExpanded = canEditDraft && expandedSet.has(repIdStr);
 
         const counts = { adhoc: 0, plan: 0, proposal: 0, feedback: 0 };
         const staffSet = new Set();
@@ -30542,8 +30947,68 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0"><i class="fa-solid fa-users text-[9px] text-slate-400"></i><span>' + staffSet.size + ' nhân sự</span></span>'
           : '';
 
+        const itemCountOrToggleHtml = canEditDraft
+          ? ('<button type="button" onclick="toggleRpBoxHistoryDraftExpand(\'' + repIdAttr + '\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-bold border shrink-0 transition cursor-pointer shadow-2xs ' +
+            (isExpanded
+              ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200/80'
+              : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200') +
+            '" title="' + (isExpanded ? 'Thu gọn danh sách đầu việc trong bản nháp' : 'Xem chi tiết & bớt đầu việc khỏi bản nháp này') + '">' +
+            '<i class="fa-solid fa-list-check text-[9.5px] text-amber-600"></i>' +
+            '<span class="font-num">' + items.length + '</span><span> đầu việc</span>' +
+            '<span class="text-amber-400">·</span>' +
+            '<span>' + (isExpanded ? 'Thu gọn' : 'Xem / Bớt việc') + '</span>' +
+            '<i class="fa-solid ' + (isExpanded ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-[8.5px]"></i>' +
+            '</button>')
+          : ('<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0"><i class="fa-solid fa-list-check text-[9px] text-slate-500"></i><span class="font-num">' + items.length + '</span> đầu việc</span>');
+
+        const draftTasksHtml = isExpanded ? (
+          '<div class="border-t border-amber-200/80 bg-amber-50/35 px-4 py-3 space-y-2">' +
+            '<div class="flex items-center justify-between gap-2 flex-wrap text-[11px]">' +
+              '<span class="inline-flex items-center gap-1.5 font-extrabold text-amber-900">' +
+                '<i class="fa-solid fa-layer-group text-amber-600 text-[10px]"></i>' +
+                '<span>Đầu việc trong bản nháp (' + items.length + ')</span>' +
+              '</span>' +
+              '<span class="text-[10.5px] text-slate-500 font-medium">' +
+                (items.length > 1
+                  ? 'Bấm "Bỏ khỏi nháp" để gỡ đầu việc và trả về trạng thái Chưa tổng hợp'
+                  : 'Bản nháp đang còn 1 đầu việc (cần tối thiểu 1 đầu việc, hoặc dùng nút Xóa bản nháp)') +
+              '</span>' +
+            '</div>' +
+            '<div class="space-y-1.5">' +
+              items.map((it, iIdx) => {
+                const meta = typeMetaMap[it?.type] || typeMetaMap.adhoc;
+                const staffLabel = (it && (it.staffName || it.senderFullName)) ? String(it.staffName || it.senderFullName) : '';
+                const dateLabel = (it && (it.dueDate || it.date)) ? String(it.dueDate || it.date) : '';
+                return (
+                  '<div class="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-white border border-slate-200/90 hover:border-amber-200 transition-colors text-xs">' +
+                    '<div class="flex items-center gap-2 min-w-0 flex-1 flex-wrap sm:flex-nowrap">' +
+                      '<span class="w-5 h-5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-black font-num flex items-center justify-center shrink-0">' + (iIdx + 1) + '</span>' +
+                      '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ' + meta.cls + '">' +
+                        '<i class="fa-solid ' + meta.icon + ' text-[9px]"></i><span>' + meta.label + '</span>' +
+                      '</span>' +
+                      '<span class="font-bold text-slate-800 truncate min-w-0">' + escapeHtml((it && it.title) || 'Đầu việc') + '</span>' +
+                      (staffLabel ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 shrink-0"><i class="fa-solid fa-user text-[8.5px] text-slate-400"></i><span>' + escapeHtml(staffLabel) + '</span></span>' : '') +
+                      (dateLabel ? '<span class="text-[10.5px] font-num text-slate-400 shrink-0">' + escapeHtml(dateLabel) + '</span>' : '') +
+                    '</div>' +
+                    (items.length > 1 ? (
+                      '<button type="button" onclick="removeTaskFromRpBoxDraft(\'' + repIdAttr + '\', ' + iIdx + ')" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 hover:border-rose-300 transition cursor-pointer shadow-2xs active:scale-95" title="Bỏ đầu việc này khỏi bản nháp">' +
+                        '<i class="fa-solid fa-circle-minus text-[10px]"></i><span>Bỏ khỏi nháp</span>' +
+                      '</button>'
+                    ) : (
+                      '<button type="button" onclick="deleteConsolidatedReport(\'' + repIdAttr + '\')" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 transition cursor-pointer shadow-2xs active:scale-95" title="Bản nháp còn 1 đầu việc — bấm để xóa toàn bộ bản nháp này">' +
+                        '<i class="fa-solid fa-trash-can text-[10px]"></i><span>Xóa bản nháp</span>' +
+                      '</button>'
+                    )) +
+                  '</div>'
+                );
+              }).join('') +
+            '</div>' +
+          '</div>'
+        ) : '';
+
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4 shadow-2xs">' +
+          '<div class="group relative w-full max-w-full overflow-hidden bg-white border ' + (isExpanded ? 'border-amber-300/90 ring-1 ring-amber-200' : 'border-slate-200/90') + ' hover:border-amber-300/90 hover:shadow-sm rounded-2xl transition-all duration-200 shadow-2xs">' +
+          '<div class="pl-4 pr-3 py-3 hover:bg-amber-50/45 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">' +
 
           '<div class="flex items-center gap-3 flex-1 min-w-0">' +
           '<span class="w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (rIdx + 1) + '</span>' +
@@ -30559,7 +31024,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           (!isDraft && rep.recipientFullName ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0"><i class="fa-solid fa-user-tie text-[9px]"></i><span>Gửi đến: ' + escapeHtml(rep.recipientFullName) + (rep.recipientRole ? ' (' + escapeHtml(rep.recipientRole) + ')' : '') + '</span></span>' : '') +
           '</div>' +
           '<div class="flex items-center gap-1.5 flex-wrap">' +
-          '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0"><i class="fa-solid fa-list-check text-[9px] text-slate-500"></i><span class="font-num">' + items.length + '</span> đầu việc</span>' +
+          itemCountOrToggleHtml +
           typeChip(counts.adhoc, 'bg-amber-50 text-amber-800 border-amber-200', 'fa-bolt text-amber-500', 'Việc phát sinh') +
           typeChip(counts.plan, 'bg-sky-50 text-sky-800 border-sky-200', 'fa-calendar-days text-sky-500', 'Kế hoạch') +
           typeChip(counts.proposal, 'bg-purple-50 text-purple-800 border-purple-200', 'fa-lightbulb text-purple-500', 'Đề xuất') +
@@ -30575,24 +31040,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
           '</div>' +
           '<div class="flex items-center gap-1.5 md:w-[420px] shrink-0 min-w-0">' +
-          '<button type="button" onclick="downloadConsolidatedReportWordById(\'' + escapeHtml(String(rep.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="flex-1 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
+          '<button type="button" onclick="downloadConsolidatedReportWordById(\'' + repIdAttr + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="flex-1 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
           '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
           '<span class="truncate flex-1 min-w-0">' + escapeHtml(fileName) + '</span>' +
           '<i class="fa-solid fa-download text-blue-500 text-[11px] shrink-0"></i>' +
           '</button>' +
           (canManage && isDraft ? (
-            '<button type="button" onclick="sendDraftReportToLeadership(\'' + escapeHtml(String(rep.id)) + '\')" class="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-[11.5px] font-bold shadow-xs shadow-emerald-600/20 transition cursor-pointer" title="Gửi bản nháp này chuyển lên Ban Giám Đốc / Lãnh đạo">' +
+            '<button type="button" onclick="sendDraftReportToLeadership(\'' + repIdAttr + '\')" class="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-[11.5px] font-bold shadow-xs shadow-emerald-600/20 transition cursor-pointer" title="Gửi bản nháp này chuyển lên Ban Giám Đốc / Lãnh đạo">' +
             '<i class="fa-solid fa-paper-plane text-[10px]"></i><span>Gửi lãnh đạo</span>' +
             '</button>'
           ) : '') +
           (canManage ? (
-            '<button type="button" onclick="deleteConsolidatedReport(\'' + escapeHtml(String(rep.id)) + '\')" class="p-2 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 transition cursor-pointer shrink-0" title="Xóa báo cáo này và hủy trạng thái đã tổng hợp của các đầu việc">' +
+            '<button type="button" onclick="deleteConsolidatedReport(\'' + repIdAttr + '\')" class="p-2 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 transition cursor-pointer shrink-0" title="Xóa báo cáo này và hủy trạng thái đã tổng hợp của các đầu việc">' +
             '<i class="fa-solid fa-trash-can text-xs"></i>' +
             '</button>'
           ) : '') +
           '</div>' +
           '</div>' +
 
+          '</div>' +
+          draftTasksHtml +
           '</div>'
         );
       }).join('');
@@ -34504,6 +34971,19 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           </div>
         </div>
 
+        <!-- CHỌN NƠI LƯU: TẠO MỚI HOẶC GỘP THÊM VÀO BẢN NHÁP ĐÃ CÓ -->
+        <div id="csModalDraftTargetWrap" class="hidden space-y-1.5">
+          <label for="csModalDraftTarget" class="flex items-center gap-2 font-extrabold text-slate-800 text-[13px]">
+            <i class="fa-solid fa-code-merge text-indigo-600"></i>
+            <span>Nơi lưu các đầu việc đã chọn:</span>
+          </label>
+          <select id="csModalDraftTarget" onchange="onConsolidateDraftTargetChange()"
+            class="w-full px-3 py-2.5 text-[13px] bg-slate-50/80 hover:bg-white border border-slate-200/90 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition text-slate-800 font-semibold shadow-2xs cursor-pointer">
+            <option value="">Tạo báo cáo tổng hợp mới</option>
+          </select>
+          <p id="csModalDraftTargetHint" class="text-[11.5px] text-slate-400 font-medium"></p>
+        </div>
+
         <!-- Ô NHẬP Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ -->
         <div class="space-y-2">
           <label for="csModalAssessmentInput"
@@ -34540,7 +35020,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs sm:text-[13px] font-bold transition cursor-pointer whitespace-nowrap">
           Hủy bỏ
         </button>
-        <div class="flex items-center justify-end gap-2.5">
+        <div id="csModalCreateButtons" class="flex items-center justify-end gap-2.5">
           <button type="button" onclick="executeConsolidateSelectedTasksFromInbox(true)"
             class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 active:scale-95 text-xs sm:text-[13px] font-black shadow-2xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap"
             title="Chỉ tạo báo cáo tổng hợp và chuyển vào Lịch sử báo cáo">
@@ -34551,6 +35031,14 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-[13px] font-black shadow-md shadow-emerald-600/25 transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
             <i class="fa-solid fa-paper-plane text-xs"></i>
             <span>Xác Nhận &amp; Gửi Ban Giám Đốc</span>
+          </button>
+        </div>
+        <div id="csModalMergeButtons" class="hidden flex items-center justify-end gap-2.5">
+          <button type="button" onclick="executeMergeIntoSelectedDraft()"
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 text-white text-xs sm:text-[13px] font-black shadow-md shadow-indigo-600/25 transition flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            title="Thêm các đầu việc đã chọn vào bản nháp có sẵn, chưa gửi Ban Giám Đốc">
+            <i class="fa-solid fa-code-merge text-xs"></i>
+            <span>Gộp vào bản nháp đã chọn</span>
           </button>
         </div>
       </div>
