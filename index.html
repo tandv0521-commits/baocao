@@ -29666,40 +29666,67 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function onRpTaskCheckboxChange(el) {
       const key = el.dataset.key;
+      const visibleEntries = applyRpBoxConsolidationFilter(getRpBoxFilteredBaseEntries());
+      const matched = visibleEntries.find(e => String(e.entryKey) === String(key))
+        || getAllRpBoxTaskEntries().find(e => String(e.entryKey) === String(key));
       if (el.checked) {
+        if (matched && matched.isConsolidated) {
+          el.checked = false;
+          rpBoxSelectedTaskKeys.delete(key);
+          showToast('Đầu việc này đã được tạo nháp hoặc tổng hợp báo cáo nên không thể tích chọn lại!', true);
+          updateRpBoxMultiSelectBar(visibleEntries);
+          return;
+        }
         rpBoxSelectedTaskKeys.add(key);
       } else {
         rpBoxSelectedTaskKeys.delete(key);
       }
-      const visibleEntries = applyRpBoxConsolidationFilter(getRpBoxFilteredBaseEntries());
       updateRpBoxMultiSelectBar(visibleEntries);
     }
 
     function toggleSelectAllRpTasks(checked) {
       const visibleEntries = applyRpBoxConsolidationFilter(getRpBoxFilteredBaseEntries());
+      const selectableEntries = visibleEntries.filter(e => !e.isConsolidated);
+      visibleEntries.filter(e => e.isConsolidated).forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
+
       if (checked) {
-        visibleEntries.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
+        if (selectableEntries.length === 0) {
+          showToast('Không có đầu việc chưa tổng hợp nào để tích chọn.', true);
+        } else {
+          selectableEntries.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
+        }
       } else {
-        visibleEntries.forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
+        selectableEntries.forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
       }
 
-      document.querySelectorAll('.rp-task-chk').forEach(chk => {
-        chk.checked = checked;
-      });
+      if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+        const selectableSet = new Set(selectableEntries.map(e => String(e.entryKey)));
+        document.querySelectorAll('.rp-task-chk').forEach(chk => {
+          const k = chk.dataset ? String(chk.dataset.key) : '';
+          chk.checked = !!checked && selectableSet.has(k);
+        });
+      }
 
       updateRpBoxMultiSelectBar(visibleEntries);
     }
 
     function updateRpBoxMultiSelectBar(visibleEntries = []) {
+      const list = Array.isArray(visibleEntries) ? visibleEntries : [];
+      list.forEach(e => {
+        if (e && e.isConsolidated) rpBoxSelectedTaskKeys.delete(e.entryKey);
+      });
+      const selectableEntries = list.filter(e => !e.isConsolidated);
+
       const countEl = document.getElementById('rpBoxSelectedTasksCount');
       if (countEl) countEl.innerText = rpBoxSelectedTaskKeys.size;
 
       const selectAllChk = document.getElementById('rpBoxSelectAllChk');
       if (selectAllChk) {
-        if (visibleEntries.length > 0 && visibleEntries.every(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
+        selectAllChk.disabled = selectableEntries.length === 0;
+        if (selectableEntries.length > 0 && selectableEntries.every(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
           selectAllChk.checked = true;
           selectAllChk.indeterminate = false;
-        } else if (visibleEntries.some(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
+        } else if (selectableEntries.some(e => rpBoxSelectedTaskKeys.has(e.entryKey))) {
           selectAllChk.checked = false;
           selectAllChk.indeterminate = true;
         } else {
@@ -29805,6 +29832,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const allEntries = getRpBoxScopedEntries();
+      allEntries.forEach(e => {
+        if (e && e.isConsolidated) rpBoxSelectedTaskKeys.delete(e.entryKey);
+      });
 
       // 1. Cập nhật số đếm trên 5 Tab
       const countAll = allEntries.length;
@@ -29921,7 +29951,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const rowsHtml = filteredEntries.map((entry, eIdx) => {
         const it = entry.item;
-        const isChecked = rpBoxSelectedTaskKeys.has(entry.entryKey);
+        const isChecked = !entry.isConsolidated && rpBoxSelectedTaskKeys.has(entry.entryKey);
         const myCleanU = cleanReportUsername(currentUser.username);
         const entryCleanU = cleanReportUsername(entry.senderUsername);
         const myCleanName = removeAccents(String(currentUser.fullName || '')).toLowerCase().trim();
@@ -30024,11 +30054,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
         }
 
-        // 3. Cột 1 (52px): Checkbox + STT (cho Quản lý) hoặc STT + Ngôi sao (cho Nhân viên)
+        // 3. Cột 1 (52px): Checkbox + STT (cho Quản lý, ẩn checkbox nếu đã tạo nháp/tạo báo cáo) hoặc STT + Ngôi sao (cho Nhân viên)
         let leftActionCol = '';
         if (isManagerOrAbove) {
+          const canSelectEntry = !entry.isConsolidated;
+          const checkboxHtml = canSelectEntry
+            ? '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + escapeHtml(String(entry.entryKey)) + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" title="Tích chọn để đưa vào báo cáo tổng hợp" />'
+            : '<span class="w-4 h-4 shrink-0" aria-hidden="true"></span>';
           leftActionCol = '<div class="flex items-center gap-1.5 w-[52px] shrink-0 pt-0.5 md:pt-0">' +
-            '<input type="checkbox" class="rp-task-chk w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" data-key="' + entry.entryKey + '" ' + (isChecked ? 'checked' : '') + ' onchange="onRpTaskCheckboxChange(this)" title="Tích chọn để đưa vào báo cáo tổng hợp" />' +
+            checkboxHtml +
             '<span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-black text-[11px] flex items-center justify-center font-num shrink-0">' + (eIdx + 1) + '</span>' +
             '</div>';
         } else {
@@ -30554,7 +30588,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function consolidateSelectedTasksFromInbox() {
       if (!currentUser) return;
       const allEntries = getAllRpBoxTaskEntries();
-      const selectedEntries = allEntries.filter(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+      allEntries.forEach(e => { if (e && e.isConsolidated) rpBoxSelectedTaskKeys.delete(e.entryKey); });
+      const selectedEntries = allEntries.filter(e => rpBoxSelectedTaskKeys.has(e.entryKey) && !e.isConsolidated);
 
       if (selectedEntries.length === 0) {
         showToast("Vui lòng tích chọn ít nhất 1 đầu việc để tạo báo cáo!", true);
