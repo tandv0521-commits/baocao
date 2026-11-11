@@ -1224,6 +1224,17 @@
       font-feature-settings: "tnum" 1, "zero" 0 !important;
     }
 
+    /* Typography sắc nét, số thẳng hàng cho bộ chọn kỳ báo cáo trong modal tạo & tổng hợp */
+    #rpPeriodSelect,
+    #csModalPeriodSelect,
+    #sendInboxPeriodSelect {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-style: normal !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
+    }
+
     /* Chuẩn hóa font chữ Sổ tay công việc & Bảng danh sách công việc:
        Sử dụng 'Plus Jakarta Sans' kết hợp 'Inter': Nét chữ tròn trịa, thanh thoát, hiện đại, cực kỳ dễ nhìn */
     #personalWorkspacePageView,
@@ -6386,7 +6397,7 @@
                 </span>
               </div>
               <div class="relative">
-                <select id="rpRecipientSelect" onchange="onReportRecipientSelectChange(this.value)"
+                <select id="rpRecipientSelect" onchange="onReportRecipientSelectChange(this.value, true)"
                   class="w-full bg-white border border-emerald-300 text-xs font-bold text-slate-800 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs cursor-pointer">
                   <!-- Nạp tự động các tài khoản Quản lý & Phó Giám Đốc -->
                 </select>
@@ -6398,9 +6409,25 @@
             <h2 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wide mt-2">BÁO CÁO CÔNG VIỆC CÁ
               NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
             <p id="rpPreviewRecipientText" class="text-xs font-bold text-slate-700 mt-1">Kính gửi: Quản lý bộ phận</p>
-            <p class="text-xs text-slate-500 italic mt-0.5">Kỳ báo cáo: <span id="rpPeriodText"
-                class="font-bold text-slate-700">Tháng 11/2026</span> • Ngày lập: <span id="rpDateText"
-                class="font-bold text-slate-700">--/--/----</span></p>
+            <div class="mt-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-xs text-slate-500 not-italic">
+              <div class="inline-flex items-center gap-1.5">
+                <label for="rpPeriodSelect" class="font-medium text-slate-500">Kỳ báo cáo:</label>
+                <div class="relative inline-flex items-center">
+                  <select id="rpPeriodSelect" onchange="onLeadershipPreviewPeriodChange(this.value)"
+                    aria-label="Chọn kỳ báo cáo"
+                    class="appearance-none h-8 pl-3 pr-7 rounded-xl border border-emerald-200/90 bg-emerald-50/90 hover:bg-emerald-100/80 text-xs font-bold text-emerald-900 font-num tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition shadow-2xs cursor-pointer">
+                  </select>
+                  <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600/85"
+                    aria-hidden="true"></i>
+                </div>
+                <span id="rpPeriodText" class="hidden font-bold text-slate-700">Tháng 11/2026</span>
+              </div>
+              <span class="text-slate-300 select-none hidden sm:inline" aria-hidden="true">&bull;</span>
+              <span class="inline-flex items-center gap-1 text-slate-500">
+                <span>Ngày lập:</span>
+                <span id="rpDateText" class="font-bold text-slate-700 font-num tabular-nums">--/--/----</span>
+              </span>
+            </div>
           </div>
 
           <!-- THÔNG TIN NGƯỜI BÁO CÁO -->
@@ -25191,8 +25218,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // 6. XUẤT FILE WORD (.doc) BÁO CÁO CÁ NHÂN CHUẨN MẪU DOANH NGHIỆP
     function generateSingleReportWordHtml(rep) {
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const resolvedPeriod = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const m = resolvedPeriod.m;
+      const y = resolvedPeriod.y;
+      const mPad = String(m).padStart(2, '0');
       const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
       const adhocList = items.filter(it => it.type === 'adhoc');
       const planList = items.filter(it => it.type === 'plan');
@@ -25330,7 +25361,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
           <div class="doc-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">${recipientText}</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateOnlyStr}</div>
+          <div class="period-date">Kỳ báo cáo: Tháng ${mPad}/${y} &bull; Ngày lập: ${dateOnlyStr}</div>
         </div>
 
         <table class="info-card">
@@ -25426,6 +25457,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
+      const fallbackPeriod = (reportsList && reportsList.length === 1 && typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(reportsList[0])
+        : ((typeof getDefaultSmartReportPeriod === 'function') ? getDefaultSmartReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
+      const resolvedM = parseInt(m, 10) || fallbackPeriod.m;
+      const resolvedY = parseInt(y, 10) || fallbackPeriod.y;
+      const mPad = String(resolvedM).padStart(2, '0');
       let allAdhoc = [];
       let allPlan = [];
       let allProp = [];
@@ -25585,7 +25622,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
           <div class="doc-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
+          <div class="period-date">Kỳ báo cáo: Tháng ${mPad}/${resolvedY} &bull; Ngày lập: ${dateStr}</div>
         </div>
 
         <table class="info-card">
@@ -25637,13 +25674,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         showToast("Không có mục nào được chọn để xuất Word!", true);
         return;
       }
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getLeadershipPreviewReportPeriod === 'function')
+        ? getLeadershipPreviewReportPeriod()
+        : ((typeof getActivePersonalReportPeriod === 'function') ? getActivePersonalReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
+      const mPad = String(m).padStart(2, '0');
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const currentNotes = (document.getElementById('rpLeaderNoteInput')?.value || '').trim();
 
+      const activeRecipient = (typeof getActivePreviewReportRecipient === 'function')
+        ? getActivePreviewReportRecipient()
+        : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
       const previewRep = {
+        recipientId: activeRecipient ? activeRecipient.id : null,
+        recipientUsername: activeRecipient ? (activeRecipient.username || '') : '',
+        recipientFullName: activeRecipient ? (activeRecipient.full_name || activeRecipient.fullName || '') : '',
+        recipientRole: activeRecipient ? (activeRecipient.role || '') : '',
+        recipientDepartment: activeRecipient ? (activeRecipient.department || activeRecipient.dept || '') : '',
         senderId: currentUser.id,
         senderUsername: currentUser.username,
         senderFullName: currentUser.fullName,
@@ -25661,7 +25708,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const wordHtml = generateSingleReportWordHtml(previewRep);
       const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-      downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
+      downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${mPad}_${y}.doc`);
       showToast("📄 Đã tải file Word báo cáo công việc chuẩn mẫu thành công!");
     }
 
@@ -25672,11 +25719,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         showToast("Không tìm thấy dữ liệu báo cáo!", true);
         return;
       }
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const { m, y } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const wordHtml = generateSingleReportWordHtml(rep);
       const safeName = removeAccents(rep.senderFullName || 'Bao_cao').replace(/\s+/g, '_');
-      downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
+      downloadWordDocument(wordHtml, `Bao_cao_cong_viec_${safeName}_Thang_${mPad}_${y}.doc`);
       showToast(`📄 Đã tải file Word báo cáo của ${rep.senderFullName || 'nhân sự'}!`);
     }
 
@@ -25692,8 +25741,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       let selectedItems = items.filter(it => it.selectedForReport);
       if (selectedItems.length === 0) selectedItems = items;
 
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActivePersonalReportPeriod === 'function')
+        ? getActivePersonalReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -25712,7 +25763,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const wordHtml = generateSingleReportWordHtml(rep);
       const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-      downloadWordDocument(wordHtml, `So_tay_cong_viec_${safeName}_Thang_${m}_${y}.doc`);
+      downloadWordDocument(wordHtml, `So_tay_cong_viec_${safeName}_Thang_${mPad}_${y}.doc`);
       showToast("📄 Đã tải file Word sổ tay công việc thành công!");
     }
 
@@ -25787,12 +25838,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const deptName = currentUser.department || 'Bộ phận';
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
 
       const wordHtml = generateConsolidatedReportsWordHtml(selectedReps, deptName, m, y);
       const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
-      downloadWordDocument(wordHtml, `Bao_cao_gop_bo_phan_${safeDept}_Thang_${m}_${y}.doc`);
+      downloadWordDocument(wordHtml, `Bao_cao_gop_bo_phan_${safeDept}_Thang_${mPad}_${y}.doc`);
       showToast(`📄 Đã gộp và tải file Word thành công (${selectedReps.length} báo cáo)!`);
     }
 
@@ -26192,30 +26245,114 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return 'Tháng ' + key;
     }
 
-    function getActivePersonalReportPeriod() {
-      if (typeof pwFilterMonth === 'string' && pwFilterMonth !== 'ALL' && pwFilterMonth.includes('/')) {
-        const parts = pwFilterMonth.split('/');
-        const m = parseInt(parts[0], 10);
-        const y = parseInt(parts[1], 10);
-        if (m >= 1 && m <= 12 && y >= 2000) return { m, y };
+    function parseReportPeriodKey(key) {
+      if (typeof key !== 'string') return null;
+      const trimmed = key.trim();
+      if (!trimmed || trimmed.toUpperCase() === 'ALL') return null;
+      const match = trimmed.match(/^(\d{1,2})\/(\d{4})$/);
+      if (!match) return null;
+      const m = parseInt(match[1], 10);
+      const y = parseInt(match[2], 10);
+      if (m >= 1 && m <= 12 && y >= 2000 && y <= 2100) {
+        return { m, y, key: m + '/' + y };
       }
-      return {
-        m: currentSelectedMonth || (new Date().getMonth() + 1),
-        y: currentSelectedYear || new Date().getFullYear()
-      };
+      return null;
     }
 
-    function getActiveInboxReportPeriod() {
-      if (typeof rpBoxFilterMonth === 'string' && rpBoxFilterMonth !== 'ALL' && rpBoxFilterMonth.includes('/')) {
-        const parts = rpBoxFilterMonth.split('/');
-        const m = parseInt(parts[0], 10);
-        const y = parseInt(parts[1], 10);
-        if (m >= 1 && m <= 12 && y >= 2000) return { m, y };
-      }
-      return {
-        m: currentSelectedMonth || (new Date().getMonth() + 1),
-        y: currentSelectedYear || new Date().getFullYear()
+    // Mặc định kỳ báo cáo theo ngày lập: ngày 01–10 lấy tháng trước đó; ngày 11–cuối tháng lấy tháng hiện tại
+    function getDefaultSmartReportPeriod(now = new Date()) {
+      const ref = (now instanceof Date && !isNaN(now.getTime())) ? now : new Date();
+      const offsetMonth = ref.getDate() <= 10 ? 1 : 0;
+      const periodDate = new Date(ref.getFullYear(), ref.getMonth() - offsetMonth, 1);
+      return { m: periodDate.getMonth() + 1, y: periodDate.getFullYear() };
+    }
+
+    function formatReportPeriodLabel(m, y) {
+      const monthNum = parseInt(m, 10);
+      const yearNum = parseInt(y, 10);
+      if (!(monthNum >= 1 && monthNum <= 12 && yearNum >= 2000 && yearNum <= 2100)) return '---';
+      return 'Tháng ' + String(monthNum).padStart(2, '0') + '/' + yearNum;
+    }
+
+    function getReportPeriodOptionsList(selectedPeriod = null, now = new Date()) {
+      const ref = (now instanceof Date && !isNaN(now.getTime())) ? now : new Date();
+      const map = new Map();
+      const addOpt = (m, y) => {
+        const mNum = parseInt(m, 10);
+        const yNum = parseInt(y, 10);
+        if (!(mNum >= 1 && mNum <= 12 && yNum >= 2000 && yNum <= 2100)) return;
+        const key = mNum + '/' + yNum;
+        if (!map.has(key)) {
+          map.set(key, {
+            m: mNum,
+            y: yNum,
+            key,
+            label: formatReportPeriodLabel(mNum, yNum),
+            sortVal: yNum * 12 + mNum
+          });
+        }
       };
+
+      const smart = getDefaultSmartReportPeriod(ref);
+      addOpt(smart.m, smart.y);
+      if (selectedPeriod && selectedPeriod.m && selectedPeriod.y) {
+        addOpt(selectedPeriod.m, selectedPeriod.y);
+      }
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+        addOpt(d.getMonth() + 1, d.getFullYear());
+      }
+
+      return Array.from(map.values()).sort((a, b) => b.sortVal - a.sortVal);
+    }
+
+    function populateReportPeriodSelect(selectIdOrEl, selectedPeriod = null, now = new Date()) {
+      const el = (typeof selectIdOrEl === 'string') ? document.getElementById(selectIdOrEl) : selectIdOrEl;
+      const target = (selectedPeriod && parseReportPeriodKey(selectedPeriod.m + '/' + selectedPeriod.y))
+        ? { m: parseInt(selectedPeriod.m, 10), y: parseInt(selectedPeriod.y, 10) }
+        : getDefaultSmartReportPeriod(now);
+      const targetKey = target.m + '/' + target.y;
+      if (el) {
+        const options = getReportPeriodOptionsList(target, now);
+        el.innerHTML = options.map(opt => '<option value="' + escapeHtml(opt.key) + '">' + escapeHtml(opt.label) + '</option>').join('');
+        el.value = targetKey;
+      }
+      return { m: target.m, y: target.y, key: targetKey };
+    }
+
+    function resolveSavedReportPeriod(rep, fallbackPeriod = null, now = new Date()) {
+      if (rep) {
+        const parsedExplicit = parseReportPeriodKey(String(rep.periodMonth || '') + '/' + String(rep.periodYear || ''));
+        if (parsedExplicit) return { m: parsedExplicit.m, y: parsedExplicit.y };
+        if (typeof parseMonthYearFromAnyDate === 'function') {
+          const parsedDate = parseMonthYearFromAnyDate(rep.submissionDate || rep.createdAt || rep.displayDate || rep.forwardedAt || rep.updatedAt);
+          if (parsedDate) return { m: parsedDate.month, y: parsedDate.year };
+          const items = Array.isArray(rep.items) ? rep.items : (rep.items && Array.isArray(rep.items.tasks) ? rep.items.tasks : []);
+          if (typeof getPersonalItemMonthYear === 'function') {
+            for (const it of items) {
+              const my = getPersonalItemMonthYear(it);
+              if (my) return { m: my.month, y: my.year };
+            }
+          }
+        }
+      }
+      if (fallbackPeriod && fallbackPeriod.m && fallbackPeriod.y) {
+        const pFallback = parseReportPeriodKey(fallbackPeriod.m + '/' + fallbackPeriod.y);
+        if (pFallback) return { m: pFallback.m, y: pFallback.y };
+      }
+      return getDefaultSmartReportPeriod(now);
+    }
+
+    function getActivePersonalReportPeriod(now = new Date()) {
+      const parsed = (typeof pwFilterMonth === 'string') ? parseReportPeriodKey(pwFilterMonth) : null;
+      if (parsed) return { m: parsed.m, y: parsed.y };
+      return getDefaultSmartReportPeriod(now);
+    }
+
+    function getActiveInboxReportPeriod(now = new Date()) {
+      const parsed = (typeof rpBoxFilterMonth === 'string') ? parseReportPeriodKey(rpBoxFilterMonth) : null;
+      if (parsed) return { m: parsed.m, y: parsed.y };
+      return getDefaultSmartReportPeriod(now);
     }
 
     function getRecent12MonthsList() {
@@ -28435,6 +28572,33 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return 'Ban DVKH';
     }
 
+    let _rpRecipientManuallySelected = false;
+
+    function normalizeReportRecipientUsername(str) {
+      if (typeof cleanReportUsername === 'function') return cleanReportUsername(str);
+      return removeAccents(String(str || '')).toLowerCase().replace(/[\.\s\-_]/g, '').trim();
+    }
+
+    function isPreferredDefaultReportRecipient(u) {
+      if (!u) return false;
+      const cleanU = normalizeReportRecipientUsername(u.username);
+      if (cleanU === 'thuytm') return true;
+      const fullName = removeAccents(String(u.fullName || u.full_name || '')).toLowerCase().trim().replace(/\s+/g, ' ');
+      return fullName === 'tran minh thuy';
+    }
+
+    function getActivePreviewReportRecipient() {
+      const select = document.getElementById('rpRecipientSelect');
+      if (currentSelectedRecipient && (!select || !select.value || String(currentSelectedRecipient.id) === String(select.value))) {
+        return currentSelectedRecipient;
+      }
+      if (select && select.value && Array.isArray(currentReportRecipientsList)) {
+        const found = currentReportRecipientsList.find(x => String(x.id) === String(select.value));
+        if (found) return found;
+      }
+      return currentSelectedRecipient || null;
+    }
+
     function loadReportRecipientsOptions(customUserList) {
       const select = document.getElementById('rpRecipientSelect');
       if (!select) return;
@@ -28470,8 +28634,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // Loại trừ chính mình nếu bản thân người gửi là Quản lý/Lãnh đạo
       if (currentUser) {
         const myId = String(currentUser.id || '');
-        const myUsername = String(currentUser.username || '').toLowerCase();
-        filtered = filtered.filter(u => String(u.id) !== myId && String(u.username || '').toLowerCase() !== myUsername);
+        const myCleanU = normalizeReportRecipientUsername(currentUser.username);
+        filtered = filtered.filter(u => {
+          const uClean = normalizeReportRecipientUsername(u.username);
+          const sameId = myId && String(u.id || '') === myId;
+          const sameUser = myCleanU && uClean && uClean === myCleanU;
+          return !sameId && !sameUser;
+        });
         if (filtered.length === 0) {
           filtered = [
             { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
@@ -28481,7 +28650,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const userDept = currentUser?.department || '';
+      const senderRoleInfo = (typeof getPersonalWorkspaceReportingRole === 'function')
+        ? getPersonalWorkspaceReportingRole(currentUser)
+        : { isStaff: true };
+
       filtered.sort((a, b) => {
+        // 0. Mặc định người tiếp nhận báo cáo của nhân viên gửi cho quản lý là "Trần Minh Thùy"
+        const aPref = isPreferredDefaultReportRecipient(a) ? 1 : 0;
+        const bPref = isPreferredDefaultReportRecipient(b) ? 1 : 0;
+        if (senderRoleInfo.isStaff && aPref !== bPref) return bPref - aPref;
+
         // 1. Quản lý cùng bộ phận với người gửi (nếu có) lên đầu
         const aDeptMatch = isDeptEquivalent(a.department, userDept) ? 1 : 0;
         const bDeptMatch = isDeptEquivalent(b.department, userDept) ? 1 : 0;
@@ -28499,6 +28677,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const rankB = getRoleRank(b.role);
         if (rankA !== rankB) return rankA - rankB;
 
+        if (aPref !== bPref) return bPref - aPref;
+
         return (a.fullName || '').localeCompare(b.fullName || '', 'vi');
       });
 
@@ -28509,11 +28689,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }).join('');
 
       if (currentReportRecipientsList.length > 0) {
-        const selectedId = currentSelectedRecipient?.id && currentReportRecipientsList.some(x => String(x.id) === String(currentSelectedRecipient.id))
-          ? currentSelectedRecipient.id
-          : currentReportRecipientsList[0].id;
+        const defaultRecipient = currentReportRecipientsList.find(isPreferredDefaultReportRecipient) || currentReportRecipientsList[0];
+        const keepManual = _rpRecipientManuallySelected
+          && currentSelectedRecipient?.id
+          && currentReportRecipientsList.some(x => String(x.id) === String(currentSelectedRecipient.id));
+        const selectedId = keepManual ? currentSelectedRecipient.id : defaultRecipient.id;
         select.value = selectedId;
-        onReportRecipientSelectChange(selectedId);
+        onReportRecipientSelectChange(selectedId, false);
       }
 
       // Truy vấn nền từ Supabase nếu có kết nối để luôn cập nhật danh sách mới nhất
@@ -28530,17 +28712,61 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function onReportRecipientSelectChange(userId) {
+    function onReportRecipientSelectChange(userId, isUserAction = false) {
       const u = currentReportRecipientsList.find(x => String(x.id) === String(userId));
       if (!u) return;
+      if (isUserAction) _rpRecipientManuallySelected = true;
       currentSelectedRecipient = u;
       const fName = u.fullName || u.full_name || u.username;
-      const deptName = u.department || 'Ban DVKH';
-      const roleName = u.role || 'Quản lý';
 
       const recipientText = document.getElementById('rpPreviewRecipientText');
       if (recipientText) {
         recipientText.innerText = `Kính gửi: ${fName}`;
+      }
+    }
+
+    let _previewSelectedReportPeriod = null;
+
+    function getLeadershipPreviewReportPeriod() {
+      const sel = document.getElementById('rpPeriodSelect');
+      const parsedSel = (sel && typeof parseReportPeriodKey === 'function') ? parseReportPeriodKey(sel.value) : null;
+      if (parsedSel) return { m: parsedSel.m, y: parsedSel.y };
+      if (_previewSelectedReportPeriod && _previewSelectedReportPeriod.m && _previewSelectedReportPeriod.y) {
+        return { m: _previewSelectedReportPeriod.m, y: _previewSelectedReportPeriod.y };
+      }
+      if (typeof getActivePersonalReportPeriod === 'function') return getActivePersonalReportPeriod();
+      if (typeof getDefaultSmartReportPeriod === 'function') return getDefaultSmartReportPeriod();
+      return { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+    }
+
+    function setLeadershipPreviewReportPeriod(m, y) {
+      const fallback = (typeof getDefaultSmartReportPeriod === 'function')
+        ? getDefaultSmartReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const parsed = (typeof parseReportPeriodKey === 'function')
+        ? parseReportPeriodKey(String(m) + '/' + String(y))
+        : null;
+      const target = parsed ? { m: parsed.m, y: parsed.y } : fallback;
+      _previewSelectedReportPeriod = { m: target.m, y: target.y };
+      if (typeof populateReportPeriodSelect === 'function') {
+        populateReportPeriodSelect('rpPeriodSelect', target);
+      } else {
+        const sel = document.getElementById('rpPeriodSelect');
+        if (sel) sel.value = target.m + '/' + target.y;
+      }
+      const periodText = document.getElementById('rpPeriodText');
+      if (periodText) {
+        periodText.innerText = (typeof formatReportPeriodLabel === 'function')
+          ? formatReportPeriodLabel(target.m, target.y)
+          : ('Tháng ' + String(target.m).padStart(2, '0') + '/' + target.y);
+      }
+      return target;
+    }
+
+    function onLeadershipPreviewPeriodChange(val) {
+      const parsed = (typeof parseReportPeriodKey === 'function') ? parseReportPeriodKey(val) : null;
+      if (parsed) {
+        setLeadershipPreviewReportPeriod(parsed.m, parsed.y);
       }
     }
 
@@ -28590,7 +28816,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (submitBtnTextEl) submitBtnTextEl.innerText = "Lưu Báo Cáo Lãnh Đạo";
       }
 
-      // TẢI VÀ NẠP DANH SÁCH NGƯỜI TIẾP NHẬN BÁO CÁO (QUẢN LÝ & PHÓ GIÁM ĐỐC)
+      // TẢI VÀ NẠP DANH SÁCH NGƯỜI TIẾP NHẬN BÁO CÁO (MẶC ĐỊNH TRẦN MINH THÙY)
+      currentSelectedRecipient = null;
+      _rpRecipientManuallySelected = false;
       loadReportRecipientsOptions();
 
       // Thông tin người gửi
@@ -28601,9 +28829,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const rl = document.getElementById('rpRole');
       if (rl) rl.innerText = currentUser.role || "Nhân viên";
 
-      const periodText = document.getElementById('rpPeriodText');
-      const { m, y } = getActivePersonalReportPeriod();
-      if (periodText) periodText.innerText = `Tháng ${m}/${y}`;
+      const { m, y } = (typeof getActivePersonalReportPeriod === 'function')
+        ? getActivePersonalReportPeriod()
+        : { m: currentSelectedMonth || (new Date().getMonth() + 1), y: currentSelectedYear || new Date().getFullYear() };
+      if (typeof setLeadershipPreviewReportPeriod === 'function') {
+        setLeadershipPreviewReportPeriod(m, y);
+      } else {
+        const periodText = document.getElementById('rpPeriodText');
+        if (periodText) periodText.innerText = `Tháng ${String(m).padStart(2, '0')}/${y}`;
+      }
 
       const dateText = document.getElementById('rpDateText');
       const now = new Date();
@@ -28658,6 +28892,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function closeLeadershipReportPreviewModal() {
       const modal = document.getElementById('leadershipReportPreviewModal');
       if (modal) modal.classList.add('hidden');
+      _previewSelectedReportPeriod = null;
+      currentSelectedRecipient = null;
+      _rpRecipientManuallySelected = false;
     }
 
     function submitLeadershipReport() {
@@ -28672,7 +28909,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const noteInput = document.getElementById('rpLeaderNoteInput');
       const leaderNote = noteInput ? noteInput.value.trim() : '';
 
-      const { m, y } = getActivePersonalReportPeriod();
+      const { m, y } = (typeof getLeadershipPreviewReportPeriod === 'function')
+        ? getLeadershipPreviewReportPeriod()
+        : getActivePersonalReportPeriod();
       const now = new Date();
 
       const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
@@ -28765,14 +29004,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function copyLeadershipReportToClipboard() {
       if (!currentUser || currentReportSelectedItems.length === 0) return;
 
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getLeadershipPreviewReportPeriod === 'function')
+        ? getLeadershipPreviewReportPeriod()
+        : ((typeof getActivePersonalReportPeriod === 'function') ? getActivePersonalReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
+      const mPad = String(m).padStart(2, '0');
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
       const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
+      const activeRecipient = (typeof getActivePreviewReportRecipient === 'function')
+        ? getActivePreviewReportRecipient()
+        : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
       let recipient = "Ban Giám Đốc / Ban Lãnh Đạo Công ty";
-      if (roleInfo.isStaff) {
+      if (activeRecipient && (activeRecipient.fullName || activeRecipient.full_name || activeRecipient.username)) {
+        recipient = activeRecipient.fullName || activeRecipient.full_name || activeRecipient.username;
+      } else if (roleInfo.isStaff) {
         recipient = `Quản lý / Trưởng bộ phận ${currentUser.department || 'Ban DVKH'}`;
       }
 
@@ -28780,7 +29026,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       txt += `CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG - BAN DỊCH VỤ KHÁCH HÀNG\n`;
       txt += `BÁO CÁO CÔNG VIỆC CÁ NHÂN & ĐỀ XUẤT KIẾN NGHỊ\n`;
       txt += `Kính gửi: ${recipient}\n`;
-      txt += `Kỳ báo cáo: Tháng ${m}/${y} • Ngày lập: ${dateFormatted}\n`;
+      txt += `Kỳ báo cáo: Tháng ${mPad}/${y} • Ngày lập: ${dateFormatted}\n`;
       txt += `-----------------------------------------------------------\n`;
       txt += `Người báo cáo: ${currentUser.fullName || currentUser.username}\n`;
       txt += `Bộ phận: ${currentUser.department || 'Ban DVKH'} • Chức vụ: ${currentUser.role || 'Nhân sự'}\n`;
@@ -28859,14 +29105,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function printLeadershipReport() {
       if (!currentUser) return;
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getLeadershipPreviewReportPeriod === 'function')
+        ? getLeadershipPreviewReportPeriod()
+        : ((typeof getActivePersonalReportPeriod === 'function') ? getActivePersonalReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
       const currentNotes = (document.getElementById('rpLeaderNoteInput')?.value || '').trim();
 
+      const activeRecipient = (typeof getActivePreviewReportRecipient === 'function')
+        ? getActivePreviewReportRecipient()
+        : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
       const previewRep = {
+        recipientId: activeRecipient ? activeRecipient.id : null,
+        recipientUsername: activeRecipient ? (activeRecipient.username || '') : '',
+        recipientFullName: activeRecipient ? (activeRecipient.full_name || activeRecipient.fullName || '') : '',
+        recipientRole: activeRecipient ? (activeRecipient.role || '') : '',
+        recipientDepartment: activeRecipient ? (activeRecipient.department || activeRecipient.dept || '') : '',
         senderId: currentUser.id,
         senderUsername: currentUser.username,
         senderFullName: currentUser.fullName,
@@ -28940,8 +29195,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         showToast("Không có mục nào được chọn để xuất Excel!", true);
         return;
       }
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getLeadershipPreviewReportPeriod === 'function')
+        ? getLeadershipPreviewReportPeriod()
+        : ((typeof getActivePersonalReportPeriod === 'function') ? getActivePersonalReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
+      const mPad = String(m).padStart(2, '0');
       const now = new Date();
       const dateFormatted = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
 
@@ -28966,7 +29223,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         '<head><meta charset="UTF-8"></head>' +
         '<body>' +
         '<h2 style="text-align:center;">BÁO CÁO CÔNG VIỆC CÁ NHÂN - ' + escapeHtml((currentUser.fullName || '').toUpperCase()) + '</h2>' +
-        '<p style="text-align:center;">Bộ phận: ' + escapeHtml(currentUser.department || '') + ' | Kỳ: Tháng ' + m + '/' + y + ' | Ngày xuất: ' + dateFormatted + '</p>' +
+        '<p style="text-align:center;">Bộ phận: ' + escapeHtml(currentUser.department || '') + ' | Kỳ: Tháng ' + mPad + '/' + y + ' | Ngày xuất: ' + dateFormatted + '</p>' +
         '<table border="1" style="border-collapse:collapse; width:100%;">' +
         '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
         '<th>STT</th><th>Loại mục</th><th>Tiêu đề công việc</th><th>Nội dung chi tiết</th><th>Hạn / Ngày</th><th>Trạng thái</th>' +
@@ -28980,7 +29237,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const a = document.createElement('a');
       a.href = url;
       const safeName = removeAccents(currentUser.fullName || 'User').replace(/\s+/g, '_');
-      a.download = 'Bao_cao_ca_nhan_' + safeName + '_Thang_' + m + '_' + y + '.xls';
+      a.download = 'Bao_cao_ca_nhan_' + safeName + '_Thang_' + mPad + '_' + y + '.xls';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -29477,6 +29734,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }).join('');
       }
 
+      if (typeof populateReportPeriodSelect === 'function' && typeof getActivePersonalReportPeriod === 'function') {
+        populateReportPeriodSelect('sendInboxPeriodSelect', getActivePersonalReportPeriod());
+      }
+
       const modal = document.getElementById('confirmSendToInboxModal');
       if (modal) modal.classList.remove('hidden');
     }
@@ -29493,12 +29754,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         closeConfirmSendToInboxModal();
         return;
       }
+      const periodSel = document.getElementById('sendInboxPeriodSelect');
+      const parsedPeriodSel = (periodSel && typeof parseReportPeriodKey === 'function') ? parseReportPeriodKey(periodSel.value) : null;
+      const { m, y } = parsedPeriodSel
+        ? { m: parsedPeriodSel.m, y: parsedPeriodSel.y }
+        : getActivePersonalReportPeriod();
       closeConfirmSendToInboxModal();
 
       const data = getPersonalWorkspaceData(currentUser);
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const { m, y } = getActivePersonalReportPeriod();
 
       const clonedItems = selectedItems.map(it => {
         const copy = JSON.parse(JSON.stringify(it));
@@ -30481,10 +30746,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function getRpBoxSenderWordFileName(r) {
-      const m = r.periodMonth || (new Date().getMonth() + 1);
-      const y = r.periodYear || new Date().getFullYear();
+      const { m, y } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(r)
+        : { m: r.periodMonth || (new Date().getMonth() + 1), y: r.periodYear || new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const safeName = removeAccents(r.senderFullName || 'Bao_cao').replace(/\s+/g, '_');
-      return 'Bao_cao_cong_viec_' + safeName + '_Thang_' + m + '_' + y + '.doc';
+      return 'Bao_cao_cong_viec_' + safeName + '_Thang_' + mPad + '_' + y + '.doc';
     }
 
     // Danh sách các lượt gửi (theo đúng phân quyền: gửi đến ai thì tài khoản đó mới thấy)
@@ -30563,8 +30830,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
       if (rep.reportType === 'manager_summary') {
         const sDept = rep.senderDepartment || 'Bộ phận';
-        const sM = rep.periodMonth || (new Date().getMonth() + 1);
-        const sY = rep.periodYear || new Date().getFullYear();
+        const { m: sM, y: sY } = (typeof resolveSavedReportPeriod === 'function')
+          ? resolveSavedReportPeriod(rep)
+          : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
         downloadWordDocument(generateConsolidatedReportsWordHtml([rep], sDept, sM, sY), getConsolidatedWordFileName(rep));
         showToast("📄 Đã tải file Word báo cáo tổng hợp thành công!");
         return;
@@ -30735,8 +31003,85 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function describeRpBoxDraftOption(draft) {
       const when = formatRpBoxSendDateTime(draft);
-      const period = (draft.periodMonth && draft.periodYear) ? ' · Tháng ' + draft.periodMonth + '/' + draft.periodYear : '';
+      const period = (draft.periodMonth && draft.periodYear) ? ' · ' + ((typeof formatReportPeriodLabel === 'function') ? formatReportPeriodLabel(draft.periodMonth, draft.periodYear) : ('Tháng ' + draft.periodMonth + '/' + draft.periodYear)) : '';
       return 'Bản nháp ' + (when.date || '---') + (when.time ? ' ' + when.time : '') + period + ' · ' + getRpBoxConsolidationItems(draft).length + ' đầu việc';
+    }
+
+    function buildConsolidateDefaultNote(m, y, selectedEntries = [], staffNames = []) {
+      const mPad = String(m).padStart(2, '0');
+      const entriesArr = Array.isArray(selectedEntries) ? selectedEntries : [];
+      const namesArr = (Array.isArray(staffNames) && staffNames.length > 0)
+        ? staffNames
+        : Array.from(new Set(entriesArr.map(e => e && (e.senderFullName || e.senderUsername)).filter(Boolean)));
+      const staffListStr = namesArr.join(', ');
+      return "Báo cáo tổng hợp tình hình công việc (Tháng " + mPad + "/" + y + "). Gồm " + entriesArr.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + namesArr.length + " nhân sự (" + staffListStr + ").";
+    }
+
+    function syncConsolidatePeriodDisplay(m, y, lockedDraftPeriod = false) {
+      const mNum = parseInt(m, 10) || ((typeof getActiveInboxReportPeriod === 'function') ? getActiveInboxReportPeriod().m : (new Date().getMonth() + 1));
+      const yNum = parseInt(y, 10) || ((typeof getActiveInboxReportPeriod === 'function') ? getActiveInboxReportPeriod().y : new Date().getFullYear());
+      const target = { m: mNum, y: yNum };
+      if (typeof populateReportPeriodSelect === 'function') {
+        populateReportPeriodSelect('csModalPeriodSelect', target);
+      } else {
+        const sel = document.getElementById('csModalPeriodSelect');
+        if (sel) sel.value = mNum + '/' + yNum;
+      }
+      const periodSel = document.getElementById('csModalPeriodSelect');
+      if (periodSel) periodSel.disabled = !!lockedDraftPeriod;
+      const lockHint = document.getElementById('csModalPeriodDraftLockHint');
+      if (lockHint) {
+        if (lockedDraftPeriod) lockHint.classList.remove('hidden');
+        else lockHint.classList.add('hidden');
+      }
+      const periodEl = document.getElementById('csModalPeriodText');
+      if (periodEl) {
+        periodEl.innerText = 'Tháng ' + String(mNum).padStart(2, '0') + ' / ' + yNum;
+      }
+      return target;
+    }
+
+    function onConsolidateAssessmentInput() {
+      if (!_pendingConsolidatePayload) return;
+      const inputEl = document.getElementById('csModalAssessmentInput');
+      const val = inputEl ? inputEl.value : '';
+      const select = document.getElementById('csModalDraftTarget');
+      const draftId = select ? select.value : '';
+      if (!draftId) {
+        _pendingConsolidatePayload.autoNoteNew = false;
+        _pendingConsolidatePayload.newReportNote = val;
+        _pendingConsolidatePayload.userEditedBlankNew = (val.trim() === '');
+      } else {
+        if (!_pendingConsolidatePayload.draftNotesById) _pendingConsolidatePayload.draftNotesById = {};
+        if (!_pendingConsolidatePayload.userEditedBlankDraftIds) _pendingConsolidatePayload.userEditedBlankDraftIds = {};
+        _pendingConsolidatePayload.draftNotesById[draftId] = val;
+        _pendingConsolidatePayload.userEditedBlankDraftIds[draftId] = (val.trim() === '');
+      }
+    }
+
+    function onConsolidatePeriodChange(val) {
+      if (!_pendingConsolidatePayload) return;
+      const targetSelect = document.getElementById('csModalDraftTarget');
+      if (targetSelect && targetSelect.value) return;
+      const parsed = (typeof parseReportPeriodKey === 'function') ? parseReportPeriodKey(val) : null;
+      if (!parsed) return;
+      const prevDefault = _pendingConsolidatePayload.defaultNote || '';
+      const selectedEntries = _pendingConsolidatePayload.selectedEntries || [];
+      const staffNames = _pendingConsolidatePayload.staffNames || [];
+      const nextDefault = buildConsolidateDefaultNote(parsed.m, parsed.y, selectedEntries, staffNames);
+      const inputEl = document.getElementById('csModalAssessmentInput');
+      const shouldUpdateAuto = !!_pendingConsolidatePayload.autoNoteNew || (inputEl && inputEl.value.trim() === prevDefault.trim() && !_pendingConsolidatePayload.userEditedBlankNew);
+      _pendingConsolidatePayload.m = parsed.m;
+      _pendingConsolidatePayload.y = parsed.y;
+      _pendingConsolidatePayload.newReportPeriod = { m: parsed.m, y: parsed.y };
+      _pendingConsolidatePayload.defaultNote = nextDefault;
+      if (shouldUpdateAuto) {
+        _pendingConsolidatePayload.autoNoteNew = true;
+        _pendingConsolidatePayload.userEditedBlankNew = false;
+        _pendingConsolidatePayload.newReportNote = nextDefault;
+        if (inputEl) inputEl.value = nextDefault;
+      }
+      syncConsolidatePeriodDisplay(parsed.m, parsed.y, false);
     }
 
     function refreshConsolidateDraftTargetUI() {
@@ -30747,6 +31092,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       select.innerHTML = '<option value="">Tạo báo cáo tổng hợp mới</option>' +
         drafts.map(d => '<option value="' + escapeHtml(String(d.id)) + '">' + escapeHtml(describeRpBoxDraftOption(d)) + '</option>').join('');
       select.value = '';
+      if (_pendingConsolidatePayload) _pendingConsolidatePayload.activeTargetDraftId = null;
       if (drafts.length > 0) wrap.classList.remove('hidden'); else wrap.classList.add('hidden');
       onConsolidateDraftTargetChange();
     }
@@ -30759,17 +31105,57 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const mergeButtons = document.getElementById('csModalMergeButtons');
       const hint = document.getElementById('csModalDraftTargetHint');
       const inputEl = document.getElementById('csModalAssessmentInput');
+      const payload = _pendingConsolidatePayload;
+
+      if (payload && inputEl && payload.activeTargetDraftId !== undefined && payload.activeTargetDraftId !== null) {
+        const prevId = String(payload.activeTargetDraftId);
+        if (prevId === '') {
+          payload.newReportNote = inputEl.value;
+        } else {
+          if (!payload.draftNotesById) payload.draftNotesById = {};
+          payload.draftNotesById[prevId] = inputEl.value;
+        }
+      }
+
       if (createButtons) { if (draft) createButtons.classList.add('hidden'); else createButtons.classList.remove('hidden'); }
       if (mergeButtons) { if (draft) mergeButtons.classList.remove('hidden'); else mergeButtons.classList.add('hidden'); }
       if (draft) {
+        if (payload) payload.activeTargetDraftId = String(draft.id);
         const existing = new Set(getRpBoxConsolidationItems(draft).map(it => it && it.sourceEntryKey != null ? String(it.sourceEntryKey) : '').filter(Boolean));
-        const selected = (_pendingConsolidatePayload && _pendingConsolidatePayload.selectedEntries) || [];
+        const selected = (payload && payload.selectedEntries) || [];
         const fresh = selected.filter(e => !existing.has(String(e.entryKey))).length;
         if (hint) hint.innerText = 'Sẽ thêm ' + fresh + ' đầu việc mới vào bản nháp' + (selected.length - fresh > 0 ? ' (bỏ qua ' + (selected.length - fresh) + ' đầu việc đã có sẵn)' : '') + '. Bản nháp vẫn chưa gửi Ban Giám Đốc.';
-        if (inputEl) inputEl.value = draft.managerFeedback || draft.notes || '';
+        const draftPeriod = (typeof resolveSavedReportPeriod === 'function')
+          ? resolveSavedReportPeriod(draft)
+          : { m: draft.periodMonth || (new Date().getMonth() + 1), y: draft.periodYear || new Date().getFullYear() };
+        if (typeof syncConsolidatePeriodDisplay === 'function') {
+          syncConsolidatePeriodDisplay(draftPeriod.m, draftPeriod.y, true);
+        } else {
+          const periodEl = document.getElementById('csModalPeriodText');
+          if (periodEl) periodEl.innerText = 'Tháng ' + String(draftPeriod.m).padStart(2, '0') + ' / ' + draftPeriod.y;
+        }
+        if (inputEl) {
+          const hasStored = payload && payload.draftNotesById && Object.prototype.hasOwnProperty.call(payload.draftNotesById, String(draft.id));
+          inputEl.value = hasStored ? payload.draftNotesById[String(draft.id)] : (draft.managerFeedback || draft.notes || '');
+        }
       } else {
+        if (payload) payload.activeTargetDraftId = '';
         if (hint) hint.innerText = 'Chọn một bản nháp để gộp thêm các đầu việc vừa tích chọn thay vì tạo báo cáo mới.';
-        if (inputEl && _pendingConsolidatePayload) inputEl.value = _pendingConsolidatePayload.defaultNote || '';
+        const fallbackPeriod = (typeof getActiveInboxReportPeriod === 'function')
+          ? getActiveInboxReportPeriod()
+          : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+        const newPeriod = (payload && payload.newReportPeriod)
+          ? payload.newReportPeriod
+          : ((payload && payload.m && payload.y) ? { m: payload.m, y: payload.y } : fallbackPeriod);
+        if (typeof syncConsolidatePeriodDisplay === 'function') {
+          syncConsolidatePeriodDisplay(newPeriod.m, newPeriod.y, false);
+        } else {
+          const periodEl = document.getElementById('csModalPeriodText');
+          if (periodEl) periodEl.innerText = 'Tháng ' + String(newPeriod.m).padStart(2, '0') + ' / ' + newPeriod.y;
+        }
+        if (inputEl && payload) {
+          inputEl.value = (payload.newReportNote !== undefined) ? payload.newReportNote : (payload.defaultNote || '');
+        }
       }
     }
 
@@ -30865,28 +31251,44 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
-      const { m, y } = getActiveInboxReportPeriod();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
 
       const staffNames = new Set(selectedEntries.map(e => e.senderFullName));
-      const staffListStr = Array.from(staffNames).join(', ');
+      const staffNamesArr = Array.from(staffNames);
+      const staffListStr = staffNamesArr.join(', ');
 
-      const defaultNote = "Báo cáo tổng hợp tình hình công việc (Tháng " + m + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").";
+      const defaultNote = (typeof buildConsolidateDefaultNote === 'function')
+        ? buildConsolidateDefaultNote(m, y, selectedEntries, staffNamesArr)
+        : ("Báo cáo tổng hợp tình hình công việc (Tháng " + String(m).padStart(2, '0') + "/" + y + "). Gồm " + selectedEntries.length + " đầu việc được Quản lý thẩm định và tổng hợp từ " + staffNames.size + " nhân sự (" + staffListStr + ").");
 
       _pendingConsolidatePayload = {
         targetDept,
         m,
         y,
         selectedEntries,
-        staffNames: Array.from(staffNames),
-        defaultNote
+        staffNames: staffNamesArr,
+        defaultNote,
+        autoNoteNew: true,
+        newReportPeriod: { m, y },
+        newReportNote: defaultNote,
+        draftNotesById: {},
+        userEditedBlankNew: false,
+        userEditedBlankDraftIds: {},
+        activeTargetDraftId: null
       };
 
       // Nạp dữ liệu vào bảng Modal chuyên nghiệp
       const deptEl = document.getElementById('csModalDeptName');
       if (deptEl) deptEl.innerText = formatDeptName(targetDept);
 
-      const periodEl = document.getElementById('csModalPeriodText');
-      if (periodEl) periodEl.innerText = 'Tháng ' + m + ' / ' + y;
+      if (typeof syncConsolidatePeriodDisplay === 'function') {
+        syncConsolidatePeriodDisplay(m, y, false);
+      } else {
+        const periodEl = document.getElementById('csModalPeriodText');
+        if (periodEl) periodEl.innerText = 'Tháng ' + String(m).padStart(2, '0') + ' / ' + y;
+      }
 
       const taskCountEl = document.getElementById('csModalTaskCount');
       if (taskCountEl) taskCountEl.innerText = selectedEntries.length;
@@ -30912,10 +31314,42 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function resetConsolidateDefaultNote() {
-      if (_pendingConsolidatePayload) {
-        const inputEl = document.getElementById('csModalAssessmentInput');
-        if (inputEl) inputEl.value = _pendingConsolidatePayload.defaultNote;
+      if (!_pendingConsolidatePayload) return;
+      const inputEl = document.getElementById('csModalAssessmentInput');
+      const select = document.getElementById('csModalDraftTarget');
+      const draftId = select ? select.value : '';
+      const selectedEntries = _pendingConsolidatePayload.selectedEntries || [];
+      if (draftId && typeof getRpBoxOwnDraftSummaries === 'function') {
+        const draft = getRpBoxOwnDraftSummaries().find(d => String(d.id) === String(draftId));
+        if (draft) {
+          const draftPeriod = (typeof resolveSavedReportPeriod === 'function')
+            ? resolveSavedReportPeriod(draft)
+            : { m: draft.periodMonth || (new Date().getMonth() + 1), y: draft.periodYear || new Date().getFullYear() };
+          const existingItems = getRpBoxConsolidationItems(draft);
+          const mergedNames = Array.from(new Set([
+            ...existingItems.map(it => it && (it.staffName || it.sourceSenderFullName)).filter(Boolean),
+            ...selectedEntries.map(e => e && (e.senderFullName || e.senderUsername)).filter(Boolean)
+          ]));
+          const existingKeys = new Set(existingItems.map(it => it && it.sourceEntryKey != null ? String(it.sourceEntryKey) : '').filter(Boolean));
+          const combinedCount = existingItems.length + selectedEntries.filter(e => !existingKeys.has(String(e.entryKey))).length;
+          const resetText = "Báo cáo tổng hợp tình hình công việc (Tháng " + String(draftPeriod.m).padStart(2, '0') + "/" + draftPeriod.y + "). Gồm " + combinedCount + " đầu việc được Quản lý thẩm định và tổng hợp từ " + mergedNames.length + " nhân sự (" + mergedNames.join(', ') + ").";
+          if (!_pendingConsolidatePayload.draftNotesById) _pendingConsolidatePayload.draftNotesById = {};
+          if (!_pendingConsolidatePayload.userEditedBlankDraftIds) _pendingConsolidatePayload.userEditedBlankDraftIds = {};
+          _pendingConsolidatePayload.draftNotesById[draftId] = resetText;
+          _pendingConsolidatePayload.userEditedBlankDraftIds[draftId] = false;
+          if (inputEl) inputEl.value = resetText;
+          return;
+        }
       }
+      const period = _pendingConsolidatePayload.newReportPeriod || { m: _pendingConsolidatePayload.m, y: _pendingConsolidatePayload.y };
+      const resetNote = (typeof buildConsolidateDefaultNote === 'function' && period && period.m && period.y)
+        ? buildConsolidateDefaultNote(period.m, period.y, selectedEntries, _pendingConsolidatePayload.staffNames || [])
+        : (_pendingConsolidatePayload.defaultNote || '');
+      _pendingConsolidatePayload.defaultNote = resetNote;
+      _pendingConsolidatePayload.newReportNote = resetNote;
+      _pendingConsolidatePayload.autoNoteNew = true;
+      _pendingConsolidatePayload.userEditedBlankNew = false;
+      if (inputEl) inputEl.value = resetNote;
     }
 
     function reconcileRpBoxConsolidationState(reports, user = currentUser) {
@@ -30953,9 +31387,28 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      const { targetDept, m, y, selectedEntries, staffNames, defaultNote } = _pendingConsolidatePayload;
+      const payload = _pendingConsolidatePayload;
+      const selectedEntries = Array.isArray(payload.selectedEntries) ? payload.selectedEntries : [];
+      const fallbackPeriod = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: currentSelectedMonth || (new Date().getMonth() + 1), y: currentSelectedYear || new Date().getFullYear() };
+      const periodSel = document.getElementById('csModalPeriodSelect');
+      const parsedSel = (periodSel && typeof parseReportPeriodKey === 'function') ? parseReportPeriodKey(periodSel.value) : null;
+      const newPeriod = payload.newReportPeriod || null;
+      const m = parsedSel ? parsedSel.m : (payload.m || (newPeriod && newPeriod.m) || fallbackPeriod.m);
+      const y = parsedSel ? parsedSel.y : (payload.y || (newPeriod && newPeriod.y) || fallbackPeriod.y);
+      const targetDept = payload.targetDept || (currentUser.department || 'Bộ phận');
+      const staffNames = Array.isArray(payload.staffNames)
+        ? payload.staffNames
+        : Array.from(new Set(selectedEntries.map(e => e && (e.senderFullName || e.senderUsername)).filter(Boolean)));
+      const defaultNote = payload.defaultNote || (
+        (typeof buildConsolidateDefaultNote === 'function')
+          ? buildConsolidateDefaultNote(m, y, selectedEntries, staffNames)
+          : ("Báo cáo tổng hợp tình hình công việc (Tháng " + String(m).padStart(2, '0') + "/" + y + ").")
+      );
       const inputEl = document.getElementById('csModalAssessmentInput');
-      const mgrAssessment = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : defaultNote;
+      const rawNote = inputEl ? inputEl.value.trim() : '';
+      const mgrAssessment = rawNote ? rawNote : (payload.userEditedBlankNew ? '' : defaultNote);
 
       closeConsolidateAssessmentModal();
 
@@ -31057,10 +31510,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function getConsolidatedWordFileName(r) {
       const deptName = (r && r.senderDepartment) || (currentUser && currentUser.department) || 'Bo_phan';
-      const m = (r && r.periodMonth) || (new Date().getMonth() + 1);
-      const y = (r && r.periodYear) || new Date().getFullYear();
+      const { m, y } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(r)
+        : { m: (r && r.periodMonth) || (new Date().getMonth() + 1), y: (r && r.periodYear) || new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
-      return 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc';
+      return 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + mPad + '_' + y + '.doc';
     }
 
     function getRpBoxHistoryExpandedSet() {
@@ -31474,8 +31929,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       _pendingSendDraftReportId = rep.id;
       const ownItems = Array.isArray(rep.items) ? rep.items : (rep.items && rep.items.tasks ? rep.items.tasks : []);
       const infoEl = document.getElementById('sdlReportInfo');
+      const draftPeriod = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
       if (infoEl) {
-        infoEl.innerHTML = '<div class="flex items-center justify-between gap-2"><span class="text-slate-500 font-medium">Kỳ báo cáo:</span><b class="text-slate-800">Tháng ' + escapeHtml(String(rep.periodMonth || '')) + ' / ' + escapeHtml(String(rep.periodYear || '')) + '</b></div>' +
+        infoEl.innerHTML = '<div class="flex items-center justify-between gap-2"><span class="text-slate-500 font-medium">Kỳ báo cáo:</span><b class="text-slate-800 font-num tabular-nums">Tháng ' + escapeHtml(String(draftPeriod.m).padStart(2, '0')) + ' / ' + escapeHtml(String(draftPeriod.y)) + '</b></div>' +
           '<div class="flex items-center justify-between gap-2"><span class="text-slate-500 font-medium">Quy mô:</span><b class="text-emerald-700">' + ownItems.length + ' đầu việc</b></div>' +
           '<div class="flex items-center justify-between gap-2"><span class="text-slate-500 font-medium">Bộ phận:</span><b class="text-slate-800">' + escapeHtml(rep.senderDepartment || '---') + '</b></div>';
       }
@@ -31598,11 +32056,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
       const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const { m, y } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const wordHtml = generateConsolidatedReportsWordHtml([rep], deptName, m, y);
-      const safeDept = removeAccents(deptName).replace(/\\s+/g, '_');
-      downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc');
+      const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
+      downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + mPad + '_' + y + '.doc');
       showToast("📄 Đã tải file Word báo cáo thành công!");
     }
 
@@ -31619,8 +32079,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
       const deptName = rep.senderDepartment || currentUser.department || 'Bộ phận';
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const { m, y } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
 
       let rowsHtml = '';
@@ -31647,7 +32109,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         '<head><meta charset="UTF-8"></head>' +
         '<body>' +
         '<h2 style="text-align:center;">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN ' + escapeHtml(deptName.toUpperCase()) + '</h2>' +
-        '<p style="text-align:center;">Kỳ: Tháng ' + m + '/' + y + ' | Số lượng: ' + items.length + ' đầu việc</p>' +
+        '<p style="text-align:center;">Kỳ: Tháng ' + mPad + '/' + y + ' | Số lượng: ' + items.length + ' đầu việc</p>' +
         '<table border="1" style="border-collapse:collapse; width:100%;">' +
         '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
         '<th>STT</th><th>Nhân Viên Gửi</th><th>Bộ Phận</th><th>Phân Loại</th><th>Tiêu Đề Công Việc</th><th>Nội Dung Chi Tiết</th><th>Hạn / Ngày</th><th>Trạng Thái</th>' +
@@ -31660,8 +32122,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const safeDept = removeAccents(deptName).replace(/\\s+/g, '_');
-      a.download = 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.xls';
+      const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
+      a.download = 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + mPad + '_' + y + '.xls';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -31731,8 +32193,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const deptName = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
 
       const consolidatedItems = selectedEntries.map(e => {
         const it = JSON.parse(JSON.stringify(e.item));
@@ -31751,7 +32215,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const wordHtml = generateConsolidatedReportsWordHtml([pseudoReport], deptName, m, y);
       const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
-      downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.doc');
+      downloadWordDocument(wordHtml, 'Bao_cao_tong_hop_' + safeDept + '_Thang_' + mPad + '_' + y + '.doc');
       showToast("📄 Đã xuất file Word tổng hợp " + selectedEntries.length + " đầu việc thành công!");
     }
 
@@ -31766,8 +32230,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const deptName = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
 
       let rowsHtml = '';
       selectedEntries.forEach((e, idx) => {
@@ -31793,7 +32259,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         '<head><meta charset="UTF-8"></head>' +
         '<body>' +
         '<h2 style="text-align:center;">BÁO CÁO TỔNG HỢP CÔNG VIỆC BỘ PHẬN ' + escapeHtml(deptName.toUpperCase()) + '</h2>' +
-        '<p style="text-align:center;">Kỳ: Tháng ' + m + '/' + y + ' | Số lượng: ' + selectedEntries.length + ' đầu việc</p>' +
+        '<p style="text-align:center;">Kỳ: Tháng ' + mPad + '/' + y + ' | Số lượng: ' + selectedEntries.length + ' đầu việc</p>' +
         '<table border="1" style="border-collapse:collapse; width:100%;">' +
         '<tr style="background:#059669; color:white; font-weight:bold; text-align:center;">' +
         '<th>STT</th><th>Nhân Viên Gửi</th><th>Bộ Phận</th><th>Phân Loại</th><th>Tiêu Đề Công Việc</th><th>Nội Dung Chi Tiết</th><th>Hạn / Ngày</th><th>Trạng Thái</th>' +
@@ -31807,7 +32273,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const a = document.createElement('a');
       a.href = url;
       const safeDept = removeAccents(deptName).replace(/\s+/g, '_');
-      a.download = 'Bang_tong_hop_' + safeDept + '_Thang_' + m + '_' + y + '.xls';
+      a.download = 'Bang_tong_hop_' + safeDept + '_Thang_' + mPad + '_' + y + '.xls';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -31817,8 +32283,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     async function openManagerConsolidatedReportModal() {
       if (!currentUser || !isUserReportManagerOrLeadership(currentUser)) return;
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: currentSelectedMonth || (new Date().getMonth() + 1), y: currentSelectedYear || new Date().getFullYear() };
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
@@ -32030,8 +32497,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
+      const { m: rM, y: rY } = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
       const safeName = removeAccents(rep.senderFullName || rep.senderUsername || 'Ca_nhan').replace(/\s+/g, '_');
-      a.download = `Bao_cao_cong_viec_${safeName}_Thang_${rep.periodMonth}_${rep.periodYear}.xls`;
+      a.download = `Bao_cao_cong_viec_${safeName}_Thang_${String(rM).padStart(2, '0')}_${rY}.xls`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -32041,8 +32511,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // 2. Tạo nội dung HTML file Excel chuẩn theo đúng mẫu giao diện
     function generateSingleReportExcelHtml(rep) {
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const resolvedPeriod = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const m = resolvedPeriod.m;
+      const y = resolvedPeriod.y;
+      const mPad = String(m).padStart(2, '0');
       const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
       const adhocList = items.filter(it => it.type === 'adhoc');
       const planList = items.filter(it => it.type === 'plan');
@@ -32050,7 +32524,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const feedList = items.filter(it => it.type === 'feedback');
 
       const isMgr = (rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary');
-      const recipientText = isMgr ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty" : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`;
+      const recipientText = rep.recipientFullName
+        ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
+        : (isMgr ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty" : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
 
       let sectionsRows = '';
 
@@ -32215,7 +32691,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         </tr>
         <tr style="height:20px;">
           <td colspan="4" style="text-align:center;font-size:10pt;font-style:italic;color:#64748b;">
-            Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${escapeHtml(rep.displayDate || '')}
+            Kỳ báo cáo: Tháng ${mPad}/${y} &bull; Ngày lập: ${escapeHtml(rep.displayDate || '')}
           </td>
         </tr>
         <tr style="height:14px;"><td colspan="4" style="border:none;"></td></tr>
@@ -32333,8 +32809,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // 4. Tạo giao diện HTML in PDF chuẩn theo đúng mẫu giao diện
     function generateSingleReportPrintHtml(rep) {
-      const m = rep.periodMonth || (new Date().getMonth() + 1);
-      const y = rep.periodYear || new Date().getFullYear();
+      const resolvedPeriod = (typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(rep)
+        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+      const m = resolvedPeriod.m;
+      const y = resolvedPeriod.y;
+      const mPad = String(m).padStart(2, '0');
       const items = Array.isArray(rep.items) ? rep.items : (rep.items?.tasks || []);
       const adhocList = items.filter(it => it.type === 'adhoc');
       const planList = items.filter(it => it.type === 'plan');
@@ -32342,7 +32822,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const feedList = items.filter(it => it.type === 'feedback');
 
       const isMgr = (rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary');
-      const recipientText = isMgr ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty" : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`;
+      const recipientText = rep.recipientFullName
+        ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
+        : (isMgr ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty" : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
 
       let sectionsHtml = '';
 
@@ -32494,7 +32976,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <div class="corp-name">BAN DỊCH VỤ KHÁCH HÀNG</div>
           <div class="doc-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
           <div class="recipient">${recipientText}</div>
-          <div class="period-date">Kỳ báo cáo: <b>Tháng ${m}/${y}</b> • Ngày lập: <b>${escapeHtml(rep.displayDate || '')}</b></div>
+          <div class="period-date">Kỳ báo cáo: <b>Tháng ${mPad}/${y}</b> • Ngày lập: <b>${escapeHtml(rep.displayDate || '')}</b></div>
         </div>
 
         <!-- THÔNG TIN NGƯỜI BÁO CÁO 3 CỘT -->
@@ -32571,8 +33053,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // 5. Xuất file Excel tổng hợp các báo cáo bộ phận / toàn ban
     function exportConsolidatedReportsToExcel() {
       if (!currentUser) return;
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
       const sharedReports = getLeadershipReportsShared();
@@ -32856,8 +33339,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // 7. In hoặc lưu file PDF tổng hợp các báo cáo bộ phận / toàn ban
     function printConsolidatedReportsPDF() {
       if (!currentUser) return;
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActiveInboxReportPeriod === 'function')
+        ? getActiveInboxReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
       const deptSelect = document.getElementById('rpBoxFilterDept');
       const targetDept = (deptSelect && deptSelect.value !== 'ALL') ? deptSelect.value : (currentUser.department || 'Bộ phận');
       const sharedReports = getLeadershipReportsShared();
@@ -33054,7 +33538,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <div class="corp-name">BAN DỊCH VỤ KHÁCH HÀNG &mdash; ${escapeHtml(deptName).toUpperCase()}</div>
           <div class="doc-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC VÀ ĐỀ XUẤT KIẾN NGHỊ BỘ PHẬN</div>
           <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${m}/${y} &bull; Ngày lập: ${dateStr}</div>
+          <div class="period-date">Kỳ báo cáo: Tháng ${String(m).padStart(2, '0')}/${y} &bull; Ngày lập: ${dateStr}</div>
         </div>
 
         <!-- THẺ THỐNG KÊ TỔNG QUAN -->
@@ -33148,8 +33632,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         selectedItems = items;
       }
 
-      const m = currentSelectedMonth || (new Date().getMonth() + 1);
-      const y = currentSelectedYear || new Date().getFullYear();
+      const { m, y } = (typeof getActivePersonalReportPeriod === 'function')
+        ? getActivePersonalReportPeriod()
+        : { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+      const mPad = String(m).padStart(2, '0');
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -33175,7 +33661,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const a = document.createElement('a');
       a.href = url;
       const safeName = removeAccents(currentUser.fullName || 'Ca_nhan').replace(/\s+/g, '_');
-      a.download = `Bao_cao_cong_viec_${safeName}_Thang_${m}_${y}.xls`;
+      a.download = `Bao_cao_cong_viec_${safeName}_Thang_${mPad}_${y}.xls`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -35090,6 +35576,20 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
           đầu việc cá nhân vào <b>Hộp thư chung của bộ phận</b>:
         </p>
 
+        <!-- CHỌN KỲ BÁO CÁO ÁP DỤNG KHI ĐƯA VÀO HỘP THƯ -->
+        <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-indigo-50/60 border border-indigo-200/80">
+          <label for="sendInboxPeriodSelect" class="text-xs font-bold text-indigo-950 flex items-center gap-1.5 shrink-0">
+            <i class="fa-regular fa-calendar-check text-indigo-600 text-xs" aria-hidden="true"></i>
+            <span>Kỳ báo cáo:</span>
+          </label>
+          <div class="relative inline-flex items-center shrink-0">
+            <select id="sendInboxPeriodSelect" aria-label="Chọn kỳ báo cáo khi chuyển vào hộp thư"
+              class="appearance-none h-8 pl-3 pr-7 rounded-xl border border-indigo-200/90 bg-white hover:bg-indigo-50/70 text-xs font-bold text-indigo-900 font-num tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 transition shadow-2xs cursor-pointer">
+            </select>
+            <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-indigo-600/80" aria-hidden="true"></i>
+          </div>
+        </div>
+
         <!-- DANH SÁCH XEM TRƯỚC ĐẦU VIỆC -->
         <div id="sendInboxPreviewList"
           class="max-h-44 overflow-y-auto custom-scroll space-y-1.5 p-2 bg-slate-50/90 rounded-2xl border border-slate-200/80 text-xs font-medium">
@@ -35261,9 +35761,20 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         <!-- THẺ TỔNG QUAN BỘ PHẬN & QUY MÔ -->
         <div
           class="p-4 bg-gradient-to-br from-slate-50 to-emerald-50/40 rounded-2xl border border-slate-200/90 space-y-2 shadow-2xs">
-          <div class="flex items-center justify-between gap-2 text-xs">
-            <span class="text-slate-500 font-medium">Kỳ báo cáo:</span>
-            <span id="csModalPeriodText" class="font-bold text-slate-700">Tháng 11 / 2026</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <label for="csModalPeriodSelect" class="text-slate-500 font-medium shrink-0">Kỳ báo cáo:</label>
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="relative inline-flex items-center shrink-0">
+                <select id="csModalPeriodSelect" onchange="onConsolidatePeriodChange(this.value)"
+                  aria-label="Chọn kỳ báo cáo tổng hợp"
+                  class="appearance-none h-8 pl-3 pr-7 rounded-xl border border-emerald-200/90 bg-white hover:bg-emerald-50/70 focus:bg-white text-xs font-bold text-emerald-900 font-num tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition shadow-2xs cursor-pointer disabled:bg-slate-100 disabled:text-slate-600 disabled:border-slate-200 disabled:cursor-not-allowed">
+                </select>
+                <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600/80"
+                  aria-hidden="true"></i>
+              </div>
+              <span id="csModalPeriodDraftLockHint" class="hidden text-[11px] font-semibold text-indigo-600 whitespace-nowrap">Theo bản nháp</span>
+              <span id="csModalPeriodText" class="sr-only font-bold text-slate-700">Tháng 11 / 2026</span>
+            </div>
           </div>
           <div class="flex items-center justify-between gap-2 text-xs">
             <span class="text-slate-500 font-medium">Quy mô tổng hợp:</span>
@@ -35304,7 +35815,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
               <span>Khôi phục mặc định</span>
             </button>
           </label>
-          <textarea id="csModalAssessmentInput" rows="3"
+          <textarea id="csModalAssessmentInput" rows="3" oninput="onConsolidateAssessmentInput()"
             class="w-full p-3.5 text-[13px] bg-slate-50/80 hover:bg-slate-50 border border-slate-200/90 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition resize-none leading-relaxed text-slate-800 font-medium shadow-2xs"
             placeholder="Nhập ý kiến đánh giá tình hình công việc, tiến độ và đề xuất kính trình Ban Giám Đốc..."></textarea>
           <p class="text-[11.5px] text-slate-400 font-medium">Quản lý có thể giữ nguyên ý kiến tổng hợp mẫu hoặc chỉnh sửa chi tiết theo yêu cầu.</p>
