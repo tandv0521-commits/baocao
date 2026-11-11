@@ -1188,11 +1188,40 @@
     #confirmDeletePersonalItemModal,
     #confirmDeleteLeadershipReportModal,
     #consolidateAssessmentModal,
-    #leaderFeedbackModal,
-    #confirmSelectReportedItemModal {
+    #leaderFeedbackModal {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Chuẩn hóa riêng font chữ hiện đại, nét mượt cho Modal thông báo đầu việc đã gửi */
+    #confirmSelectReportedItemModal,
+    #confirmSelectReportedItemModal h4,
+    #confirmSelectReportedItemModal h5,
+    #confirmSelectReportedItemModal p,
+    #confirmSelectReportedItemModal span,
+    #confirmSelectReportedItemModal div,
+    #confirmSelectReportedItemModal button {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    #confirmSelectReportedItemModal i[class*="fa-"],
+    #confirmSelectReportedItemModal .fa,
+    #confirmSelectReportedItemModal .fa-solid,
+    #confirmSelectReportedItemModal .fa-regular,
+    #confirmSelectReportedItemModal .fa-brands {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+
+    #confirmSelectReportedItemModal .font-num,
+    #confirmSelectReportedItemModal .tabular-nums {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
     }
 
     /* Chuẩn hóa font chữ Sổ tay công việc & Bảng danh sách công việc:
@@ -6084,6 +6113,23 @@
       <div class="flex-1 overflow-y-auto px-5 sm:px-6 py-3.5 space-y-3 custom-scroll">
         <input type="hidden" id="pwEditItemId" value="" />
 
+        <!-- THÔNG BÁO KHI ĐANG SAO CHÉP TỪ ĐẦU VIỆC ĐÃ GỬI ĐỂ TẠO ĐẦU VIỆC MỚI -->
+        <div id="pwEditCopyOriginBanner"
+          class="hidden p-3 rounded-2xl bg-gradient-to-r from-indigo-50 via-blue-50/70 to-sky-50 border border-indigo-200/90 text-xs text-indigo-950 flex items-start gap-2.5 shadow-2xs">
+          <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs mt-0.5">
+            <i class="fa-solid fa-copy"></i>
+          </span>
+          <div class="min-w-0 flex-1 leading-relaxed">
+            <div class="font-black text-indigo-950 flex items-center gap-1.5 flex-wrap">
+              <span>Đang sao chép thành đầu việc mới để chỉnh sửa</span>
+              <span class="px-2 py-0.5 rounded-full bg-white text-indigo-700 border border-indigo-200 text-[10px] font-bold">Bản gốc đã gửi giữ nguyên</span>
+            </div>
+            <p class="text-[11.5px] text-indigo-900/90 mt-0.5 font-medium">
+              Nguồn sao chép: <b id="pwEditCopyOriginTitle" class="text-indigo-950">---</b>. Hãy cập nhật nội dung, thời gian hoặc trạng thái mới rồi nhấn <b>Lưu công việc</b>.
+            </p>
+          </div>
+        </div>
+
         <!-- 1. CHỌN LOẠI MỤC THEO DÕI (4 CỘT CÂN ĐỐI, 1 DÒNG DUY NHẤT) -->
         <div>
           <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
@@ -6255,14 +6301,14 @@
             </div>
           </label>
 
-          <!-- Tích chọn sẵn để đẩy vào báo cáo lãnh đạo -->
-          <label
+          <!-- Tích chọn sẵn để đẩy vào báo cáo lãnh đạo (Tự khóa nếu việc đã gửi) -->
+          <label id="pwEditSelectedForReportLabel"
             class="flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/70 hover:bg-emerald-100/70 cursor-pointer transition select-none shadow-2xs">
             <input type="checkbox" id="pwEditSelectedForReport" checked
               class="w-4 h-4 text-emerald-600 rounded border-emerald-400 focus:ring-emerald-500 cursor-pointer accent-emerald-600 shrink-0" />
-            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-950 truncate">
-              <i class="fa-solid fa-paper-plane text-emerald-600"></i>
-              <span>Đưa mục này vào báo cáo gửi cấp trên</span>
+            <div id="pwEditSelectedForReportTextWrap" class="flex items-center gap-1.5 text-xs font-bold text-emerald-950 min-w-0">
+              <i id="pwEditSelectedForReportIcon" class="fa-solid fa-paper-plane text-emerald-600 shrink-0"></i>
+              <span id="pwEditSelectedForReportText" class="truncate">Đưa mục này vào báo cáo gửi cấp trên</span>
             </div>
           </label>
         </div>
@@ -6508,174 +6554,216 @@
         </div>
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG 5 TAB & CÔNG CỤ TÌM KIẾM TRÊN 1 DÒNG HIỆN ĐẠI -->
+      <!-- THANH 1: ĐIỀU HƯỚNG TAB PHÂN LOẠI & CÔNG CỤ TRA CỨU HIỆN ĐẠI -->
       <div
-        class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200/80 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2.5 text-xs flex-shrink-0">
+        class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200/80 flex flex-col min-[1340px]:flex-row min-[1340px]:items-center min-[1340px]:justify-between gap-2.5 text-xs flex-shrink-0">
 
-        <!-- 5 TAB LỌC CÔNG VIỆC: HIỂN THỊ ĐẦY ĐỦ TRÊN 1 DÒNG, KHÔNG BỊ ẨN -->
-        <div id="rpBoxTabsContainer" class="flex items-center gap-1.5 flex-wrap py-0.5 min-w-0">
-          <!-- 0. Người gửi (danh sách người gửi báo cáo / chuyển vào hộp thư) -->
-          <button type="button" id="rpBoxTab_senders" onclick="switchRpBoxTab('senders')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-paper-plane text-indigo-500 text-xs"></i>
-            <span id="rpBoxSendersTabLabel">Người gửi</span>
-            <span id="rpBoxCount_senders"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-indigo-50 text-indigo-800 border border-indigo-200">0</span>
-          </button>
+        <!-- Nhóm Tab phân loại nằm trong track nền slate đồng nhất, cuộn ngang mượt trên màn hẹp -->
+        <div class="min-w-0 overflow-x-auto rounded-xl bg-slate-100/90 p-1 border border-slate-200/75">
+          <div id="rpBoxTabsContainer" role="group" aria-label="Nhóm nội dung báo cáo"
+            class="flex w-max min-w-full items-center gap-0.5">
+            <!-- 0. Người gửi -->
+            <button type="button" id="rpBoxTab_senders" onclick="switchRpBoxTab('senders')" aria-pressed="false"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-paper-plane text-indigo-500 text-xs" aria-hidden="true"></i>
+              <span id="rpBoxSendersTabLabel">Người gửi</span>
+              <span id="rpBoxCount_senders"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-slate-600">0</span>
+            </button>
 
-          <!-- 1. Tất cả -->
-          <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold transition">
-            <i class="fa-solid fa-layer-group text-xs"></i>
-            <span>Tất cả</span>
-            <span id="rpBoxCount_all"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-emerald-800/90 text-emerald-50">0</span>
-          </button>
+            <!-- 1. Tất cả -->
+            <button type="button" id="rpBoxTab_all" onclick="switchRpBoxTab('all')" aria-pressed="true"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-bold bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200/80 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-layer-group text-emerald-600 text-xs" aria-hidden="true"></i>
+              <span>Tất cả</span>
+              <span id="rpBoxCount_all"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-emerald-800">0</span>
+            </button>
 
-          <!-- 2. Việc phát sinh -->
-          <button type="button" id="rpBoxTab_adhoc" onclick="switchRpBoxTab('adhoc')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
-            <span>Việc phát sinh</span>
-            <span id="rpBoxCount_adhoc"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-amber-50 text-amber-800 border border-amber-200">0</span>
-          </button>
+            <!-- 2. Việc phát sinh -->
+            <button type="button" id="rpBoxTab_adhoc" onclick="switchRpBoxTab('adhoc')" aria-pressed="false"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-bolt text-amber-500 text-xs" aria-hidden="true"></i>
+              <span>Việc phát sinh</span>
+              <span id="rpBoxCount_adhoc"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-slate-600">0</span>
+            </button>
 
-          <!-- 3. Lịch & Kế hoạch -->
-          <button type="button" id="rpBoxTab_plan" onclick="switchRpBoxTab('plan')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
-            <span>Lịch &amp; Kế hoạch</span>
-            <span id="rpBoxCount_plan"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-sky-50 text-sky-800 border border-sky-200">0</span>
-          </button>
+            <!-- 3. Lịch & Kế hoạch -->
+            <button type="button" id="rpBoxTab_plan" onclick="switchRpBoxTab('plan')" aria-pressed="false"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-calendar-days text-sky-500 text-xs" aria-hidden="true"></i>
+              <span>Lịch &amp; Kế hoạch</span>
+              <span id="rpBoxCount_plan"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-slate-600">0</span>
+            </button>
 
-          <!-- 4. Đề xuất & Sáng kiến -->
-          <button type="button" id="rpBoxTab_proposal" onclick="switchRpBoxTab('proposal')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
-            <span>Đề xuất</span>
-            <span id="rpBoxCount_proposal"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-purple-50 text-purple-800 border border-purple-200">0</span>
-          </button>
+            <!-- 4. Đề xuất & Sáng kiến -->
+            <button type="button" id="rpBoxTab_proposal" onclick="switchRpBoxTab('proposal')" aria-pressed="false"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-lightbulb text-purple-500 text-xs" aria-hidden="true"></i>
+              <span>Đề xuất</span>
+              <span id="rpBoxCount_proposal"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-slate-600">0</span>
+            </button>
 
-          <!-- 5. Ý kiến / Phản ánh -->
-          <button type="button" id="rpBoxTab_feedback" onclick="switchRpBoxTab('feedback')"
-            class="rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-            <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
-            <span>Ý kiến / Phản ánh</span>
-            <span id="rpBoxCount_feedback"
-              class="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-num bg-teal-50 text-teal-800 border border-teal-200">0</span>
-          </button>
+            <!-- 5. Ý kiến / Phản ánh -->
+            <button type="button" id="rpBoxTab_feedback" onclick="switchRpBoxTab('feedback')" aria-pressed="false"
+              class="rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+              <i class="fa-solid fa-comment-dots text-teal-500 text-xs" aria-hidden="true"></i>
+              <span>Ý kiến / Phản ánh</span>
+              <span id="rpBoxCount_feedback"
+                class="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums text-slate-600">0</span>
+            </button>
+          </div>
         </div>
 
-        <!-- CÔNG CỤ TÌM KIẾM & LÀM MỚI (ĐÃ BỎ CHỌN TẤT CẢ BỘ PHẬN THEO YÊU CẦU) -->
-        <div class="flex items-center gap-2 shrink-0 xl:ml-auto w-full xl:w-auto justify-end flex-wrap sm:flex-nowrap">
-          <!-- Bộ lọc báo cáo & đầu việc theo tháng -->
-          <div class="relative flex items-center shrink-0">
-            <i class="fa-regular fa-calendar-days absolute left-2.5 text-emerald-600 text-xs pointer-events-none"></i>
+        <!-- Cụm công cụ lọc tháng, tìm kiếm, làm mới & tổng đếm -->
+        <div
+          class="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem_auto] items-center gap-2 sm:flex sm:items-center sm:justify-end shrink-0">
+          <!-- Ô tìm kiếm từ khóa trong hộp thư -->
+          <div class="relative col-span-3 min-w-0 sm:col-span-1 sm:w-48 min-[1340px]:w-44 2xl:w-56">
+            <label for="rpBoxSearchInput" class="sr-only">Tìm đầu việc hoặc nhân viên</label>
+            <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+              aria-hidden="true"></i>
+            <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()"
+              placeholder="Tìm việc, nhân viên..."
+              class="h-8 w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white pl-8 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition font-medium" />
+          </div>
+
+          <!-- Bộ lọc theo tháng -->
+          <div class="relative min-w-0 shrink-0">
+            <label for="rpBoxMonthFilterSelect" class="sr-only">Lọc theo tháng</label>
+            <i class="fa-regular fa-calendar-days pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+              aria-hidden="true"></i>
             <select id="rpBoxMonthFilterSelect" onchange="onRpBoxMonthFilterChange(this.value)"
-              class="pl-7 pr-6 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-white focus:bg-white text-xs font-bold text-slate-700 focus:border-emerald-500 focus:outline-none transition shadow-2xs cursor-pointer appearance-none"
+              class="h-8 w-full min-w-0 pl-7 pr-6 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white focus:bg-white text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer appearance-none"
               title="Lọc báo cáo & đầu việc theo tháng">
               <option value="ALL">Tất cả các tháng</option>
             </select>
-            <i class="fa-solid fa-chevron-down absolute right-2.5 text-[10px] text-slate-400 pointer-events-none"></i>
-          </div>
-
-          <!-- Ô tìm kiếm từ khóa trong hộp thư -->
-          <div class="relative flex-1 xl:flex-initial xl:w-64">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()"
-              placeholder="Tìm việc, nhân viên..."
-              class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 focus:bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition font-medium" />
+            <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"
+              aria-hidden="true"></i>
           </div>
 
           <!-- Nút Làm mới -->
           <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)"
-            class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-200 flex items-center justify-center transition cursor-pointer shadow-2xs shrink-0"
+            aria-label="Làm mới danh sách báo cáo"
+            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 border border-slate-200 hover:border-emerald-200 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             title="Làm mới & tải báo cáo mới nhất">
-            <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-emerald-600 text-xs"></i>
+            <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-xs" aria-hidden="true"></i>
           </button>
 
           <span id="rpBoxReportsCountBadge"
-            class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-black font-num shrink-0 whitespace-nowrap shadow-2xs">0
-            đầu việc</span>
+            class="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-slate-200/90 bg-slate-100/85 px-2.5 text-[11px] font-bold font-num tabular-nums text-slate-700">0 đầu việc</span>
         </div>
 
       </div>
 
-      <!-- THANH CHỌN ĐẦU VIỆC & NÚT HÀNH ĐỘNG TỔNG HỢP (DÀNH CHO QUẢN LÝ / NGƯỜI XEM) -->
+      <!-- THANH 2: BỘ LỌC TRẠNG THÁI TỔNG HỢP (TRÁI) & CỤM CHỌN ĐẦU VIỆC (PHẢI) + THANH THAO TÁC KHI CÓ MỤC CHỌN -->
       <div id="rpBoxMultiSelectBar"
-        class="px-5 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white border-b border-emerald-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs flex-shrink-0">
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <label
-            class="flex items-center gap-2 cursor-pointer font-bold text-slate-800 select-none hover:text-emerald-800 transition">
-            <input type="checkbox" id="rpBoxSelectAllChk" onchange="toggleSelectAllRpTasks(this.checked)"
-              class="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
-            <span>Chọn tất cả</span>
-          </label>
-          <span class="text-slate-300">|</span>
-          <span class="text-slate-600 font-medium">Đã chọn: <b id="rpBoxSelectedTasksCount"
-              class="text-emerald-700 font-black font-num">0</b> đầu việc</span>
-          <span class="text-slate-300 hidden sm:inline">|</span>
-          <div class="inline-flex items-center gap-1.5 flex-wrap">
-            <button type="button" id="rpBoxFilterCons_all" onclick="setRpBoxConsolidationFilter('all')"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-slate-800 text-white border-slate-800 shadow-2xs"
-              title="Hiển thị tất cả đầu việc">
-              <span>Tất cả</span>
-            </button>
-            <button type="button" id="rpBoxFilterCons_unconsolidated" onclick="setRpBoxConsolidationFilter('unconsolidated')"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-amber-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
-              title="Chỉ hiển thị các đầu việc chưa tổng hợp (Bấm lần nữa để bỏ lọc)">
-              <i class="fa-regular fa-clock text-[10px] text-amber-500"></i>
-              <span>Chưa tổng hợp</span>
-              <span id="rpBoxCountCons_unconsolidated" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-amber-100 text-amber-800">0</span>
-            </button>
-            <button type="button" id="rpBoxFilterCons_draft" onclick="setRpBoxConsolidationFilter('draft')"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-indigo-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
-              title="Chỉ hiển thị các đầu việc đã tạo nháp (Bấm lần nữa để bỏ lọc)">
-              <i class="fa-solid fa-file-pen text-[10px] text-indigo-500"></i>
-              <span>Đã tạo nháp</span>
-              <span id="rpBoxCountCons_draft" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-indigo-50 text-indigo-700">0</span>
-            </button>
-            <button type="button" id="rpBoxFilterCons_sent" onclick="setRpBoxConsolidationFilter('sent')"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-emerald-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs"
-              title="Chỉ hiển thị các đầu việc đã tạo báo cáo (Bấm lần nữa để bỏ lọc)">
-              <i class="fa-solid fa-file-circle-check text-[10px] text-emerald-600"></i>
-              <span>Đã tạo báo cáo</span>
-              <span id="rpBoxCountCons_sent" class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold font-num bg-emerald-50 text-emerald-700">0</span>
-            </button>
-            <button type="button" id="rpBoxBtnSelectUnconsolidated" onclick="selectUnconsolidatedRpTasks()"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300/90 inline-flex items-center gap-1 shadow-2xs active:scale-95"
-              title="Tích chọn nhanh toàn bộ đầu việc chưa tổng hợp trong danh sách hiện tại">
-              <i class="fa-solid fa-bolt-lightning text-[10px] text-amber-600"></i>
-              <span id="rpBoxBtnSelectUnconsolidatedText">Chọn nhanh chưa tổng hợp</span>
-            </button>
+        class="px-4 sm:px-6 py-2 bg-slate-50/75 border-b border-slate-200/80 text-xs flex-shrink-0">
+        <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <!-- Nhóm lọc trạng thái tổng hợp trong segmented pill container -->
+          <div class="flex min-w-0 items-center gap-2 flex-1">
+            <span class="shrink-0 text-[11px] font-bold text-slate-500 inline-flex items-center gap-1 select-none">
+              <i class="fa-solid fa-filter text-[10px] text-slate-400" aria-hidden="true"></i>
+              <span>Tổng hợp</span>
+            </span>
+            <div class="min-w-0 overflow-x-auto">
+              <div role="group" aria-label="Lọc theo trạng thái tổng hợp"
+                class="inline-flex w-max items-center gap-0.5 rounded-xl bg-slate-200/65 p-1 border border-slate-200/80">
+                <button type="button" id="rpBoxFilterCons_all" onclick="setRpBoxConsolidationFilter('all')" aria-pressed="true"
+                  class="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] font-bold transition cursor-pointer bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90"
+                  title="Hiển thị mọi trạng thái tổng hợp">
+                  <span>Mọi trạng thái</span>
+                </button>
+                <button type="button" id="rpBoxFilterCons_unconsolidated" onclick="setRpBoxConsolidationFilter('unconsolidated')" aria-pressed="false"
+                  class="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] font-semibold transition cursor-pointer text-slate-600 hover:bg-white/60 hover:text-slate-900"
+                  title="Chỉ hiển thị các đầu việc chưa tổng hợp (Bấm lần nữa để bỏ lọc)">
+                  <i class="fa-regular fa-clock text-[10px] text-amber-500" aria-hidden="true"></i>
+                  <span>Chưa tổng hợp</span>
+                  <span id="rpBoxCountCons_unconsolidated" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num tabular-nums bg-amber-100/90 text-amber-800">0</span>
+                </button>
+                <button type="button" id="rpBoxFilterCons_draft" onclick="setRpBoxConsolidationFilter('draft')" aria-pressed="false"
+                  class="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] font-semibold transition cursor-pointer text-slate-600 hover:bg-white/60 hover:text-slate-900"
+                  title="Chỉ hiển thị các đầu việc đã tạo nháp (Bấm lần nữa để bỏ lọc)">
+                  <i class="fa-solid fa-file-pen text-[10px] text-indigo-500" aria-hidden="true"></i>
+                  <span>Đã tạo nháp</span>
+                  <span id="rpBoxCountCons_draft" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num tabular-nums bg-indigo-100/75 text-indigo-700">0</span>
+                </button>
+                <button type="button" id="rpBoxFilterCons_sent" onclick="setRpBoxConsolidationFilter('sent')" aria-pressed="false"
+                  class="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] font-semibold transition cursor-pointer text-slate-600 hover:bg-white/60 hover:text-slate-900"
+                  title="Chỉ hiển thị các đầu việc đã tạo báo cáo (Bấm lần nữa để bỏ lọc)">
+                  <i class="fa-solid fa-file-circle-check text-[10px] text-emerald-600" aria-hidden="true"></i>
+                  <span>Đã tạo báo cáo</span>
+                  <span id="rpBoxCountCons_sent" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num tabular-nums bg-emerald-100/75 text-emerald-700">0</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cụm chọn đầu việc: đặt gọn bên phải, chỉ tô nhấn emerald nhẹ khi đã tích >= 1 việc -->
+          <div id="rpBoxSelectionSurface"
+            class="inline-flex w-full sm:w-auto sm:ml-auto flex-wrap items-center justify-between sm:justify-end gap-2.5 rounded-xl border border-slate-200/85 bg-white px-3 py-1.5 transition-colors">
+            <label for="rpBoxSelectAllChk"
+              title="Các việc đã tạo nháp hoặc đã tạo báo cáo đã ẩn ô tích và không thuộc nhóm chọn"
+              class="inline-flex cursor-pointer select-none items-center gap-2 whitespace-nowrap font-bold text-slate-700 hover:text-emerald-800 transition">
+              <input type="checkbox" id="rpBoxSelectAllChk" onchange="toggleSelectAllRpTasks(this.checked)"
+                class="h-4 w-4 cursor-pointer rounded border-slate-300 text-emerald-600 accent-emerald-600 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-40" />
+              <span>Chọn tất cả</span>
+            </label>
+
+            <span class="h-3.5 w-px bg-slate-200 shrink-0" aria-hidden="true"></span>
+
+            <span aria-live="polite" aria-atomic="true" class="whitespace-nowrap text-[11px] font-medium text-slate-500">
+              Đã chọn: <b id="rpBoxSelectedTasksCount" class="font-extrabold font-num tabular-nums text-slate-800">0</b> đầu việc
+            </span>
+
+            <!-- Nút chọn nhanh: chỉ hiện khi bộ lọc đang ẩn bớt các đầu việc chưa tổng hợp -->
+            <span id="rpBoxQuickSelectWrap" class="hidden inline-flex items-center">
+              <span class="h-3.5 w-px bg-slate-200 mr-2 shrink-0" aria-hidden="true"></span>
+              <button type="button" id="rpBoxBtnSelectUnconsolidated" onclick="selectUnconsolidatedRpTasks()"
+                class="inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-0.5 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/90 transition cursor-pointer active:scale-95"
+                title="Tích chọn nhanh toàn bộ đầu việc chưa tổng hợp trong danh sách hiện tại">
+                <i class="fa-solid fa-bolt-lightning text-[9.5px] text-amber-500" aria-hidden="true"></i>
+                <span id="rpBoxBtnSelectUnconsolidatedText">Chọn việc chưa tổng hợp</span>
+              </button>
+            </span>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-          <!-- Nút Tạo Báo Cáo Từ Các Mục Đã Chọn (Dành cho Quản lý) -->
-          <button type="button" id="rpBoxBtnConsolidateSelected" onclick="consolidateSelectedTasksFromInbox()"
-            class="hidden px-4 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition flex items-center gap-1.5 cursor-pointer active:scale-95"
-            title="Tạo báo cáo tổng hợp từ các mục đã chọn và chuyển vào Lịch sử báo cáo">
-            <i class="fa-solid fa-file-circle-check text-xs"></i>
-            <span>Tạo báo cáo tổng hợp</span>
-          </button>
+        <!-- Hàng nút hành động: chỉ mở ra gọn gàng khi đã chọn >= 1 đầu việc -->
+        <div id="rpBoxSelectionActionsWrap"
+          class="hidden mt-2 pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+          <span id="rpBoxSelectionActionsLabel"
+            class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-xs" aria-hidden="true"></i>
+            <span>Sẵn sàng tổng hợp hoặc xuất file cho các đầu việc đã chọn</span>
+          </span>
+          <div role="group" aria-label="Thao tác với đầu việc đã chọn"
+            class="w-full sm:w-auto sm:ml-auto grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
+            <!-- Nút Tạo Báo Cáo Từ Các Mục Đã Chọn -->
+            <button type="button" id="rpBoxBtnConsolidateSelected" onclick="consolidateSelectedTasksFromInbox()"
+              class="hidden col-span-2 inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 shadow-sm shadow-emerald-600/20 transition cursor-pointer active:scale-95"
+              title="Tạo báo cáo tổng hợp từ các mục đã chọn và chuyển vào Lịch sử báo cáo">
+              <i class="fa-solid fa-file-circle-check text-xs" aria-hidden="true"></i>
+              <span>Tạo báo cáo tổng hợp</span>
+            </button>
 
-          <!-- Nút Tải Word từ các mục đã chọn -->
-          <button type="button" id="rpBoxBtnExportWordSelected" onclick="exportSelectedTasksToWord()"
-            class="hidden px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-            <i class="fa-solid fa-file-word text-blue-600 text-xs"></i>
-            <span>Tải Word (.doc)</span>
-          </button>
+            <!-- Nút Tải Word từ các mục đã chọn -->
+            <button type="button" id="rpBoxBtnExportWordSelected" onclick="exportSelectedTasksToWord()"
+              class="hidden inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-700 hover:text-blue-900 px-3 text-xs font-semibold transition cursor-pointer">
+              <i class="fa-solid fa-file-word text-blue-600 text-xs" aria-hidden="true"></i>
+              <span>Tải Word (.doc)</span>
+            </button>
 
-          <!-- Nút Tải Excel từ các mục đã chọn -->
-          <button type="button" id="rpBoxBtnExportExcelSelected" onclick="exportSelectedTasksToExcel()"
-            class="hidden px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-            <i class="fa-solid fa-file-excel text-teal-600 text-xs"></i>
-            <span>Tải Excel (.xls)</span>
-          </button>
+            <!-- Nút Tải Excel từ các mục đã chọn -->
+            <button type="button" id="rpBoxBtnExportExcelSelected" onclick="exportSelectedTasksToExcel()"
+              class="hidden inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white hover:bg-teal-50 hover:border-teal-200 text-slate-700 hover:text-teal-900 px-3 text-xs font-semibold transition cursor-pointer">
+              <i class="fa-solid fa-file-excel text-teal-600 text-xs" aria-hidden="true"></i>
+              <span>Tải Excel (.xls)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -26886,7 +26974,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       try {
         const data = getPersonalWorkspaceData(currentUser);
         const items = data.items || [];
-        const selectedCount = items.filter(it => it.selectedForReport).length;
+        const selectableItems = items.filter(it => !isPersonalTaskLockedFromReportSelect(it, currentUser));
+        const selectedCount = selectableItems.filter(it => it.selectedForReport).length;
         const countEl1 = document.getElementById('pwSelectedCount');
         const countEl2 = document.getElementById('pwSelectedCountNum');
         if (countEl1) countEl1.innerText = selectedCount;
@@ -26894,7 +26983,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         const selectAllCb = document.getElementById('pwSelectAllCheckbox');
         if (selectAllCb) {
-          selectAllCb.checked = (items.length > 0 && items.every(it => it.selectedForReport));
+          selectAllCb.checked = (selectableItems.length > 0 && selectableItems.every(it => it.selectedForReport));
         }
 
         if (selectedSummaryText) {
@@ -27012,17 +27101,56 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return (typeof isSenderOfReport === 'function') ? isSenderOfReport(user, rep) : false;
     }
 
+    // Kiểm tra đầu việc trong Sổ tay đã từng gửi vào Hộp thư hoặc gửi báo cáo cho Quản lý/Cấp trên hay chưa
+    function isPersonalTaskLockedFromReportSelect(item, user = currentUser) {
+      if (!item) return false;
+      const isMgr = user ? isUserReportManagerOrLeadership(user) : false;
+      return !!((isMgr && (item.copiedToInboxAt || item.sentToInboxAt)) || item.isReported || item.reportedAt);
+    }
+
+    // Lọc các đầu việc đủ điều kiện tích chọn báo cáo và tự động dọn cờ chọn trùng ở việc đã gửi
+    function collectSelectablePersonalItems(user = currentUser) {
+      if (!user) return { data: { items: [] }, selectedItems: [], clearedLockedCount: 0, syncChanged: false };
+      const data = getPersonalWorkspaceData(user);
+      const preSelectedIds = new Set((data.items || []).filter(it => it && it.selectedForReport).map(it => it.id));
+      const syncChanged = syncReportTransferStatusForPersonalTasks(data.items, user);
+      let clearedLockedCount = 0;
+      (data.items || []).forEach(it => {
+        if (it && isPersonalTaskLockedFromReportSelect(it, user)) {
+          if (it.selectedForReport || preSelectedIds.has(it.id)) {
+            clearedLockedCount++;
+          }
+          it.selectedForReport = false;
+        }
+      });
+      if (syncChanged || clearedLockedCount > 0) {
+        savePersonalWorkspaceData(data, user);
+        renderPersonalWorkspaceUI();
+      }
+      const selectedItems = (data.items || []).filter(it => it && it.selectedForReport && !isPersonalTaskLockedFromReportSelect(it, user));
+      return { data, selectedItems, clearedLockedCount, syncChanged };
+    }
+
     // So khớp chính xác một đầu việc trong Sổ tay với một item trong Báo cáo
     function isTaskMatchingReportItem(task, item) {
       if (!task || !item) return false;
 
-      // 1. So khớp ID trực tiếp
-      if (task.id && item.id && String(task.id) === String(item.id)) return true;
+      const taskId = task.id != null ? String(task.id).trim() : '';
+      const itemId = item.id != null ? String(item.id).trim() : '';
+      const sourceItemId = item.sourceItemId != null ? String(item.sourceItemId).trim() : '';
+      const sourceEntryKey = item.sourceEntryKey != null ? String(item.sourceEntryKey).trim() : '';
+
+      // 1. So khớp ID trực tiếp hoặc ID nguồn
+      if (taskId && itemId && taskId === itemId) return true;
+      if (taskId && sourceItemId && taskId === sourceItemId) return true;
 
       // 2. So khớp sourceEntryKey (khi đầu việc được Quản lý tổng hợp từ hộp thư)
-      if (task.id && item.sourceEntryKey && String(item.sourceEntryKey).endsWith('_' + String(task.id))) return true;
+      if (taskId && sourceEntryKey && sourceEntryKey.endsWith('_' + taskId)) return true;
 
-      // 3. So khớp tiêu đề chuẩn hóa và phân loại công việc
+      // Nếu cả hai bản ghi đều có định danh riêng nhưng khác nhau -> tuyệt đối không nhận nhầm bản sao cùng tên
+      if (taskId && (itemId || sourceItemId)) return false;
+
+      // 3. Fallback so khớp tiêu đề chỉ dành cho dữ liệu cũ chưa có định danh ID
       const titleA = String(task.title || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
       const titleB = String(item.title || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
       if (titleA && titleB && titleA === titleB) {
@@ -27088,6 +27216,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 break;
               }
             }
+          }
+          if (isPersonalTaskLockedFromReportSelect(task, user) && task.selectedForReport) {
+            task.selectedForReport = false;
+            changed = true;
           }
         });
       } catch (e) {
@@ -27220,14 +27352,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       updatePersonalWorkspaceReminders(data);
       updatePersonalWorkspaceReportButtonsUI();
 
-      // Cập nhật số lượng đã chọn ở chân trang
-      const selectedCount = (data.items || []).filter(it => it.selectedForReport).length;
+      // Cập nhật số lượng đã chọn ở chân trang (chỉ tính các việc chưa khóa)
+      const selectedCount = (data.items || []).filter(it => it.selectedForReport && !isPersonalTaskLockedFromReportSelect(it, currentUser)).length;
       const countEl = document.getElementById('pwSelectedCount') || document.getElementById('pwSelectedCountNum');
       if (countEl) countEl.innerText = selectedCount;
 
+      const selectableVisibleItems = items.filter(it => !isPersonalTaskLockedFromReportSelect(it, currentUser));
       const selectAllCb = document.getElementById('pwSelectAllCheckbox');
       if (selectAllCb) {
-        selectAllCb.checked = (items.length > 0 && items.every(it => it.selectedForReport));
+        selectAllCb.checked = (selectableVisibleItems.length > 0 && selectableVisibleItems.every(it => it.selectedForReport));
       }
 
       const selectedSummaryText = document.getElementById('pwSelectedSummaryText');
@@ -27495,9 +27628,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         </button>
       `;
 
-          // 4. Checkbox chọn đẩy báo cáo
+          // 4. Checkbox chọn đẩy báo cáo (việc đã gửi vẫn bấm được để mở hộp thoại Sao chép & Tạo việc mới nhưng không giữ dấu tích)
+          const isRowLockedForSelect = isPersonalTaskLockedFromReportSelect(it, currentUser);
           const checkBtn = `
-        <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Tích chọn mục này để tạo báo cáo" />
+        <input type="checkbox" ${(!isRowLockedForSelect && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isRowLockedForSelect ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isRowLockedForSelect ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Tích chọn mục này để tạo báo cáo'}" />
       `;
 
           // 5. Nội dung phản hồi (nếu có)
@@ -27655,7 +27789,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng">
                 <i class="fa-solid fa-star"></i>
               </button>
-              <input type="checkbox" ${it.selectedForReport ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Chọn đưa vào báo cáo" />
+              <input type="checkbox" ${(!isPersonalTaskLockedFromReportSelect(it, currentUser) && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Chọn đưa vào báo cáo'}" />
             </div>
           </div>
           <h4 class="font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
@@ -27805,32 +27939,68 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function togglePersonalItemReportSelect(id, checked, checkboxEl = null) {
       if (!currentUser) return;
       const data = getPersonalWorkspaceData(currentUser);
-      syncReportTransferStatusForPersonalTasks(data.items, currentUser);
+      const syncChanged = syncReportTransferStatusForPersonalTasks(data.items, currentUser);
       const item = (data.items || []).find(it => it.id === id);
       if (!item) return;
 
-      // Nếu người dùng bấm TÍCH CHỌN (checked === true) vào một mục ĐÃ TỪNG GỬI VÀO HỘP THƯ (Quản lý) HOẶC ĐÃ GỬI BÁO CÁO:
-      const isMgrSelect = isUserReportManagerOrLeadership(currentUser);
-      const isAlreadyTransferred = !!((isMgrSelect && (item.copiedToInboxAt || item.sentToInboxAt)) || item.isReported || item.reportedAt);
-      if (checked && isAlreadyTransferred) {
-        // Tạm thời trả lại trạng thái bỏ tích
+      const isAlreadyTransferred = isPersonalTaskLockedFromReportSelect(item, currentUser);
+      if (isAlreadyTransferred) {
         if (checkboxEl) checkboxEl.checked = false;
+        let dirty = syncChanged;
+        if (item.selectedForReport) {
+          item.selectedForReport = false;
+          dirty = true;
+        }
+        if (dirty) {
+          savePersonalWorkspaceData(data, currentUser);
+          updatePersonalWorkspaceReportButtonsUI();
+        }
+        if (!checked) return;
+
         _pendingSelectReportedItemId = id;
         _pendingSelectReportedCheckboxEl = checkboxEl;
 
-        // Hiển thị modal cảnh báo yêu cầu chỉnh sửa nội dung
         const titleEl = document.getElementById('reSelectTaskTitle');
-        if (titleEl) titleEl.innerText = item.title;
+        if (titleEl) titleEl.innerText = item.title || '---';
 
         const badgeEl = document.getElementById('reSelectTaskBadge');
         if (badgeEl) badgeEl.innerHTML = getPersonalTaskTransferBadgeHtml(item, currentUser);
 
+        const metaEl = document.getElementById('reSelectTaskMeta');
+        if (metaEl) {
+          const typeMetaMap = {
+            adhoc: { label: 'Việc phát sinh', textCls: 'text-amber-700', icon: 'fa-solid fa-bolt text-amber-500' },
+            plan: { label: 'Kế hoạch', textCls: 'text-sky-700', icon: 'fa-solid fa-calendar-days text-sky-500' },
+            proposal: { label: 'Đề xuất', textCls: 'text-purple-700', icon: 'fa-solid fa-lightbulb text-purple-500' },
+            feedback: { label: 'Ý kiến / Phản ánh', textCls: 'text-teal-700', icon: 'fa-solid fa-comment-dots text-teal-500' }
+          };
+          const tm = typeMetaMap[item.type] || typeMetaMap.adhoc;
+          const dateLabel = item.date ? formatVNDate(item.date) : (item.createdAt ? formatVNDate(item.createdAt) : '');
+          const dueLabel = (item.type === 'plan' && item.dueDate) ? formatVNDate(item.dueDate) : '';
+          const parts = [
+            '<span class="inline-flex items-center gap-1.5 font-medium ' + tm.textCls + '"><i class="' + tm.icon + ' text-[11px]"></i><span>' + tm.label + '</span></span>'
+          ];
+          if (dateLabel) {
+            parts.push('<span class="inline-flex items-center gap-1.5 text-slate-500 font-num"><i class="fa-regular fa-calendar text-slate-400 text-[11px]"></i><span>Ghi nhận: ' + escapeHtml(dateLabel) + '</span></span>');
+          }
+          if (dueLabel) {
+            parts.push('<span class="inline-flex items-center gap-1.5 text-rose-600 font-medium font-num"><i class="fa-regular fa-clock text-rose-500 text-[11px]"></i><span>Hạn: ' + escapeHtml(dueLabel) + '</span></span>');
+          }
+          metaEl.innerHTML = parts.join('<span class="text-slate-300 select-none" aria-hidden="true">&bull;</span>');
+        }
+
         const modal = document.getElementById('confirmSelectReportedItemModal');
-        if (modal) modal.classList.remove('hidden');
+        if (modal) {
+          modal.classList.remove('hidden');
+          setTimeout(() => {
+            const copyBtn = document.getElementById('confirmSelectReportedCopyBtn');
+            if (copyBtn && typeof copyBtn.focus === 'function') copyBtn.focus();
+          }, 50);
+        }
         return;
       }
 
-      item.selectedForReport = checked;
+      item.selectedForReport = !!checked;
       savePersonalWorkspaceData(data, currentUser);
       updatePersonalWorkspaceReportButtonsUI();
     }
@@ -27845,32 +28015,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       _pendingSelectReportedCheckboxEl = null;
     }
 
-    function editReportedItemBeforeSelect() {
+    function copyReportedItemToNewEdit() {
       const itemId = _pendingSelectReportedItemId;
-      closeConfirmSelectReportedItemModal();
-      if (itemId) {
-        openPersonalItemEditModal(itemId);
+      let sourceCopy = null;
+      if (itemId && currentUser) {
+        const data = getPersonalWorkspaceData(currentUser);
+        const found = (data.items || []).find(it => it.id === itemId);
+        if (found) {
+          sourceCopy = JSON.parse(JSON.stringify(found));
+        }
       }
-    }
-
-    function proceedSelectReportedItem() {
-      const itemId = _pendingSelectReportedItemId;
-      if (!itemId) {
-        closeConfirmSelectReportedItemModal();
+      closeConfirmSelectReportedItemModal();
+      if (!sourceCopy) {
+        showToast('Không tìm thấy thông tin đầu việc gốc để sao chép.', true);
         return;
       }
-
-      const data = getPersonalWorkspaceData(currentUser);
-      const item = (data.items || []).find(it => it.id === itemId);
-      if (item) {
-        item.selectedForReport = true;
-        savePersonalWorkspaceData(data, currentUser);
-      }
-
-      closeConfirmSelectReportedItemModal();
-      renderPersonalWorkspaceUI();
-      updatePersonalWorkspaceReportButtonsUI();
-      showToast("✅ Đã tích chọn đầu việc (Lưu ý: nội dung cần có cập nhật mới trước khi gửi).");
+      openPersonalItemEditModal('', sourceCopy.type || 'adhoc', { copyFromItem: sourceCopy });
     }
 
     function toggleSelectAllPersonalItemsForReport(checked) {
@@ -27880,7 +28040,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (checked) {
         // CHỈ TỰ ĐỘNG CHỌN CÁC MỤC CHƯA GỬI HỘP THƯ VÀ CHƯA GỬI BÁO CÁO
-        // BỎ QUA CÁC MỤC ĐÃ GỬI (ĐÚNG YÊU CẦU NGƯỜI DÙNG)
         let selectedCount = 0;
         let skippedCount = 0;
         (data.items || []).forEach(it => {
@@ -27888,9 +28047,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             it.selectedForReport = false;
             return;
           }
-          const isMgrSelectAll = isUserReportManagerOrLeadership(currentUser);
-          const isAlreadyTransferred = !!((isMgrSelectAll && (it.copiedToInboxAt || it.sentToInboxAt)) || it.isReported || it.reportedAt);
-          if (!isAlreadyTransferred) {
+          if (!isPersonalTaskLockedFromReportSelect(it, currentUser)) {
             it.selectedForReport = true;
             selectedCount++;
           } else {
@@ -27901,11 +28058,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         savePersonalWorkspaceData(data, currentUser);
         renderPersonalWorkspaceUI();
 
-        if (skippedCount > 0) {
-          showToast(`Đã chọn ${selectedCount} việc mới. ${skippedCount} việc đã gửi hộp thư/báo cáo được giữ bỏ chọn (chỉ tích chọn khi có chỉnh sửa mới).`);
+        if (selectedCount === 0 && skippedCount > 0) {
+          showToast('Tất cả công việc hiện có đều đã gửi hộp thư/báo cáo nên đã khóa chọn. Bấm vào ô chọn từng việc để Sao chép & Tạo việc mới chỉnh sửa.', true);
+        } else if (skippedCount > 0) {
+          showToast(`Đã chọn ${selectedCount} việc mới. ${skippedCount} việc đã gửi hộp thư/báo cáo đã khóa tích chọn (muốn sửa gửi thêm hãy Sao chép thành việc mới).`);
         }
       } else {
-        // BỎ TÍCH TẤT CẢ
         (data.items || []).forEach(it => {
           it.selectedForReport = false;
         });
@@ -27924,7 +28082,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       openPersonalItemEditModal('', type);
     }
 
-    function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc') {
+    function openPersonalItemEditModal(itemId = '', defaultType = 'adhoc', options = {}) {
       const modal = document.getElementById('personalItemEditModal');
       if (!modal) return;
 
@@ -27935,6 +28093,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const dueDateInput = document.getElementById('pwEditDueDate');
       const impChk = document.getElementById('pwEditImportant');
       const selChk = document.getElementById('pwEditSelectedForReport');
+      const selLabel = document.getElementById('pwEditSelectedForReportLabel');
+      const selIcon = document.getElementById('pwEditSelectedForReportIcon');
+      const selText = document.getElementById('pwEditSelectedForReportText');
+      const copyBanner = document.getElementById('pwEditCopyOriginBanner');
+      const copyTitleEl = document.getElementById('pwEditCopyOriginTitle');
       const modalTitle = document.getElementById('pwEditModalTitle');
 
       const now = new Date();
@@ -27943,10 +28106,56 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const dd = String(now.getDate()).padStart(2, '0');
       const todayStr = `${yyyy}-${mm}-${dd}`;
 
+      const applyReportSelectLockUI = (locked) => {
+        if (!selChk) return;
+        selChk.disabled = !!locked;
+        if (locked) selChk.checked = false;
+        if (selLabel) {
+          selLabel.className = locked
+            ? 'flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-slate-100/90 cursor-not-allowed transition select-none shadow-2xs opacity-80'
+            : 'flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/70 hover:bg-emerald-100/70 cursor-pointer transition select-none shadow-2xs';
+          selLabel.title = locked ? 'Đầu việc đã gửi vào Hộp thư hoặc Báo cáo nên không thể tích chọn lại. Hãy Sao chép thành đầu việc mới nếu cần sửa gửi thêm.' : '';
+        }
+        if (selIcon) {
+          selIcon.className = locked ? 'fa-solid fa-lock text-slate-400 shrink-0' : 'fa-solid fa-paper-plane text-emerald-600 shrink-0';
+        }
+        if (selText) {
+          selText.innerText = locked ? 'Đã gửi — khóa tích chọn lại' : 'Đưa mục này vào báo cáo gửi cấp trên';
+          selText.className = locked ? 'truncate text-slate-500' : 'truncate';
+        }
+        selChk.className = locked
+          ? 'w-4 h-4 text-slate-400 rounded border-slate-300 cursor-not-allowed accent-slate-400 shrink-0'
+          : 'w-4 h-4 text-emerald-600 rounded border-emerald-400 focus:ring-emerald-500 cursor-pointer accent-emerald-600 shrink-0';
+      };
+
+      const applyStatusToForm = (sourceItem) => {
+        const t = sourceItem.type || 'adhoc';
+        if (t === 'adhoc') {
+          const rad = document.querySelector(`input[name="pwStatusAdhoc"][value="${sourceItem.status || 'pending'}"]`);
+          if (rad) rad.checked = true;
+        } else if (t === 'plan') {
+          const rad = document.querySelector(`input[name="pwStatusPlan"][value="${(sourceItem.isCompleted || sourceItem.status === 'completed') ? 'completed' : 'pending'}"]`);
+          if (rad) rad.checked = true;
+        } else if (t === 'proposal') {
+          const rad = document.querySelector(`input[name="pwStatusProposal"][value="${sourceItem.status || 'rejected_pending'}"]`);
+          if (rad) rad.checked = true;
+        } else if (t === 'feedback') {
+          const fbStatus = (sourceItem.status === 'processed') ? 'resolved' : (sourceItem.status || 'pending');
+          const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${fbStatus}"]`);
+          if (rad) rad.checked = true;
+        }
+      };
+
+      if (copyBanner) copyBanner.classList.add('hidden');
+      if (copyTitleEl) copyTitleEl.innerText = '---';
+
       if (itemId) {
         const data = getPersonalWorkspaceData(currentUser);
+        syncReportTransferStatusForPersonalTasks(data.items, currentUser);
         const item = (data.items || []).find(it => it.id === itemId);
         if (!item) return;
+
+        const isLocked = isPersonalTaskLockedFromReportSelect(item, currentUser);
 
         if (idInput) idInput.value = item.id;
         if (titleInput) titleInput.value = item.title || '';
@@ -27954,8 +28163,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (dateInput) dateInput.value = item.date || todayStr;
         if (dueDateInput) dueDateInput.value = item.dueDate || '';
         if (impChk) impChk.checked = !!item.isImportant;
-        if (selChk) selChk.checked = (item.selectedForReport !== false);
-        if (modalTitle) modalTitle.innerText = "Chỉnh Sửa Mục Công Việc";
+        if (selChk) selChk.checked = isLocked ? false : (item.selectedForReport !== false);
+        applyReportSelectLockUI(isLocked);
+        if (modalTitle) modalTitle.innerText = 'Chỉnh Sửa Mục Công Việc';
 
         const typeRadios = document.getElementsByName('pwItemTypeRadio');
         for (let r of typeRadios) {
@@ -27965,21 +28175,32 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
         }
         onPersonalItemTypeChange(item.type);
+        applyStatusToForm(item);
+      } else if (options && options.copyFromItem) {
+        const src = options.copyFromItem;
+        const copyType = src.type || defaultType || 'adhoc';
 
-        if (item.type === 'adhoc') {
-          const rad = document.querySelector(`input[name="pwStatusAdhoc"][value="${item.status || 'pending'}"]`);
-          if (rad) rad.checked = true;
-        } else if (item.type === 'plan') {
-          const rad = document.querySelector(`input[name="pwStatusPlan"][value="${item.isCompleted ? 'completed' : 'pending'}"]`);
-          if (rad) rad.checked = true;
-        } else if (item.type === 'proposal') {
-          const rad = document.querySelector(`input[name="pwStatusProposal"][value="${item.status || 'rejected_pending'}"]`);
-          if (rad) rad.checked = true;
-        } else if (item.type === 'feedback') {
-          const fbStatus = (item.status === 'processed') ? 'resolved' : (item.status || 'pending');
-          const rad = document.querySelector(`input[name="pwStatusFeedback"][value="${fbStatus}"]`);
-          if (rad) rad.checked = true;
+        if (idInput) idInput.value = '';
+        if (titleInput) titleInput.value = src.title || '';
+        if (contentInput) contentInput.value = src.content || '';
+        if (dateInput) dateInput.value = todayStr;
+        if (dueDateInput) dueDateInput.value = (copyType === 'plan') ? (src.dueDate || todayStr) : '';
+        if (impChk) impChk.checked = !!src.isImportant;
+        if (selChk) selChk.checked = true;
+        applyReportSelectLockUI(false);
+        if (modalTitle) modalTitle.innerText = 'Sao Chép & Tạo Đầu Việc Mới';
+        if (copyBanner) copyBanner.classList.remove('hidden');
+        if (copyTitleEl) copyTitleEl.innerText = src.title || 'Đầu việc đã gửi';
+
+        const typeRadios = document.getElementsByName('pwItemTypeRadio');
+        for (let r of typeRadios) {
+          if (r.value === copyType) {
+            r.checked = true;
+            break;
+          }
         }
+        onPersonalItemTypeChange(copyType);
+        applyStatusToForm(src);
       } else {
         if (idInput) idInput.value = '';
         if (titleInput) titleInput.value = '';
@@ -27988,7 +28209,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (dueDateInput) dueDateInput.value = todayStr;
         if (impChk) impChk.checked = false;
         if (selChk) selChk.checked = true;
-        if (modalTitle) modalTitle.innerText = "Thêm Mục Công Việc / Kế Hoạch";
+        applyReportSelectLockUI(false);
+        if (modalTitle) modalTitle.innerText = 'Thêm Mục Công Việc / Kế Hoạch';
 
         const typeRadios = document.getElementsByName('pwItemTypeRadio');
         for (let r of typeRadios) {
@@ -28095,6 +28317,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (itemId) {
         const existing = data.items.find(it => it.id === itemId);
         if (existing) {
+          const isLockedExisting = isPersonalTaskLockedFromReportSelect(existing, currentUser);
           existing.type = selectedType;
           existing.title = title;
           existing.content = content;
@@ -28103,7 +28326,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           existing.isImportant = isImportant;
           existing.status = statusVal;
           existing.isCompleted = isCompletedVal;
-          existing.selectedForReport = selectedForReport;
+          existing.selectedForReport = isLockedExisting ? false : selectedForReport;
           existing.updatedAt = nowIso;
         }
       } else {
@@ -28323,32 +28546,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function openLeadershipReportPreviewModal() {
       if (!currentUser) return;
-      const data = getPersonalWorkspaceData(currentUser);
-      currentReportSelectedItems = (data.items || []).filter(it => it.selectedForReport);
+      const { selectedItems, clearedLockedCount } = collectSelectablePersonalItems(currentUser);
+      _pendingReportPayloadProceed = false;
+
+      currentReportSelectedItems = selectedItems;
 
       if (currentReportSelectedItems.length === 0) {
-        showToast("Vui lòng tích chọn ít nhất 1 mục để đưa vào báo cáo!", true);
+        showToast(clearedLockedCount > 0
+          ? 'Các đầu việc đã gửi hộp thư/báo cáo không thể chọn lại. Hãy bấm vào ô chọn từng việc để Sao chép & Tạo việc mới chỉnh sửa!'
+          : 'Vui lòng tích chọn ít nhất 1 mục chưa gửi để đưa vào báo cáo!', true);
         return;
       }
-
-      // Kiểm tra xem có công việc nào ĐÃ TỪNG GỬI BÁO CÁO không
-      if (!_pendingReportPayloadProceed) {
-        const alreadyReported = currentReportSelectedItems.filter(it => it.isReported || it.reportedAt);
-        if (alreadyReported.length > 0) {
-          const confirmModal = document.getElementById('confirmReReportModal');
-          const listEl = document.getElementById('confirmReReportItemsList');
-          const countEl = document.getElementById('reReportCountText');
-          if (countEl) countEl.innerText = alreadyReported.length;
-          if (confirmModal && listEl) {
-            listEl.innerHTML = alreadyReported.map(it => `
-          <li class="py-0.5"><b>${escapeHtml(it.title)}</b> <span class="text-slate-400 text-[10px]">(Đã gửi trước đó)</span></li>
-        `).join('');
-            confirmModal.classList.remove('hidden');
-            return;
-          }
-        }
-      }
-      _pendingReportPayloadProceed = false;
 
       const modal = document.getElementById('leadershipReportPreviewModal');
       if (!modal) return;
@@ -28698,23 +28906,29 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       rpBoxActiveTab = tab;
       if (tab === 'senders') rpBoxSourceReportFilter = '';
       const tabs = ['senders', 'all', 'adhoc', 'plan', 'proposal', 'feedback'];
-      const boxStyles = {
-        senders: 'bg-indigo-600 text-white border border-indigo-600 shadow-xs font-bold',
-        all: 'bg-emerald-600 text-white border border-emerald-600 shadow-xs font-bold',
-        adhoc: 'bg-amber-500 text-white border border-amber-500 shadow-xs font-bold',
-        plan: 'bg-sky-600 text-white border border-sky-600 shadow-xs font-bold',
-        proposal: 'bg-purple-600 text-white border border-purple-600 shadow-xs font-bold',
-        feedback: 'bg-teal-600 text-white border border-teal-600 shadow-xs font-bold'
+      const tabActiveMap = {
+        senders: { btn: 'font-bold bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200/80', badge: 'bg-indigo-100 text-indigo-800' },
+        all: { btn: 'font-bold bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200/80', badge: 'bg-emerald-100 text-emerald-800' },
+        adhoc: { btn: 'font-bold bg-white text-amber-800 shadow-sm ring-1 ring-amber-200/80', badge: 'bg-amber-100 text-amber-800' },
+        plan: { btn: 'font-bold bg-white text-sky-700 shadow-sm ring-1 ring-sky-200/80', badge: 'bg-sky-100 text-sky-800' },
+        proposal: { btn: 'font-bold bg-white text-purple-700 shadow-sm ring-1 ring-purple-200/80', badge: 'bg-purple-100 text-purple-800' },
+        feedback: { btn: 'font-bold bg-white text-teal-700 shadow-sm ring-1 ring-teal-200/80', badge: 'bg-teal-100 text-teal-800' }
       };
+      const tabBase = 'rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
+      const tabIdle = 'font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent';
+      const countBase = 'inline-flex min-w-[1.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums';
 
       tabs.forEach(t => {
+        const isActive = t === tab;
+        const style = tabActiveMap[t] || tabActiveMap.all;
         const btn = document.getElementById('rpBoxTab_' + t);
         if (btn) {
-          if (t === tab) {
-            btn.className = 'rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer transition ' + (boxStyles[t] || 'bg-emerald-600 text-white font-bold');
-          } else {
-            btn.className = 'rp-box-tab-btn px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer';
-          }
+          btn.className = tabBase + ' ' + (isActive ? style.btn : tabIdle);
+          if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-pressed', String(isActive));
+        }
+        const badge = document.getElementById('rpBoxCount_' + t);
+        if (badge) {
+          badge.className = countBase + ' ' + (isActive ? style.badge : 'bg-slate-200/80 text-slate-600');
         }
       });
 
@@ -29222,11 +29436,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function sendManagerSelectedTasksToInbox() {
       if (!currentUser) return;
-      const data = getPersonalWorkspaceData(currentUser);
-      const selectedItems = (data.items || []).filter(it => it.selectedForReport);
+      const { selectedItems, clearedLockedCount } = collectSelectablePersonalItems(currentUser);
 
       if (selectedItems.length === 0) {
-        showToast("Vui lòng tích chọn ít nhất 1 đầu việc trong sổ tay để gửi vào hộp thư!", true);
+        showToast(clearedLockedCount > 0
+          ? 'Các đầu việc đã chuyển vào hộp thư/báo cáo trước đó không thể chọn lại. Hãy Sao chép & Tạo việc mới chỉnh sửa!'
+          : 'Vui lòng tích chọn ít nhất 1 đầu việc chưa gửi để đưa vào hộp thư!', true);
         return;
       }
 
@@ -29372,8 +29587,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           let reportChanged = false;
           rItems.forEach(it => {
             if (!it) return;
-            let liveTask = senderPwItems.find(x => x && x.id && it.id && String(x.id) === String(it.id));
-            if (!liveTask) {
+            const itId = it.id != null ? String(it.id).trim() : '';
+            const itSourceId = it.sourceItemId != null ? String(it.sourceItemId).trim() : '';
+            let liveTask = senderPwItems.find(x => {
+              if (!x || !x.id) return false;
+              const xId = String(x.id).trim();
+              if (itId && xId === itId) return true;
+              if (itSourceId && xId === itSourceId) return true;
+              if (it.sourceEntryKey && String(it.sourceEntryKey).endsWith('_' + xId)) return true;
+              return false;
+            });
+            if (!liveTask && !itId && !itSourceId) {
               const itTitle = String(it.title || '').trim().toLowerCase();
               liveTask = senderPwItems.find(x => x && x.type === it.type && String(x.title || '').trim().toLowerCase() === itTitle);
             }
@@ -29752,12 +29976,49 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (hasSelected) exportExcelBtn.classList.remove('hidden');
         else exportExcelBtn.classList.add('hidden');
       }
+      const quickPool = typeof getRpBoxFilteredBaseEntries === 'function'
+        ? getRpBoxFilteredBaseEntries().filter(e => !e.isConsolidated)
+        : selectableEntries;
       const quickSelectBtn = document.getElementById('rpBoxBtnSelectUnconsolidated');
       const quickSelectText = document.getElementById('rpBoxBtnSelectUnconsolidatedText');
       if (quickSelectBtn && quickSelectText) {
-        const unconsolidatedInView = (Array.isArray(visibleEntries) ? visibleEntries : []).filter(e => !e.isConsolidated);
-        const allUnconsSelected = unconsolidatedInView.length > 0 && unconsolidatedInView.every(e => rpBoxSelectedTaskKeys.has(e.entryKey));
-        quickSelectText.innerText = allUnconsSelected ? 'Bỏ chọn chưa tổng hợp' : ('Chọn việc chưa tổng hợp' + (unconsolidatedInView.length > 0 ? ' (' + unconsolidatedInView.length + ')' : ''));
+        const allQuickSelected = quickPool.length > 0 && quickPool.every(e => rpBoxSelectedTaskKeys.has(e.entryKey));
+        quickSelectText.innerText = allQuickSelected ? 'Bỏ chọn chưa tổng hợp' : ('Chọn việc chưa tổng hợp' + (quickPool.length > 0 ? ' (' + quickPool.length + ')' : ''));
+      }
+
+      const selectAllIds = new Set(selectableEntries.map(e => String(e.entryKey)));
+      const quickIds = new Set(quickPool.map(e => String(e.entryKey)));
+      const sameQuickScope = selectAllIds.size === quickIds.size && [...selectAllIds].every(id => quickIds.has(id));
+      const quickSelectWrap = document.getElementById('rpBoxQuickSelectWrap');
+      if (quickSelectWrap && quickSelectWrap.classList) {
+        if (sameQuickScope || quickIds.size === 0) quickSelectWrap.classList.add('hidden');
+        else quickSelectWrap.classList.remove('hidden');
+      }
+
+      const surfaceEl = document.getElementById('rpBoxSelectionSurface');
+      if (surfaceEl && surfaceEl.classList) {
+        if (hasSelected) {
+          surfaceEl.classList.remove('bg-white', 'border-slate-200/85');
+          surfaceEl.classList.add('bg-emerald-50', 'border-emerald-300');
+        } else {
+          surfaceEl.classList.remove('bg-emerald-50', 'border-emerald-300');
+          surfaceEl.classList.add('bg-white', 'border-slate-200/85');
+        }
+      }
+      if (countEl && countEl.classList) {
+        if (hasSelected) {
+          countEl.classList.remove('text-slate-800');
+          countEl.classList.add('text-emerald-700');
+        } else {
+          countEl.classList.remove('text-emerald-700');
+          countEl.classList.add('text-slate-800');
+        }
+      }
+
+      const actionsWrap = document.getElementById('rpBoxSelectionActionsWrap');
+      if (actionsWrap && actionsWrap.classList) {
+        if (hasSelected) actionsWrap.classList.remove('hidden');
+        else actionsWrap.classList.add('hidden');
       }
     }
 
@@ -29894,15 +30155,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (elUncons) elUncons.innerText = countUncons;
         if (elDraft) elDraft.innerText = countDraft;
         if (elSent) elSent.innerText = countSent;
+        const consBase = 'inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] transition cursor-pointer';
+        const consIdle = consBase + ' font-semibold text-slate-600 hover:bg-white/60 hover:text-slate-900';
         const consBtnConfigs = {
-          all: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-slate-800 text-white border-slate-800 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-slate-100 text-slate-700 border-slate-200/90 shadow-2xs' },
-          unconsolidated: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-amber-500 text-white border-amber-500 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-amber-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' },
-          draft: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-indigo-600 text-white border-indigo-600 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-indigo-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' },
-          sent: { active: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-emerald-600 text-white border-emerald-600 inline-flex items-center gap-1 shadow-2xs', inactive: 'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border bg-white hover:bg-emerald-50 text-slate-700 border-slate-200/90 inline-flex items-center gap-1 shadow-2xs' }
+          all: { active: consBase + ' font-bold bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90', inactive: consIdle },
+          unconsolidated: { active: consBase + ' font-bold bg-white text-amber-800 shadow-sm ring-1 ring-amber-200/90', inactive: consIdle },
+          draft: { active: consBase + ' font-bold bg-white text-indigo-800 shadow-sm ring-1 ring-indigo-200/90', inactive: consIdle },
+          sent: { active: consBase + ' font-bold bg-white text-emerald-800 shadow-sm ring-1 ring-emerald-200/90', inactive: consIdle }
         };
         ['all', 'unconsolidated', 'draft', 'sent'].forEach(mode => {
           const btn = document.getElementById('rpBoxFilterCons_' + mode);
-          if (btn) btn.className = (activeConsFilter === mode) ? consBtnConfigs[mode].active : consBtnConfigs[mode].inactive;
+          const isActive = activeConsFilter === mode;
+          if (btn) {
+            btn.className = isActive ? consBtnConfigs[mode].active : consBtnConfigs[mode].inactive;
+            if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-pressed', String(isActive));
+          }
         });
         if (activeConsFilter === 'unconsolidated') filteredEntries = filteredEntries.filter(e => !e.isConsolidated);
         else if (activeConsFilter === 'draft') filteredEntries = filteredEntries.filter(e => e.isConsolidated && e.consolidatedMode === 'draft');
@@ -29921,7 +30188,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (filteredEntries.length === 0) {
         const emptyConsTitle = activeConsFilter === 'unconsolidated' ? 'Tất cả đầu việc trong mục này đều đã được tổng hợp' : (activeConsFilter === 'draft' ? 'Chưa có đầu việc nào đang ở trạng thái Đã tạo nháp' : (activeConsFilter === 'sent' ? 'Chưa có đầu việc nào ở trạng thái Đã tạo báo cáo' : 'Chưa có đầu việc nào trong danh mục này'));
-        const emptyConsHint = activeConsFilter !== 'all' ? 'Bấm "Tất cả" trên thanh lọc trạng thái tổng hợp để xem lại toàn bộ đầu việc.' : 'Các đầu việc được gửi báo cáo hoặc chuyển vào hộp thư sẽ hiển thị tại đây.';
+        const emptyConsHint = activeConsFilter !== 'all' ? 'Bấm "Mọi trạng thái" trên thanh lọc tổng hợp để xem lại toàn bộ đầu việc.' : 'Các đầu việc được gửi báo cáo hoặc chuyển vào hộp thư sẽ hiển thị tại đây.';
         container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
           '<div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 border border-slate-200/80 flex items-center justify-center text-2xl mx-auto shadow-2xs">' +
           '<i class="fa-solid fa-inbox"></i>' +
@@ -32954,6 +33221,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         { id: 'changePasswordModal', fn: closeChangePasswordModal },
         { id: 'userProfileModal', fn: closeUserProfileModal },
         { id: 'supabaseSetupGuideModal', fn: closeSupabaseTableSetupGuide },
+        { id: 'confirmSelectReportedItemModal', fn: closeConfirmSelectReportedItemModal },
+        { id: 'confirmReReportModal', fn: closeConfirmReReportModal },
+        { id: 'confirmSendToInboxModal', fn: closeConfirmSendToInboxModal },
+        { id: 'confirmDeletePersonalItemModal', fn: closeConfirmDeletePersonalItemModal },
         { id: 'personalItemEditModal', fn: closePersonalItemEditModal },
         { id: 'leadershipReportPreviewModal', fn: closeLeadershipReportPreviewModal },
         { id: 'leadershipReportsBoxModal', fn: closeLeadershipReportsBoxModal },
@@ -35197,84 +35468,89 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
 
 
-  <!-- ================= MODAL XÁC NHẬN TÍCH CHỌN ĐẦU VIỆC ĐÃ GỬI BÁO CÁO / HỘP THƯ (THIẾT KẾ HIỆN ĐẠI, CÂN ĐỐI) ================= -->
-  <div id="confirmSelectReportedItemModal"
-    class="fixed inset-0 z-[85] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 animate-in fade-in duration-150">
-    <div
-      class="bg-white border border-slate-200/90 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-6 sm:p-7 space-y-4 animate-in zoom-in-95 duration-150">
+  <!-- ================= MODAL THÔNG BÁO ĐẦU VIỆC ĐÃ GỬI (GIAO DIỆN HIỆN ĐẠI, PHẲNG & TINH TẾ) ================= -->
+  <div id="confirmSelectReportedItemModal" onclick="if (event.target === this) closeConfirmSelectReportedItemModal()"
+    class="fixed inset-0 z-[85] bg-slate-900/55 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+    <div role="dialog" aria-modal="true" aria-labelledby="confirmSelectReportedModalTitle"
+      class="bg-white rounded-3xl max-w-[540px] w-full shadow-[0_24px_60px_-15px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150">
 
-      <!-- HEADER -->
-      <div class="flex items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
-        <div class="flex items-center gap-3.5">
+      <!-- HEADER: MẶT PHẲNG TRẮNG SẠCH, KHOẢNG THỞ RỘNG, PHÂN CẤP CHỮ RÕ NÉT -->
+      <div class="px-6 sm:px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 bg-white">
+        <div class="flex items-start gap-3.5 min-w-0">
           <div
-            class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-xl shrink-0 shadow-xs">
-            <i class="fa-solid fa-triangle-exclamation"></i>
+            class="w-11 h-11 rounded-2xl bg-indigo-50/90 text-indigo-600 ring-1 ring-indigo-200/70 flex items-center justify-center text-base shrink-0 mt-0.5">
+            <i class="fa-solid fa-lock"></i>
           </div>
-          <div>
-            <h4 class="font-black text-slate-800 text-base sm:text-lg leading-tight">Xác Nhận Chọn Đầu Việc Đã Gửi</h4>
-            <p class="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">Đầu việc đã từng được gửi vào Hộp thư
-              hoặc Báo cáo trước đó</p>
+          <div class="min-w-0">
+            <h4 id="confirmSelectReportedModalTitle"
+              class="text-[17px] sm:text-lg font-bold text-slate-900 leading-snug tracking-[-0.015em]">
+              Đầu việc đã gửi — Không thể tích chọn
+            </h4>
+            <p class="text-[13px] font-normal text-slate-500 mt-1 leading-relaxed">
+              Công việc này đã được lưu trong Hộp thư hoặc gửi lên Quản lý cấp trên.
+            </p>
           </div>
         </div>
-        <button type="button" onclick="closeConfirmSelectReportedItemModal()"
-          class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
-          <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
+        <button type="button" onclick="closeConfirmSelectReportedItemModal()" aria-label="Đóng thông báo"
+          class="w-8 h-8 rounded-xl bg-slate-100/80 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 cursor-pointer shrink-0">
+          <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <!-- BODY -->
-      <div class="space-y-3.5 text-xs leading-relaxed">
-        <!-- KHỐI HIỂN THỊ CHI TIẾT ĐẦU VIỆC -->
-        <div
-          class="p-3.5 bg-gradient-to-r from-slate-50 via-slate-50/90 to-indigo-50/30 border border-slate-200/90 rounded-2xl space-y-2 shadow-2xs">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[10.5px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-list-check text-slate-400"></i>
-              <span>Đầu việc đang chọn:</span>
-            </span>
-            <div id="reSelectTaskBadge"></div>
+      <!-- BODY: KHÔNG LỒNG KHUNG RỐI MẮT, CHỮ DỄ ĐỌC CỠ 13.5-15.5PX -->
+      <div class="px-6 sm:px-7 py-5 sm:py-6 space-y-5 bg-white">
+        <!-- KHỐI TÓM TẮT ĐẦU VIỆC ĐANG CHỌN -->
+        <div class="rounded-2xl bg-slate-50/85 ring-1 ring-slate-200/70 px-4 py-3.5 sm:px-5 sm:py-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1 space-y-1">
+              <span class="text-xs font-medium text-slate-400 block">Đầu việc đang chọn</span>
+              <div id="reSelectTaskTitle"
+                class="text-[15.5px] sm:text-base font-semibold text-slate-900 leading-snug tracking-[-0.01em] break-words">
+                ---
+              </div>
+            </div>
+            <div id="reSelectTaskBadge" class="flex items-center gap-1.5 flex-wrap justify-end shrink-0 pt-0.5"></div>
           </div>
-          <div id="reSelectTaskTitle" class="font-black text-slate-800 text-sm sm:text-base leading-snug">---</div>
+          <div id="reSelectTaskMeta"
+            class="flex items-center gap-x-2.5 gap-y-1 flex-wrap text-[12.5px] text-slate-500 pt-0.5"></div>
         </div>
 
-        <!-- HỘP CẢNH BÁO QUY ĐỊNH CÂN ĐỐI, RÕ RÀNG -->
-        <div
-          class="p-4 bg-gradient-to-br from-amber-50/80 via-amber-50/50 to-orange-50/40 border border-amber-200/90 rounded-2xl space-y-2.5 shadow-2xs">
-          <div class="flex items-center gap-2 text-amber-900 font-black text-xs sm:text-sm">
+        <!-- GIẢI THÍCH & HƯỚNG DẪN SAO CHÉP (2 DÒNG PHẲNG, THOÁNG MẮT) -->
+        <div class="space-y-3.5 px-0.5">
+          <div class="flex items-start gap-3">
             <span
-              class="w-5 h-5 rounded-lg bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-2xs shrink-0">
-              <i class="fa-solid fa-triangle-exclamation"></i>
+              class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] shrink-0 mt-0.5">
+              <i class="fa-solid fa-shield-halved"></i>
             </span>
-            <span>Quy định gửi lại công việc:</span>
+            <p class="text-[13.5px] text-slate-600 leading-[1.6] font-normal">
+              <span class="font-semibold text-slate-800">Vì sao bị khóa tích chọn?</span>
+              Đầu việc đã chuyển vào Hộp thư hoặc gửi báo cáo cấp trên nên hệ thống khóa chọn lại để tránh trùng lặp và bảo toàn lịch sử đã gửi.
+            </p>
           </div>
-          <p class="text-xs text-amber-950/90 leading-relaxed font-medium">
-            Đầu việc này đã từng được chuyển vào <b>Hộp thư bộ phận</b> hoặc đã <b>gửi báo cáo</b> ở lượt trước.
-          </p>
-          <div
-            class="p-2.5 bg-white/90 rounded-xl border border-amber-200/80 text-xs text-amber-900 leading-relaxed font-semibold flex items-start gap-2 shadow-2xs">
-            <i class="fa-solid fa-circle-info text-amber-600 text-xs mt-0.5 shrink-0"></i>
-            <span>Nội dung gửi lần này <b>bắt buộc phải có sự chỉnh sửa / bổ sung cập nhật mới</b>, không được gửi trùng
-              lặp nguyên xi giống như lượt gửi hoặc di chuyển trước đây.</span>
+          <div class="flex items-start gap-3">
+            <span
+              class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[11px] shrink-0 mt-0.5">
+              <i class="fa-solid fa-copy"></i>
+            </span>
+            <p class="text-[13.5px] text-slate-600 leading-[1.6] font-normal">
+              <span class="font-semibold text-slate-800">Cách cập nhật hoặc gửi mới:</span>
+              Bấm <span class="font-semibold text-indigo-600">Sao chép &amp; tạo việc mới để sửa</span> bên dưới để tạo đầu việc mới chỉnh sửa (bản gốc vẫn được giữ nguyên).
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- FOOTER: 3 NÚT CÂN ĐỐI, NẰM THẲNG HÀNG TRÊN DESKTOP, KHÔNG BỊ NGẮT DÒNG CHỮ -->
+      <!-- FOOTER CÂN ĐỐI, RÕ RÀNG -->
       <div
-        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
-        <button type="button" onclick="closeConfirmSelectReportedItemModal()"
-          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer text-center">
-          Hủy bỏ
+        class="px-6 sm:px-7 py-4 bg-slate-50/60 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
+        <button type="button" id="confirmSelectReportedCloseBtn" onclick="closeConfirmSelectReportedItemModal()"
+          class="min-h-[42px] px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-800 ring-1 ring-slate-200/90 text-[13.5px] font-semibold transition whitespace-nowrap cursor-pointer text-center">
+          Đóng
         </button>
-        <button type="button" onclick="editReportedItemBeforeSelect()"
-          class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs sm:text-sm font-black transition whitespace-nowrap cursor-pointer shadow-2xs flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-pen-to-square text-xs"></i>
-          <span>Chỉnh Sửa Việc</span>
-        </button>
-        <button type="button" onclick="proceedSelectReportedItem()"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md shadow-emerald-600/25 transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-check text-xs"></i>
-          <span>Đã Cập Nhật - Tích Chọn</span>
+        <button type="button" id="confirmSelectReportedCopyBtn" onclick="copyReportedItemToNewEdit()"
+          class="min-h-[42px] px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.985] text-white text-[13.5px] font-semibold shadow-sm shadow-indigo-600/20 transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-2">
+          <i class="fa-solid fa-copy text-xs"></i>
+          <span>Sao chép &amp; tạo việc mới để sửa</span>
         </button>
       </div>
 
