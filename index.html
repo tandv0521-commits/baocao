@@ -25343,7 +25343,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
         if (!isCurrent()) return false;
         const mergedList = Array.from(merged.values());
-        saveLeadershipReportsShared(mergedList);
+        saveLeadershipReportsShared(mergedList)
         if (typeof syncPersonalTasksIntoSharedReports === 'function') syncPersonalTasksIntoSharedReports(true);
         if (currentUser && typeof syncReportTransferStatusForPersonalTasks === 'function') {
           const userWsData = getPersonalWorkspaceData(currentUser);
@@ -25886,11 +25886,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (modal) modal.classList.add('hidden');
     }
 
-    // 6. XUẤT FILE WORD (.doc) BÁO CÁO CÁ NHÂN CHUẨN MẪU DOANH NGHIỆP
-    function generateSingleReportWordHtml(rep) {
-      const resolvedPeriod = (typeof resolveSavedReportPeriod === 'function')
-        ? resolveSavedReportPeriod(rep)
-        : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() };
+    // 6. XUẤT FILE WORD (.doc) BÁO CÁO CÁ NHÂN & TỔNG HỢP CHUẨN MẪU HÀNH CHÍNH DOANH NGHIỆP
+    const TIENPHONG_LOGO_BASE64_CLEAN = 'iVBORw0KGgoAAAANSUhEUgAAASwAAACrCAMAAADrYVGTAAAC/VBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////92vkPtHCTqAADtHSVesyJ3vkR4v0WCw1JquTPrAAXoAAD4+/Wx2pR0vUBbsR5dsiBzvT5jtSlfsyPyZF95v0dwuzpxvDxouDD3n5ditSdltixquDLsDRhgtCX///1uujjtICjtHiZtujZmty5suTTtFiDsEBrtGSJZsRthtCbtGiNXsBl/wk6UzGvq9eLrAAntFR3sChXrAAf7/fn829KKx13tERztFhfO57uk04HrAg/5ta39/vv6xr7sCBP/9/Cr1or2joeh0n3sCxD4pp6MyGDtFB/G46+73qD0c2zvLzHrAQz6/PfzZmDB4ah8wUry+Ov5q6ePyWPtHx/i8dba7crD4qye0XmZznKXzW+RymaHxVjv9+j7z8bM5rex2ZLrBRH1+vDn89zsExTp9N/70tTU6sK+36S125jwRUzz+e7X68e53Zyn1YWExFXvNzftGhrsDg7t9uXJ5bP1gnvyWmDuKSj82M35sarwQz/95dzk8tmu2I/wR0T3+vLyWVT+7OX7yMD6ubP3lJj0cWzuIiLrBgv95uDe79Dc7s33l4/wPTlWrxb+8+z+8Oj83NbQ6L2bz3Xg8NPV6sT1hIjxTEfrAAL//fj/+vX0c3DzYVrsCgv6wbr5rqf3mp33m5T3k4vxT0v939j4q6HyU1HvLi3uJiTrBQb0eHb0bWf94tv81M/1hID/9O/6v7b2h4PyW1n4n5z2jI7yZGnwPEBPrA77zMLR6b/vMzNJqQX+7ur4o5r1gHZDpgD70Mr4o6TxTlL6xcXwP0QRWmdPAAAAO3RSTlMAR+7hYIgDu517CWdNrVlT5oF2OBb7zbEjEg7JxbaPPyprLx7Qwaiil+ndcTP0k/bs1vPc2dMa+PCl17Sua20AACJmSURBVHja5Jm5T9twHMVD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';
+
+    function generateSingleReportWordHtml(rep, _consolidatedOpts) {
+      const isConsolidated = Boolean(_consolidatedOpts && _consolidatedOpts.isConsolidated);
+      const resolvedPeriod = (_consolidatedOpts && _consolidatedOpts.m && _consolidatedOpts.y)
+        ? { m: _consolidatedOpts.m, y: _consolidatedOpts.y }
+        : ((typeof resolveSavedReportPeriod === 'function')
+          ? resolveSavedReportPeriod(rep)
+          : { m: rep.periodMonth || (new Date().getMonth() + 1), y: rep.periodYear || new Date().getFullYear() });
       const m = resolvedPeriod.m;
       const y = resolvedPeriod.y;
       const mPad = String(m).padStart(2, '0');
@@ -25900,61 +25905,222 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const propList = items.filter(it => it.type === 'proposal');
       const feedList = items.filter(it => it.type === 'feedback');
 
-      const recipientText = rep.recipientFullName
-        ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
-        : ((rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary')
-          ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
-          : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
+      const formatWordMultilineText = (val) => {
+        const safe = escapeHtml(String(val ?? '').trim());
+        if (!safe) return '';
+        return safe.replace(/\r\n|\r|\n/g, '<br>');
+      };
 
-      const renderSectionItemsHtml = (list) => {
+      const renderSectionItemsHtml = (list, sectionAccentColor) => {
         if (!list || list.length === 0) {
           return `
-        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+        <div style="margin-top: 4pt; margin-bottom: 9pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
           (Không có nội dung ghi nhận trong kỳ báo cáo)
         </div>
       `;
         }
-        return list.map((it, idx) => `
-      <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4; margin-left: 12pt;">
-          ${idx + 1}. ${escapeHtml(it.title)}
-        </div>
-        ${it.content ? `
-          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 26pt;">
-            ${escapeHtml(it.content)}
+
+        return list.map((it, idx) => {
+          let rawTitle = String(it.title || '').trim();
+          let cleanTitle = rawTitle.replace(/^\d+[\.\-\)\s]+/, '').trim();
+          if (!cleanTitle) cleanTitle = rawTitle || 'Hạng mục công việc';
+
+          let staffSuffix = '';
+          if (isConsolidated) {
+            const authorName = it.staffName || it.senderFullName || '';
+            if (authorName) {
+              const authorRegex = new RegExp(`\\s*[\\-\\—\\–]\\s*${authorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+              cleanTitle = cleanTitle.replace(authorRegex, '').trim();
+              staffSuffix = ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857;">- ${escapeHtml(authorName)}</span>`;
+            }
+          }
+
+          const detailBody = formatWordMultilineText(it.content);
+          const detailHtml = detailBody
+            ? `
+          <div style="margin-top: 2.5pt; margin-bottom: 4pt; margin-left: 24pt; border-left: 2pt solid ${sectionAccentColor}; padding-left: 8pt; font-size: 11pt; color: #1e293b; line-height: 1.45;">
+            <span style="font-weight: bold; color: #475569;">Nội dung chi tiết:</span> ${detailBody}
           </div>
-        ` : ''}
-      </div>
-    `).join('');
+        `
+            : '';
+
+          return `
+        <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
+          <div style="font-size: 11.5pt; font-weight: bold; color: #0f172a; line-height: 1.4; margin-left: 12pt;">
+            ${idx + 1}. ${escapeHtml(cleanTitle)}${staffSuffix}
+          </div>
+          ${detailHtml}
+        </div>
+      `;
+        }).join('');
       };
 
-      let sectionsHtml = `
+      const sectionsHtml = `
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(adhocList)}</div>
+      <div class="sec-heading" style="border-bottom: 1.25pt solid #d97706; color: #92400e;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(adhocList, '#d97706')}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(planList)}</div>
+      <div class="sec-heading" style="border-bottom: 1.25pt solid #0284c7; color: #0369a1;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(planList, '#0284c7')}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #7e22ce;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(propList)}</div>
+      <div class="sec-heading" style="border-bottom: 1.25pt solid #7e22ce; color: #6d28d9;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(propList, '#7e22ce')}</div>
     </div>
     <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(feedList)}</div>
+      <div class="sec-heading" style="border-bottom: 1.25pt solid #0f766e; color: #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
+      <div style="margin-top: 6pt;">${renderSectionItemsHtml(feedList, '#0f766e')}</div>
     </div>
   `;
 
       const now = new Date();
       const dateOnlyStr = (rep.displayDate ? String(rep.displayDate).split(' ')[0] : '') || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
+      const recipientText = isConsolidated
+        ? (rep.recipientFullName
+          ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
+          : "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty")
+        : (rep.recipientFullName
+          ? `Kính gửi: ${escapeHtml(rep.recipientFullName)}`
+          : ((rep.senderRole === 'Quản lý' || rep.senderRole === 'Trưởng phòng' || rep.reportType === 'manager_summary')
+            ? "Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty"
+            : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`));
+
+      const docTitleText = isConsolidated
+        ? 'BÁO CÁO TỔNG HỢP CÔNG VIỆC &amp; ĐỀ XUẤT KIẾN NGHỊ'
+        : 'BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ';
+
+      const metadataHtml = isConsolidated
+        ? `
+        <table class="info-card">
+          <tr>
+            <td style="width: 55%;">
+              <span style="color: #475569;">Người tổng hợp:</span> <b>${escapeHtml(rep.senderFullName || 'Quản lý bộ phận')}</b>
+            </td>
+            <td style="width: 45%; text-align: right;">
+              <span style="color: #475569;">Phạm vi:</span> <b style="color: #047857;">Toàn bộ phận</b>
+            </td>
+          </tr>
+        </table>
+      `
+        : `
+        <table class="info-card">
+          <tr>
+            <td style="width: 50%;">
+              <span style="color: #475569;">Họ và tên:</span> <b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b>
+            </td>
+            <td style="width: 50%; text-align: right;">
+              <span style="color: #475569;">Bộ phận:</span> <b>${escapeHtml(rep.senderDepartment || 'Bộ phận')}</b>
+            </td>
+          </tr>
+        </table>
+      `;
+
+      let managerSignerName = rep.forwardedBy || '';
+      if (!managerSignerName && rep.recipientFullName) {
+        const recLower = String(rep.recipientFullName).toLowerCase();
+        if (!recLower.includes('giám đốc') && !recLower.includes('lãnh đạo') && !recLower.includes('kim oanh')) {
+          managerSignerName = rep.recipientFullName;
+        }
+      }
+      if (!managerSignerName && rep.recipientUsername) {
+        managerSignerName = rep.recipientUsername;
+      }
+      if (!managerSignerName && !isConsolidated) {
+        const fallbackRec = (typeof getActivePreviewReportRecipient === "function")
+          ? getActivePreviewReportRecipient()
+          : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
+        if (fallbackRec) {
+          const recName = fallbackRec.full_name || fallbackRec.fullName || fallbackRec.username || '';
+          const recLower = recName.toLowerCase();
+          if (!recLower.includes('giám đốc') && !recLower.includes('lãnh đạo') && !recLower.includes('kim oanh')) {
+            managerSignerName = recName;
+          }
+        }
+      }
+      if (!managerSignerName) {
+        managerSignerName = 'Quản lý bộ phận';
+      }
+
+      const signatureTableHtml = isConsolidated
+        ? `
+        <table class="sig-table">
+          <tr>
+            <td style="width: 50%; text-align: center; padding: 0 6pt 3pt 6pt; line-height: 1.15;">&nbsp;</td>
+            <td style="width: 50%; text-align: center; padding: 0 6pt 3pt 6pt; font-size: 10pt; font-style: italic; color: #334155; line-height: 1.15; white-space: nowrap;">Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth() + 1).padStart(2, '0')} năm ${now.getFullYear()}</td>
+          </tr>
+          <tr>
+            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
+              <span class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</span><br>
+              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
+            </td>
+            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
+              <span class="sig-title" style="white-space: nowrap;">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</span><br>
+              <span class="sig-sub">(Ký duyệt)</span>
+            </td>
+          </tr>
+          <tr style="height: 55pt;">
+            <td style="width: 50%; height: 55pt; text-align: center; padding: 0;">&nbsp;</td>
+            <td style="width: 50%; height: 55pt; text-align: center; padding: 0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
+              <span class="sig-name">${escapeHtml(rep.senderFullName || 'Quản lý bộ phận')}</span>
+            </td>
+            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
+              <span class="sig-name">Lê Thị Kim Oanh</span>
+            </td>
+          </tr>
+        </table>
+      `
+        : `
+        <table class="sig-table">
+          <tr>
+            <td style="width: 28%; padding: 0 4pt 3pt 4pt; line-height: 1.15;">&nbsp;</td>
+            <td style="width: 28%; padding: 0 4pt 3pt 4pt; line-height: 1.15;">&nbsp;</td>
+            <td style="width: 44%; text-align: center; padding: 0 4pt 3pt 4pt; font-size: 10pt; font-style: italic; color: #334155; line-height: 1.15; white-space: nowrap;">
+              Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth() + 1).padStart(2, '0')} năm ${now.getFullYear()}
+            </td>
+          </tr>
+          <tr>
+            <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-title">NGƯỜI LẬP BÁO CÁO</span><br>
+              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
+            </td>
+            <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-title">QUẢN LÝ BỘ PHẬN</span><br>
+              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
+            </td>
+            <td style="width: 44%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-title" style="white-space: nowrap;">BAN GIÁM ĐỐC / LÃNH ĐẠO</span><br>
+              <span class="sig-sub">(Ký duyệt)</span>
+            </td>
+          </tr>
+          <tr style="height: 55pt;">
+            <td style="width: 28%; height: 55pt; padding: 0;">&nbsp;</td>
+            <td style="width: 28%; height: 55pt; padding: 0;">&nbsp;</td>
+            <td style="width: 44%; height: 55pt; padding: 0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</span>
+            </td>
+            <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-name">${escapeHtml(managerSignerName)}</span>
+            </td>
+            <td style="width: 44%; text-align: center; padding: 0 4pt; line-height: 1.2;">
+              <span class="sig-name">Lê Thị Kim Oanh</span>
+            </td>
+          </tr>
+        </table>
+      `;
+
       return `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset='utf-8'>
-      <title>Báo cáo công việc - ${escapeHtml(rep.senderFullName || rep.senderUsername)}</title>
+      <title>${isConsolidated ? 'Báo cáo tổng hợp' : 'Báo cáo công việc'} - ${escapeHtml(rep.senderFullName || rep.senderDepartment || rep.senderUsername || '')}</title>
       <!--[if gte mso 9]>
       <xml>
         <w:WordDocument>
@@ -25979,29 +26145,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           color: #000000;
         }
         .header-box {
-          text-align: center;
-          margin-bottom: 14pt;
-          padding-bottom: 10pt;
+          margin-bottom: 12pt;
+          padding-bottom: 8pt;
           border-bottom: 1.5pt solid #047857;
         }
         .corp-sub { font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; }
         .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; }
-        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10pt; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 5pt; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; }
+        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 9pt; text-align: center; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 4pt; text-align: center; }
+        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; text-align: center; }
 
         .info-card {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 10pt;
+          margin-bottom: 12pt;
         }
         .info-card td { padding: 3pt 4pt; vertical-align: top; border: none; font-size: 11pt; }
         .sec-heading {
           font-size: 11.5pt;
           font-weight: bold;
-          color: #0f172a;
           text-transform: uppercase;
-          border-bottom: 1pt solid #94a3b8;
           padding-bottom: 3pt;
         }
         .sig-table {
@@ -26019,7 +26182,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           mso-para-margin-top: 0pt;
           mso-para-margin-bottom: 0pt;
         }
-        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; line-height: 1.2; }
+        .sig-title { font-size: 10.5pt; font-weight: bold; color: #000000; text-transform: uppercase; line-height: 1.2; white-space: nowrap; }
         .sig-sub { font-size: 10pt; font-style: italic; color: #475569; line-height: 1.2; }
         .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.2; }
       </style>
@@ -26027,99 +26190,61 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     <body>
       <div class="Section1">
         <div class="header-box">
-          <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
-          <div class="doc-title">BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
+          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; margin-bottom: 4pt;">
+            <tr>
+              <td style="width: 20%; vertical-align: middle; text-align: left; padding: 0;">
+                <img src="tienphong_logo2.png" width="76" height="43" style="width: 57pt; height: 32.5pt; border: 0; display: block;" alt="Nhựa Tiền Phong" />
+              </td>
+              <td style="width: 60%; vertical-align: middle; text-align: center; padding: 0;">
+                <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
+                <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
+              </td>
+              <td style="width: 20%; vertical-align: middle; padding: 0;">&nbsp;</td>
+            </tr>
+          </table>
+          <div class="doc-title">${docTitleText}</div>
           <div class="recipient">${recipientText}</div>
           <div class="period-date">Kỳ báo cáo: Tháng ${mPad}/${y} &bull; Ngày lập: ${dateOnlyStr}</div>
         </div>
 
-        <table class="info-card">
-          <tr>
-            <td style="width: 36%;">
-              <span style="color: #475569;">Họ và tên:</span> <b>${escapeHtml(rep.senderFullName || rep.senderUsername)}</b>
-            </td>
-            <td style="width: 36%;">
-              <span style="color: #475569;">Bộ phận:</span> <b>${escapeHtml(rep.senderDepartment || 'Bộ phận')}</b>
-            </td>
-            <td style="width: 28%;">
-              <span style="color: #475569;">Chức vụ:</span> <b style="color: #047857;">${escapeHtml(rep.senderRole || 'Nhân viên')}</b>
-            </td>
-          </tr>
-        </table>
+        ${metadataHtml}
 
         ${sectionsHtml}
 
         ${rep.notes ? `
-          <div style="margin-top: 14pt; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-bottom: 3pt;">
-              Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:
+          <div style="margin-top: 14pt; margin-bottom: 8pt; border-left: 2.5pt solid #0284c7; padding-left: 10pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #0284c7; text-transform: uppercase; margin-bottom: 2pt;">
+              ${isConsolidated ? `NHẬN XÉT &amp; ĐÁNH GIÁ TỔNG HỢP CỦA QUẢN LÝ (${escapeHtml(rep.senderFullName || 'Quản lý')}):` : 'Ý KIẾN / LỜI NHẮN THÊM GỬI BAN LÃNH ĐẠO:'}
             </div>
-            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-left: 14pt;">
-              ${escapeHtml(rep.notes)}
+            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45;">
+              ${formatWordMultilineText(rep.notes)}
             </div>
           </div>
         ` : ''}
 
-        ${rep.managerFeedback ? `
-          <div style="margin-top: 12pt; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #0369a1; text-transform: uppercase; margin-bottom: 3pt;">
-              Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(rep.forwardedBy || 'Quản lý')}):
+        ${(!isConsolidated && rep.managerFeedback) ? `
+          <div style="margin-top: 12pt; margin-bottom: 8pt; border-left: 2.5pt solid #d97706; padding-left: 10pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #d97706; text-transform: uppercase; margin-bottom: 2pt;">
+              Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(managerSignerName || rep.forwardedBy || 'Quản lý')}):
             </div>
-            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-left: 14pt;">
-              ${escapeHtml(rep.managerFeedback)}
+            <div style="font-size: 11pt; color: #1e293b; line-height: 1.45;">
+              ${formatWordMultilineText(rep.managerFeedback)}
             </div>
           </div>
         ` : ''}
 
         ${rep.leaderFeedback ? `
-          <div style="margin-top: 12pt; page-break-inside: avoid;">
-            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 3pt;">
+          <div style="margin-top: 12pt; margin-bottom: 8pt; border-left: 2.5pt solid #047857; padding-left: 10pt; page-break-inside: avoid;">
+            <div style="font-size: 11pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 2pt;">
               Ý KIẾN CHỈ ĐẠO CỦA BAN GIÁM ĐỐC:
             </div>
-            <div style="font-size: 11pt; color: #047857; font-weight: bold; line-height: 1.45; margin-left: 14pt;">
-              ${escapeHtml(rep.leaderFeedback)}
+            <div style="font-size: 11pt; color: #047857; font-weight: bold; line-height: 1.45;">
+              ${formatWordMultilineText(rep.leaderFeedback)}
             </div>
           </div>
         ` : ''}
 
-        <table class="sig-table">
-          <tr>
-            <td style="width: 33.33%; padding: 0 4pt 3pt 4pt; line-height: 1.15;">&nbsp;</td>
-            <td style="width: 33.33%; padding: 0 4pt 3pt 4pt; line-height: 1.15;">&nbsp;</td>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt 3pt 4pt; font-size: 10.5pt; font-style: italic; color: #334155; line-height: 1.15;">Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth() + 1).padStart(2, '0')} năm ${now.getFullYear()}</td>
-          </tr>
-          <tr>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-title">NGƯỜI LẬP BÁO CÁO</span><br>
-              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
-            </td>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-title">QUẢN LÝ BỘ PHẬN</span><br>
-              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
-            </td>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO</span><br>
-              <span class="sig-sub">(Ký duyệt)</span>
-            </td>
-          </tr>
-          <tr style="height: 55pt;">
-            <td style="width: 33.33%; height: 55pt; padding: 0;">&nbsp;</td>
-            <td style="width: 33.33%; height: 55pt; padding: 0;">&nbsp;</td>
-            <td style="width: 33.33%; height: 55pt; padding: 0;">&nbsp;</td>
-          </tr>
-          <tr>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</span>
-            </td>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</span>
-            </td>
-            <td style="width: 33.33%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-name">Lê Thị Kim Oanh</span>
-            </td>
-          </tr>
-        </table>
+        ${signatureTableHtml}
       </div>
     </body>
     </html>
@@ -26127,19 +26252,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function generateConsolidatedReportsWordHtml(reportsList, deptName, m, y) {
-      const fallbackPeriod = (reportsList && reportsList.length === 1 && typeof resolveSavedReportPeriod === 'function')
-        ? resolveSavedReportPeriod(reportsList[0])
+      const safeReportsList = Array.isArray(reportsList) ? reportsList : [];
+      const singleRep = safeReportsList.length === 1 ? safeReportsList[0] : null;
+      const fallbackPeriod = (singleRep && typeof resolveSavedReportPeriod === 'function')
+        ? resolveSavedReportPeriod(singleRep)
         : ((typeof getDefaultSmartReportPeriod === 'function') ? getDefaultSmartReportPeriod() : { m: new Date().getMonth() + 1, y: new Date().getFullYear() });
       const resolvedM = parseInt(m, 10) || fallbackPeriod.m;
       const resolvedY = parseInt(y, 10) || fallbackPeriod.y;
-      const mPad = String(resolvedM).padStart(2, '0');
-      let allAdhoc = [];
-      let allPlan = [];
-      let allProp = [];
-      let allFeed = [];
+
+      const consolidatedItems = [];
       const staffSet = new Set();
 
-      reportsList.forEach(rep => {
+      safeReportsList.forEach(rep => {
         const defaultAuthor = rep.senderFullName || rep.senderUsername || 'Nhân sự';
         const defaultDept = rep.senderDepartment || deptName || 'Bộ phận';
         const defaultRole = rep.senderRole || 'Nhân viên';
@@ -26150,193 +26274,35 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const authorDept = it.staffDept || it.senderDepartment || defaultDept;
           const authorRole = it.staffRole || it.senderRole || defaultRole;
           staffSet.add(authorName);
-
-          const itemWithStaff = { ...it, staffName: authorName, staffDept: authorDept, staffRole: authorRole };
-          if (it.type === 'adhoc') allAdhoc.push(itemWithStaff);
-          else if (it.type === 'plan') allPlan.push(itemWithStaff);
-          else if (it.type === 'proposal') allProp.push(itemWithStaff);
-          else if (it.type === 'feedback') allFeed.push(itemWithStaff);
+          consolidatedItems.push({ ...it, staffName: authorName, staffDept: authorDept, staffRole: authorRole });
         });
       });
 
-      const formatWordStaffLabel = (name) => name
-        ? ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857;">- ${escapeHtml(name)}</span>`
-        : '';
+      const signerName = (singleRep && singleRep.senderFullName)
+        ? singleRep.senderFullName
+        : (currentUser?.fullName || 'Quản lý bộ phận');
+      const resolvedDeptLabel = deptName || singleRep?.senderDepartment || currentUser?.department || 'Bộ phận';
 
-      const renderConsolidatedSectionItemsHtml = (list) => {
-        if (!list || list.length === 0) {
-          return `
-        <div style="margin-top: 4pt; margin-bottom: 8pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
-          (Không có nội dung ghi nhận trong kỳ báo cáo)
-        </div>
-      `;
-        }
-        return list.map((it, idx) => `
-      <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
-        <div style="font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.4; margin-left: 12pt;">
-          ${idx + 1}. ${escapeHtml(it.title)}${formatWordStaffLabel(it.staffName)}
-        </div>
-        ${it.content ? `
-          <div style="font-size: 11pt; color: #1e293b; line-height: 1.45; margin-top: 2pt; margin-left: 26pt;">
-            ${escapeHtml(it.content)}
-          </div>
-        ` : ''}
-      </div>
-    `).join('');
+      const consolidatedRep = {
+        senderFullName: signerName,
+        senderDepartment: resolvedDeptLabel,
+        senderRole: singleRep?.senderRole || currentUser?.role || 'Quản lý',
+        recipientFullName: singleRep?.recipientFullName || '',
+        periodMonth: resolvedM,
+        periodYear: resolvedY,
+        displayDate: singleRep?.displayDate || '',
+        notes: singleRep?.notes || singleRep?.managerFeedback || '',
+        leaderFeedback: singleRep?.leaderFeedback || '',
+        items: consolidatedItems
       };
 
-      let sectionsHtml = `
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #d97706;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
-      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allAdhoc)}</div>
-    </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #0284c7;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
-      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allPlan)}</div>
-    </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #7e22ce;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
-      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allProp)}</div>
-    </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 0.75pt solid #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
-      <div style="margin-top: 6pt;">${renderConsolidatedSectionItemsHtml(allFeed)}</div>
-    </div>
-  `;
-
-      const now = new Date();
-      const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-      const totalTasks = allAdhoc.length + allPlan.length + allProp.length + allFeed.length;
-      const signerName = (reportsList.length === 1 && reportsList[0].senderFullName)
-        ? reportsList[0].senderFullName
-        : (currentUser?.fullName || 'Quản lý bộ phận');
-
-      return `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head>
-      <meta charset='utf-8'>
-      <title>Báo cáo tổng hợp - ${escapeHtml(deptName)}</title>
-      <!--[if gte mso 9]>
-      <xml>
-        <w:WordDocument>
-          <w:View>Print</w:View>
-          <w:Zoom>100</w:Zoom>
-          <w:DoNotOptimizeForBrowser/>
-        </w:WordDocument>
-      </xml>
-      <![endif]-->
-      <style>
-        @page Section1 {
-          size: 210mm 297mm;
-          margin: 20mm 20mm 20mm 25mm;
-          mso-header-margin: 10mm;
-          mso-footer-margin: 10mm;
-        }
-        div.Section1 { page: Section1; }
-        body {
-          font-family: 'Times New Roman', serif;
-          font-size: 11.5pt;
-          line-height: 1.45;
-          color: #000000;
-        }
-        .header-box {
-          text-align: center;
-          margin-bottom: 14pt;
-          padding-bottom: 10pt;
-          border-bottom: 1.5pt solid #047857;
-        }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; }
-        .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; }
-        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 10pt; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 5pt; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; }
-
-        .info-card {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 10pt;
-        }
-        .info-card td { padding: 3pt 4pt; vertical-align: top; border: none; font-size: 11pt; }
-        .sec-heading {
-          font-size: 11.5pt;
-          font-weight: bold;
-          color: #0f172a;
-          text-transform: uppercase;
-          border-bottom: 1pt solid #94a3b8;
-          padding-bottom: 3pt;
-        }
-        .sig-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 22pt;
-          page-break-inside: avoid;
-        }
-        .sig-table td {
-          text-align: center;
-          vertical-align: top;
-          border: none;
-          padding: 0 6pt;
-          mso-para-margin: 0pt;
-          mso-para-margin-top: 0pt;
-          mso-para-margin-bottom: 0pt;
-        }
-        .sig-title { font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase; line-height: 1.2; }
-        .sig-sub { font-size: 10pt; font-style: italic; color: #475569; line-height: 1.2; }
-        .sig-name { font-size: 11.5pt; font-weight: bold; color: #000000; line-height: 1.2; }
-      </style>
-    </head>
-    <body>
-      <div class="Section1">
-        <div class="header-box">
-          <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-          <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
-          <div class="doc-title">BÁO CÁO TỔNG HỢP CÔNG VIỆC &amp; ĐỀ XUẤT KIẾN NGHỊ</div>
-          <div class="recipient">Kính gửi: Ban Giám Đốc / Ban Lãnh Đạo Công ty</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${mPad}/${resolvedY} &bull; Ngày lập: ${dateStr}</div>
-        </div>
-
-        <table class="info-card">
-          <tr>
-            <td>
-              <span style="color: #475569;">Người tổng hợp:</span> <b>${escapeHtml(signerName)}</b>
-            </td>
-          </tr>
-        </table>
-
-        ${sectionsHtml}
-
-        <table class="sig-table">
-          <tr>
-            <td style="width: 50%; text-align: center; padding: 0 6pt 3pt 6pt; line-height: 1.15;">&nbsp;</td>
-            <td style="width: 50%; text-align: center; padding: 0 6pt 3pt 6pt; font-size: 10.5pt; font-style: italic; color: #334155; line-height: 1.15;">Hải Phòng, ngày ${String(now.getDate()).padStart(2, '0')} tháng ${String(now.getMonth() + 1).padStart(2, '0')} năm ${now.getFullYear()}</td>
-          </tr>
-          <tr>
-            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</span><br>
-              <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
-            </td>
-            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-title">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</span><br>
-              <span class="sig-sub">(Ký duyệt)</span>
-            </td>
-          </tr>
-          <tr style="height: 55pt;">
-            <td style="width: 50%; height: 55pt; text-align: center; padding: 0;">&nbsp;</td>
-            <td style="width: 50%; height: 55pt; text-align: center; padding: 0;">&nbsp;</td>
-          </tr>
-          <tr>
-            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-name">${escapeHtml(signerName)}</span>
-            </td>
-            <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-name">Lê Thị Kim Oanh</span>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </body>
-    </html>
-  `;
+      return generateSingleReportWordHtml(consolidatedRep, {
+        isConsolidated: true,
+        m: resolvedM,
+        y: resolvedY,
+        staffCount: staffSet.size || 1,
+        reportCount: safeReportsList.length || 1
+      });
     }
 
     function exportPreviewReportToWord() {
@@ -26418,7 +26384,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const now = new Date();
       const dateFormatted = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+      const activeRecipient = (typeof getActivePreviewReportRecipient === "function")
+        ? getActivePreviewReportRecipient()
+        : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
+
       const rep = {
+        recipientId: activeRecipient ? activeRecipient.id : null,
+        recipientUsername: activeRecipient ? (activeRecipient.username || '') : '',
+        recipientFullName: activeRecipient ? (activeRecipient.full_name || activeRecipient.fullName || '') : '',
+        recipientRole: activeRecipient ? (activeRecipient.role || '') : '',
+        recipientDepartment: activeRecipient ? (activeRecipient.department || activeRecipient.dept || '') : '',
         senderId: currentUser.id,
         senderUsername: currentUser.username,
         senderFullName: currentUser.fullName,
@@ -26438,7 +26413,35 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function downloadWordDocument(htmlContent, fileName) {
-      const blob = new Blob(['\uFEFF' + htmlContent], { type: 'application/msword;charset=utf-8' });
+      let finalDoc = htmlContent;
+      if (htmlContent.includes('tienphong_logo2.png') && typeof TIENPHONG_LOGO_BASE64_CLEAN !== 'undefined') {
+        const boundary = '----=_NextPart_TiengPhong_' + Date.now();
+        const base64Lines = TIENPHONG_LOGO_BASE64_CLEAN.match(/.{1,76}/g).join('\r\n');
+        finalDoc = [
+          'MIME-Version: 1.0',
+          'Content-Type: multipart/related; boundary="' + boundary + '"; type="text/html"',
+          '',
+          '--' + boundary,
+          'Content-Type: text/html; charset="utf-8"',
+          'Content-Transfer-Encoding: 8bit',
+          'Content-Location: report.html',
+          '',
+          htmlContent.replace(/\r?\n/g, '\r\n'),
+          '',
+          '--' + boundary,
+          'Content-Type: image/png',
+          'Content-Transfer-Encoding: base64',
+          'Content-Location: tienphong_logo2.png',
+          '',
+          base64Lines,
+          '',
+          '--' + boundary + '--',
+          ''
+        ].join('\r\n');
+      } else if (!finalDoc.startsWith('\uFEFF')) {
+        finalDoc = '\uFEFF' + finalDoc;
+      }
+      const blob = new Blob([finalDoc], { type: 'application/msword;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -26625,9 +26628,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function getDeletedLeadershipReportIds() {
       try {
         const raw = localStorage.getItem(DELETED_LEADERSHIP_REPORTS_KEY);
-        if (raw) return new Set(JSON.parse(raw));
+        const set = raw ? new Set(JSON.parse(raw)) : new Set();
+        set.add('lr_summary_1794214541654');
+        return set;
       } catch (e) { }
-      return new Set();
+      return new Set(['lr_summary_1794214541654']);
     }
 
     function saveDeletedLeadershipReportIds(idsSet) {
@@ -26721,6 +26726,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } catch (e) { }
       } catch (e) { }
     })();
+
+    function dedupeLeadershipDrafts(list) {
+      if (!Array.isArray(list)) return [];
+      const seenDraftIds = new Set();
+      const sorted = [...list].sort((a, b) => {
+        const tA = new Date(a?.updatedAt || a?.submissionDate || a?.createdAt || 0).getTime();
+        const tB = new Date(b?.updatedAt || b?.submissionDate || b?.createdAt || 0).getTime();
+        return tB - tA;
+      });
+      return sorted.filter(r => {
+        if (!r || r.id == null) return false;
+        const idStr = String(r.id);
+        if (seenDraftIds.has(idStr)) return false;
+        seenDraftIds.add(idStr);
+        return true;
+      });
+    }
 
     function getLeadershipReportsShared() {
       try {
@@ -30355,6 +30377,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return timeB - timeA;
       });
 
+      // Quy tắc: Cho phép Quản lý tạo nhiều bản nháp độc lập trong cùng 1 kỳ (tháng). Khử trùng lặp theo ID báo cáo
+      const seenHistoryReportIds = new Set();
+      list = list.filter(r => {
+        if (!r || r.id == null) return false;
+        const idStr = String(r.id);
+        if (seenHistoryReportIds.has(idStr)) return false;
+        seenHistoryReportIds.add(idStr);
+        return true;
+      });
+
       return list;
     }
 
@@ -31666,9 +31698,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!user) return [];
       const viewer = getRpBoxConsolidationIdentity({ senderId: user.id, senderUsername: user.username, senderFullName: user.fullName || user.full_name });
       const deletedIds = getDeletedLeadershipReportIds();
-      return getLeadershipReportsShared().filter(r => r && r.id != null && !deletedIds.has(String(r.id)) && isRpBoxDraftSummary(r)
+      const rawDrafts = getLeadershipReportsShared().filter(r => r && r.id != null && !deletedIds.has(String(r.id)) && isRpBoxDraftSummary(r)
         && isSenderOfReport(user, r) && rpBoxConsolidationIdentityMatches(viewer, getRpBoxConsolidationIdentity(r)))
         .sort((a, b) => getLeadershipReportUpdatedTime(b) - getLeadershipReportUpdatedTime(a));
+      const seenDraftIds = new Set();
+      return rawDrafts.filter(r => {
+        const idStr = String(r.id);
+        if (seenDraftIds.has(idStr)) return false;
+        seenDraftIds.add(idStr);
+        return true;
+      });
     }
 
     function describeRpBoxDraftOption(draft) {
@@ -31760,9 +31799,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!wrap || !select) return;
       const drafts = getRpBoxOwnDraftSummaries();
       select.innerHTML = '<option value="">Tạo báo cáo tổng hợp mới</option>' +
-        drafts.map(d => '<option value="' + escapeHtml(String(d.id)) + '">' + escapeHtml(describeRpBoxDraftOption(d)) + '</option>').join('');
-      select.value = '';
-      if (_pendingConsolidatePayload) _pendingConsolidatePayload.activeTargetDraftId = null;
+        drafts.map(d => '<option value="' + escapeHtml(String(d.id)) + '">'+ escapeHtml(describeRpBoxDraftOption(d)) + '</option>').join('');
+
+      const payload = _pendingConsolidatePayload;
+      // Mặc định luôn là 'Tạo báo cáo tổng hợp mới'. Chỉ giữ lựa chọn nếu người dùng đã chủ động chọn 1 draft trước đó và draft đó còn tồn tại
+      const prevChosenId = (payload && payload.activeTargetDraftId) ? String(payload.activeTargetDraftId) : '';
+      const chosenDraft = prevChosenId ? drafts.find(d => String(d.id) === prevChosenId) : null;
+
+      if (chosenDraft) {
+        select.value = String(chosenDraft.id);
+        if (payload) payload.activeTargetDraftId = String(chosenDraft.id);
+      } else {
+        select.value = '';
+        if (payload) payload.activeTargetDraftId = null;
+      }
       if (drafts.length > 0) wrap.classList.remove('hidden'); else wrap.classList.add('hidden');
       onConsolidateDraftTargetChange();
     }
@@ -32080,29 +32130,67 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const rawNote = inputEl ? inputEl.value.trim() : '';
       const mgrAssessment = rawNote ? rawNote : (payload.userEditedBlankNew ? '' : defaultNote);
 
+      // Đọc lựa chọn draft đích trước khi đóng modal (nếu người dùng có chọn gộp vào 1 draft cụ thể)
+      const targetSelect = document.getElementById('csModalDraftTarget');
+      const targetDraftId = (targetSelect && targetSelect.value) ? String(targetSelect.value).trim() : ((payload && payload.activeTargetDraftId) ? String(payload.activeTargetDraftId).trim() : '');
+
       closeConsolidateAssessmentModal();
 
       const now = new Date();
-      const reportId = 'lr_summary_' + Date.now();
+      const sharedReports = getLeadershipReportsShared();
+
+      // Chỉ cập nhật đè khi người dùng CHỦ ĐỘNG chọn 1 bản nháp cụ thể (targetDraftId).
+      // Khi ở chế độ 'Tạo báo cáo tổng hợp mới' (targetDraftId rỗng): LUÔN tạo ID mới độc lập, không ép đè bản nháp khác cùng kỳ.
+      const existingDraft = targetDraftId
+        ? sharedReports.find(r => r && String(r.id) === targetDraftId && isRpBoxDraftSummary(r) && isSenderOfReport(currentUser, r))
+        : null;
+
+      const reportId = existingDraft ? existingDraft.id : ('lr_summary_' + Date.now());
       const modeVal = isDraft ? 'draft' : 'sent';
       const selectedKeySet = new Set(selectedEntries.map(e => e.entryKey));
 
-      const consolidatedItems = selectedEntries.map(e => {
-        const it = JSON.parse(JSON.stringify(e.item));
-        it.staffName = e.senderFullName;
-        it.staffDept = e.senderDepartment;
-        it.staffRole = e.senderRole;
-        it.isConsolidated = true;
-        it.consolidatedReportId = reportId;
-        it.consolidatedMode = modeVal;
-        it.sourceEntryKey = e.entryKey;
-        it.sourceReportId = e.reportId;
-        it.sourceItemId = e.item?.id ?? null;
-        it.sourceSenderId = e.senderId ?? null;
-        it.sourceSenderUsername = e.senderUsername || '';
-        it.sourceSenderFullName = e.senderFullName || '';
-        return it;
-      });
+      let consolidatedItems = [];
+      if (existingDraft && Array.isArray(existingDraft.items)) {
+        const itemMap = new Map();
+        existingDraft.items.forEach(it => {
+          const k = it.sourceEntryKey || it.id;
+          if (k) itemMap.set(String(k), it);
+        });
+        selectedEntries.forEach(e => {
+          const it = JSON.parse(JSON.stringify(e.item));
+          it.staffName = e.senderFullName;
+          it.staffDept = e.senderDepartment;
+          it.staffRole = e.senderRole;
+          it.isConsolidated = true;
+          it.consolidatedReportId = reportId;
+          it.consolidatedMode = modeVal;
+          it.sourceEntryKey = e.entryKey;
+          it.sourceReportId = e.reportId;
+          it.sourceItemId = e.item?.id ?? null;
+          it.sourceSenderId = e.senderId ?? null;
+          it.sourceSenderUsername = e.senderUsername || '';
+          it.sourceSenderFullName = e.senderFullName || '';
+          itemMap.set(String(e.entryKey), it);
+        });
+        consolidatedItems = Array.from(itemMap.values());
+      } else {
+        consolidatedItems = selectedEntries.map(e => {
+          const it = JSON.parse(JSON.stringify(e.item));
+          it.staffName = e.senderFullName;
+          it.staffDept = e.senderDepartment;
+          it.staffRole = e.senderRole;
+          it.isConsolidated = true;
+          it.consolidatedReportId = reportId;
+          it.consolidatedMode = modeVal;
+          it.sourceEntryKey = e.entryKey;
+          it.sourceReportId = e.reportId;
+          it.sourceItemId = e.item?.id ?? null;
+          it.sourceSenderId = e.senderId ?? null;
+          it.sourceSenderUsername = e.senderUsername || '';
+          it.sourceSenderFullName = e.senderFullName || '';
+          return it;
+        });
+      }
 
       const summaryReport = {
         id: reportId,
@@ -32111,9 +32199,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         senderFullName: currentUser.fullName,
         senderDepartment: targetDept,
         senderRole: currentUser.role,
-        submissionDate: now.toISOString(),
+        submissionDate: (existingDraft && existingDraft.submissionDate) ? existingDraft.submissionDate : now.toISOString(),
+        createdAt: (existingDraft && (existingDraft.createdAt || existingDraft.submissionDate)) ? (existingDraft.createdAt || existingDraft.submissionDate) : now.toISOString(),
         updatedAt: now.toISOString(),
-        displayDate: String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
+        displayDate: (existingDraft && existingDraft.displayDate) ? existingDraft.displayDate : (String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0')),
         periodMonth: m,
         periodYear: y,
         notes: mgrAssessment,
@@ -32136,7 +32225,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       saveConsolidatedTaskKeys(consolidatedKeys);
 
       // 2. Cập nhật trạng thái đã tạo báo cáo trong các báo cáo nguồn
-      const sharedReports = getLeadershipReportsShared();
       sharedReports.forEach(r => {
         const rItems = Array.isArray(r.items) ? r.items : (r.items && r.items.tasks ? r.items.tasks : []);
         rItems.forEach((it, idx) => {
@@ -32149,8 +32237,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       });
 
-      // 3. Thêm báo cáo tổng hợp mới vào đầu danh sách và lưu trữ vào Lịch sử báo cáo
-      sharedReports.unshift(summaryReport);
+      // 3. Cập nhật đè hoặc thêm báo cáo tổng hợp vào danh sách
+      const exIdx = sharedReports.findIndex(r => String(r.id) === String(reportId));
+      if (exIdx >= 0) {
+        sharedReports[exIdx] = summaryReport;
+      } else {
+        sharedReports.unshift(summaryReport);
+      }
       reconcileRpBoxConsolidationState(sharedReports);
       saveLeadershipReportsShared(sharedReports);
       const cloudSave = saveLeadershipReportToSupabase(summaryReport);
@@ -33446,7 +33539,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         <tr style="height:60px;"><td colspan="4" style="border:none;"></td></tr>
         <tr>
           <td colspan="2" class="sig-name" style="border:none;">${escapeHtml(rep.senderFullName || rep.senderUsername)}</td>
-          <td class="sig-name" style="border:none;">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</td>
+          <td class="sig-name" style="border:none;">${escapeHtml(rep.forwardedBy || rep.recipientFullName || rep.recipientUsername || 'Quản lý bộ phận')}</td>
           <td class="sig-name" style="border:none;">Lê Thị Kim Oanh</td>
         </tr>
       </table>
@@ -33704,7 +33797,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <div class="sig-title">QUẢN LÝ BỘ PHẬN</div>
               <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
               <div class="sig-space"></div>
-              <div class="sig-name">${escapeHtml(rep.forwardedBy || 'Quản lý bộ phận')}</div>
+              <div class="sig-name">${escapeHtml(rep.forwardedBy || rep.recipientFullName || rep.recipientUsername || 'Quản lý bộ phận')}</div>
             </div>
             <div class="sig-col">
               <div class="sig-title">BAN GIÁM ĐỐC</div>
