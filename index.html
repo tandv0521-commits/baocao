@@ -27988,15 +27988,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return d;
     }
 
-    // ================= RENDER TOÀN BỘ GIAO DIỆN SỔ TAY CÔNG VIỆC =================
+        // ================= RENDER TOÀN BỘ GIAO DIỆN SỔ TAY CÔNG VIỆC =================
     // Hàm sắp xếp công việc:
-    // - Việc chưa hoàn thành luôn ưu tiên lên trước việc đã xong (việc đã xong hoàn thành đẩy về cuối cùng)
-    // - Mọi công việc nhóm theo loại đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
-    // - Đối với kế hoạch chưa hoàn thành: Ưu tiên việc sắp hết hạn lên trước lần lượt
-    // - Sắp xếp các ngày ghi nhận mới nhất lần lượt lên trên, ngày ghi cũ nhất ở dưới (cho việc đã làm/hoàn thiện và các mục cùng loại)
+    // 1. Việc chưa hoàn thành luôn ưu tiên lên trước; việc đã xong hoàn thành BẮT BUỘC ĐẨY VỀ CUỐI CÙNG
+    // 2. Với CÔNG VIỆC CHƯA LÀM / CHƯA HOÀN THIỆN: ÁP DỤNG NGUYÊN VẸN QUY TẮC CŨ
+    //    - Kế hoạch (1) -> Việc phát sinh (2) -> Đề xuất (3) -> Ý kiến (4)
+    //    - Kế hoạch: Việc sắp hết hạn lên trước lần lượt (quá hạn -> đến hạn hôm nay -> ngày mai...)
+    //    - Cùng loại: Việc quan trọng (⭐) lên trước, ngày cũ hơn xếp trước
+    // 3. Với CÔNG VIỆC ĐÃ LÀM / ĐÃ HOÀN THIỆN: ÁP DỤNG QUY TẮC MỚI THEO YÊU CẦU
+    //    - Các loại mục đứng cạnh nhau: Phát sinh (1) -> Kế hoạch (2) -> Đề xuất (3) -> Ý kiến (4)
+    //    - Sắp xếp các ngày ghi nhận mới nhất lần lượt lên trên, ngày ghi cũ nhất ở dưới
     function sortPersonalWorkspaceItemsList(items) {
-      const typeOrder = {
-        'adhoc': 1,     // 1. Việc phát sinh
+      const pendingTypeOrder = {
+        'plan': 1,      // 1. Kế hoạch (việc chưa làm: Kế hoạch lên trước để nhắc hạn chót)
+        'adhoc': 2,     // 2. Việc phát sinh
+        'proposal': 3, // 3. Đề xuất & sáng kiến
+        'feedback': 4   // 4. Ý kiến / phản ánh
+      };
+
+      const doneTypeOrder = {
+        'adhoc': 1,     // 1. Việc phát sinh (việc đã hoàn thiện: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến)
         'plan': 2,      // 2. Kế hoạch
         'proposal': 3, // 3. Đề xuất & sáng kiến
         'feedback': 4   // 4. Ý kiến / phản ánh
@@ -28009,36 +28020,75 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (!aDone && bDone) return -1;
         if (aDone && !bDone) return 1;
 
-        // 2. Nhóm theo loại mục đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
-        const orderA = typeOrder[a.type] || 99;
-        const orderB = typeOrder[b.type] || 99;
+        // =========================================================================
+        // NHÁNH A: CÁC CÔNG VIỆC CHƯA LÀM / CHƯA HOÀN THIỆN (!aDone && !bDone)
+        // ÁP DỤNG NGUYÊN VẸN QUY TẮC CŨ: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+        // =========================================================================
+        if (!aDone && !bDone) {
+          const orderA = pendingTypeOrder[a.type] || 99;
+          const orderB = pendingTypeOrder[b.type] || 99;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+
+          if (a.type === 'plan' && b.type === 'plan') {
+            const dueA = a.dueDate ? String(a.dueDate).trim() : '';
+            const dueB = b.dueDate ? String(b.dueDate).trim() : '';
+
+            // Có hạn chót ưu tiên lên trước không đặt hạn chót
+            if (dueA && !dueB) return -1;
+            if (!dueA && dueB) return 1;
+
+            // Cả 2 có hạn chót: Hạn chót sớm hơn / sắp hết hạn hơn lên trước (tăng dần YYYY-MM-DD)
+            if (dueA && dueB && dueA !== dueB) {
+              return dueA.localeCompare(dueB);
+            }
+
+            // Cùng ngày hạn chót: Việc quan trọng (⭐) lên trước
+            if (a.isImportant && !b.isImportant) return -1;
+            if (!a.isImportant && b.isImportant) return 1;
+
+            // Cùng hạn chót & độ quan trọng: Thời gian tạo cũ hơn lên trước
+            const tA = new Date(a.createdAt || a.date || 0).getTime();
+            const tB = new Date(b.createdAt || b.date || 0).getTime();
+            if (tA && tB && tA !== tB) return tA - tB;
+
+            return (a.id || '').localeCompare(b.id || '');
+          }
+
+          // Các loại việc khác chưa làm (Phát sinh, Đề xuất, Ý kiến):
+          if (a.isImportant && !b.isImportant) return -1;
+          if (!a.isImportant && b.isImportant) return 1;
+
+          // Trong cùng nhóm chưa làm: ngày cũ hơn xếp trước (tăng dần)
+          const dateA = a.date || (a.createdAt ? a.createdAt.substring(0, 10) : '') || '';
+          const dateB = b.date || (b.createdAt ? b.createdAt.substring(0, 10) : '') || '';
+          if (dateA && dateB && dateA !== dateB) {
+            return dateA.localeCompare(dateB);
+          }
+
+          // Thời gian tạo cũ hơn lên trước
+          const tA = new Date(a.createdAt || 0).getTime();
+          const tB = new Date(b.createdAt || 0).getTime();
+          if (tA && tB && tA !== tB) {
+            return tA - tB;
+          }
+
+          return (a.id || '').localeCompare(b.id || '');
+        }
+
+        // =========================================================================
+        // NHÁNH B: CÁC CÔNG VIỆC ĐÃ LÀM / ĐÃ HOÀN THIỆN (aDone && bDone)
+        // ÁP DỤNG QUY TẮC MỚI THEO YÊU CẦU:
+        // - Mọi công việc phát sinh - kế hoạch - đề xuất - ý kiến đứng cạnh nhau
+        // - Sắp xếp các ngày ghi nhận mới nhất lần lượt lên trên, ngày cũ nhất ở dưới
+        // =========================================================================
+        const orderA = doneTypeOrder[a.type] || 99;
+        const orderB = doneTypeOrder[b.type] || 99;
         if (orderA !== orderB) {
           return orderA - orderB;
         }
 
-        // 3. ĐỐI VỚI KẾ HOẠCH CHƯA HOÀN THÀNH:
-        // ƯU TIÊN SẮP HẾT HẠN LÊN TRÊN CÙNG LẦN LƯỢT: quá hạn -> đến hạn hôm nay -> ngày mai -> ngày gần nhất
-        if (!aDone && !bDone && a.type === 'plan' && b.type === 'plan') {
-          const dueA = a.dueDate ? String(a.dueDate).trim() : '';
-          const dueB = b.dueDate ? String(b.dueDate).trim() : '';
-
-          if (dueA && !dueB) return -1;
-          if (!dueA && dueB) return 1;
-          if (dueA && dueB && dueA !== dueB) {
-            return dueA.localeCompare(dueB);
-          }
-
-          if (a.isImportant && !b.isImportant) return -1;
-          if (!a.isImportant && b.isImportant) return 1;
-        }
-
-        // 4. Việc quan trọng (⭐) lên trước (đối với việc chưa hoàn thành)
-        if (!aDone && !bDone) {
-          if (a.isImportant && !b.isImportant) return -1;
-          if (!a.isImportant && b.isImportant) return 1;
-        }
-
-        // 5. SẮP XẾP CÁC NGÀY GHI NHẬN MỚI NHẤT LẦN LƯỢT LÊN TRÊN, NGÀY CŨ NHẤT XUỐNG DƯỚI
         const dateA = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(a.date || (a.createdAt ? a.createdAt.substring(0, 10) : '') || a.dueDate || '');
         const dateB = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(b.date || (b.createdAt ? b.createdAt.substring(0, 10) : '') || b.dueDate || '');
         if (dateA && dateB && dateA !== dateB) {
@@ -30863,55 +30913,74 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return entries;
     }
 
-    // Sắp xếp các đầu việc trong Hộp thư đồng nhất 100% với Sổ tay công việc:
-    // Việc chưa hoàn thành lên trước; Nhóm theo loại mục đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
-    // Sắp xếp ngày ghi nhận mới nhất lên trên, ngày cũ nhất ở dưới
+        // Sắp xếp các đầu việc trong Hộp thư đồng nhất 100% với Sổ tay công việc:
+    // Việc chưa hoàn thành lên trước; Nhóm theo loại mục đứng cạnh nhau; Việc chưa làm theo quy tắc cũ, việc đã làm theo quy tắc mới
     function sortRpBoxTaskEntries(entries) {
-      const typeOrder = {
-        'adhoc': 1,     // 1. Phát sinh
+      const pendingTypeOrder = {
+        'plan': 1,      // 1. Kế hoạch (việc chưa làm)
+        'adhoc': 2,     // 2. Phát sinh
+        'proposal': 3, // 3. Đề xuất
+        'feedback': 4   // 4. Ý kiến / Phản ánh
+      };
+
+      const doneTypeOrder = {
+        'adhoc': 1,     // 1. Phát sinh (việc đã hoàn thiện)
         'plan': 2,      // 2. Kế hoạch
         'proposal': 3,  // 3. Đề xuất
         'feedback': 4   // 4. Ý kiến / Phản ánh
       };
 
       return entries.sort((a, b) => {
-        // 1. Việc chưa hoàn thành luôn ưu tiên lên trước; việc đã xong hoàn thành BẮT BUỘC ĐẨY VỀ CUỐI CÙNG (đồng nhất với sortPersonalWorkspaceItemsList)
+        // 1. Việc chưa hoàn thành luôn ưu tiên lên trước; việc đã xong hoàn thành BẮT BUỘC ĐẨY VỀ CUỐI CÙNG
         const aDone = isPersonalTaskFinished(a.item);
         const bDone = isPersonalTaskFinished(b.item);
         if (!aDone && bDone) return -1;
         if (aDone && !bDone) return 1;
 
-        // 2. Nhóm theo loại đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
-        const orderA = typeOrder[a.item.type] || 99;
-        const orderB = typeOrder[b.item.type] || 99;
+        // Việc chưa làm: Quy tắc cũ (Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến)
+        if (!aDone && !bDone) {
+          const orderA = pendingTypeOrder[a.item.type] || 99;
+          const orderB = pendingTypeOrder[b.item.type] || 99;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+
+          if (a.item.type === 'plan' && b.item.type === 'plan') {
+            const dueA = a.item.dueDate ? String(a.item.dueDate).trim() : '';
+            const dueB = b.item.dueDate ? String(b.item.dueDate).trim() : '';
+            if (dueA && !dueB) return -1;
+            if (!dueA && dueB) return 1;
+            if (dueA && dueB && dueA !== dueB) return dueA.localeCompare(dueB);
+
+            if (a.item.isImportant && !b.item.isImportant) return -1;
+            if (!a.item.isImportant && b.item.isImportant) return 1;
+          }
+
+          if (a.item.isImportant && !b.item.isImportant) return -1;
+          if (!a.item.isImportant && b.item.isImportant) return 1;
+
+          const dateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
+          const dateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
+          if (dateA && dateB && dateA !== dateB) {
+            return dateA.localeCompare(dateB); // Tăng dần: việc cũ lên trên
+          }
+
+          return (a.entryKey || '').localeCompare(b.entryKey || '');
+        }
+
+        // Việc đã hoàn thiện: Quy tắc mới (Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến; ngày mới nhất lên trên)
+        const orderA = doneTypeOrder[a.item.type] || 99;
+        const orderB = doneTypeOrder[b.item.type] || 99;
         if (orderA !== orderB) {
           return orderA - orderB;
         }
 
-        // 3. Đối với kế hoạch chưa hoàn thành: việc sắp hết hạn lên trước lần lượt
-        if (!aDone && !bDone && a.item.type === 'plan' && b.item.type === 'plan') {
-          const dueA = a.item.dueDate ? String(a.item.dueDate).trim() : '';
-          const dueB = b.item.dueDate ? String(b.item.dueDate).trim() : '';
-          if (dueA && !dueB) return -1;
-          if (!dueA && dueB) return 1;
-          if (dueA && dueB && dueA !== dueB) return dueA.localeCompare(dueB);
-
-          if (a.item.isImportant && !b.item.isImportant) return -1;
-          if (!a.item.isImportant && b.item.isImportant) return 1;
-        }
-
-        if (!aDone && !bDone) {
-          if (a.item.isImportant && !b.item.isImportant) return -1;
-          if (!a.item.isImportant && b.item.isImportant) return 1;
-        }
-
-        // 4. Sắp xếp các ngày ghi nhận mới nhất lên trên, cũ nhất ở dưới
         const rawDateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
         const rawDateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
         const dateA = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(rawDateA);
         const dateB = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(rawDateB);
         if (dateA && dateB && dateA !== dateB) {
-          return dateB.localeCompare(dateA); // Giảm dần: mới nhất lên trên, cũ nhất ở dưới
+          return dateB.localeCompare(dateA); // Giảm dần: mới nhất lên trên
         }
 
         const tA = new Date(a.item.createdAt || 0).getTime();
