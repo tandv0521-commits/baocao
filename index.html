@@ -9157,6 +9157,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           input.value = num.toLocaleString('en-US');
         }
       }
+      if (input && input.classList && input.classList.contains('matrix-input-cell') && typeof scheduleMatrixCellLiveAutosave === 'function') {
+        scheduleMatrixCellLiveAutosave(input, 900);
+      }
     }
 
     function showToast(msg, isError = false) {
@@ -9610,6 +9613,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (localSaved) {
             const parsed = JSON.parse(localSaved);
             if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+              applyLocalMatrixWritesToMatrixObj(parsed, y, m);
               cachedPreloadMatrix = parsed;
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
@@ -9627,16 +9631,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       try {
         const matrix = await fetchMatrixFromSupabase(m, y);
         if (matrix) {
-          cachedPreloadMatrix = matrix;
-          fullPeriodMatrixCache = matrix;
-          currentMatrixData = matrix;
-          try {
-            localStorage.setItem(`ops_matrix_active_cache_${y}_${m}`, JSON.stringify(matrix));
-          } catch (e) { }
           if (currentUser) {
             const loadingBox = document.getElementById('loadingTasksBox');
             if (loadingBox) loadingBox.classList.add('hidden');
-            applyClientFilterAndRender();
+            applyFreshMatrixSafely(matrix, y, m, '');
+          } else {
+            applyLocalMatrixWritesToMatrixObj(matrix, y, m);
+            persistActiveMatrixCaches(y, m, matrix);
           }
         }
       } catch (err) {
@@ -11800,15 +11801,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         // Đồng bộ ngầm để cập nhật số liệu mới nhất trong nền mà không xoay hay giật màn hình
         setTimeout(() => {
-          fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear).then(fresh => {
+          const syncM = currentSelectedMonth;
+          const syncY = currentSelectedYear;
+          fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
             if (fresh) {
-              fullPeriodMatrixCache = fresh;
-              currentMatrixData = fresh;
-              cachedPreloadMatrix = fresh;
-              try {
-                localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
-              } catch (e) { }
-              applyClientFilterAndRender();
+              applyFreshMatrixSafely(fresh, syncY, syncM, '');
             }
           }).catch(() => { });
         }, 300);
@@ -12966,6 +12963,254 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // ================= TRUY VẤN MA TRẬN: BẢO TOÀN LỊCH SỬ THÁNG CŨ & LỌC CÔNG VIỆC THEO THỜI GIAN =================
+    // ================= HỆ THỐNG BẢO VỆ LƯU TRỮ MA TRẬN ĐA TẦNG & PHÂN TRANG VƯỢT GIỚI HẠN 1000 DÒNG =================
+    let _activeMatrixCellSaveCount = 0;
+
+    function getLocalMatrixWritesStorageKey(year, month) {
+      return `ops_matrix_local_writes_${year}_${month}`;
+    }
+
+    function getLocalMatrixWritesMap(year, month) {
+      try {
+        const raw = localStorage.getItem(getLocalMatrixWritesStorageKey(year, month));
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return {};
+        const now = Date.now();
+        const maxAgeMs = 7 * 24 * 60 * 60 * 1000; // Giữ lịch sử ghi cục bộ 7 ngày
+        let mutated = false;
+        Object.keys(parsed).forEach(k => {
+          const item = parsed[k];
+          if (!item || (item.synced && item.updatedAtMs && (now - item.updatedAtMs > maxAgeMs))) {
+            delete parsed[k];
+            mutated = true;
+          }
+        });
+        if (mutated) {
+          localStorage.setItem(getLocalMatrixWritesStorageKey(year, month), JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function recordLocalMatrixWrite(year, month, entries) {
+      if (!year || !month || !Array.isArray(entries) || entries.length === 0) return;
+      try {
+        const map = getLocalMatrixWritesMap(year, month);
+        const nowMs = Date.now();
+        entries.forEach(ent => {
+          if (!ent || !ent.taskId || !ent.dayNum) return;
+          const key = `${ent.taskId}_${ent.dayNum}`;
+          map[key] = {
+            taskId: Number(ent.taskId),
+            userId: Number(ent.userId) || (currentUser ? Number(currentUser.id) : null),
+            dayNum: Number(ent.dayNum),
+            reportDate: ent.reportDate || '',
+            valToCache: ent.valToCache !== undefined && ent.valToCache !== null ? ent.valToCache : '',
+            numV: ent.numV !== undefined ? ent.numV : null,
+            symV: ent.symV !== undefined ? ent.symV : null,
+            textV: ent.textV !== undefined ? ent.textV : null,
+            updatedAtIso: ent.updatedAtIso || new Date(nowMs).toISOString(),
+            updatedAtMs: ent.updatedAtMs || nowMs,
+            synced: !!ent.synced
+          };
+        });
+        localStorage.setItem(getLocalMatrixWritesStorageKey(year, month), JSON.stringify(map));
+      } catch (e) {
+        console.warn('[MatrixWriteLedger] Không thể ghi local write ledger:', e);
+      }
+    }
+
+    function persistActiveMatrixCaches(year, month, matrixObj = null) {
+      const y = Number(year || currentSelectedYear);
+      const m = Number(month || currentSelectedMonth);
+      const target = matrixObj || fullPeriodMatrixCache || currentMatrixData;
+      if (!target || !target.staffGroups) return;
+
+      if (y === Number(currentSelectedYear) && m === Number(currentSelectedMonth)) {
+        fullPeriodMatrixCache = target;
+        currentMatrixData = target;
+        cachedPreloadMatrix = target;
+      }
+      const memKey = `${y}_${m}`;
+      if (typeof periodMatrixMemoryCache !== 'undefined' && periodMatrixMemoryCache) {
+        periodMatrixMemoryCache.set(memKey, target);
+      }
+      try {
+        localStorage.setItem(`ops_matrix_active_cache_${y}_${m}`, JSON.stringify(target));
+      } catch (e) { }
+    }
+
+    function applyLocalMatrixWritesToMatrixObj(matrixObj, year, month) {
+      if (!matrixObj || !Array.isArray(matrixObj.staffGroups)) return matrixObj;
+      const localMap = getLocalMatrixWritesMap(year, month);
+      const keys = Object.keys(localMap);
+      if (keys.length === 0) return matrixObj;
+
+      // Chỉ phủ các bản ghi chưa đồng bộ hoặc vừa ghi tức thì (< 120 giây) để chống trễ mạng
+      const now = Date.now();
+      const recentEntries = keys
+        .map(k => localMap[k])
+        .filter(item => item && (!item.synced || (now - (item.updatedAtMs || 0) < 120000)));
+
+      if (recentEntries.length === 0) return matrixObj;
+
+      matrixObj.staffGroups.forEach(grp => {
+        if (!grp || !Array.isArray(grp.tasks)) return;
+        grp.tasks.forEach(t => {
+          let touched = false;
+          recentEntries.forEach(ent => {
+            if (Number(t.taskId) === Number(ent.taskId) && ent.dayNum) {
+              if (!t.dailyValues) t.dailyValues = {};
+              const curVal = t.dailyValues[ent.dayNum];
+              const nextVal = (ent.valToCache !== undefined && ent.valToCache !== null) ? ent.valToCache : '';
+              if (String(curVal ?? '') !== String(nextVal ?? '')) {
+                t.dailyValues[ent.dayNum] = nextVal;
+                touched = true;
+              }
+            }
+          });
+          if (touched) {
+            t.monthTotal = calculateSmartRowTotalClient(t.dailyValues, matrixObj.dayCols || []);
+          }
+        });
+      });
+      return matrixObj;
+    }
+
+    async function flushUnsyncedLocalMatrixWrites(year, month) {
+      const localMap = getLocalMatrixWritesMap(year, month);
+      const unsynced = Object.values(localMap).filter(item => item && !item.synced && item.taskId && item.userId && item.reportDate);
+      if (unsynced.length === 0) return;
+
+      const records = unsynced.map(item => ({
+        task_id: item.taskId,
+        user_id: item.userId,
+        report_date: item.reportDate,
+        num_val: item.numV,
+        sym_val: item.symV,
+        text_val: item.textV,
+        updated_at: item.updatedAtIso || new Date().toISOString()
+      }));
+
+      try {
+        const { error } = await supabase
+          .from('daily_reports')
+          .upsert(records, { onConflict: 'task_id,user_id,report_date' });
+        if (!error) {
+          recordLocalMatrixWrite(year, month, unsynced.map(item => ({ ...item, synced: true })));
+        }
+      } catch (e) {
+        console.warn('[MatrixWriteLedger] Chưa thể đồng bộ lại bản ghi chờ:', e);
+      }
+    }
+
+    async function fetchAllMonthlyDailyReports(startDate, endDate) {
+      const PAGE_SIZE = 1000;
+      const MAX_PAGES = 50; // Hỗ trợ tới 50.000 bản ghi/tháng
+      let allRows = [];
+      let offset = 0;
+
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const { data, error } = await supabase
+          .from('daily_reports')
+          .select('*')
+          .gte('report_date', startDate)
+          .lte('report_date', endDate)
+          .order('updated_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+
+        if (error) throw error;
+        const batch = data || [];
+        allRows = allRows.concat(batch);
+        if (batch.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
+      return allRows;
+    }
+
+    async function fetchAllTasksForMatrix() {
+      const PAGE_SIZE = 1000;
+      const MAX_PAGES = 20;
+      let allTasks = [];
+      let offset = 0;
+
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id, status)')
+          .order('id', { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+
+        if (error) throw error;
+        const batch = data || [];
+        allTasks = allTasks.concat(batch);
+        if (batch.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
+      return allTasks;
+    }
+
+    function applyFreshMatrixSafely(fresh, year, month, senderName = '') {
+      if (!fresh || !fresh.staffGroups) return;
+      const y = Number(year || currentSelectedYear);
+      const m = Number(month || currentSelectedMonth);
+      applyLocalMatrixWritesToMatrixObj(fresh, y, m);
+      persistActiveMatrixCaches(y, m, fresh);
+
+      if (y !== Number(currentSelectedYear) || m !== Number(currentSelectedMonth)) return;
+
+      // Nếu người dùng đang lưu 1 ô hoặc đang gõ dở trong ô ma trận, bảo toàn tuyệt đối trạng thái ô đang nhập
+      if (_activeMatrixCellSaveCount > 0) {
+        refreshReportingProgressRealtime();
+        return;
+      }
+
+      const tableContainer = document.getElementById('tableScrollContainer');
+      const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
+      const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
+
+      const activeEl = document.activeElement;
+      let activeInputMeta = null;
+      if (activeEl && activeEl.tagName === 'INPUT' && activeEl.dataset && activeEl.dataset.taskId && activeEl.dataset.day) {
+        activeInputMeta = {
+          taskId: activeEl.dataset.taskId,
+          day: activeEl.dataset.day,
+          val: activeEl.value,
+          oldValue: activeEl.dataset.oldValue || '',
+          selectionStart: activeEl.selectionStart,
+          selectionEnd: activeEl.selectionEnd
+        };
+      }
+
+      applyClientFilterAndRender();
+      refreshReportingProgressRealtime();
+
+      if (tableContainer) {
+        tableContainer.scrollLeft = prevScrollLeft;
+        tableContainer.scrollTop = prevScrollTop;
+      }
+
+      if (activeInputMeta) {
+        const restoredInp = document.querySelector(`input[data-task-id="${activeInputMeta.taskId}"][data-day="${activeInputMeta.day}"]`);
+        if (restoredInp) {
+          restoredInp.dataset.oldValue = activeInputMeta.oldValue;
+          restoredInp.value = activeInputMeta.val;
+          restoredInp.focus();
+          try {
+            restoredInp.setSelectionRange(activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
+          } catch (e) { }
+        }
+      }
+
+      if (senderName) {
+        showLiveSyncIndicator(senderName, m, y);
+      }
+    }
+
     async function fetchMatrixFromSupabase(month, year) {
       const daysInMonth = new Date(year, month, 0).getDate();
       const dayCols = [];
@@ -12991,28 +13236,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const startDate = `${year}-${mFormatted}-01`;
       const endDate = `${year}-${mFormatted}-${daysInMonth < 10 ? '0' + daysInMonth : daysInMonth}`;
 
-      // TỐI ƯU HÓA TRUY VẤN SONG SONG (Parallel execution) qua Promise.all để tăng tốc độ tải lên gấp 3-4 lần
+      // Đồng bộ lại các bản ghi cục bộ chưa kịp gửi lên máy chủ (nếu có)
+      await flushUnsyncedLocalMatrixWrites(year, month);
+
+      // TỐI ƯU TỐC ĐỘ TẢI MA TRẬN & PHÂN TRANG VƯỢT GIỚI HẠN 1.000 BẢN GHI CỦA SUPABASE/POSTGREST
       const [
         { data: dbDepts },
         { data: dbUsers },
-        { data: tasks, error: tErr },
-        { data: reports, error: rErr }
+        tasks,
+        reports
       ] = await Promise.all([
         supabase.from('departments').select('*').limit(1000),
         supabase.from('users').select('*').order('full_name').limit(10000),
-        supabase.from('tasks')
-          .select('*, departments(id, name, is_shared_group), users(id, full_name, username, role, department_id, status)')
-          .order('id', { ascending: true })
-          .limit(10000),
-        supabase.from('daily_reports')
-          .select('*')
-          .gte('report_date', startDate)
-          .lte('report_date', endDate)
-          .limit(50000)
+        fetchAllTasksForMatrix(),
+        fetchAllMonthlyDailyReports(startDate, endDate)
       ]);
-
-      if (tErr) throw tErr;
-      if (rErr) throw rErr;
 
       // LẬP CHỈ MỤC O(1) CHO USERS, DEPTS VÀ REPORTS ĐỂ LOẠI BỎ HOÀN TOÀN VÒNG LẶP N^2
       const userMap = new Map();
@@ -13032,26 +13270,100 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
 
       const reportLookup = {};
+      const reportMetaLookup = {};
       const reportsByTaskId = new Map();
+      let maxFetchedUpdatedAtMs = 0;
 
       if (reports) {
         reports.forEach(r => {
-          const day = parseInt(r.report_date.split('-')[2], 10);
+          const day = parseInt((r.report_date || '').split('-')[2], 10);
+          if (isNaN(day)) return;
           const key = `${r.task_id}_${day}`;
           let val = '';
-          if (r.num_val !== null) val = r.num_val;
-          else if (r.sym_val) val = r.sym_val;
-          else if (r.text_val) val = r.text_val;
-          reportLookup[key] = val;
+          if (r.num_val !== null && r.num_val !== undefined) val = r.num_val;
+          else if (r.sym_val !== null && r.sym_val !== undefined && r.sym_val !== '') val = r.sym_val;
+          else if (r.text_val !== null && r.text_val !== undefined && r.text_val !== '') val = r.text_val;
 
-          let taskReps = reportsByTaskId.get(r.task_id);
-          if (!taskReps) {
-            taskReps = [];
-            reportsByTaskId.set(r.task_id, taskReps);
+          const hasValue = (val !== '' && val !== null && val !== undefined);
+          const rowUpdatedMs = r.updated_at ? new Date(r.updated_at).getTime() : 0;
+          if (rowUpdatedMs > maxFetchedUpdatedAtMs) {
+            maxFetchedUpdatedAtMs = rowUpdatedMs;
           }
-          taskReps.push(r);
+
+          const prevMeta = reportMetaLookup[key];
+          if (!prevMeta) {
+            reportLookup[key] = val;
+            reportMetaLookup[key] = { val, hasValue, updatedAtMs: rowUpdatedMs, userId: r.user_id };
+          } else if (hasValue) {
+            // Bản ghi có số liệu thực tế luôn được ưu tiên nếu mới hơn hoặc bản ghi trước là rỗng
+            if (!prevMeta.hasValue || rowUpdatedMs >= prevMeta.updatedAtMs) {
+              reportLookup[key] = val;
+              reportMetaLookup[key] = { val, hasValue: true, updatedAtMs: rowUpdatedMs, userId: r.user_id };
+            }
+          } else {
+            // Bản ghi rỗng (xóa số liệu) chỉ ghi đè khi cùng user_id xóa sau hoặc thời gian xóa mới hơn hẳn
+            if (prevMeta.hasValue && (String(prevMeta.userId) === String(r.user_id) || rowUpdatedMs > prevMeta.updatedAtMs + 1000) && rowUpdatedMs >= prevMeta.updatedAtMs) {
+              reportLookup[key] = '';
+              reportMetaLookup[key] = { val: '', hasValue: false, updatedAtMs: rowUpdatedMs, userId: r.user_id };
+            }
+          }
+
+          if (hasValue || !reportsByTaskId.has(r.task_id)) {
+            let taskReps = reportsByTaskId.get(r.task_id);
+            if (!taskReps) {
+              taskReps = [];
+              reportsByTaskId.set(r.task_id, taskReps);
+            }
+            if (hasValue) {
+              taskReps.unshift(r);
+            } else {
+              taskReps.push(r);
+            }
+          }
         });
       }
+
+      if (maxFetchedUpdatedAtMs > 0 && Number(year) === Number(currentSelectedYear) && Number(month) === Number(currentSelectedMonth)) {
+        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, maxFetchedUpdatedAtMs);
+      }
+
+      // HỢP NHẤT BẢN GHI CỤC BỘ VỪA LƯU ĐỂ CHỐNG ĐỘ TRỄ MẠNG HOẶC TRUY VẤN CHỒNG CHÉO
+      const localWritesMap = getLocalMatrixWritesMap(year, month);
+      const nowMergeMs = Date.now();
+      Object.keys(localWritesMap).forEach(key => {
+        const lw = localWritesMap[key];
+        if (!lw || !lw.taskId || !lw.dayNum) return;
+        const dbMeta = reportMetaLookup[key];
+        const isRecentOrUnsynced = !lw.synced || (nowMergeMs - (lw.updatedAtMs || 0) < 120000);
+        const isNewerThanDb = !dbMeta || ((lw.updatedAtMs || 0) >= (dbMeta.updatedAtMs || 0));
+        if (isRecentOrUnsynced && isNewerThanDb) {
+          reportLookup[key] = (lw.valToCache !== undefined && lw.valToCache !== null) ? lw.valToCache : '';
+          reportMetaLookup[key] = {
+            val: reportLookup[key],
+            hasValue: reportLookup[key] !== '',
+            updatedAtMs: lw.updatedAtMs || nowMergeMs,
+            userId: lw.userId
+          };
+          if (reportLookup[key] !== '' && lw.taskId) {
+            let taskReps = reportsByTaskId.get(lw.taskId);
+            if (!taskReps) {
+              taskReps = [];
+              reportsByTaskId.set(lw.taskId, taskReps);
+            }
+            if (taskReps.length === 0) {
+              taskReps.push({
+                task_id: lw.taskId,
+                user_id: lw.userId,
+                report_date: lw.reportDate,
+                num_val: lw.numV,
+                sym_val: lw.symV,
+                text_val: lw.textV,
+                updated_at: lw.updatedAtIso
+              });
+            }
+          }
+        }
+      });
 
       const staffGroupsMap = {};
       const sharedDeptCache = new Map();
@@ -13376,6 +13688,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     async function loadMatrixData(forceServerFetch = false) {
       if (!forceServerFetch && fullPeriodMatrixCache && fullPeriodMatrixCache.queryMonth === currentSelectedMonth && fullPeriodMatrixCache.queryYear === currentSelectedYear) {
+        applyLocalMatrixWritesToMatrixObj(fullPeriodMatrixCache, currentSelectedYear, currentSelectedMonth);
         const loadingBox = document.getElementById('loadingTasksBox');
         if (loadingBox) loadingBox.classList.add('hidden');
         applyClientFilterAndRender();
@@ -13416,6 +13729,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (activeSaved) {
             const parsed = JSON.parse(activeSaved);
             if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
+              applyLocalMatrixWritesToMatrixObj(parsed, currentSelectedYear, currentSelectedMonth);
               parsed.staffGroups = sortStaffGroupsUniformly(parsed.staffGroups);
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
@@ -13426,15 +13740,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               setupDailyReportsRealtimeListener();
 
               // Cập nhật ngầm trong nền không gây gián đoạn hay hiện vòng xoay
-              fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear).then(fresh => {
+              const syncM = currentSelectedMonth;
+              const syncY = currentSelectedYear;
+              fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
                 if (fresh) {
-                  fullPeriodMatrixCache = fresh;
-                  currentMatrixData = fresh;
-                  cachedPreloadMatrix = fresh;
-                  try {
-                    localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
-                  } catch (e) { }
-                  applyClientFilterAndRender();
+                  applyFreshMatrixSafely(fresh, syncY, syncM, '');
                 }
               }).catch(() => { });
               return;
@@ -14051,6 +14361,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           nextCell.focus();
           nextCell.select();
           scrollMatrixCellIntoView(nextCell);
+        } else if (e.key === 'Enter' && e.target) {
+          e.preventDefault();
+          e.target.blur();
         }
       }
     }
@@ -14060,10 +14373,126 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       inputElem.select();
     }
 
+    let _matrixCellLiveAutosaveTimer = null;
+    let _matrixCellLiveAutosaveTarget = null;
+
+    function stageMatrixCellImmediateLocalDraft(inputElem) {
+      if (!inputElem || !inputElem.dataset || currentPeriodLocked) return;
+      const taskId = parseInt(inputElem.dataset.taskId, 10);
+      const userId = parseInt(inputElem.dataset.userId, 10);
+      const dayNum = parseInt(inputElem.dataset.day, 10);
+      if (!taskId || !dayNum || isFutureDay(dayNum, currentSelectedMonth, currentSelectedYear)) return;
+
+      let rawVal = (inputElem.value || '').trim().replace(/,/g, '');
+      if (rawVal === '0') rawVal = '';
+      const symInfo = getSmartSymbolInfo(rawVal);
+      const valToCache = symInfo ? symInfo.code : rawVal;
+      const oldVal = (inputElem.dataset.oldValue || '').trim();
+      if (oldVal === valToCache) return;
+
+      let numV = null, symV = null, textV = null;
+      if (symInfo) {
+        symV = symInfo.code;
+        if (rawVal !== symInfo.code) textV = rawVal;
+      } else if (rawVal !== '' && !isNaN(rawVal) && !isNaN(parseFloat(rawVal))) {
+        const p = parseFloat(rawVal);
+        if (p !== 0) numV = p;
+      } else if (rawVal && rawVal !== '0') {
+        textV = rawVal;
+      }
+
+      const activeData = fullPeriodMatrixCache || currentMatrixData;
+      let staffGrp = null;
+      if (activeData && activeData.staffGroups) {
+        staffGrp = activeData.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === taskId));
+      }
+      const effectiveUserId = Number(userId) || (staffGrp && Number(staffGrp.userId)) || (currentUser ? Number(currentUser.id) : null);
+      const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+      const dFormatted = (dayNum < 10 ? '0' : '') + dayNum;
+      const reportDate = `${currentSelectedYear}-${mFormatted}-${dFormatted}`;
+      const nowMs = Date.now();
+      const nowIso = new Date(nowMs).toISOString();
+
+      recordLocalMatrixWrite(currentSelectedYear, currentSelectedMonth, [{
+        taskId: taskId,
+        userId: effectiveUserId,
+        dayNum: dayNum,
+        reportDate: reportDate,
+        valToCache: valToCache,
+        numV: numV,
+        symV: symV,
+        textV: textV,
+        updatedAtIso: nowIso,
+        updatedAtMs: nowMs,
+        synced: false
+      }]);
+
+      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+        if (targetCache && targetCache.staffGroups) {
+          targetCache.staffGroups.forEach(grp => {
+            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+            if (matchedTask) {
+              matchedTask.dailyValues[dayNum] = valToCache;
+              matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+            }
+          });
+        }
+      });
+      persistActiveMatrixCaches(currentSelectedYear, currentSelectedMonth);
+    }
+
+    function scheduleMatrixCellLiveAutosave(inputElem, delayMs = 900) {
+      if (!inputElem || currentPeriodLocked) return;
+      stageMatrixCellImmediateLocalDraft(inputElem);
+
+      if (_matrixCellLiveAutosaveTimer) {
+        clearTimeout(_matrixCellLiveAutosaveTimer);
+        _matrixCellLiveAutosaveTimer = null;
+      }
+      _matrixCellLiveAutosaveTarget = inputElem;
+      _matrixCellLiveAutosaveTimer = setTimeout(() => {
+        _matrixCellLiveAutosaveTimer = null;
+        const target = _matrixCellLiveAutosaveTarget;
+        _matrixCellLiveAutosaveTarget = null;
+        if (!target || !document.body.contains(target)) return;
+        const rawVal = (target.value || '').trim().replace(/,/g, '');
+        const symInfo = getSmartSymbolInfo(rawVal === '0' ? '' : rawVal);
+        const wasLeaveMerged = (target.dataset.isLeaveMerged === 'true');
+        // Với ký hiệu nghỉ gộp nhiều dòng, đợi người dùng rời ô hoặc nhấn Enter để tránh nhảy dòng khi đang gõ
+        if ((symInfo && symInfo.isLeave) || wasLeaveMerged) return;
+        handleMatrixCellBlur(target);
+      }, delayMs);
+    }
+
+    if (typeof window !== 'undefined' && !window._hasMatrixPageUnloadFlushListener) {
+      window._hasMatrixPageUnloadFlushListener = true;
+      const flushActiveCellOnHide = () => {
+        if (_matrixCellLiveAutosaveTimer) {
+          clearTimeout(_matrixCellLiveAutosaveTimer);
+          _matrixCellLiveAutosaveTimer = null;
+        }
+        const activeEl = document.activeElement;
+        if (activeEl && activeEl.classList && activeEl.classList.contains('matrix-input-cell')) {
+          stageMatrixCellImmediateLocalDraft(activeEl);
+          handleMatrixCellBlur(activeEl);
+        }
+      };
+      window.addEventListener('pagehide', flushActiveCellOnHide);
+      window.addEventListener('beforeunload', flushActiveCellOnHide);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) flushActiveCellOnHide();
+      });
+    }
+
     /**
-     * TỰ ĐỘNG LƯU BÁO CÁO KHI RỜI Ô TRÊN MA TRẬN
+     * TỰ ĐỘNG LƯU BÁO CÁO KHI RỜI Ô TRÊN MA TRẬN HOẶC TỰ ĐỘNG LƯU TỨC THỜI KHI GÕ
      */
     async function handleMatrixCellBlur(inputElem) {
+      if (_matrixCellLiveAutosaveTimer && _matrixCellLiveAutosaveTarget === inputElem) {
+        clearTimeout(_matrixCellLiveAutosaveTimer);
+        _matrixCellLiveAutosaveTimer = null;
+        _matrixCellLiveAutosaveTarget = null;
+      }
       const oldVal = (inputElem.dataset.oldValue || "").trim();
       let rawVal = inputElem.value.trim().replace(/,/g, '');
 
@@ -14157,25 +14586,50 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (activeData && activeData.staffGroups) {
         staffGrp = activeData.staffGroups.find(g => (g.tasks || []).some(t => t.taskId === taskId));
       }
+      const effectiveUserId = Number(userId) || (staffGrp && Number(staffGrp.userId)) || (currentUser ? Number(currentUser.id) : null);
+      const saveYear = currentSelectedYear;
+      const saveMonth = currentSelectedMonth;
+      const nowIso = new Date().toISOString();
+      const nowMs = Date.now();
+      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, nowMs + 1000);
 
       // TRƯỜNG HỢP 1: ĐIỀN KÝ HIỆU NGÀY NGHỈ (7 KÝ HIỆU: P, Ô, CT, VR, HT, H, L)
       // Tự động gộp cả cột của nhân sự đó trong ngày và áp dụng ký hiệu cho toàn bộ đầu việc
       if (symInfo && symInfo.isLeave && staffGrp && staffGrp.tasks.length > 1) {
         const recordsToUpsert = staffGrp.tasks.map(t => ({
           task_id: t.taskId,
-          user_id: staffGrp.userId || userId,
+          user_id: staffGrp.userId || effectiveUserId,
           report_date: reportDate,
           num_val: null,
           sym_val: symInfo.code,
           text_val: (val !== symInfo.code) ? val : null,
-          updated_at: new Date().toISOString()
+          updated_at: nowIso
         }));
 
+        const localEntries = staffGrp.tasks.map(t => ({
+          taskId: t.taskId,
+          userId: staffGrp.userId || effectiveUserId,
+          dayNum: dayNum,
+          reportDate: reportDate,
+          valToCache: symInfo.code,
+          numV: null,
+          symV: symInfo.code,
+          textV: (val !== symInfo.code) ? val : null,
+          updatedAtIso: nowIso,
+          updatedAtMs: nowMs,
+          synced: false
+        }));
+        recordLocalMatrixWrite(saveYear, saveMonth, localEntries);
+
+        _activeMatrixCellSaveCount++;
         try {
           const { error } = await supabase
             .from('daily_reports')
             .upsert(recordsToUpsert, { onConflict: 'task_id,user_id,report_date' });
           if (error) throw error;
+
+          recordLocalMatrixWrite(saveYear, saveMonth, localEntries.map(e => ({ ...e, synced: true })));
+          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
 
           [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
             if (targetCache && targetCache.staffGroups) {
@@ -14188,13 +14642,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               }
             }
           });
+          persistActiveMatrixCaches(saveYear, saveMonth);
 
           inputElem.classList.remove('cell-saving');
           applyClientFilterAndRender();
           refreshReportingProgressRealtime();
           broadcastMatrixChange('cell_saved', {
-            targetYear: currentSelectedYear,
-            targetMonth: currentSelectedMonth,
+            targetYear: saveYear,
+            targetMonth: saveMonth,
             senderName: currentUser ? (currentUser.fullName || currentUser.full_name || currentUser.username) : 'Nhân sự'
           });
           showToast(`Đã gộp ngày nghỉ (${symInfo.code}) cho ${staffGrp.staffName}`);
@@ -14210,6 +14665,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           inputElem.classList.remove('cell-saving');
           showToast("Lỗi lưu ngày nghỉ: " + err.message, true);
           return;
+        } finally {
+          _activeMatrixCellSaveCount = Math.max(0, _activeMatrixCellSaveCount - 1);
         }
       }
 
@@ -14220,29 +14677,63 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const recordsToUpsert = [
           {
             task_id: taskId,
-            user_id: staffGrp.userId || userId,
+            user_id: staffGrp.userId || effectiveUserId,
             report_date: reportDate,
             num_val: numV,
             sym_val: symV,
             text_val: textV,
-            updated_at: new Date().toISOString()
+            updated_at: nowIso
           },
           ...otherTasks.map(t => ({
             task_id: t.taskId,
-            user_id: staffGrp.userId || userId,
+            user_id: staffGrp.userId || effectiveUserId,
             report_date: reportDate,
             num_val: null,
             sym_val: null,
             text_val: null,
-            updated_at: new Date().toISOString()
+            updated_at: nowIso
           }))
         ];
 
+        const localEntries = [
+          {
+            taskId: taskId,
+            userId: staffGrp.userId || effectiveUserId,
+            dayNum: dayNum,
+            reportDate: reportDate,
+            valToCache: valToCache,
+            numV: numV,
+            symV: symV,
+            textV: textV,
+            updatedAtIso: nowIso,
+            updatedAtMs: nowMs,
+            synced: false
+          },
+          ...otherTasks.map(t => ({
+            taskId: t.taskId,
+            userId: staffGrp.userId || effectiveUserId,
+            dayNum: dayNum,
+            reportDate: reportDate,
+            valToCache: '',
+            numV: null,
+            symV: null,
+            textV: null,
+            updatedAtIso: nowIso,
+            updatedAtMs: nowMs,
+            synced: false
+          }))
+        ];
+        recordLocalMatrixWrite(saveYear, saveMonth, localEntries);
+
+        _activeMatrixCellSaveCount++;
         try {
           const { error } = await supabase
             .from('daily_reports')
             .upsert(recordsToUpsert, { onConflict: 'task_id,user_id,report_date' });
           if (error) throw error;
+
+          recordLocalMatrixWrite(saveYear, saveMonth, localEntries.map(e => ({ ...e, synced: true })));
+          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
 
           [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
             if (targetCache && targetCache.staffGroups) {
@@ -14259,13 +14750,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               }
             }
           });
+          persistActiveMatrixCaches(saveYear, saveMonth);
 
           inputElem.classList.remove('cell-saving');
           applyClientFilterAndRender();
           refreshReportingProgressRealtime();
           broadcastMatrixChange('cell_saved', {
-            targetYear: currentSelectedYear,
-            targetMonth: currentSelectedMonth,
+            targetYear: saveYear,
+            targetMonth: saveMonth,
             senderName: currentUser ? (currentUser.fullName || currentUser.full_name || currentUser.username) : 'Nhân sự'
           });
           showToast(`Đã tách các ô làm việc cho ${staffGrp.staffName}`);
@@ -14280,19 +14772,51 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           inputElem.classList.remove('cell-saving');
           showToast("Lỗi cập nhật: " + err.message, true);
           return;
+        } finally {
+          _activeMatrixCellSaveCount = Math.max(0, _activeMatrixCellSaveCount - 1);
         }
       }
 
       const dbRecord = {
         task_id: taskId,
-        user_id: userId,
+        user_id: effectiveUserId,
         report_date: reportDate,
         num_val: numV,
         sym_val: symV,
         text_val: textV,
-        updated_at: new Date().toISOString()
+        updated_at: nowIso
       };
 
+      const singleLocalEntry = {
+        taskId: taskId,
+        userId: effectiveUserId,
+        dayNum: dayNum,
+        reportDate: reportDate,
+        valToCache: valToCache,
+        numV: numV,
+        symV: symV,
+        textV: textV,
+        updatedAtIso: nowIso,
+        updatedAtMs: nowMs,
+        synced: false
+      };
+
+      // Cập nhật lạc quan (optimistic) ngay vào bộ nhớ và localStorage trước khi chờ mạng
+      recordLocalMatrixWrite(saveYear, saveMonth, [singleLocalEntry]);
+      [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
+        if (targetCache && targetCache.staffGroups) {
+          targetCache.staffGroups.forEach(grp => {
+            const matchedTask = grp.tasks.find(t => t.taskId === taskId);
+            if (matchedTask) {
+              matchedTask.dailyValues[dayNum] = valToCache;
+              matchedTask.monthTotal = calculateSmartRowTotalClient(matchedTask.dailyValues, targetCache.dayCols);
+            }
+          });
+        }
+      });
+      persistActiveMatrixCaches(saveYear, saveMonth);
+
+      _activeMatrixCellSaveCount++;
       try {
         const { error } = await supabase
           .from('daily_reports')
@@ -14300,6 +14824,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         if (error) throw error;
         registerReportMonthIfNew(reportDate);
+
+        recordLocalMatrixWrite(saveYear, saveMonth, [{ ...singleLocalEntry, synced: true }]);
+        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
 
         inputElem.dataset.oldValue = valToCache;
         inputElem.value = valToCache;
@@ -14330,7 +14857,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           inputElem.style.removeProperty('font-size');
         }
 
-        // Đồng bộ giá trị mới vào cả fullPeriodMatrixCache và currentMatrixData
+        // Đồng bộ giá trị mới vào cả fullPeriodMatrixCache, currentMatrixData và localStorage
         [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
           if (targetCache && targetCache.staffGroups) {
             targetCache.staffGroups.forEach(grp => {
@@ -14342,6 +14869,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             });
           }
         });
+        persistActiveMatrixCaches(saveYear, saveMonth);
 
         const rowTr = inputElem.closest('tr');
         if (rowTr) {
@@ -14365,14 +14893,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         // CẬP NHẬT TỨC THÌ TIẾN ĐỘ BÁO CÁO VÀ THI ĐUA ĐỂ KỊP THEO DÕI
         refreshReportingProgressRealtime();
         broadcastMatrixChange('cell_saved', {
-          targetYear: currentSelectedYear,
-          targetMonth: currentSelectedMonth,
+          targetYear: saveYear,
+          targetMonth: saveMonth,
           senderName: currentUser ? (currentUser.fullName || currentUser.full_name || currentUser.username) : 'Nhân sự'
         });
         showToast("Cập nhật báo cáo thành công!");
       } catch (err) {
         inputElem.classList.remove('cell-saving');
         showToast("Lỗi cập nhật: " + err.message, true);
+      } finally {
+        _activeMatrixCellSaveCount = Math.max(0, _activeMatrixCellSaveCount - 1);
       }
     }
 
@@ -14717,69 +15247,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // LÀM MỚI NGẦM MA TRẬN: BẢO LƯU VỊ TRÍ CUỘN & KHÔNG LÀM MẤT CON TRỎ SOẠN THẢO
     async function silentRefreshMatrixData(senderName = '') {
-      if (_isSilentRefreshing) return;
+      if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
       _isSilentRefreshing = true;
 
       try {
-        const tableContainer = document.getElementById('tableScrollContainer');
-        const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
-        const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
-
-        // Lưu lại vị trí ô input nếu người dùng hiện tại đang gõ dở
-        const activeEl = document.activeElement;
-        let activeInputMeta = null;
-        if (activeEl && activeEl.tagName === 'INPUT' && activeEl.dataset.taskId && activeEl.dataset.day) {
-          activeInputMeta = {
-            taskId: activeEl.dataset.taskId,
-            day: activeEl.dataset.day,
-            val: activeEl.value,
-            selectionStart: activeEl.selectionStart,
-            selectionEnd: activeEl.selectionEnd
-          };
-        }
-
-        // Tải dữ liệu ma trận mới nhất trong nền (không bật vòng xoay loadingTasksBox)
-        const fresh = await fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear);
+        const refreshM = currentSelectedMonth;
+        const refreshY = currentSelectedYear;
+        const fresh = await fetchMatrixFromSupabase(refreshM, refreshY);
         if (fresh && fresh.staffGroups) {
-          fullPeriodMatrixCache = fresh;
-          currentMatrixData = fresh;
-          cachedPreloadMatrix = fresh;
-          const memKey = `${currentSelectedYear}_${currentSelectedMonth}`;
-          if (typeof periodMatrixMemoryCache !== 'undefined' && periodMatrixMemoryCache) {
-            periodMatrixMemoryCache.set(memKey, fresh);
-          }
-          try {
-            localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(fresh));
-          } catch (e) { }
-
-          // Vẽ lại ma trận mượt mà
-          applyClientFilterAndRender();
-
-          // Cập nhật lại 3 bảng phân tích bên dưới (Đôn Đốc, Thi Đua, Nhịp Độ)
-          refreshReportingProgressRealtime();
-
-          // Khôi phục chính xác vị trí cuộn
-          if (tableContainer) {
-            tableContainer.scrollLeft = prevScrollLeft;
-            tableContainer.scrollTop = prevScrollTop;
-          }
-
-          // Khôi phục lại focus nếu người dùng đang gõ
-          if (activeInputMeta) {
-            const restoredInp = document.querySelector(`input[data-task-id="${activeInputMeta.taskId}"][data-day="${activeInputMeta.day}"]`);
-            if (restoredInp) {
-              restoredInp.value = activeInputMeta.val;
-              restoredInp.focus();
-              try {
-                restoredInp.setSelectionRange(activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
-              } catch (e) { }
-            }
-          }
-
-          // Hiển thị chỉ báo đồng bộ nếu có tên người cập nhật
-          if (senderName) {
-            showLiveSyncIndicator(senderName, currentSelectedMonth, currentSelectedYear);
-          }
+          applyFreshMatrixSafely(fresh, refreshY, refreshM, senderName);
         }
       } catch (err) {
         console.warn("[SilentRefresh] Lỗi cập nhật ma trận ngầm:", err);
@@ -14835,12 +15311,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       _autoSyncPollingInterval = setInterval(async () => {
         if (document.hidden) return; // Không truy vấn khi tab đang ẩn
-        if (_isSilentRefreshing) return;
+        if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
 
         try {
           const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
+          const daysInPollMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
           const startDate = `${currentSelectedYear}-${mFormatted}-01`;
-          const endDate = `${currentSelectedYear}-${mFormatted}-31`;
+          const endDate = `${currentSelectedYear}-${mFormatted}-${String(daysInPollMonth).padStart(2, '0')}`;
 
           const { data, error } = await supabase
             .from('daily_reports')
@@ -17809,15 +18286,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const { data: dReps, error: dErr } = await supabase
             .from('daily_reports')
             .select('*')
-            .eq('user_id', currentUser.id)
-            .eq('report_date', targetDate);
+            .eq('report_date', targetDate)
+            .order('updated_at', { ascending: true })
+            .limit(1000);
           if (!dErr && dReps && dReps.length > 0) {
             dReps.forEach(dr => {
               let v = '';
-              if (dr.num_val !== null) v = dr.num_val;
+              if (dr.num_val !== null && dr.num_val !== undefined) v = dr.num_val;
               else if (dr.sym_val) v = dr.sym_val;
               else if (dr.text_val) v = dr.text_val;
-              directDayReportsMap[dr.task_id] = v;
+              if (v !== '' || directDayReportsMap[dr.task_id] === undefined || String(dr.user_id) === String(currentUser.id)) {
+                directDayReportsMap[dr.task_id] = v;
+              }
             });
           }
         } catch (errDir) {
@@ -18050,18 +18530,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const { data: mReps, error: mErr } = await supabase
               .from('daily_reports')
               .select('*')
-              .eq('user_id', currentUser.id)
               .eq('task_id', targetTask.taskId)
               .gte('report_date', `${targetY}-${mStr}-01`)
-              .lte('report_date', `${targetY}-${mStr}-${String(daysInMonth).padStart(2, '0')}`);
+              .lte('report_date', `${targetY}-${mStr}-${String(daysInMonth).padStart(2, '0')}`)
+              .order('updated_at', { ascending: true })
+              .limit(1000);
             if (!mErr && mReps && mReps.length > 0) {
               mReps.forEach(mr => {
                 const dayNum = parseInt(mr.report_date.split('-')[2], 10);
                 let v = '';
-                if (mr.num_val !== null) v = mr.num_val;
+                if (mr.num_val !== null && mr.num_val !== undefined) v = mr.num_val;
                 else if (mr.sym_val) v = mr.sym_val;
                 else if (mr.text_val) v = mr.text_val;
-                directMonthReportsMap[dayNum] = v;
+                if (v !== '' || directMonthReportsMap[dayNum] === undefined || String(mr.user_id) === String(currentUser.id)) {
+                  directMonthReportsMap[dayNum] = v;
+                }
               });
             }
           } catch (errMonth) {
@@ -18740,9 +19223,33 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       autoSimulateProgress(10, 85, isLeaveReport ? "Xác nhận và ghi nhận vào cơ sở dữ liệu..." : "Ghi nhận vào cơ sở dữ liệu...", 25);
       updateSyncStatusUI('saving');
 
-      const dbRecords = updates.map(u => {
+      const modalSaveIso = new Date().toISOString();
+      const modalSaveMs = Date.now();
+      const localModalEntries = [];
+
+      // Chỉ gửi lên DB những dòng thực sự có giá trị hoặc từng có giá trị và được người dùng xóa trắng
+      const previousValLookup = {};
+      if (currentReportInputMode === 'day') {
+        (currentDayEntryTasks || []).forEach(t => {
+          previousValLookup[`${t.taskId}_${targetDay}`] = String(t.currentVal ?? '').trim();
+        });
+      } else if (currentTaskEntryMeta) {
+        (currentTaskEntryDays || []).forEach(d => {
+          previousValLookup[`${currentTaskEntryMeta.taskId}_${d.dayNum}`] = String(d.value ?? '').trim();
+        });
+      }
+
+      const filteredUpdates = updates.filter(u => {
+        const prev = previousValLookup[`${u.taskId}_${u.dayNum}`] || '';
+        const cur = String(u.value ?? '').trim();
+        return cur !== '' || prev !== '';
+      });
+      const effectiveUpdatesForDb = filteredUpdates.length > 0 ? filteredUpdates : updates.slice(0, 1);
+
+      const dbRecords = effectiveUpdatesForDb.map(u => {
         let numV = null, symV = null, textV = null;
         const symInfo = getSmartSymbolInfo(u.value);
+        const valToCache = symInfo ? symInfo.code : u.value;
         if (symInfo) {
           symV = symInfo.code;
           if (u.value !== symInfo.code) {
@@ -18755,6 +19262,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           textV = u.value;
         }
 
+        localModalEntries.push({
+          taskId: u.taskId,
+          userId: u.userId,
+          dayNum: u.dayNum,
+          reportDate: u.reportDate,
+          valToCache: valToCache,
+          numV: numV,
+          symV: symV,
+          textV: textV,
+          updatedAtIso: modalSaveIso,
+          updatedAtMs: modalSaveMs,
+          synced: false
+        });
+
         return {
           task_id: u.taskId,
           user_id: u.userId,
@@ -18762,9 +19283,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           num_val: numV,
           sym_val: symV,
           text_val: textV,
-          updated_at: new Date().toISOString()
+          updated_at: modalSaveIso
         };
       });
+
+      recordLocalMatrixWrite(targetYear, targetMonth, localModalEntries);
+      persistActiveMatrixCaches(targetYear, targetMonth);
+      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, modalSaveMs + 1000);
 
       try {
         const { error } = await supabase
@@ -18772,6 +19297,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           .upsert(dbRecords, { onConflict: 'task_id,user_id,report_date' });
 
         if (error) throw error;
+        recordLocalMatrixWrite(targetYear, targetMonth, localModalEntries.map(e => ({ ...e, synced: true })));
+        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
         registerReportMonthIfNew(curDate);
 
         finishProgressHud(isLeaveReport ? "Đã xác nhận báo cáo thành công!" : "Đã lưu thành công!", () => {
