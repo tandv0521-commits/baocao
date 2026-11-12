@@ -25889,6 +25889,86 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // 6. XUẤT FILE WORD (.doc) BÁO CÁO CÁ NHÂN & TỔNG HỢP CHUẨN MẪU HÀNH CHÍNH DOANH NGHIỆP
     const TIENPHONG_LOGO_BASE64_CLEAN = 'iVBORw0KGgoAAAANSUhEUgAAASwAAACrCAMAAADrYVGTAAAC/VBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////92vkPtHCTqAADtHSVesyJ3vkR4v0WCw1JquTPrAAXoAAD4+/Wx2pR0vUBbsR5dsiBzvT5jtSlfsyPyZF95v0dwuzpxvDxouDD3n5ditSdltixquDLsDRhgtCX///1uujjtICjtHiZtujZmty5suTTtFiDsEBrtGSJZsRthtCbtGiNXsBl/wk6UzGvq9eLrAAntFR3sChXrAAf7/fn829KKx13tERztFhfO57uk04HrAg/5ta39/vv6xr7sCBP/9/Cr1or2joeh0n3sCxD4pp6MyGDtFB/G46+73qD0c2zvLzHrAQz6/PfzZmDB4ah8wUry+Ov5q6ePyWPtHx/i8dba7crD4qye0XmZznKXzW+RymaHxVjv9+j7z8bM5rex2ZLrBRH1+vDn89zsExTp9N/70tTU6sK+36S125jwRUzz+e7X68e53Zyn1YWExFXvNzftGhrsDg7t9uXJ5bP1gnvyWmDuKSj82M35sarwQz/95dzk8tmu2I/wR0T3+vLyWVT+7OX7yMD6ubP3lJj0cWzuIiLrBgv95uDe79Dc7s33l4/wPTlWrxb+8+z+8Oj83NbQ6L2bz3Xg8NPV6sT1hIjxTEfrAAL//fj/+vX0c3DzYVrsCgv6wbr5rqf3mp33m5T3k4vxT0v939j4q6HyU1HvLi3uJiTrBQb0eHb0bWf94tv81M/1hID/9O/6v7b2h4PyW1n4n5z2jI7yZGnwPEBPrA77zMLR6b/vMzNJqQX+7ur4o5r1gHZDpgD70Mr4o6TxTlL6xcXwP0QRWmdPAAAAO3RSTlMAR+7hYIgDu517CWdNrVlT5oF2OBb7zbEjEg7JxbaPPyprLx7Qwaiil+ndcTP0k/bs1vPc2dMa+PCl17Sua20AACJmSURBVHja5Jm5T9twHMVD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';
 
+    function resolveReportSigners(rep, isConsolidated = false) {
+      const senderRole = rep?.senderRole || (typeof currentUser !== 'undefined' && currentUser?.role) || '';
+      const senderUsername = rep?.senderUsername || (typeof currentUser !== 'undefined' && currentUser?.username) || '';
+      const normSenderRole = (typeof removeAccents === 'function' ? removeAccents(String(senderRole || '')) : String(senderRole || '')).toLowerCase().trim();
+      const normSenderUser = (typeof removeAccents === 'function' ? removeAccents(String(senderUsername || '')) : String(senderUsername || '')).toLowerCase().trim();
+
+      const isSenderLeadership = (typeof isBoardOfDirectors === 'function' && isBoardOfDirectors({ role: senderRole, username: senderUsername }))
+        || (typeof isDeputyDirector === 'function' && isDeputyDirector(senderRole, senderUsername))
+        || (typeof isDirectorOrAdmin === 'function' && isDirectorOrAdmin(senderRole, senderUsername))
+        || normSenderRole.includes('giam doc')
+        || normSenderRole.includes('lanh dao')
+        || normSenderUser === 'admin';
+
+      const isSenderManager = (typeof isAdminOrManager === 'function' && isAdminOrManager(senderRole, senderUsername))
+        || (typeof getWorkRoleLevel === 'function' && getWorkRoleLevel({ role: senderRole, username: senderUsername }) >= 3)
+        || normSenderRole.includes('quan ly')
+        || normSenderRole.includes('truong phong')
+        || normSenderRole.includes('pho phong')
+        || rep?.reportType === 'manager_summary';
+
+      const isSenderManagerOrLeadership = isSenderLeadership || isSenderManager || isConsolidated;
+
+      const fallbackRec = (typeof getActivePreviewReportRecipient === "function")
+        ? getActivePreviewReportRecipient()
+        : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
+
+      const recRole = rep?.recipientRole || (fallbackRec && fallbackRec.role) || '';
+      const recName = rep?.recipientFullName || (fallbackRec && (fallbackRec.full_name || fallbackRec.fullName)) || '';
+      const recUser = rep?.recipientUsername || (fallbackRec && fallbackRec.username) || '';
+
+      const normRecRole = (typeof removeAccents === 'function' ? removeAccents(String(recRole || '')) : String(recRole || '')).toLowerCase().trim();
+      const normRecName = (typeof removeAccents === 'function' ? removeAccents(String(recName || '')) : String(recName || '')).toLowerCase().trim();
+      const normRecUser = (typeof removeAccents === 'function' ? removeAccents(String(recUser || '')) : String(recUser || '')).toLowerCase().trim();
+
+      const isRecipientLeadership = (typeof isBoardOfDirectors === 'function' && isBoardOfDirectors({ role: recRole, username: recUser }))
+        || (typeof isDeputyDirector === 'function' && isDeputyDirector(recRole, recUser))
+        || (typeof isDirectorOrAdmin === 'function' && isDirectorOrAdmin(recRole, recUser))
+        || normRecRole.includes('giam doc')
+        || normRecRole.includes('lanh dao')
+        || normRecName.includes('giam doc')
+        || normRecName.includes('lanh dao')
+        || normRecName.includes('kim oanh')
+        || normRecName.includes('ms oanh')
+        || normRecUser === 'oanhltki'
+        || normRecUser === 'trangntq';
+
+      const isSentStraightToLeadership = isRecipientLeadership && !rep?.forwardedBy;
+      const shouldOmitManagerSigner = Boolean(isConsolidated || isSenderManagerOrLeadership || isSentStraightToLeadership);
+
+      let directorSignerName = 'Lê Thị Kim Oanh';
+      if (isRecipientLeadership && recName) {
+        const isGenericLeadership = normRecName.includes('ban giam doc') || normRecName.includes('ban lanh dao') || normRecName.includes('kim oanh') || normRecName.includes('ms oanh') || normRecUser === 'oanhltki';
+        if (!isGenericLeadership && recName.trim()) {
+          directorSignerName = recName.trim();
+        }
+      }
+
+      let managerSignerName = rep?.forwardedBy || '';
+      if (!managerSignerName && !isRecipientLeadership && recName) {
+        managerSignerName = recName;
+      }
+      if (!managerSignerName && !isRecipientLeadership && recUser) {
+        managerSignerName = recUser;
+      }
+      if (!managerSignerName) {
+        managerSignerName = 'Quản lý bộ phận';
+      }
+
+      const authorName = rep?.senderFullName || rep?.senderUsername || (typeof currentUser !== 'undefined' && currentUser?.fullName) || 'Người lập báo cáo';
+
+      return {
+        shouldOmitManagerSigner,
+        isSenderManagerOrLeadership,
+        isRecipientLeadership,
+        authorName,
+        managerSignerName,
+        directorSignerName
+      };
+    }
+
     function generateSingleReportWordHtml(rep, _consolidatedOpts) {
       const isConsolidated = Boolean(_consolidatedOpts && _consolidatedOpts.isConsolidated);
       const resolvedPeriod = (_consolidatedOpts && _consolidatedOpts.m && _consolidatedOpts.y)
@@ -26017,33 +26097,49 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         </table>
       `;
 
-      let managerSignerName = rep.forwardedBy || '';
-      if (!managerSignerName && rep.recipientFullName) {
-        const recLower = String(rep.recipientFullName).toLowerCase();
-        if (!recLower.includes('giám đốc') && !recLower.includes('lãnh đạo') && !recLower.includes('kim oanh')) {
-          managerSignerName = rep.recipientFullName;
-        }
-      }
-      if (!managerSignerName && rep.recipientUsername) {
-        managerSignerName = rep.recipientUsername;
-      }
-      if (!managerSignerName && !isConsolidated) {
-        const fallbackRec = (typeof getActivePreviewReportRecipient === "function")
-          ? getActivePreviewReportRecipient()
-          : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
-        if (fallbackRec) {
-          const recName = fallbackRec.full_name || fallbackRec.fullName || fallbackRec.username || '';
-          const recLower = recName.toLowerCase();
-          if (!recLower.includes('giám đốc') && !recLower.includes('lãnh đạo') && !recLower.includes('kim oanh')) {
-            managerSignerName = recName;
-          }
-        }
-      }
-      if (!managerSignerName) {
-        managerSignerName = 'Quản lý bộ phận';
-      }
+      const signers = (typeof resolveReportSigners === 'function')
+        ? resolveReportSigners(rep, isConsolidated)
+        : (() => {
+            const senderRole = rep?.senderRole || (typeof currentUser !== 'undefined' && currentUser?.role) || '';
+            const senderUsername = rep?.senderUsername || (typeof currentUser !== 'undefined' && currentUser?.username) || '';
+            const normSenderRole = (typeof removeAccents === 'function' ? removeAccents(String(senderRole || '')) : String(senderRole || '')).toLowerCase().trim();
+            const normSenderUser = (typeof removeAccents === 'function' ? removeAccents(String(senderUsername || '')) : String(senderUsername || '')).toLowerCase().trim();
+            const isSenderLeadership = normSenderRole.includes('giam doc') || normSenderRole.includes('lanh dao') || normSenderUser === 'admin';
+            const isSenderManager = normSenderRole.includes('quan ly') || normSenderRole.includes('truong phong') || normSenderRole.includes('pho phong') || rep?.reportType === 'manager_summary';
+            const isSenderManagerOrLeadership = isSenderLeadership || isSenderManager || isConsolidated;
 
-      const signatureTableHtml = isConsolidated
+            const fallbackRec = (typeof getActivePreviewReportRecipient === 'function') ? getActivePreviewReportRecipient() : (typeof currentSelectedRecipient !== 'undefined' ? currentSelectedRecipient : null);
+            const recRole = rep?.recipientRole || (fallbackRec && fallbackRec.role) || '';
+            const recName = rep?.recipientFullName || (fallbackRec && (fallbackRec.full_name || fallbackRec.fullName)) || '';
+            const recUser = rep?.recipientUsername || (fallbackRec && fallbackRec.username) || '';
+            const normRecRole = (typeof removeAccents === 'function' ? removeAccents(String(recRole || '')) : String(recRole || '')).toLowerCase().trim();
+            const normRecName = (typeof removeAccents === 'function' ? removeAccents(String(recName || '')) : String(recName || '')).toLowerCase().trim();
+            const normRecUser = (typeof removeAccents === 'function' ? removeAccents(String(recUser || '')) : String(recUser || '')).toLowerCase().trim();
+            const isRecipientLeadership = normRecRole.includes('giam doc') || normRecRole.includes('lanh dao') || normRecName.includes('giam doc') || normRecName.includes('lanh dao') || normRecName.includes('kim oanh') || normRecName.includes('ms oanh') || normRecUser === 'oanhltki' || normRecUser === 'trangntq';
+            const isSentStraightToLeadership = isRecipientLeadership && !rep?.forwardedBy;
+            const shouldOmitManagerSigner = Boolean(isConsolidated || isSenderManagerOrLeadership || isSentStraightToLeadership);
+
+            let directorSignerName = 'Lê Thị Kim Oanh';
+            if (isRecipientLeadership && recName) {
+              const isGenericLeadership = normRecName.includes('ban giam doc') || normRecName.includes('ban lanh dao') || normRecName.includes('kim oanh') || normRecName.includes('ms oanh') || normRecUser === 'oanhltki';
+              if (!isGenericLeadership && recName.trim()) directorSignerName = recName.trim();
+            }
+
+            let managerSignerName = rep?.forwardedBy || '';
+            if (!managerSignerName && !isRecipientLeadership && recName) managerSignerName = recName;
+            if (!managerSignerName && !isRecipientLeadership && recUser) managerSignerName = recUser;
+            if (!managerSignerName) managerSignerName = 'Quản lý bộ phận';
+
+            const authorName = rep?.senderFullName || rep?.senderUsername || (typeof currentUser !== 'undefined' && currentUser?.fullName) || 'Người lập báo cáo';
+            return { shouldOmitManagerSigner, authorName, managerSignerName, directorSignerName };
+          })();
+
+      const shouldOmitManagerSigner = signers.shouldOmitManagerSigner;
+      const authorSignerName = signers.authorName || rep.senderFullName || rep.senderUsername || 'Người lập báo cáo';
+      const managerSignerName = signers.managerSignerName || 'Quản lý bộ phận';
+      const directorSignerName = signers.directorSignerName || 'Lê Thị Kim Oanh';
+
+      const signatureTableHtml = shouldOmitManagerSigner
         ? `
         <table class="sig-table">
           <tr>
@@ -26052,11 +26148,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </tr>
           <tr>
             <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-title">QUẢN LÝ TỔNG HỢP BÁO CÁO</span><br>
+              <span class="sig-title">${isConsolidated ? 'QUẢN LÝ TỔNG HỢP BÁO CÁO' : 'NGƯỜI LẬP BÁO CÁO'}</span><br>
               <span class="sig-sub">(Ký, ghi rõ họ tên)</span>
             </td>
             <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-title" style="white-space: nowrap;">BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY</span><br>
+              <span class="sig-title" style="white-space: nowrap;">${isConsolidated ? 'BAN GIÁM ĐỐC / LÃNH ĐẠO CÔNG TY' : 'BAN GIÁM ĐỐC / LÃNH ĐẠO'}</span><br>
               <span class="sig-sub">(Ký duyệt)</span>
             </td>
           </tr>
@@ -26066,10 +26162,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </tr>
           <tr>
             <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-name">${escapeHtml(rep.senderFullName || 'Quản lý bộ phận')}</span>
+              <span class="sig-name">${escapeHtml(authorSignerName)}</span>
             </td>
             <td style="width: 50%; text-align: center; padding: 0 6pt; line-height: 1.2;">
-              <span class="sig-name">Lê Thị Kim Oanh</span>
+              <span class="sig-name">${escapeHtml(directorSignerName)}</span>
             </td>
           </tr>
         </table>
@@ -26104,13 +26200,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </tr>
           <tr>
             <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</span>
+              <span class="sig-name">${escapeHtml(authorSignerName)}</span>
             </td>
             <td style="width: 28%; text-align: center; padding: 0 4pt; line-height: 1.2;">
               <span class="sig-name">${escapeHtml(managerSignerName)}</span>
             </td>
             <td style="width: 44%; text-align: center; padding: 0 4pt; line-height: 1.2;">
-              <span class="sig-name">Lê Thị Kim Oanh</span>
+              <span class="sig-name">${escapeHtml(directorSignerName)}</span>
             </td>
           </tr>
         </table>
@@ -26222,7 +26318,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </div>
         ` : ''}
 
-        ${(!isConsolidated && rep.managerFeedback) ? `
+        ${(!shouldOmitManagerSigner && rep.managerFeedback) ? `
           <div style="margin-top: 12pt; margin-bottom: 8pt; border-left: 2.5pt solid #d97706; padding-left: 10pt; page-break-inside: avoid;">
             <div style="font-size: 11pt; font-weight: bold; color: #d97706; text-transform: uppercase; margin-bottom: 2pt;">
               Ý KIẾN ĐÁNH GIÁ CỦA QUẢN LÝ BỘ PHẬN (${escapeHtml(managerSignerName || rep.forwardedBy || 'Quản lý')}):
@@ -33783,30 +33879,39 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </div>
         ` : ''}
 
-        <!-- CHỮ KÝ 3 BÊN -->
-        <div class="sig-container">
-          <div class="sig-date">Hải Phòng, ngày ..... tháng ..... năm 2026</div>
-          <div class="sig-grid">
-            <div class="sig-col">
-              <div class="sig-title">NGƯỜI LẬP BÁO CÁO</div>
-              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
-              <div class="sig-space"></div>
-              <div class="sig-name">${escapeHtml(rep.senderFullName || rep.senderUsername)}</div>
-            </div>
-            <div class="sig-col">
-              <div class="sig-title">QUẢN LÝ BỘ PHẬN</div>
-              <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
-              <div class="sig-space"></div>
-              <div class="sig-name">${escapeHtml(rep.forwardedBy || rep.recipientFullName || rep.recipientUsername || 'Quản lý bộ phận')}</div>
-            </div>
-            <div class="sig-col">
-              <div class="sig-title">BAN GIÁM ĐỐC</div>
-              <div class="sig-sub">(Ký duyệt)</div>
-              <div class="sig-space"></div>
-              <div class="sig-name">Ban Giám Đốc</div>
+        <!-- CHỮ KÝ -->
+        ${(() => {
+          const printSigners = (typeof resolveReportSigners === 'function')
+            ? resolveReportSigners(rep, isMgr)
+            : { shouldOmitManagerSigner: isMgr, managerSignerName: 'Quản lý bộ phận', directorSignerName: 'Ban Giám Đốc' };
+          return `
+          <div class="sig-container">
+            <div class="sig-date">Hải Phòng, ngày ..... tháng ..... năm 2026</div>
+            <div class="sig-grid">
+              <div class="sig-col">
+                <div class="sig-title">NGƯỜI LẬP BÁO CÁO</div>
+                <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">${escapeHtml(printSigners.authorName || rep.senderFullName || rep.senderUsername)}</div>
+              </div>
+              ${!printSigners.shouldOmitManagerSigner ? `
+              <div class="sig-col">
+                <div class="sig-title">QUẢN LÝ BỘ PHẬN</div>
+                <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">${escapeHtml(printSigners.managerSignerName || 'Quản lý bộ phận')}</div>
+              </div>
+              ` : ''}
+              <div class="sig-col">
+                <div class="sig-title">BAN GIÁM ĐỐC</div>
+                <div class="sig-sub">(Ký duyệt)</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">${escapeHtml(printSigners.directorSignerName || 'Ban Giám Đốc')}</div>
+              </div>
             </div>
           </div>
-        </div>
+          `;
+        })()}
       </div>
     </body>
     </html>
