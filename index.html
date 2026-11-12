@@ -6348,7 +6348,7 @@
   <div id="leadershipReportPreviewModal"
     class="fixed inset-0 z-[65] bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div
-      class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-3xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      class="bg-white border-t sm:border border-slate-200 rounded-t-3xl sm:rounded-3xl max-w-4xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
 
       <!-- HEADER -->
       <div
@@ -6430,20 +6430,27 @@
             </div>
           </div>
 
-          <!-- THÔNG TIN NGƯỜI BÁO CÁO -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-xs">
-            <div>
-              <span class="text-slate-400 font-medium">Người báo cáo:</span>
-              <p id="rpFullName" class="font-black text-slate-800 text-sm">---</p>
+          <!-- THÔNG TIN NGƯỜI BÁO CÁO (2 CỘT CÂN ĐỐI, BỎ CỘT CHỨC VỤ) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50/90 border border-slate-200/80 p-3.5 sm:p-4 rounded-2xl text-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-200">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Người báo cáo</span>
+                <p id="rpFullName" class="font-extrabold text-slate-800 text-sm sm:text-base leading-snug truncate">---</p>
+              </div>
             </div>
-            <div>
-              <span class="text-slate-400 font-medium">Bộ phận / Tổ kho:</span>
-              <p id="rpDept" class="font-bold text-slate-700">---</p>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-200">
+                <i class="fa-solid fa-building-user"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Bộ phận / Tổ kho</span>
+                <p id="rpDept" class="font-bold text-slate-700 text-xs sm:text-sm leading-snug truncate">---</p>
+              </div>
             </div>
-            <div>
-              <span class="text-slate-400 font-medium">Chức vụ / Vị trí:</span>
-              <p id="rpRole" class="font-bold text-emerald-700">---</p>
-            </div>
+            <span id="rpRole" class="hidden" aria-hidden="true"></span>
           </div>
 
           <!-- KHUNG NỘI DUNG 4 PHẦN CHÍNH -->
@@ -6491,8 +6498,8 @@
 
           <!-- Ô LỜI NHẮN GỬI LÃNH ĐẠO -->
           <div class="pt-2 border-t border-slate-100">
-            <label for="rpLeaderNoteInput"
-              class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <label id="rpLeaderNoteLabel" for="rpLeaderNoteInput"
+              class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <i class="fa-solid fa-message text-emerald-600"></i>
               <span>Ý kiến / Lời nhắn thêm gửi Ban Lãnh đạo (tùy chọn):</span>
             </label>
@@ -6508,13 +6515,6 @@
       <div
         class="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
         <div class="flex items-center gap-2">
-          <!-- Nút sao chép nội dung gửi Zalo / Email -->
-          <button type="button" onclick="copyLeadershipReportToClipboard()"
-            class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-            <i class="fa-solid fa-copy text-slate-500 text-xs"></i>
-            <span>Sao chép (Zalo / Email)</span>
-          </button>
-
           <!-- Nút tải File Word chuẩn báo cáo doanh nghiệp -->
           <button type="button" onclick="exportPreviewReportToWord()"
             class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
@@ -27976,16 +27976,28 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       } catch (err) { }
     }
 
+    // Chuyển đổi linh hoạt các định dạng ngày (YYYY-MM-DD hoặc DD/MM/YYYY) sang chuẩn ISO so sánh YYYY-MM-DD
+    function toComparableDate(d) {
+      if (!d) return '';
+      d = String(d).trim().split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.substring(0, 10);
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(d)) {
+        const parts = d.split('/');
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+      return d;
+    }
+
     // ================= RENDER TOÀN BỘ GIAO DIỆN SỔ TAY CÔNG VIỆC =================
     // Hàm sắp xếp công việc:
     // - Việc chưa hoàn thành luôn ưu tiên lên trước việc đã xong (việc đã xong hoàn thành đẩy về cuối cùng)
-    // - Đối với kế hoạch: Những việc sắp hết hạn (quá hạn, đến hạn hôm nay, ngày mai, ngày gần nhất) lên trên cùng lần lượt
-    // - Việc quan trọng (⭐) cùng mức hạn được ưu tiên lên trước
-    // - Nhóm theo loại mục: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+    // - Mọi công việc nhóm theo loại đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
+    // - Đối với kế hoạch chưa hoàn thành: Ưu tiên việc sắp hết hạn lên trước lần lượt
+    // - Sắp xếp các ngày ghi nhận mới nhất lần lượt lên trên, ngày ghi cũ nhất ở dưới (cho việc đã làm/hoàn thiện và các mục cùng loại)
     function sortPersonalWorkspaceItemsList(items) {
       const typeOrder = {
-        'plan': 1,      // 1. Kế hoạch
-        'adhoc': 2,     // 2. Việc phát sinh
+        'adhoc': 1,     // 1. Việc phát sinh
+        'plan': 2,      // 2. Kế hoạch
         'proposal': 3, // 3. Đề xuất & sáng kiến
         'feedback': 4   // 4. Ý kiến / phản ánh
       };
@@ -27997,57 +28009,47 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (!aDone && bDone) return -1;
         if (aDone && !bDone) return 1;
 
-        // 2. Nhóm theo loại mục: Kế hoạch -> Việc phát sinh -> Đề xuất -> Ý kiến
+        // 2. Nhóm theo loại mục đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
         const orderA = typeOrder[a.type] || 99;
         const orderB = typeOrder[b.type] || 99;
         if (orderA !== orderB) {
           return orderA - orderB;
         }
 
-        // 3. ĐỐI VỚI KẾ HOẠCH (hoặc khi cả 2 đều là Kế hoạch):
+        // 3. ĐỐI VỚI KẾ HOẠCH CHƯA HOÀN THÀNH:
         // ƯU TIÊN SẮP HẾT HẠN LÊN TRÊN CÙNG LẦN LƯỢT: quá hạn -> đến hạn hôm nay -> ngày mai -> ngày gần nhất
-        if (a.type === 'plan' && b.type === 'plan') {
+        if (!aDone && !bDone && a.type === 'plan' && b.type === 'plan') {
           const dueA = a.dueDate ? String(a.dueDate).trim() : '';
           const dueB = b.dueDate ? String(b.dueDate).trim() : '';
 
-          // Việc có hạn chót ưu tiên lên trước việc không đặt hạn chót
           if (dueA && !dueB) return -1;
           if (!dueA && dueB) return 1;
-
-          // Cả 2 đều có hạn chót: Hạn chót sớm hơn / sắp hết hạn hơn lên trước (tăng dần YYYY-MM-DD)
           if (dueA && dueB && dueA !== dueB) {
             return dueA.localeCompare(dueB);
           }
 
-          // Cùng ngày hạn chót: Việc quan trọng (⭐) lên trước
           if (a.isImportant && !b.isImportant) return -1;
           if (!a.isImportant && b.isImportant) return 1;
-
-          // Cùng hạn chót & độ quan trọng: Thời gian tạo cũ hơn lên trước
-          const tA = new Date(a.createdAt || a.date || 0).getTime();
-          const tB = new Date(b.createdAt || b.date || 0).getTime();
-          if (tA && tB && tA !== tB) return tA - tB;
-
-          return (a.id || '').localeCompare(b.id || '');
         }
 
-        // 4. ĐỐI VỚI CÁC LOẠI VIỆC KHÁC (Phát sinh, Đề xuất, Ý kiến):
-        // Việc quan trọng (⭐) lên trước
-        if (a.isImportant && !b.isImportant) return -1;
-        if (!a.isImportant && b.isImportant) return 1;
+        // 4. Việc quan trọng (⭐) lên trước (đối với việc chưa hoàn thành)
+        if (!aDone && !bDone) {
+          if (a.isImportant && !b.isImportant) return -1;
+          if (!a.isImportant && b.isImportant) return 1;
+        }
 
-        // Trong cùng nhóm: ngày cũ hơn xếp trước
-        const dateA = a.date || (a.createdAt ? a.createdAt.substring(0, 10) : '') || '';
-        const dateB = b.date || (b.createdAt ? b.createdAt.substring(0, 10) : '') || '';
+        // 5. SẮP XẾP CÁC NGÀY GHI NHẬN MỚI NHẤT LẦN LƯỢT LÊN TRÊN, NGÀY CŨ NHẤT XUỐNG DƯỚI
+        const dateA = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(a.date || (a.createdAt ? a.createdAt.substring(0, 10) : '') || a.dueDate || '');
+        const dateB = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(b.date || (b.createdAt ? b.createdAt.substring(0, 10) : '') || b.dueDate || '');
         if (dateA && dateB && dateA !== dateB) {
-          return dateA.localeCompare(dateB);
+          return dateB.localeCompare(dateA); // Giảm dần: mới nhất lên trên
         }
 
-        // Thời gian tạo cũ hơn lên trước
+        // Thời gian tạo mới hơn lên trước
         const tA = new Date(a.createdAt || 0).getTime();
         const tB = new Date(b.createdAt || 0).getTime();
         if (tA && tB && tA !== tB) {
-          return tA - tB;
+          return tB - tA; // Giảm dần: mới hơn lên trước
         }
 
         return (a.id || '').localeCompare(b.id || '');
@@ -29643,10 +29645,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const noteLabelEl = document.getElementById('rpLeaderNoteLabel');
       const submitBtnTextEl = document.getElementById('rpSubmitBtnText');
 
+      const deptName = currentUser.department || 'Ban DVKH';
+      const cleanDeptForManager = deptName.replace(/^Bộ phận\s+/i, '');
+
       if (roleInfo.isStaff) {
         if (titleEl) titleEl.innerText = "Gửi Báo Cáo Công Việc Lên Quản Lý Bộ Phận";
-        if (subTitleEl) subTitleEl.innerText = `Gửi Quản lý bộ phận ${currentUser.department || 'Ban DVKH'} xem xét, tổng hợp và chuyển Ban Lãnh đạo`;
-        if (recipientEl) recipientEl.innerText = `Kính gửi: Quản lý / Trưởng bộ phận ${currentUser.department || 'Ban DVKH'}`;
+        if (subTitleEl) subTitleEl.innerText = `Gửi Quản lý ${cleanDeptForManager ? 'Bộ phận ' + cleanDeptForManager : deptName} xem xét, tổng hợp và chuyển Ban Lãnh đạo`;
+        if (recipientEl) recipientEl.innerText = `Kính gửi: Quản lý / Trưởng bộ phận ${deptName}`;
         if (noteLabelEl) noteLabelEl.innerHTML = `<i class="fa-solid fa-message text-emerald-600"></i><span>Ý kiến / Lời nhắn gửi Quản lý bộ phận (tùy chọn):</span>`;
         if (submitBtnTextEl) submitBtnTextEl.innerText = "Xác Nhận Gửi Cho Quản Lý";
       } else if (roleInfo.isManager) {
@@ -29707,13 +29712,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             let tag = '';
             if (badgeType === 'plan' && it.dueDate) {
               const tl = calculatePlanTimelineStatus(it);
-              tag = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none font-normal italic border whitespace-nowrap font-num ${tl.badgeClass}"><i class="${tl.icon} text-[9.5px] shrink-0 not-italic"></i><span class="whitespace-nowrap font-normal italic">${tl.label} (Hạn: ${formatVNDate(it.dueDate)})</span></span>`;
+              tag = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs leading-none font-semibold border whitespace-nowrap font-num shadow-2xs ${tl.badgeClass}"><i class="${tl.icon} text-[10px] shrink-0 not-italic"></i><span class="whitespace-nowrap font-medium">${tl.label} (Hạn: ${formatVNDate(it.dueDate)})</span></span>`;
             }
             return `
-          <div class="flex items-start justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+          <div class="flex items-start justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/90 shadow-2xs hover:bg-slate-50 transition-all">
             <div class="min-w-0 flex-1">
-              <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug">${idx + 1}. ${escapeHtml(it.title)} ${it.isImportant ? '<span class="text-amber-500">⭐</span>' : ''}</div>
-              ${it.content ? `<p class="text-xs text-slate-500 mt-1 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+              <div class="font-bold text-slate-800 text-xs sm:text-[13.5px] leading-snug flex items-baseline gap-1.5">
+                <span class="text-slate-400 font-medium shrink-0">${idx + 1}.</span>
+                <span class="font-bold text-slate-800">${escapeHtml(it.title)}</span>
+                ${it.isImportant ? '<span class="text-amber-500 text-xs ml-0.5" title="Quan trọng">⭐</span>' : ''}
+              </div>
+              ${it.content ? `<div class="text-xs text-slate-600 mt-1.5 ml-4 pl-2.5 border-l-2 border-emerald-300 leading-relaxed bg-white/60 p-1.5 rounded-r-lg">${escapeHtml(it.content)}</div>` : ''}
             </div>
             ${tag ? `<div class="shrink-0 pt-0.5">${tag}</div>` : ''}
           </div>
@@ -29721,8 +29730,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }).join('');
         } else {
           list.innerHTML = `
-        <div class="py-3 px-3.5 text-xs text-slate-400 italic bg-slate-50/60 rounded-xl border border-dashed border-slate-200 min-h-[44px] flex items-center">
-          (Không có nội dung ghi nhận trong kỳ báo cáo / để trống)
+        <div class="py-2.5 px-3.5 text-xs text-slate-400 font-medium italic bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[40px] flex items-center gap-2">
+          <i class="fa-regular fa-folder-open text-slate-300 text-xs"></i>
+          <span>(Không có nội dung ghi nhận trong kỳ báo cáo / để trống)</span>
         </div>
       `;
         }
@@ -29876,7 +29886,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       txt += `Kỳ báo cáo: Tháng ${mPad}/${y} • Ngày lập: ${dateFormatted}\n`;
       txt += `-----------------------------------------------------------\n`;
       txt += `Người báo cáo: ${currentUser.fullName || currentUser.username}\n`;
-      txt += `Bộ phận: ${currentUser.department || 'Ban DVKH'} • Chức vụ: ${currentUser.role || 'Nhân sự'}\n`;
+      txt += roleInfo.isStaff
+        ? `Bộ phận: ${currentUser.department || 'Ban DVKH'}\n`
+        : `Bộ phận: ${currentUser.department || 'Ban DVKH'} • Chức vụ: ${currentUser.role || 'Nhân sự'}\n`;
       txt += `===========================================================\n\n`;
 
       const adhocItems = currentReportSelectedItems.filter(it => it.type === 'adhoc');
@@ -30852,12 +30864,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // Sắp xếp các đầu việc trong Hộp thư đồng nhất 100% với Sổ tay công việc:
-    // Việc chưa hoàn thành lên trước (việc đã hoàn thành đẩy về cuối); Kế hoạch (sắp hết hạn lên trước) -> Phát sinh -> Đề xuất -> Ý kiến
+    // Việc chưa hoàn thành lên trước; Nhóm theo loại mục đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
+    // Sắp xếp ngày ghi nhận mới nhất lên trên, ngày cũ nhất ở dưới
     function sortRpBoxTaskEntries(entries) {
       const typeOrder = {
-        'plan': 1,      // 1. Kế hoạch
-        'adhoc': 2,     // 2. Phát sinh
-        'proposal': 3, // 3. Đề xuất
+        'adhoc': 1,     // 1. Phát sinh
+        'plan': 2,      // 2. Kế hoạch
+        'proposal': 3,  // 3. Đề xuất
         'feedback': 4   // 4. Ý kiến / Phản ánh
       };
 
@@ -30868,15 +30881,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (!aDone && bDone) return -1;
         if (aDone && !bDone) return 1;
 
-        // 2. Nhóm theo loại: Kế hoạch -> Phát sinh -> Đề xuất -> Ý kiến
+        // 2. Nhóm theo loại đứng cạnh nhau: Phát sinh -> Kế hoạch -> Đề xuất -> Ý kiến
         const orderA = typeOrder[a.item.type] || 99;
         const orderB = typeOrder[b.item.type] || 99;
         if (orderA !== orderB) {
           return orderA - orderB;
         }
 
-        // 3. Đối với kế hoạch: việc sắp hết hạn lên trước lần lượt
-        if (a.item.type === 'plan' && b.item.type === 'plan') {
+        // 3. Đối với kế hoạch chưa hoàn thành: việc sắp hết hạn lên trước lần lượt
+        if (!aDone && !bDone && a.item.type === 'plan' && b.item.type === 'plan') {
           const dueA = a.item.dueDate ? String(a.item.dueDate).trim() : '';
           const dueB = b.item.dueDate ? String(b.item.dueDate).trim() : '';
           if (dueA && !dueB) return -1;
@@ -30887,13 +30900,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (!a.item.isImportant && b.item.isImportant) return 1;
         }
 
-        if (a.item.isImportant && !b.item.isImportant) return -1;
-        if (!a.item.isImportant && b.item.isImportant) return 1;
+        if (!aDone && !bDone) {
+          if (a.item.isImportant && !b.item.isImportant) return -1;
+          if (!a.item.isImportant && b.item.isImportant) return 1;
+        }
 
-        const dateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
-        const dateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
+        // 4. Sắp xếp các ngày ghi nhận mới nhất lên trên, cũ nhất ở dưới
+        const rawDateA = a.item.date || (a.item.createdAt ? a.item.createdAt.substring(0, 10) : '') || a.item.dueDate || a.submissionDate || '';
+        const rawDateB = b.item.date || (b.item.createdAt ? b.item.createdAt.substring(0, 10) : '') || b.item.dueDate || b.submissionDate || '';
+        const dateA = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(rawDateA);
+        const dateB = (typeof toComparableDate === 'function' ? toComparableDate : (d => d ? String(d).trim().split('T')[0] : ''))(rawDateB);
         if (dateA && dateB && dateA !== dateB) {
-          return dateA.localeCompare(dateB); // Tăng dần: việc cũ lên trên
+          return dateB.localeCompare(dateA); // Giảm dần: mới nhất lên trên, cũ nhất ở dưới
+        }
+
+        const tA = new Date(a.item.createdAt || 0).getTime();
+        const tB = new Date(b.item.createdAt || 0).getTime();
+        if (tA && tB && tA !== tB) {
+          return tB - tA; // Mới hơn lên trước
         }
 
         return (a.entryKey || '').localeCompare(b.entryKey || '');
