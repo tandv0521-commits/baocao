@@ -9539,10 +9539,31 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // ================= TIẾN TRÌNH NẠP DỮ LIỆU BAN ĐẦU & TẠO KỲ BÁO CÁO CHUẨN =================
+    // PHÂN TRANG TỰ ĐỘNG ĐỂ KHÔNG BỊ GIỚI HẠN 1.000 DÒNG CỦA SUPABASE LÀM MẤT CÁC THÁNG LỊCH SỬ CŨ
+    async function fetchAllReportMonthsDistinct() {
+      const PAGE_SIZE = 1000;
+      const MAX_PAGES = 30; // Hỗ trợ tới 30.000 bản ghi
+      let allDates = [];
+      let offset = 0;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const { data, error } = await supabase
+          .from('daily_reports')
+          .select('report_date')
+          .order('report_date', { ascending: false })
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error) throw error;
+        const batch = data || [];
+        allDates = allDates.concat(batch);
+        if (batch.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
+      return Array.from(new Set(allDates.map(r => r.report_date ? r.report_date.substring(0, 7) : null).filter(Boolean)));
+    }
+
     // ĐIỀU CHỈNH: TẢI SONG SONG QUA PROMISE.ALL VÀ LƯU BỘ NHỚ ĐỆM TỨC THÌ
     async function loadInitialData(callback) {
       try {
-        const [deptRes, userRes, repDatesRes] = await Promise.all([
+        const [deptRes, userRes, existingMonths] = await Promise.all([
           supabase
             .from('departments')
             .select('*')
@@ -9554,11 +9575,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             .eq('status', 'Hoạt động')
             .order('full_name')
             .limit(10000),
-          supabase
-            .from('daily_reports')
-            .select('report_date')
-            .order('report_date', { ascending: false })
-            .limit(50000)
+          fetchAllReportMonthsDistinct()
         ]);
 
         if (deptRes.error) throw deptRes.error;
@@ -9566,8 +9583,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         const depts = deptRes.data || [];
         const users = userRes.data || [];
-        const repDates = (repDatesRes && repDatesRes.data) ? repDatesRes.data : [];
-        const existingMonths = Array.from(new Set(repDates.map(r => r.report_date ? r.report_date.substring(0, 7) : null).filter(Boolean)));
 
         // Lưu vào bộ nhớ đệm để các lần sau mở trang nạp TỨC THÌ trong 0ms
         try {
@@ -24781,11 +24796,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       };
     }
 
-    async function fetchPersonalTasksFromSupabase(isSilentSync = false) {
-      if (!supabase || !currentUser) return;
-      try {
-        const uId = String(currentUser.id || '');
-        const uName = String(currentUser.username || '');
+    // ================= PHÂN TRANG TỰ ĐỘNG ĐA TẦNG CHO BẢNG SỔ TAY CÔNG VIỆC CÁ NHÂN (personal_tasks) =================
+    async function fetchAllPersonalTasksForUser(uId, uName) {
+      const PAGE_SIZE = 1000;
+      const MAX_PAGES = 50; // Hỗ trợ tới 50.000 đầu việc cá nhân cho mỗi nhân sự
+      let allRows = [];
+      const seenIds = new Set();
+      let offset = 0;
+
+      for (let page = 0; page < MAX_PAGES; page++) {
         let query = supabase.from('personal_tasks').select('*');
         if (uId && uName && uId !== uName) {
           query = query.or(`user_id.eq.${uId},username.eq.${uName}`);
@@ -24794,9 +24813,39 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
         const { data, error } = await query
           .order('created_at', { ascending: false })
-          .limit(1000);
+          .order('id', { ascending: false })
+          .range(offset, offset + PAGE_SIZE - 1);
 
         if (error) {
+          if (page === 0) throw error;
+          console.warn('[PersonalTasksPagination] Lỗi tải trang tiếp theo:', error);
+          break;
+        }
+        const batch = data || [];
+        batch.forEach(item => {
+          const idKey = String(item.id || '');
+          if (idKey && !seenIds.has(idKey)) {
+            seenIds.add(idKey);
+            allRows.push(item);
+          } else if (!idKey) {
+            allRows.push(item);
+          }
+        });
+        if (batch.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
+      return allRows;
+    }
+
+    async function fetchPersonalTasksFromSupabase(isSilentSync = false) {
+      if (!supabase || !currentUser) return;
+      try {
+        const uId = String(currentUser.id || '');
+        const uName = String(currentUser.username || '');
+        let data;
+        try {
+          data = await fetchAllPersonalTasksForUser(uId, uName);
+        } catch (error) {
           if (error.code === 'PGRST205') {
             pwCloudAvailable = false;
             updateCloudSyncBadge(false);
@@ -35306,6 +35355,43 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     /**
      * TẢI VÀ ĐỒNG BỘ DỮ LIỆU NHẬT KÝ ĐĂNG NHẬP TỪ SUPABASE / LOCALSTORAGE
      */
+    // ================= PHÂN TRANG TỰ ĐỘNG ĐA TẦNG CHO BẢNG NHẬT KÝ ĐĂNG NHẬP (login_history) =================
+    async function fetchAllLoginHistory(maxPages = 20) {
+      const PAGE_SIZE = 1000;
+      const safeMaxPages = Math.max(1, Math.min(maxPages, 50)); // Hỗ trợ tới 20.000 - 50.000 nhật ký
+      let allRows = [];
+      const seenIds = new Set();
+      let offset = 0;
+
+      for (let page = 0; page < safeMaxPages; page++) {
+        const { data, error } = await supabase
+          .from('login_history')
+          .select('*')
+          .order('logged_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(offset, offset + PAGE_SIZE - 1);
+
+        if (error) {
+          if (page === 0) throw error;
+          console.warn('[LoginHistoryPagination] Lỗi tải trang nhật ký tiếp theo:', error);
+          break;
+        }
+        const batch = data || [];
+        batch.forEach(item => {
+          const idKey = String(item.id || '');
+          if (idKey && !seenIds.has(idKey)) {
+            seenIds.add(idKey);
+            allRows.push(item);
+          } else if (!idKey) {
+            allRows.push(item);
+          }
+        });
+        if (batch.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
+      return allRows;
+    }
+
     async function loadLoginHistoryData(forceRefresh = false) {
       const loadingEl = document.getElementById('loadingLoginHistoryBox');
       if (!currentUser || !isSystemAdminUser(currentUser)) {
@@ -35325,25 +35411,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (supabase) {
         try {
-          const { data, error } = await supabase
-            .from('login_history')
-            .select('*')
-            .order('logged_at', { ascending: false })
-            .limit(500);
-
-          if (error) {
-            if (error.code === 'PGRST205' || (error.message && error.message.includes('login_history'))) {
-              isTableMissing = true;
-              isSupabaseLoginHistoryAvailable = false;
-            } else {
-              console.warn("Lỗi tải lịch sử từ Supabase:", error.message);
-            }
-          } else if (data) {
-            remoteLogs = data;
-            isSupabaseLoginHistoryAvailable = true;
+          remoteLogs = await fetchAllLoginHistory(20);
+          isSupabaseLoginHistoryAvailable = true;
+        } catch (error) {
+          if (error.code === 'PGRST205' || (error.message && error.message.includes('login_history'))) {
+            isTableMissing = true;
+            isSupabaseLoginHistoryAvailable = false;
+          } else {
+            console.warn("Lỗi tải lịch sử từ Supabase:", error.message);
           }
-        } catch (err) {
-          console.warn("Exception tải lịch sử đăng nhập:", err);
         }
       }
 
@@ -35362,7 +35438,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         combined = remoteLogs;
         // Cập nhật lại bộ nhớ cục bộ để giữ dữ liệu đồng bộ
         try {
-          localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(remoteLogs.slice(0, 500)));
+          localStorage.setItem(LOGIN_HISTORY_CACHE_KEY, JSON.stringify(remoteLogs.slice(0, 1000)));
         } catch (e) { }
       } else {
         combined = getLoginLogsFromLocalStorage();
