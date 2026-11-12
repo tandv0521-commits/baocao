@@ -25183,38 +25183,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         ).length;
       } else {
         // QUẢN LÝ / BAN GIÁM ĐỐC:
-        // 1. Kiểm tra chính xác các đầu việc thực tế đang có trong Hộp thư nhận việc
-        const allEntries = getAllRpBoxTaskEntries();
-
-        // Nếu hộp thư KHÔNG có đầu việc nào -> BỘ ĐẾM CHUẨN XÁC LUÔN LÀ 0 (ẨN HOÀN TOÀN)
-        if (!allEntries || allEntries.length === 0) {
-          unreadCount = 0;
-        } else {
-          // 2. Nếu có đầu việc: Kiểm tra trạng thái đã vào xem
-          const viewedReportIds = getInboxViewedReportIds(userKey);
-          const lastViewedAt = getInboxLastViewedTime(userKey);
-
-          // Đếm các đầu việc chưa xem (báo cáo chưa nằm trong danh sách đã xem VÀ gửi sau thời điểm xem)
-          const unreadEntries = allEntries.filter(entry => {
-            if (entry.isConsolidated) return false;
-            if (viewedReportIds.has(String(entry.reportId))) return false;
-            if (lastViewedAt) {
-              const itemTime = new Date(entry.submissionDate || entry.item.createdAt || 0).getTime();
-              if (itemTime > 0 && itemTime <= lastViewedAt) return false;
-            }
-            return true;
-          });
-
-          unreadCount = unreadEntries.length;
-        }
-      }
-
-      if (isManagerOrAbove) {
-        const viewedSummaryIds = getInboxViewedReportIds(userKey);
-        unreadCount += (reportsList || getLeadershipReportsShared()).filter(r =>
-          r && r.reportType === 'manager_summary' && !isSenderOfReport(currentUser, r) &&
-          canUserAccessReport(currentUser, r) && !viewedSummaryIds.has(String(r.id))
-        ).length;
+        // Đếm chính xác số lượng báo cáo gửi đến trong hộp thư mà Quản lý CHƯA ĐỌC
+        const senderRecords = getRpBoxSenderRecords(true);
+        unreadCount = senderRecords.filter(rec => {
+          if (!rec || !rec.report || !rec.report.id) return false;
+          if (isSenderOfReport(currentUser, rec.report)) return false;
+          return !isRpBoxReportRead(rec.report.id, currentUser);
+        }).length;
       }
 
       if (unreadCount > 0) {
@@ -26746,6 +26721,90 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     const INBOX_VIEWED_REPORTS_KEY_PREFIX = 'ops_inbox_viewed_report_ids_v2_';
     const INBOX_LAST_VIEWED_TIME_PREFIX = 'ops_inbox_last_viewed_time_v2_';
+    const INBOX_READ_REPORTS_KEY_PREFIX = 'ops_inbox_read_report_ids_v3_';
+
+    function getInboxReadReportIds(userKey) {
+      if (!userKey) {
+        userKey = (currentUser && (currentUser.id || currentUser.username)) || 'default';
+      }
+      try {
+        const raw = localStorage.getItem(INBOX_READ_REPORTS_KEY_PREFIX + userKey);
+        if (raw) return new Set(JSON.parse(raw));
+      } catch (e) { }
+      return new Set();
+    }
+
+    function saveInboxReadReportIds(idsSet, userKey) {
+      if (!userKey) {
+        userKey = (currentUser && (currentUser.id || currentUser.username)) || 'default';
+      }
+      try {
+        localStorage.setItem(INBOX_READ_REPORTS_KEY_PREFIX + userKey, JSON.stringify(Array.from(idsSet)));
+      } catch (e) { }
+    }
+
+    function isRpBoxReportRead(reportId, user = currentUser) {
+      if (!reportId || !user) return true;
+      const rep = getLeadershipReportsShared().find(r => r && String(r.id) === String(reportId));
+      if (rep && isSenderOfReport(user, rep)) return true;
+      const userKey = user.id || user.username || 'default';
+      const readSet = getInboxReadReportIds(userKey);
+      return readSet.has(String(reportId));
+    }
+
+    function setRpBoxReportReadStatus(reportId, isRead, user = currentUser) {
+      if (!reportId || !user) return;
+      const userKey = user.id || user.username || 'default';
+      const readSet = getInboxReadReportIds(userKey);
+      const idStr = String(reportId);
+      if (isRead) {
+        readSet.add(idStr);
+      } else {
+        readSet.delete(idStr);
+      }
+      saveInboxReadReportIds(readSet, userKey);
+      updateInboxUnreadBadgeCount();
+    }
+
+    function toggleRpBoxReportReadStatus(reportId, event) {
+      if (event) {
+        if (typeof event.stopPropagation === 'function') event.stopPropagation();
+        if (typeof event.preventDefault === 'function') event.preventDefault();
+      }
+      if (!reportId || !currentUser) return;
+      const currentRead = isRpBoxReportRead(reportId, currentUser);
+      const newRead = !currentRead;
+      setRpBoxReportReadStatus(reportId, newRead, currentUser);
+      showToast(newRead ? "✓ Đã đánh dấu báo cáo là ĐÃ ĐỌC" : "✉ Đã đánh dấu báo cáo là CHƯA ĐỌC");
+      renderLeadershipReportsBoxUI();
+    }
+
+    function markAllRpBoxReportsAsRead() {
+      if (!currentUser) return;
+      const userKey = currentUser.id || currentUser.username || 'default';
+      const records = getRpBoxSenderRecords(true);
+      const readSet = getInboxReadReportIds(userKey);
+      let count = 0;
+      records.forEach(rec => {
+        if (rec && rec.report && rec.report.id) {
+          const idStr = String(rec.report.id);
+          if (!readSet.has(idStr)) {
+            readSet.add(idStr);
+            count++;
+          }
+        }
+      });
+      saveInboxReadReportIds(readSet, userKey);
+      updateInboxUnreadBadgeCount();
+      showToast('✓ Đã đánh dấu tất cả báo cáo là ĐÃ ĐỌC!');
+      renderLeadershipReportsBoxUI();
+    }
+
+    let rpBoxReadFilter = 'all'; // 'all', 'unread', 'read'
+    function setRpBoxReadFilter(mode) {
+      rpBoxReadFilter = mode || 'all';
+      renderLeadershipReportsBoxUI();
+    }
 
     function getInboxViewedReportIds(userKey) {
       try {
@@ -30038,10 +30097,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const modal = document.getElementById('leadershipReportsBoxModal');
       if (!modal) return;
 
-      // ĐÃ VÀO XEM HỘP THƯ: Đánh dấu tất cả công việc/báo cáo hiện tại là ĐÃ XEM và xóa ngay bộ đếm!
-      markInboxReportsAsViewed();
-
       const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
+      // Với nhân viên: đánh dấu đã xem phản hồi; với quản lý: giữ nguyên trạng thái Đã đọc / Chưa đọc của từng báo cáo
+      if (!isManagerOrAbove) {
+        markInboxReportsAsViewed();
+      }
       const roleInfo = getPersonalWorkspaceReportingRole(currentUser);
 
       // Cập nhật tiêu đề hộp thư & hiển thị nút theo phân quyền bảo mật
@@ -30853,6 +30913,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         showToast('Không tìm thấy đầu việc của lượt gửi này!', true);
         return;
       }
+      if (typeof setRpBoxReportReadStatus === 'function') setRpBoxReportReadStatus(reportId, true);
       rpBoxSourceReportFilter = String(rep.id);
       rpBoxConsolidationFilter = 'all';
       const searchInput = document.getElementById('rpBoxSearchInput');
@@ -30965,6 +31026,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           return;
         }
         rpBoxSelectedTaskKeys.add(key);
+        if (matched && matched.reportId && typeof setRpBoxReportReadStatus === 'function') {
+          setRpBoxReportReadStatus(matched.reportId, true);
+        }
       } else {
         rpBoxSelectedTaskKeys.delete(key);
       }
@@ -30980,7 +31044,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (selectableEntries.length === 0) {
           showToast('Không có đầu việc chưa tổng hợp nào để tích chọn.', true);
         } else {
-          selectableEntries.forEach(e => rpBoxSelectedTaskKeys.add(e.entryKey));
+          selectableEntries.forEach(e => {
+            rpBoxSelectedTaskKeys.add(e.entryKey);
+            if (e && e.reportId && typeof setRpBoxReportReadStatus === 'function') setRpBoxReportReadStatus(e.reportId, true);
+          });
         }
       } else {
         selectableEntries.forEach(e => rpBoxSelectedTaskKeys.delete(e.entryKey));
@@ -31405,11 +31472,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         // 4. Huy hiệu Người gửi / Người nhận gắn gọn cạnh tiêu đề (đã bỏ nhãn phụ "Việc của bạn")
         let senderOrRecipientPill = '';
         if (isManagerOrAbove) {
+          const isReportRead = (typeof isRpBoxReportRead === 'function') ? isRpBoxReportRead(entry.reportId, currentUser) : true;
           senderOrRecipientPill =
             '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0 shadow-2xs">' +
             '<i class="fa-solid fa-user text-emerald-600 text-[9px]"></i>' +
             '<span>' + escapeHtml(entry.senderFullName) + '</span>' +
-            '</span>';
+            '</span>' +
+            (!isReportRead ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 border border-blue-300 shrink-0 shadow-2xs" title="Lượt gửi chứa đầu việc này chưa được đọc"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>Chưa đọc</span>' : '');
         } else {
           senderOrRecipientPill =
             '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs" title="Ngày gửi: ' + escapeHtml(entry.displayDate || '') + '">' +
@@ -31626,6 +31695,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         showToast("Bạn không có quyền tải báo cáo của tài khoản khác!", true);
         return;
       }
+      if (typeof setRpBoxReportReadStatus === 'function') setRpBoxReportReadStatus(reportId, true);
       if (rep.reportType === 'manager_summary') {
         const sDept = rep.senderDepartment || 'Bộ phận';
         const { m: sM, y: sY } = (typeof resolveSavedReportPeriod === 'function')
@@ -31652,35 +31722,114 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       }
 
+      // Đếm số lượng theo trạng thái đã đọc / chưa đọc
+      const totalSenderCount = records.length;
+      const unreadSenderCount = records.filter(rec => !isSenderOfReport(currentUser, rec.report) && !(typeof isRpBoxReportRead === 'function' && isRpBoxReportRead(rec.report.id, currentUser))).length;
+      const readSenderCount = records.filter(rec => isSenderOfReport(currentUser, rec.report) || (typeof isRpBoxReportRead === 'function' && isRpBoxReportRead(rec.report.id, currentUser))).length;
+
+      // Áp dụng bộ lọc Đã đọc / Chưa đọc cho Quản lý
+      if (isManagerOrAbove && typeof rpBoxReadFilter !== 'undefined') {
+        if (rpBoxReadFilter === 'unread') {
+          filtered = filtered.filter(rec => !isSenderOfReport(currentUser, rec.report) && !(typeof isRpBoxReportRead === 'function' && isRpBoxReportRead(rec.report.id, currentUser)));
+        } else if (rpBoxReadFilter === 'read') {
+          filtered = filtered.filter(rec => isSenderOfReport(currentUser, rec.report) || (typeof isRpBoxReportRead === 'function' && isRpBoxReportRead(rec.report.id, currentUser)));
+        }
+      }
+
       const countBadge = document.getElementById('rpBoxReportsCountBadge');
-      if (countBadge) countBadge.innerText = filtered.length + ' lượt gửi';
+      if (countBadge) {
+        if (isManagerOrAbove && unreadSenderCount > 0) {
+          countBadge.innerHTML = filtered.length + ' lượt gửi <span class="ml-1 px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold font-num">' + unreadSenderCount + ' chưa đọc</span>';
+        } else {
+          countBadge.innerText = filtered.length + ' lượt gửi';
+        }
+      }
+
+      // Thanh công cụ lọc trạng thái Đọc / Chưa đọc (dành riêng cho Quản lý và Lãnh đạo)
+      let readFilterBarHtml = '';
+      if (isManagerOrAbove) {
+        const rfAllActive = (typeof rpBoxReadFilter === 'undefined' || rpBoxReadFilter === 'all');
+        const rfUnreadActive = (typeof rpBoxReadFilter !== 'undefined' && rpBoxReadFilter === 'unread');
+        const rfReadActive = (typeof rpBoxReadFilter !== 'undefined' && rpBoxReadFilter === 'read');
+
+        const btnBase = 'inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[11px] transition cursor-pointer select-none';
+        const btnActive = btnBase + ' font-bold bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90';
+        const btnIdle = btnBase + ' font-semibold text-slate-600 hover:bg-white/60 hover:text-slate-900';
+
+        const unreadBtnActive = btnBase + ' font-bold bg-white text-blue-900 shadow-sm ring-1 ring-blue-300';
+        const readBtnActive = btnBase + ' font-bold bg-white text-emerald-900 shadow-sm ring-1 ring-emerald-300';
+
+        readFilterBarHtml =
+          '<div class="flex flex-wrap items-center justify-between gap-2.5 mb-2.5 px-0.5">' +
+          '<div class="flex items-center gap-1.5 flex-wrap">' +
+          '<span class="text-[11px] font-bold text-slate-500 inline-flex items-center gap-1 select-none mr-1">' +
+          '<i class="fa-solid fa-envelope-open-text text-[10px] text-slate-400"></i>' +
+          '<span>Trạng thái thư:</span>' +
+          '</span>' +
+          '<div role="group" aria-label="Lọc theo trạng thái đọc" class="inline-flex items-center gap-0.5 rounded-xl bg-slate-200/65 p-1 border border-slate-200/80">' +
+          '<button type="button" onclick="setRpBoxReadFilter(\'all\')" class="' + (rfAllActive ? btnActive : btnIdle) + '" title="Tất cả các lượt gửi">' +
+          '<span>Tất cả</span>' +
+          '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-200/90 text-slate-700">' + totalSenderCount + '</span>' +
+          '</button>' +
+          '<button type="button" onclick="setRpBoxReadFilter(\'unread\')" class="' + (rfUnreadActive ? unreadBtnActive : btnIdle) + '" title="Chỉ hiển thị các báo cáo chưa đọc">' +
+          '<span class="w-2 h-2 rounded-full ' + (unreadSenderCount > 0 ? 'bg-blue-600 animate-pulse' : 'bg-slate-400') + '"></span>' +
+          '<span>Chưa đọc</span>' +
+          '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num ' + (unreadSenderCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-200/80 text-slate-600') + '">' + unreadSenderCount + '</span>' +
+          '</button>' +
+          '<button type="button" onclick="setRpBoxReadFilter(\'read\')" class="' + (rfReadActive ? readBtnActive : btnIdle) + '" title="Chỉ hiển thị các báo cáo đã đọc">' +
+          '<i class="fa-solid fa-check text-[10px] text-emerald-600"></i>' +
+          '<span>Đã đọc</span>' +
+          '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-emerald-100/80 text-emerald-800">' + readSenderCount + '</span>' +
+          '</button>' +
+          '</div>' +
+          '</div>' +
+          (unreadSenderCount > 0 ? (
+            '<button type="button" onclick="markAllRpBoxReportsAsRead()" class="inline-flex h-7 items-center gap-1.5 px-2.5 rounded-xl bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200/90 hover:border-blue-300 shadow-2xs text-[11px] font-bold transition cursor-pointer select-none active:scale-[0.98]" title="Đánh dấu tất cả báo cáo trong hộp thư là ĐÃ ĐỌC">' +
+            '<i class="fa-solid fa-envelope-circle-check text-blue-600 text-xs"></i>' +
+            '<span>Đã đọc tất cả</span>' +
+            '</button>'
+          ) : '') +
+          '</div>';
+      }
 
       if (filtered.length === 0) {
         const hasFilter = !!keyword || (typeof rpBoxFilterMonth !== 'undefined' && rpBoxFilterMonth !== 'ALL');
-        const emptyTitle = isManagerOrAbove ? 'Chưa có ai gửi báo cáo vào hộp thư' : (hasFilter ? 'Không tìm thấy báo cáo phù hợp' : 'Bạn chưa gửi báo cáo nào');
-        const emptyHint = isManagerOrAbove ? 'Các lượt nhân sự gửi báo cáo hoặc Quản lý chuyển đầu việc vào hộp thư sẽ hiển thị tại đây.' : (hasFilter ? 'Thử đổi tháng hoặc từ khóa tìm kiếm để xem báo cáo đã gửi.' : 'Các báo cáo bạn gửi sẽ hiển thị tại đây, kèm người nhận, ngày giờ và file Word.');
-        container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
+        let emptyTitle = isManagerOrAbove ? 'Chưa có ai gửi báo cáo vào hộp thư' : (hasFilter ? 'Không tìm thấy báo cáo phù hợp' : 'Bạn chưa gửi báo cáo nào');
+        let emptyHint = isManagerOrAbove ? 'Các lượt nhân sự gửi báo cáo hoặc Quản lý chuyển đầu việc vào hộp thư sẽ hiển thị tại đây.' : (hasFilter ? 'Thử đổi tháng hoặc từ khóa tìm kiếm để xem báo cáo đã gửi.' : 'Các báo cáo bạn gửi sẽ hiển thị tại đây, kèm người nhận, ngày giờ và file Word.');
+
+        if (isManagerOrAbove && typeof rpBoxReadFilter !== 'undefined') {
+          if (rpBoxReadFilter === 'unread') {
+            emptyTitle = 'Không có báo cáo nào chưa đọc';
+            emptyHint = 'Tuyệt vời! Bạn đã đọc tất cả các báo cáo trong hộp thư tiếp nhận.';
+          } else if (rpBoxReadFilter === 'read') {
+            emptyTitle = 'Không có báo cáo nào đã đọc';
+            emptyHint = 'Các báo cáo bạn đã mở xem hoặc tải file Word sẽ hiển thị tại đây.';
+          }
+        }
+
+        container.innerHTML = readFilterBarHtml + '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
           '<div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 border border-slate-200/80 flex items-center justify-center text-2xl mx-auto shadow-2xs">' +
           '<i class="fa-solid fa-paper-plane"></i>' +
           '</div>' +
           '<div class="space-y-1">' +
           '<p class="text-sm font-black text-slate-700">' + emptyTitle + '</p>' +
           '<p class="text-xs text-slate-400">' + emptyHint + '</p>' +
+          (isManagerOrAbove && typeof rpBoxReadFilter !== 'undefined' && rpBoxReadFilter !== 'all' ? '<button type="button" onclick="setRpBoxReadFilter(\'all\')" class="mt-2 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold transition cursor-pointer">Xem tất cả báo cáo</button>' : '') +
           '</div>' +
           '</div>';
         return;
       }
 
       const headerHtml =
-        '<div class="hidden xl:flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
+        '<div class="hidden xl:!flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
         '<div class="flex items-center gap-3 flex-1 min-w-0">' +
         '<span class="w-[28px] shrink-0 text-center">STT</span>' +
         '<span class="flex-1 min-w-0">' + (isManagerOrAbove ? 'Người gửi &amp; nội dung gửi' : 'Báo cáo đã gửi &amp; người nhận') + '</span>' +
         '</div>' +
         '<div class="flex items-center justify-end gap-3 shrink-0">' +
+        '<span class="w-[112px] shrink-0 text-center">Ngày giờ gửi</span>' +
         (isManagerOrAbove ? '<span class="w-[152px] shrink-0 text-center">Tổng hợp báo cáo</span>' : '') +
-        '<span class="w-[140px] shrink-0">Ngày giờ gửi</span>' +
-        '<span class="w-[320px] shrink-0">File báo cáo</span>' +
+        '<span class="' + (isManagerOrAbove ? 'w-[152px]' : 'w-[112px]') + ' shrink-0 text-center">Thao tác</span>' +
         '</div>' +
         '</div>';
 
@@ -31720,9 +31869,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0"><i class="fa-solid fa-circle-check text-[9px]"></i><span>Đã tổng hợp <span class="font-num">' + rec.consolidated + '/' + rec.total + '</span></span></span>'
           : '';
 
+        const isRead = isSenderOfReport(currentUser, r) || (typeof isRpBoxReportRead === 'function' ? isRpBoxReportRead(r.id, currentUser) : true);
+        const cardBgClass = (isManagerOrAbove && !isRead)
+          ? 'bg-blue-50/25 border-blue-300/90 hover:bg-blue-50/60 hover:border-blue-400 hover:shadow-sm'
+          : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm';
+        const unreadLeftBarHtml = (isManagerOrAbove && !isRead)
+          ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-blue-500 shadow-xs"></span>'
+          : '';
+        const readStatusPill = isManagerOrAbove
+          ? (!isRead
+              ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300 shrink-0 shadow-2xs"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>Chưa đọc</span>'
+              : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0"><i class="fa-solid fa-check text-[9px] text-slate-400"></i>Đã đọc</span>')
+          : '';
+
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden bg-white border border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs' + (isSummary ? '' : ' cursor-pointer') + '"' +
+          '<div class="group relative w-full max-w-full overflow-hidden ' + cardBgClass + ' rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs' + (isSummary ? '' : ' cursor-pointer') + '"' +
           (isSummary ? '' : ' onclick="openRpBoxSenderRecordTasks(\'' + escapeHtml(String(r.id)) + '\')" title="Bấm để xem các đầu việc của lượt gửi này"') + '>' +
+          unreadLeftBarHtml +
 
           '<div class="flex items-center gap-3 flex-1 min-w-0">' +
           '<span class="w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (idx + 1) + '</span>' +
@@ -31741,13 +31904,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           typeChip(rec.counts.plan, 'bg-sky-50 text-sky-800 border-sky-200', 'fa-calendar-days text-sky-500', 'Kế hoạch') +
           typeChip(rec.counts.proposal, 'bg-purple-50 text-purple-800 border-purple-200', 'fa-lightbulb text-purple-500', 'Đề xuất') +
           typeChip(rec.counts.feedback, 'bg-teal-50 text-teal-800 border-teal-200', 'fa-comment-dots text-teal-500', 'Ý kiến / Phản ánh') +
-          deptPill + recipientPill + periodPill + consolidatedPill +
+          readStatusPill + deptPill + recipientPill + periodPill + consolidatedPill +
           (isSummary ? '' : '<span class="hidden group-hover:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0"><i class="fa-solid fa-eye text-[9px]"></i><span>Bấm để xem đầu việc</span></span>') +
           '</div>' +
           '</div>' +
           '</div>' +
 
           '<div class="flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
+          '<div class="flex flex-col items-start xl:items-center justify-center gap-1.5 text-[11px] w-[112px] shrink-0">' +
+          '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
+          (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
+          '</div>' +
           (isManagerOrAbove ? (
             '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
             (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
@@ -31763,22 +31930,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             )) +
             '</div>'
           ) : '') +
-          '<div class="flex flex-col items-start justify-center gap-1 text-[11px] xl:w-[140px] shrink-0">' +
-          '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
-          (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
-          '</div>' +
-          '<button type="button" onclick="event.stopPropagation();downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-full xl:w-[320px] basis-full xl:basis-auto shrink-0 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
+          '<div class="flex items-center justify-end gap-2 shrink-0 ml-auto xl:ml-0 ' + (isManagerOrAbove ? 'w-[152px]' : 'w-[112px]') + '">' +
+          (isManagerOrAbove ? (
+            '<button type="button" onclick="event.stopPropagation();toggleRpBoxReportReadStatus(\'' + escapeHtml(String(r.id)) + '\', event)" title="' + (isRead ? 'Đánh dấu là CHƯA ĐỌC' : 'Đánh dấu là ĐÃ ĐỌC') + '" class="h-8 w-8 rounded-xl shrink-0 inline-flex items-center justify-center border transition cursor-pointer shadow-2xs ' + (isRead ? 'bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 border-slate-200' : 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-300') + '">' +
+            '<i class="' + (isRead ? 'fa-regular fa-envelope-open text-xs' : 'fa-solid fa-envelope text-blue-600 text-xs') + '"></i>' +
+            '</button>'
+          ) : '') +
+          '<button type="button" onclick="event.stopPropagation();downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-[112px] h-8 shrink-0 inline-flex items-center justify-center gap-2 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[11.5px] font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">' +
           '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
-          '<span class="truncate flex-1 min-w-0">' + escapeHtml(fileName) + '</span>' +
-          '<i class="fa-solid fa-download text-blue-500 text-[11px] shrink-0"></i>' +
+          '<span>Tải Word</span>' +
           '</button>' +
+          '</div>' +
           '</div>' +
 
           '</div>'
         );
       }).join('');
 
-      container.innerHTML = headerHtml + '<div class="flex flex-col space-y-2 w-full pt-0.5">' + rowsHtml + '</div>';
+      container.innerHTML = (isManagerOrAbove ? readFilterBarHtml : '') + headerHtml + '<div class="flex flex-col space-y-2 w-full pt-0.5">' + rowsHtml + '</div>';
     }
 
 // Biến tạm lưu trữ thông tin khi Quản lý mở bảng tổng hợp báo cáo
@@ -32232,6 +32401,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       closeConsolidateAssessmentModal();
 
+      // Đánh dấu tất cả các báo cáo nguồn là ĐÃ ĐỌC
+      if (typeof setRpBoxReportReadStatus === 'function') {
+        selectedEntries.forEach(e => {
+          if (e && e.reportId) setRpBoxReportReadStatus(e.reportId, true);
+        });
+      }
+
       const now = new Date();
       const sharedReports = getLeadershipReportsShared();
 
@@ -32496,14 +32672,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const headerHtml =
-        '<div class="pw-desktop-flex w-full max-w-full overflow-hidden items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
+        '<div class="hidden xl:!flex w-full max-w-full overflow-hidden items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
         '<div class="flex items-center gap-3 flex-1 min-w-0">' +
         '<span class="w-[28px] shrink-0 text-center">STT</span>' +
         '<span class="flex-1 min-w-0">Thông tin tạo báo cáo tổng hợp</span>' +
         '</div>' +
         '<div class="flex items-center justify-end gap-3 shrink-0">' +
-        '<span class="w-[150px] shrink-0">Ngày giờ tạo</span>' +
-        '<span class="w-[420px] shrink-0">File báo cáo</span>' +
+        '<span class="w-[112px] shrink-0 text-center">Ngày giờ tạo</span>' +
+        '<span class="w-[288px] shrink-0 text-center">Thao tác &amp; File báo cáo</span>' +
         '</div>' +
         '</div>';
 
@@ -32624,7 +32800,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         return (
           '<div class="group relative w-full max-w-full overflow-hidden bg-white border ' + (isExpanded ? 'border-amber-300/90 ring-1 ring-amber-200' : 'border-slate-200/90') + ' hover:border-amber-300/90 hover:shadow-sm rounded-2xl transition-all duration-200 shadow-2xs">' +
-          '<div class="pl-4 pr-3 py-3 hover:bg-amber-50/45 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-4">' +
+          '<div class="pl-4 pr-3 py-3 hover:bg-amber-50/45 transition-colors flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4">' +
 
           '<div class="flex items-center gap-3 flex-1 min-w-0">' +
           '<span class="w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (rIdx + 1) + '</span>' +
@@ -32650,24 +32826,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '</div>' +
           '</div>' +
 
-          '<div class="flex items-center justify-between md:justify-end gap-2.5 md:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">' +
-          '<div class="flex flex-col items-start justify-center gap-1 text-[11px] md:w-[150px] shrink-0">' +
+          '<div class="flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
+          '<div class="flex flex-col items-start xl:items-center justify-center gap-1.5 text-[11px] w-[112px] shrink-0">' +
           '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
           (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
           '</div>' +
-          '<div class="flex items-center gap-1.5 md:w-[420px] shrink-0 min-w-0">' +
-          '<button type="button" onclick="downloadConsolidatedReportWordById(\'' + repIdAttr + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="flex-1 min-w-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-[11.5px] font-semibold transition cursor-pointer shadow-2xs active:scale-[0.99] text-left">' +
+          '<div class="flex flex-wrap items-center justify-end gap-1.5 w-full sm:w-auto xl:w-[288px] max-w-full shrink-0 min-w-0">' +
+          '<button type="button" onclick="downloadConsolidatedReportWordById(\'' + repIdAttr + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-[112px] h-8 shrink-0 inline-flex items-center justify-center gap-2 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[11.5px] font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">' +
           '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
-          '<span class="truncate flex-1 min-w-0">' + escapeHtml(fileName) + '</span>' +
-          '<i class="fa-solid fa-download text-blue-500 text-[11px] shrink-0"></i>' +
+          '<span>Tải Word</span>' +
           '</button>' +
           (canManage && isDraft ? (
-            '<button type="button" onclick="sendDraftReportToLeadership(\'' + repIdAttr + '\')" class="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-[11.5px] font-bold shadow-xs shadow-emerald-600/20 transition cursor-pointer" title="Gửi bản nháp này chuyển lên Ban Giám Đốc / Lãnh đạo">' +
+            '<button type="button" onclick="sendDraftReportToLeadership(\'' + repIdAttr + '\')" class="w-[132px] h-8 shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-[11.5px] font-bold shadow-xs shadow-emerald-600/20 transition cursor-pointer" title="Gửi bản nháp này chuyển lên Ban Giám Đốc / Lãnh đạo">' +
             '<i class="fa-solid fa-paper-plane text-[10px]"></i><span>Gửi lãnh đạo</span>' +
             '</button>'
           ) : '') +
           (canManage ? (
-            '<button type="button" onclick="deleteConsolidatedReport(\'' + repIdAttr + '\')" class="p-2 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 transition cursor-pointer shrink-0" title="Xóa báo cáo này và hủy trạng thái đã tổng hợp của các đầu việc">' +
+            '<button type="button" onclick="deleteConsolidatedReport(\'' + repIdAttr + '\')" class="w-8 h-8 inline-flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 transition cursor-pointer shrink-0" title="Xóa báo cáo này và hủy trạng thái đã tổng hợp của các đầu việc">' +
             '<i class="fa-solid fa-trash-can text-xs"></i>' +
             '</button>'
           ) : '') +
@@ -33048,6 +33223,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (selectedEntries.length === 0) {
         showToast("Vui lòng tích chọn ít nhất 1 đầu việc để xuất file Word!", true);
         return;
+      }
+      if (typeof setRpBoxReportReadStatus === 'function') {
+        selectedEntries.forEach(e => {
+          if (e && e.reportId) setRpBoxReportReadStatus(e.reportId, true);
+        });
       }
 
       const deptSelect = document.getElementById('rpBoxFilterDept');
