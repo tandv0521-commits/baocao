@@ -12977,11 +12977,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return {};
         const now = Date.now();
-        const maxAgeMs = 7 * 24 * 60 * 60 * 1000; // Giữ lịch sử ghi cục bộ 7 ngày
+        const maxUnsyncedAgeMs = 7 * 24 * 60 * 60 * 1000; // Giữ bản ghi chờ mạng tối đa 7 ngày
         let mutated = false;
         Object.keys(parsed).forEach(k => {
           const item = parsed[k];
-          if (!item || (item.synced && item.updatedAtMs && (now - item.updatedAtMs > maxAgeMs))) {
+          // Khi bản ghi đã đồng bộ thành công lên Supabase (synced: true), xóa khỏi hàng đợi chờ cục bộ
+          // để mọi cập nhật mới từ thiết bị khác (điện thoại <-> máy tính) được hiển thị tức thì
+          if (!item || item.synced || (item.updatedAtMs && (now - item.updatedAtMs > maxUnsyncedAgeMs))) {
             delete parsed[k];
             mutated = true;
           }
@@ -13003,6 +13005,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         entries.forEach(ent => {
           if (!ent || !ent.taskId || !ent.dayNum) return;
           const key = `${ent.taskId}_${ent.dayNum}`;
+          if (ent.synced) {
+            delete map[key];
+            return;
+          }
           map[key] = {
             taskId: Number(ent.taskId),
             userId: Number(ent.userId) || (currentUser ? Number(currentUser.id) : null),
@@ -13014,7 +13020,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             textV: ent.textV !== undefined ? ent.textV : null,
             updatedAtIso: ent.updatedAtIso || new Date(nowMs).toISOString(),
             updatedAtMs: ent.updatedAtMs || nowMs,
-            synced: !!ent.synced
+            synced: false
           };
         });
         localStorage.setItem(getLocalMatrixWritesStorageKey(year, month), JSON.stringify(map));
@@ -13049,11 +13055,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const keys = Object.keys(localMap);
       if (keys.length === 0) return matrixObj;
 
-      // Chỉ phủ các bản ghi chưa đồng bộ hoặc vừa ghi tức thì (< 120 giây) để chống trễ mạng
-      const now = Date.now();
+      // Chỉ phủ các bản ghi đang chờ đồng bộ (!item.synced) để không bao giờ đè lên dữ liệu mới từ điện thoại/máy khác
       const recentEntries = keys
         .map(k => localMap[k])
-        .filter(item => item && (!item.synced || (now - (item.updatedAtMs || 0) < 120000)));
+        .filter(item => item && !item.synced);
 
       if (recentEntries.length === 0) return matrixObj;
 
@@ -13327,16 +13332,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, maxFetchedUpdatedAtMs);
       }
 
-      // HỢP NHẤT BẢN GHI CỤC BỘ VỪA LƯU ĐỂ CHỐNG ĐỘ TRỄ MẠNG HOẶC TRUY VẤN CHỒNG CHÉO
+      // HỢP NHẤT BẢN GHI CỤC BỘ CHƯA ĐỒNG BỘ (!lw.synced) ĐỂ CHỐNG MẤT DỮ LIỆU KHI MẤT MẠNG TẠM THỜI
       const localWritesMap = getLocalMatrixWritesMap(year, month);
       const nowMergeMs = Date.now();
       Object.keys(localWritesMap).forEach(key => {
         const lw = localWritesMap[key];
-        if (!lw || !lw.taskId || !lw.dayNum) return;
+        if (!lw || lw.synced || !lw.taskId || !lw.dayNum) return;
         const dbMeta = reportMetaLookup[key];
-        const isRecentOrUnsynced = !lw.synced || (nowMergeMs - (lw.updatedAtMs || 0) < 120000);
         const isNewerThanDb = !dbMeta || ((lw.updatedAtMs || 0) >= (dbMeta.updatedAtMs || 0));
-        if (isRecentOrUnsynced && isNewerThanDb) {
+        if (isNewerThanDb) {
           reportLookup[key] = (lw.valToCache !== undefined && lw.valToCache !== null) ? lw.valToCache : '';
           reportMetaLookup[key] = {
             val: reportLookup[key],
@@ -13692,6 +13696,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const loadingBox = document.getElementById('loadingTasksBox');
         if (loadingBox) loadingBox.classList.add('hidden');
         applyClientFilterAndRender();
+        setupDailyReportsRealtimeListener();
+        scheduleSilentMatrixRefresh(250, '');
         return;
       }
 
@@ -14591,7 +14597,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const saveMonth = currentSelectedMonth;
       const nowIso = new Date().toISOString();
       const nowMs = Date.now();
-      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, nowMs + 1000);
+      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, nowMs);
 
       // TRƯỜNG HỢP 1: ĐIỀN KÝ HIỆU NGÀY NGHỈ (7 KÝ HIỆU: P, Ô, CT, VR, HT, H, L)
       // Tự động gộp cả cột của nhân sự đó trong ngày và áp dụng ký hiệu cho toàn bộ đầu việc
@@ -14629,7 +14635,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (error) throw error;
 
           recordLocalMatrixWrite(saveYear, saveMonth, localEntries.map(e => ({ ...e, synced: true })));
-          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
+          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now());
 
           [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
             if (targetCache && targetCache.staffGroups) {
@@ -14733,7 +14739,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (error) throw error;
 
           recordLocalMatrixWrite(saveYear, saveMonth, localEntries.map(e => ({ ...e, synced: true })));
-          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
+          _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now());
 
           [fullPeriodMatrixCache, currentMatrixData].forEach(targetCache => {
             if (targetCache && targetCache.staffGroups) {
@@ -14826,7 +14832,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         registerReportMonthIfNew(reportDate);
 
         recordLocalMatrixWrite(saveYear, saveMonth, [{ ...singleLocalEntry, synced: true }]);
-        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
+        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now());
 
         inputElem.dataset.oldValue = valToCache;
         inputElem.value = valToCache;
@@ -15092,10 +15098,30 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // Tích hợp Smart Polling Heartbeat (12s) và Visibility Wakeup khi quay lại tab / mở điện thoại
     let _matrixRealtimeChannel = null;
     let _lastKnownReportUpdatedAt = null;
+    let _lastPolledReportsDigest = '';
     let _isSilentRefreshing = false;
     let _autoSyncPollingInterval = null;
     let _silentRefreshTimer = null;
     let _lastToastTime = 0;
+    const MATRIX_CLIENT_INSTANCE_ID = 'matrix_cli_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+
+    function handleDailyReportsPostgresChange(payload) {
+      if (!payload) return;
+      const row = payload.new || payload.old || {};
+      if (row.report_date) {
+        const parts = String(row.report_date).split('-');
+        const rYear = parseInt(parts[0], 10);
+        const rMonth = parseInt(parts[1], 10);
+        if (rYear && rMonth && (rYear !== Number(currentSelectedYear) || rMonth !== Number(currentSelectedMonth))) {
+          return;
+        }
+      }
+      // Nếu bản ghi vừa thay đổi trên DB khác với giá trị đang hiển thị trên máy này thì đồng bộ ngay
+      if (_activeMatrixCellSaveCount > 0) return;
+      const isSameUser = Boolean(currentUser && row.user_id && String(row.user_id) === String(currentUser.id));
+      const senderLabel = isSameUser ? 'Thiết bị khác của bạn' : (row.user_id ? resolveStaffFullName(row.user_id) : '');
+      scheduleSilentMatrixRefresh(80, senderLabel);
+    }
 
     function setupDailyReportsRealtimeListener() {
       if (!supabase) return;
@@ -15104,6 +15130,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (_matrixRealtimeChannel) {
         const state = _matrixRealtimeChannel.state;
         if (state === 'joined' || state === 'joining') {
+          startMatrixAutoSyncPolling();
+          setupTabVisibilitySyncListener();
           return;
         }
         try { supabase.removeChannel(_matrixRealtimeChannel); } catch (e) { }
@@ -15118,14 +15146,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }
         });
 
-        // TẦNG 1: BROADCAST CHANNEL - Nhận tín hiệu siêu tốc (50ms - 100ms) ngay khi đồng nghiệp bấm Lưu / Sửa
+        // TẦNG 1: BROADCAST CHANNEL - Nhận tín hiệu siêu tốc (50ms - 100ms) ngay khi bấm Lưu / Sửa (kể cả từ điện thoại cùng tài khoản)
         _matrixRealtimeChannel.on('broadcast', { event: 'matrix_mutation' }, payload => {
           handleIncomingMatrixBroadcast(payload);
         });
 
+        // TẦNG 2: POSTGRES CHANGES TRỰC TIẾP TRÊN BẢNG daily_reports - Bắt mọi thay đổi CSDL kể cả khi thiết bị kia chưa gửi broadcast
+        _matrixRealtimeChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'daily_reports' }, payload => {
+          handleDailyReportsPostgresChange(payload);
+        });
+
         _matrixRealtimeChannel.subscribe((status, err) => {
           if (status === 'SUBSCRIBED') {
-            console.log('[Realtime Matrix] Đã kết nối kênh Broadcast thành công.');
+            console.log('[Realtime Matrix] Đã kết nối kênh Broadcast + Postgres Changes thành công.');
           } else if (status === 'CHANNEL_ERROR') {
             console.warn('[Realtime Matrix] Kênh gặp lỗi:', err);
           }
@@ -15134,7 +15167,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         console.warn("[Realtime] Setup error:", err);
       }
 
-      // Khởi động Tầng 3 (Heartbeat Polling) và Tầng 4 (Visibility Wakeup Sync)
+      // Khởi động Tầng 3 (Value-Aware Heartbeat Polling 4s) và Tầng 4 (Visibility & Focus Wakeup Sync)
       startMatrixAutoSyncPolling();
       setupTabVisibilitySyncListener();
     }
@@ -15164,12 +15197,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return idStr;
     }
 
-    // GỬI BROADCAST SỐ LIỆU ĐẾN TẤT CẢ CÁC MÁY ĐANG MỞ
+    // GỬI BROADCAST SỐ LIỆU ĐẾN TẤT CẢ CÁC MÁY ĐANG MỞ (ĐÍNH KÈM clientId ĐỂ PHÂN BIỆT ĐIỆN THOẠI VS MÁY TÍNH CÙNG TÀI KHOẢN)
     function broadcastMatrixChange(actionType, extraData = {}) {
       try {
         const myName = currentUser ? (currentUser.fullName || currentUser.full_name || currentUser.username) : 'Nhân sự';
         const payload = {
           action: actionType || 'report_saved',
+          clientId: MATRIX_CLIENT_INSTANCE_ID,
           senderId: currentUser ? currentUser.id : null,
           senderName: extraData.senderName || myName,
           targetMonth: extraData.targetMonth || currentSelectedMonth,
@@ -15192,7 +15226,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    // TIẾP NHẬN BROADCAST TỪ CÁC THIẾT BỊ KHÁC
+    // TIẾP NHẬN BROADCAST TỪ CÁC THIẾT BỊ KHÁC (HỖ TRỢ ĐỒNG BỘ ĐIỆN THOẠI <-> MÁY TÍNH CÙNG TÀI KHOẢN)
     function handleIncomingMatrixBroadcast(msg) {
       if (!msg || !msg.payload) return;
       const p = msg.payload;
@@ -15207,26 +15241,28 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      // Nếu chính máy này là người gửi thì bỏ qua (vì đã tự cập nhật cục bộ)
-      if (currentUser && p.senderId && String(p.senderId) === String(currentUser.id)) return;
+      // Chỉ bỏ qua nếu chính phiên trình duyệt này (cùng clientId) là nơi phát tín hiệu.
+      // Nếu cùng tài khoản (cùng senderId) nhưng khác thiết bị (ví dụ: nhập trên điện thoại, xem trên máy tính) -> BẮT BUỘC ĐỒNG BỘ NGAY!
+      if (p.clientId && p.clientId === MATRIX_CLIENT_INSTANCE_ID) return;
 
+      const isSameAccountOtherDevice = Boolean(currentUser && p.senderId && String(p.senderId) === String(currentUser.id));
       const rawSender = p.senderName || 'Nhân sự';
-      const sender = resolveStaffFullName(rawSender);
+      const sender = isSameAccountOtherDevice ? 'Thiết bị khác của bạn' : resolveStaffFullName(rawSender);
       console.log(`[Matrix Realtime] Nhận được tín hiệu cập nhật từ ${sender} (${p.action})`);
 
-      // 1. Luôn kích hoạt thông báo cho Admin / Quản lý / Ban Giám Đốc biết ngay lập tức
-      if (canUserSeeLiveSyncNotification(currentUser)) {
+      // 1. Kích hoạt thông báo cho Quản lý/Admin hoặc khi đồng bộ từ thiết bị khác của cùng tài khoản
+      if (isSameAccountOtherDevice || canUserSeeLiveSyncNotification(currentUser)) {
         showLiveSyncIndicator(sender, p.targetMonth, p.targetYear);
       }
 
-      // 2. Chỉ tải lại số liệu ma trận nếu đúng kỳ đang xem trên màn hình
+      // 2. Tải lại số liệu ma trận nếu đúng kỳ đang xem trên màn hình
       const isMatchingPeriod = (
         !p.targetMonth || !p.targetYear ||
         (Number(p.targetMonth) === Number(currentSelectedMonth) && Number(p.targetYear) === Number(currentSelectedYear))
       );
 
       if (isMatchingPeriod) {
-        scheduleSilentMatrixRefresh(120, sender);
+        scheduleSilentMatrixRefresh(60, sender);
       }
     }
 
@@ -15280,8 +15316,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME: TOAST NỔI BẬT + NHÃN NHÁY SÁNG THANH CÔNG CỤ
     let _lastLiveSyncToastTime = 0;
     function showLiveSyncIndicator(senderName = '', targetMonth = null, targetYear = null) {
-      // 1. Phân quyền: Chỉ Ban Giám Đốc, Quản lý & Admin mới nhận thông báo nổi; Nhân viên bình thường không thấy
-      if (!canUserSeeLiveSyncNotification(currentUser)) {
+      const isSameAccountSync = (senderName === 'Thiết bị khác của bạn');
+      // 1. Phân quyền: Ban Giám Đốc, Quản lý, Admin hoặc chính tài khoản đó cập nhật từ điện thoại/máy khác
+      if (!isSameAccountSync && !canUserSeeLiveSyncNotification(currentUser)) {
         return;
       }
 
@@ -15290,8 +15327,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      const displayName = resolveStaffFullName(senderName);
-      const shortName = displayName.length > 20 ? displayName.substring(0, 20) + '...' : displayName;
+      const displayName = isSameAccountSync ? 'Thiết bị khác của bạn' : resolveStaffFullName(senderName);
+      const shortName = displayName.length > 24 ? displayName.substring(0, 24) + '...' : displayName;
       const periodStr = targetMonth ? ` (T${targetMonth})` : '';
 
       // 3. Hiện duy nhất Thông báo nổi thon gọn nhẹ nhàng ngay trên đỉnh màn hình
@@ -15299,13 +15336,60 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (now - _lastLiveSyncToastTime > 1500) {
         _lastLiveSyncToastTime = now;
         if (typeof showToast === 'function') {
-          showToast(`⚡ ${shortName} vừa cập nhật báo cáo${periodStr}`, false);
+          showToast(isSameAccountSync
+            ? `⚡ Đã đồng bộ số liệu mới từ thiết bị khác${periodStr}`
+            : `⚡ ${shortName} vừa cập nhật báo cáo${periodStr}`, false);
         }
       }
     }
 
-    // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (10S - 12S)
-    // Tự động kiểm tra bản ghi mới nhất trên cơ sở dữ liệu để phòng trường hợp ngắt websocket hoặc sleep
+    // Kiểm tra nhanh xem 30 bản ghi mới nhất trên Supabase có lệch với bảng ma trận đang hiển thị trên màn hình hay không
+    function detectMatrixMismatchWithRecentDbRows(recentRows, year, month) {
+      const activeMatrix = fullPeriodMatrixCache || currentMatrixData;
+      if (!activeMatrix || !Array.isArray(activeMatrix.staffGroups) || !Array.isArray(recentRows)) return false;
+
+      const unsyncedLocal = getLocalMatrixWritesMap(year, month);
+      const activeEl = document.activeElement;
+      const activeEditingKey = (activeEl && activeEl.tagName === 'INPUT' && activeEl.dataset && activeEl.dataset.taskId && activeEl.dataset.day)
+        ? `${activeEl.dataset.taskId}_${activeEl.dataset.day}`
+        : null;
+
+      const taskMap = new Map();
+      activeMatrix.staffGroups.forEach(grp => {
+        (grp.tasks || []).forEach(t => {
+          taskMap.set(Number(t.taskId), t);
+        });
+      });
+
+      const seenTaskDay = new Set();
+      for (const r of recentRows) {
+        if (!r || !r.task_id || !r.report_date) continue;
+        const dayNum = parseInt(String(r.report_date).split('-')[2], 10);
+        if (isNaN(dayNum)) continue;
+        const cellKey = `${r.task_id}_${dayNum}`;
+        if (seenTaskDay.has(cellKey)) continue;
+        seenTaskDay.add(cellKey);
+
+        if (unsyncedLocal[cellKey] || activeEditingKey === cellKey) continue;
+        const taskObj = taskMap.get(Number(r.task_id));
+        if (!taskObj) continue;
+
+        let dbVal = '';
+        if (r.num_val !== null && r.num_val !== undefined) dbVal = r.num_val;
+        else if (r.sym_val !== null && r.sym_val !== undefined && r.sym_val !== '') dbVal = r.sym_val;
+        else if (r.text_val !== null && r.text_val !== undefined && r.text_val !== '') dbVal = r.text_val;
+
+        const curVal = (taskObj.dailyValues && taskObj.dailyValues[dayNum] !== undefined && taskObj.dailyValues[dayNum] !== null)
+          ? taskObj.dailyValues[dayNum]
+          : '';
+        if (String(curVal).trim() !== String(dbVal).trim()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (4 GIÂY) CHỐNG LỆCH ĐỒNG HỒ GIỮA ĐIỆN THOẠI & MÁY TÍNH
     function startMatrixAutoSyncPolling() {
       if (_autoSyncPollingInterval) clearInterval(_autoSyncPollingInterval);
 
@@ -15314,38 +15398,48 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
 
         try {
-          const mFormatted = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
-          const daysInPollMonth = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
-          const startDate = `${currentSelectedYear}-${mFormatted}-01`;
-          const endDate = `${currentSelectedYear}-${mFormatted}-${String(daysInPollMonth).padStart(2, '0')}`;
+          const pollMonth = currentSelectedMonth;
+          const pollYear = currentSelectedYear;
+          const mFormatted = (pollMonth < 10 ? '0' : '') + pollMonth;
+          const daysInPollMonth = new Date(pollYear, pollMonth, 0).getDate();
+          const startDate = `${pollYear}-${mFormatted}-01`;
+          const endDate = `${pollYear}-${mFormatted}-${String(daysInPollMonth).padStart(2, '0')}`;
 
           const { data, error } = await supabase
             .from('daily_reports')
-            .select('updated_at, user_id')
+            .select('id, task_id, user_id, report_date, num_val, sym_val, text_val, updated_at')
             .gte('report_date', startDate)
             .lte('report_date', endDate)
             .order('updated_at', { ascending: false })
-            .limit(1);
+            .limit(30);
 
           if (!error && data && data.length > 0) {
             const latestDbUpdate = new Date(data[0].updated_at).getTime();
+            const digest = data.map(r => `${r.id}:${r.updated_at}:${r.num_val ?? ''}:${r.sym_val ?? ''}:${r.text_val ?? ''}`).join('|');
+            const hasValueMismatch = detectMatrixMismatchWithRecentDbRows(data, pollYear, pollMonth);
+
             if (!_lastKnownReportUpdatedAt) {
               _lastKnownReportUpdatedAt = latestDbUpdate;
-            } else if (latestDbUpdate > _lastKnownReportUpdatedAt + 500) {
-              _lastKnownReportUpdatedAt = latestDbUpdate;
-              console.log("[Heartbeat] Phát hiện số liệu mới trên máy chủ -> Tự động đồng bộ ma trận!");
+              _lastPolledReportsDigest = digest;
+              if (hasValueMismatch) {
+                scheduleSilentMatrixRefresh(80, '');
+              }
+            } else if (hasValueMismatch || (digest !== _lastPolledReportsDigest && latestDbUpdate !== _lastKnownReportUpdatedAt)) {
+              _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, latestDbUpdate);
+              _lastPolledReportsDigest = digest;
+              console.log("[Heartbeat] Phát hiện số liệu thay đổi từ thiết bị khác -> Tự động đồng bộ ma trận!");
               const updaterId = data[0].user_id;
               let updaterName = '';
               if (currentUser && String(updaterId) === String(currentUser.id)) {
-                updaterName = '';
+                updaterName = hasValueMismatch ? 'Thiết bị khác của bạn' : '';
               } else {
                 updaterName = resolveStaffFullName(updaterId);
               }
-              scheduleSilentMatrixRefresh(200, updaterName);
+              scheduleSilentMatrixRefresh(80, updaterName);
             }
           }
         } catch (e) { }
-      }, 10000);
+      }, 4000);
     }
 
     function setupTabVisibilitySyncListener() {
@@ -19231,7 +19325,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const previousValLookup = {};
       if (currentReportInputMode === 'day') {
         (currentDayEntryTasks || []).forEach(t => {
-          previousValLookup[`${t.taskId}_${targetDay}`] = String(t.currentVal ?? '').trim();
+          previousValLookup[`${t.taskId}_${targetDay}`] = String(t.currentValue ?? t.currentVal ?? '').trim();
         });
       } else if (currentTaskEntryMeta) {
         (currentTaskEntryDays || []).forEach(d => {
@@ -19289,7 +19383,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       recordLocalMatrixWrite(targetYear, targetMonth, localModalEntries);
       persistActiveMatrixCaches(targetYear, targetMonth);
-      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, modalSaveMs + 1000);
+      _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, modalSaveMs);
 
       try {
         const { error } = await supabase
@@ -19298,7 +19392,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         if (error) throw error;
         recordLocalMatrixWrite(targetYear, targetMonth, localModalEntries.map(e => ({ ...e, synced: true })));
-        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now() + 1000);
+        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, Date.now());
         registerReportMonthIfNew(curDate);
 
         finishProgressHud(isLeaveReport ? "Đã xác nhận báo cáo thành công!" : "Đã lưu thành công!", () => {
