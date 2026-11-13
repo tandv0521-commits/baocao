@@ -27657,31 +27657,82 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function resolveReportRecipientHeadingText(recipientName, repOrRecipient = null) {
-      const rawName = String(recipientName || '').trim();
+      const foldStr = (val) => {
+        const s = String(val || '');
+        const stripped = (typeof removeAccents === 'function')
+          ? removeAccents(s)
+          : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+        return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+      };
+      const rawInput = String(recipientName || '').trim();
+      const cleanRawName = rawInput.replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
       const normName = (typeof normalizeDirectorAliasKey === 'function')
-        ? normalizeDirectorAliasKey(rawName)
-        : (typeof removeAccents === 'function' ? removeAccents(rawName) : rawName).toLowerCase().trim();
+        ? normalizeDirectorAliasKey(cleanRawName)
+        : foldStr(cleanRawName);
+      const roleRaw = String(repOrRecipient?.recipientRole || repOrRecipient?.role || '').trim();
       const roleNorm = (typeof normalizeDirectorAliasKey === 'function')
-        ? normalizeDirectorAliasKey(repOrRecipient?.recipientRole || repOrRecipient?.role || '')
-        : (typeof removeAccents === 'function' ? removeAccents(String(repOrRecipient?.recipientRole || repOrRecipient?.role || '')) : String(repOrRecipient?.recipientRole || repOrRecipient?.role || '')).toLowerCase().trim();
-      const userNorm = String(repOrRecipient?.recipientUsername || repOrRecipient?.username || '').toLowerCase().trim();
+        ? normalizeDirectorAliasKey(roleRaw)
+        : foldStr(roleRaw);
+      const userRaw = String(repOrRecipient?.recipientUsername || repOrRecipient?.username || '').trim();
+      const userNorm = (typeof normalizeReportRecipientUsername === 'function')
+        ? normalizeReportRecipientUsername(userRaw)
+        : foldStr(userRaw).replace(/\s+/g, '');
       const isOanh = (typeof isExactLegacyOanhAlias === 'function')
-        ? isExactLegacyOanhAlias(rawName)
+        ? isExactLegacyOanhAlias(cleanRawName)
         : (normName === 'ms oanh' || normName === 'mrs oanh' || normName === 'le thi kim oanh');
-      const isLeadership = isOanh
-        || normName.includes('kim oanh')
+      const isTrang = normName === 'nguyen thi quynh trang';
+      const isMgrWithoutExplicitRecipient = !cleanRawName
+        && repOrRecipient?.recipientKind !== 'manager_group'
+        && (repOrRecipient?.senderRole === 'Quản lý' || repOrRecipient?.senderRole === 'Trưởng phòng' || repOrRecipient?.reportType === 'manager_summary');
+      const isLeadership = Boolean(repOrRecipient?.isConsolidated)
+        || repOrRecipient?.isRecipientLeadership === true
+        || repOrRecipient?.recipientKind === 'leadership_group'
+        || isOanh
+        || isTrang
         || normName.includes('ban giam doc')
         || normName.includes('ban lanh dao')
         || roleNorm.includes('giam doc')
         || roleNorm.includes('lanh dao')
         || userNorm === 'oanhltki'
         || userNorm === 'trangntq'
-        || repOrRecipient?.recipientKind === 'leadership_group';
+        || isMgrWithoutExplicitRecipient;
 
       if (isLeadership) {
         return 'Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
       }
-      return rawName;
+      return cleanRawName;
+    }
+
+    function resolveReportRecipientSalutationLine(recipientName, repOrRecipient = null, fallbackDept = 'Bộ phận') {
+      const foldStr = (val) => {
+        const s = String(val || '');
+        const stripped = (typeof removeAccents === 'function')
+          ? removeAccents(s)
+          : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+        return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+      };
+      const heading = resolveReportRecipientHeadingText(recipientName, repOrRecipient);
+      const normHeading = foldStr(heading);
+      if (
+        heading === 'Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng'
+        || normHeading.includes('ban giam doc')
+        || normHeading.includes('ban lanh dao')
+      ) {
+        return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+      }
+      if (!heading) {
+        const dept = String(fallbackDept || repOrRecipient?.senderDepartment || 'Bộ phận').trim() || 'Bộ phận';
+        return `Kính gửi: Quản lý / Trưởng bộ phận ${dept}`;
+      }
+      const isGenericManagerGroup = repOrRecipient?.recipientKind === 'manager_group'
+        || normHeading === 'quan ly bo phan'
+        || normHeading === 'truong bo phan'
+        || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(normHeading)
+        || /^quan ly bo phan\b/.test(normHeading);
+      if (isGenericManagerGroup) {
+        return `Kính gửi: ${heading}`;
+      }
+      return `Kính Gửi Ông/Bà: ${heading}`;
     }
 
     function resolvePersonFullDisplayName(personOrRef, opts = {}) {
@@ -28081,6 +28132,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           || normRecName.includes('giam doc')
           || normRecName.includes('lanh dao')
           || isExactLegacyOanhAlias(rawRecName)
+          || normRecName === 'nguyen thi quynh trang'
           || normRecUser === 'oanhltki'
           || normRecUser === 'trangntq';
       } else {
@@ -28337,7 +28389,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             if (effectiveRecRole) {
               isRecipientLeadership = normEffectiveRecRole.includes('giam doc') || normEffectiveRecRole.includes('lanh dao');
             } else if (!recDirUser) {
-              isRecipientLeadership = rep?.recipientKind === 'leadership_group' || normRecName.includes('giam doc') || normRecName.includes('lanh dao') || isOanhAliasLocal(recName) || normRecUser === 'oanhltki' || normRecUser === 'trangntq';
+              isRecipientLeadership = rep?.recipientKind === 'leadership_group' || normRecName.includes('giam doc') || normRecName.includes('lanh dao') || isOanhAliasLocal(recName) || normRecName === 'nguyen thi quynh trang' || normRecUser === 'oanhltki' || normRecUser === 'trangntq';
             } else {
               isRecipientLeadership = rep?.recipientKind === 'leadership_group' || normRecName.includes('ban giam doc') || normRecName.includes('ban lanh dao');
             }
@@ -28379,7 +28431,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               { id: rep?.senderId ?? null, username: senderUsername, fullName: rawAuthor },
               rawAuthor
             ) || (typeof currentUser !== 'undefined' && currentUser ? resolveFullLocal(currentUser, currentUser.fullName) : '') || 'Người lập báo cáo';
-            return { shouldOmitManagerSigner, managerSignerName, directorSignerName, authorName, recipientDisplayName };
+            return { shouldOmitManagerSigner, isRecipientLeadership, managerSignerName, directorSignerName, authorName, recipientDisplayName };
           })();
 
       const shouldOmitManagerSigner = signers.shouldOmitManagerSigner;
@@ -28388,21 +28440,48 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const managerSignerName = signers.managerSignerName || 'Quản lý bộ phận';
       const directorSignerName = signers.directorSignerName || '';
 
-      const isHeadingToLeadership = isConsolidated
-        || (() => {
-            const norm = (typeof removeAccents === 'function' ? removeAccents(String(resolvedRecName || '')) : String(resolvedRecName || '')).toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
-            const rNorm = (typeof removeAccents === 'function' ? removeAccents(String(rep?.recipientRole || '')) : String(rep?.recipientRole || '')).toLowerCase().trim();
-            const uNorm = String(rep?.recipientUsername || '').toLowerCase().trim();
-            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh' || norm.includes('kim oanh');
-            return isOanh || norm.includes('ban giam doc') || norm.includes('ban lanh dao') || rNorm.includes('giam doc') || rNorm.includes('lanh dao') || uNorm === 'oanhltki' || uNorm === 'trangntq' || rep?.recipientKind === 'leadership_group';
-          })()
-        || (!resolvedRecName && (rep?.senderRole === 'Quản lý' || rep?.senderRole === 'Trưởng phòng' || rep?.reportType === 'manager_summary'));
-
-      const recipientText = isHeadingToLeadership
-        ? "Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng"
-        : (resolvedRecName
-          ? `Kính gửi: ${escapeHtml(resolvedRecName)}`
-          : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep?.senderDepartment || 'Bộ phận')}`);
+      const wordSalutationCtx = {
+        ...(rep && typeof rep === 'object' ? rep : {}),
+        isConsolidated: Boolean(isConsolidated || rep?.isConsolidated),
+        isRecipientLeadership: Boolean(signers?.isRecipientLeadership)
+      };
+      const wordSalutationLine = (typeof resolveReportRecipientSalutationLine === 'function')
+        ? resolveReportRecipientSalutationLine(resolvedRecName, wordSalutationCtx, rep?.senderDepartment || 'Bộ phận')
+        : (() => {
+            const foldStr = (val) => {
+              const s = String(val || '');
+              const stripped = (typeof removeAccents === 'function')
+                ? removeAccents(s)
+                : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+              return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            };
+            const cleanRec = String(resolvedRecName || '').trim().replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
+            const norm = foldStr(cleanRec);
+            const rNorm = foldStr(rep?.recipientRole || '');
+            const uNorm = foldStr(rep?.recipientUsername || '').replace(/\s+/g, '');
+            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh';
+            const isLeadershipHeading = Boolean(wordSalutationCtx.isConsolidated)
+              || wordSalutationCtx.isRecipientLeadership === true
+              || rep?.recipientKind === 'leadership_group'
+              || isOanh
+              || norm === 'nguyen thi quynh trang'
+              || norm.includes('ban giam doc')
+              || norm.includes('ban lanh dao')
+              || rNorm.includes('giam doc')
+              || rNorm.includes('lanh dao')
+              || uNorm === 'oanhltki'
+              || uNorm === 'trangntq'
+              || (!cleanRec && rep?.recipientKind !== 'manager_group' && (rep?.senderRole === 'Quản lý' || rep?.senderRole === 'Trưởng phòng' || rep?.reportType === 'manager_summary'));
+            if (isLeadershipHeading) return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+            if (!cleanRec) return `Kính gửi: Quản lý / Trưởng bộ phận ${String(rep?.senderDepartment || 'Bộ phận').trim() || 'Bộ phận'}`;
+            const isGenericMgr = rep?.recipientKind === 'manager_group'
+              || norm === 'quan ly bo phan'
+              || norm === 'truong bo phan'
+              || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(norm)
+              || /^quan ly bo phan\b/.test(norm);
+            return isGenericMgr ? `Kính gửi: ${cleanRec}` : `Kính Gửi Ông/Bà: ${cleanRec}`;
+          })();
+      const recipientText = escapeHtml(wordSalutationLine);
 
       const docTitleText = isConsolidated
         ? 'BÁO CÁO TỔNG HỢP CÔNG VIỆC &amp; ĐỀ XUẤT KIẾN NGHỊ'
@@ -33533,15 +33612,42 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const recipientText = document.getElementById('rpPreviewRecipientText');
       if (recipientText) {
-        const headingName = (typeof resolveReportRecipientHeadingText === 'function')
-          ? resolveReportRecipientHeadingText(fName, u)
+        const salutationLine = (typeof resolveReportRecipientSalutationLine === 'function')
+          ? resolveReportRecipientSalutationLine(fName, u, currentUser?.department || 'Bộ phận')
           : (() => {
-              const norm = (typeof removeAccents === 'function' ? removeAccents(fName) : fName).toLowerCase();
-              const roleNorm = (typeof removeAccents === 'function' ? removeAccents(String(u?.role || '')) : String(u?.role || '')).toLowerCase();
-              const isLeadership = norm.includes('kim oanh') || norm.includes('ms oanh') || norm.includes('giam doc') || roleNorm.includes('giam doc') || u?.username === 'oanhltki' || u?.username === 'trangntq';
-              return isLeadership ? 'Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng' : fName;
+              const foldStr = (val) => {
+                const s = String(val || '');
+                const stripped = (typeof removeAccents === 'function')
+                  ? removeAccents(s)
+                  : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+                return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+              };
+              const cleanRec = String(fName || '').trim().replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
+              const norm = foldStr(cleanRec);
+              const roleNorm = foldStr(u?.recipientRole || u?.role || '');
+              const uNorm = foldStr(u?.recipientUsername || u?.username || '').replace(/\s+/g, '');
+              const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh';
+              const isLeadership = u?.isConsolidated === true
+                || u?.isRecipientLeadership === true
+                || u?.recipientKind === 'leadership_group'
+                || isOanh
+                || norm === 'nguyen thi quynh trang'
+                || norm.includes('ban giam doc')
+                || norm.includes('ban lanh dao')
+                || roleNorm.includes('giam doc')
+                || roleNorm.includes('lanh dao')
+                || uNorm === 'oanhltki'
+                || uNorm === 'trangntq';
+              if (isLeadership) return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+              if (!cleanRec) return `Kính gửi: Quản lý / Trưởng bộ phận ${String(currentUser?.department || 'Bộ phận').trim() || 'Bộ phận'}`;
+              const isGenericMgr = u?.recipientKind === 'manager_group'
+                || norm === 'quan ly bo phan'
+                || norm === 'truong bo phan'
+                || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(norm)
+                || /^quan ly bo phan\b/.test(norm);
+              return isGenericMgr ? `Kính gửi: ${cleanRec}` : `Kính Gửi Ông/Bà: ${cleanRec}`;
             })();
-        recipientText.innerText = `Kính gửi: ${headingName}`;
+        recipientText.innerText = salutationLine;
       }
     }
 
@@ -33872,14 +33978,47 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       } else if (roleInfo.isStaff) {
         rawRecipientName = `Quản lý / Trưởng bộ phận ${currentUser.department || 'Ban DVKH'}`;
       }
-      const headingRecipient = (typeof resolveReportRecipientHeadingText === 'function')
-        ? resolveReportRecipientHeadingText(rawRecipientName, activeRecipient)
-        : rawRecipientName;
+      const clipboardRecipientCtx = activeRecipient || (roleInfo.isStaff ? { recipientKind: 'manager_group', senderDepartment: currentUser?.department || 'Ban DVKH' } : null);
+      const clipboardSalutationLine = (typeof resolveReportRecipientSalutationLine === 'function')
+        ? resolveReportRecipientSalutationLine(rawRecipientName, clipboardRecipientCtx, currentUser?.department || 'Ban DVKH')
+        : (() => {
+            const foldStr = (val) => {
+              const s = String(val || '');
+              const stripped = (typeof removeAccents === 'function')
+                ? removeAccents(s)
+                : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+              return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            };
+            const cleanRec = String(rawRecipientName || '').trim().replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
+            const norm = foldStr(cleanRec);
+            const roleNorm = foldStr(clipboardRecipientCtx?.recipientRole || clipboardRecipientCtx?.role || '');
+            const uNorm = foldStr(clipboardRecipientCtx?.recipientUsername || clipboardRecipientCtx?.username || '').replace(/\s+/g, '');
+            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh';
+            const isLeadership = clipboardRecipientCtx?.isConsolidated === true
+              || clipboardRecipientCtx?.isRecipientLeadership === true
+              || clipboardRecipientCtx?.recipientKind === 'leadership_group'
+              || isOanh
+              || norm === 'nguyen thi quynh trang'
+              || norm.includes('ban giam doc')
+              || norm.includes('ban lanh dao')
+              || roleNorm.includes('giam doc')
+              || roleNorm.includes('lanh dao')
+              || uNorm === 'oanhltki'
+              || uNorm === 'trangntq';
+            if (isLeadership) return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+            if (!cleanRec) return `Kính gửi: Quản lý / Trưởng bộ phận ${String(currentUser?.department || 'Ban DVKH').trim() || 'Ban DVKH'}`;
+            const isGenericMgr = clipboardRecipientCtx?.recipientKind === 'manager_group'
+              || norm === 'quan ly bo phan'
+              || norm === 'truong bo phan'
+              || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(norm)
+              || /^quan ly bo phan\b/.test(norm);
+            return isGenericMgr ? `Kính gửi: ${cleanRec}` : `Kính Gửi Ông/Bà: ${cleanRec}`;
+          })();
 
       let txt = `===========================================================\n`;
       txt += `CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG - BAN DỊCH VỤ KHÁCH HÀNG\n`;
       txt += `BÁO CÁO CÔNG VIỆC CÁ NHÂN & ĐỀ XUẤT KIẾN NGHỊ\n`;
-      txt += `Kính gửi: ${headingRecipient}\n`;
+      txt += `${clipboardSalutationLine}\n`;
       txt += `Kỳ báo cáo: Tháng ${mPad}/${y} • Ngày lập: ${dateFormatted}\n`;
       txt += `-----------------------------------------------------------\n`;
       txt += `Người báo cáo: ${currentUser.fullName || currentUser.username}\n`;
@@ -37873,19 +38012,47 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             directorSignerName: (typeof getActiveDirectorFullName === 'function') ? getActiveDirectorFullName({ directorFullName: rep?.directorFullName }) : 'Lê Thị Kim Oanh'
           };
       const resolvedExcelRecName = excelSigners.recipientDisplayName || '';
-      const isLeadershipExcelHeading = isMgr
-        || (() => {
-            const norm = (typeof removeAccents === 'function' ? removeAccents(String(resolvedExcelRecName || '')) : String(resolvedExcelRecName || '')).toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
-            const rNorm = (typeof removeAccents === 'function' ? removeAccents(String(rep?.recipientRole || '')) : String(rep?.recipientRole || '')).toLowerCase().trim();
-            const uNorm = String(rep?.recipientUsername || '').toLowerCase().trim();
-            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh' || norm.includes('kim oanh');
-            return isOanh || norm.includes('ban giam doc') || norm.includes('ban lanh dao') || rNorm.includes('giam doc') || rNorm.includes('lanh dao') || uNorm === 'oanhltki' || uNorm === 'trangntq' || rep?.recipientKind === 'leadership_group';
+      const excelSalutationCtx = {
+        ...(rep && typeof rep === 'object' ? rep : {}),
+        isRecipientLeadership: Boolean(excelSigners?.isRecipientLeadership)
+      };
+      const excelSalutationLine = (typeof resolveReportRecipientSalutationLine === 'function')
+        ? resolveReportRecipientSalutationLine(resolvedExcelRecName, excelSalutationCtx, rep?.senderDepartment || 'Bộ phận')
+        : (() => {
+            const foldStr = (val) => {
+              const s = String(val || '');
+              const stripped = (typeof removeAccents === 'function')
+                ? removeAccents(s)
+                : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+              return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            };
+            const cleanRec = String(resolvedExcelRecName || '').trim().replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
+            const norm = foldStr(cleanRec);
+            const rNorm = foldStr(rep?.recipientRole || '');
+            const uNorm = foldStr(rep?.recipientUsername || '').replace(/\s+/g, '');
+            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh';
+            const isLeadershipHeading = Boolean(rep?.isConsolidated)
+              || excelSalutationCtx.isRecipientLeadership === true
+              || rep?.recipientKind === 'leadership_group'
+              || isOanh
+              || norm === 'nguyen thi quynh trang'
+              || norm.includes('ban giam doc')
+              || norm.includes('ban lanh dao')
+              || rNorm.includes('giam doc')
+              || rNorm.includes('lanh dao')
+              || uNorm === 'oanhltki'
+              || uNorm === 'trangntq'
+              || (!cleanRec && rep?.recipientKind !== 'manager_group' && isMgr);
+            if (isLeadershipHeading) return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+            if (!cleanRec) return `Kính gửi: Quản lý / Trưởng bộ phận ${String(rep?.senderDepartment || 'Bộ phận').trim() || 'Bộ phận'}`;
+            const isGenericMgr = rep?.recipientKind === 'manager_group'
+              || norm === 'quan ly bo phan'
+              || norm === 'truong bo phan'
+              || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(norm)
+              || /^quan ly bo phan\b/.test(norm);
+            return isGenericMgr ? `Kính gửi: ${cleanRec}` : `Kính Gửi Ông/Bà: ${cleanRec}`;
           })();
-      const recipientText = isLeadershipExcelHeading
-        ? "Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng"
-        : (resolvedExcelRecName
-          ? `Kính gửi: ${escapeHtml(resolvedExcelRecName)}`
-          : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
+      const recipientText = escapeHtml(excelSalutationLine);
 
       let sectionsRows = '';
 
@@ -38218,7 +38385,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const recD = fixName(rep?.recipientFullName || '');
             const recU = cu(rep?.recipientUsername || '');
             const recR = ak(rep?.recipientRole || '');
-            const isRecL = recR.includes('giam doc') || recR.includes('lanh dao') || isOanh(recD) || recU === 'oanhltki' || recU === 'trangntq' || ak(recD).includes('ban giam doc') || ak(recD).includes('ban lanh dao');
+            const isRecL = recR.includes('giam doc') || recR.includes('lanh dao') || isOanh(recD) || ak(recD) === 'nguyen thi quynh trang' || recU === 'oanhltki' || recU === 'trangntq' || ak(recD).includes('ban giam doc') || ak(recD).includes('ban lanh dao') || rep?.recipientKind === 'leadership_group';
             let dirName = 'Lê Thị Kim Oanh';
             const expDir = String(rep?.directorFullName || '').trim();
             if (expDir) {
@@ -38242,6 +38409,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const sentStraight = isRecL && !rep?.forwardedBy;
             return {
               shouldOmitManagerSigner: Boolean(isMgr || sentStraight),
+              isRecipientLeadership: isRecL,
               recipientDisplayName: recD,
               authorName: fixName(rep?.senderFullName || rep?.senderUsername || ''),
               managerSignerName: fixName(rep?.forwardedBy || (!isRecL ? (recD || rep?.recipientUsername) : '') || 'Quản lý bộ phận'),
@@ -38249,19 +38417,47 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             };
           })();
       const resolvedPrintRec = printSigners.recipientDisplayName || '';
-      const isLeadershipPrintHeading = isMgr
-        || (() => {
-            const norm = (typeof removeAccents === 'function' ? removeAccents(String(resolvedPrintRec || '')) : String(resolvedPrintRec || '')).toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
-            const rNorm = (typeof removeAccents === 'function' ? removeAccents(String(rep?.recipientRole || '')) : String(rep?.recipientRole || '')).toLowerCase().trim();
-            const uNorm = String(rep?.recipientUsername || '').toLowerCase().trim();
-            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh' || norm.includes('kim oanh');
-            return isOanh || norm.includes('ban giam doc') || norm.includes('ban lanh dao') || rNorm.includes('giam doc') || rNorm.includes('lanh dao') || uNorm === 'oanhltki' || uNorm === 'trangntq' || rep?.recipientKind === 'leadership_group';
+      const printSalutationCtx = {
+        ...(rep && typeof rep === 'object' ? rep : {}),
+        isRecipientLeadership: Boolean(printSigners?.isRecipientLeadership)
+      };
+      const printSalutationLine = (typeof resolveReportRecipientSalutationLine === 'function')
+        ? resolveReportRecipientSalutationLine(resolvedPrintRec, printSalutationCtx, rep?.senderDepartment || 'Bộ phận')
+        : (() => {
+            const foldStr = (val) => {
+              const s = String(val || '');
+              const stripped = (typeof removeAccents === 'function')
+                ? removeAccents(s)
+                : s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd');
+              return stripped.toLowerCase().replace(/[._\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            };
+            const cleanRec = String(resolvedPrintRec || '').trim().replace(/^\s*k[íi]nh\s+g[ửu]i(?:\s+[ôo]ng\s*\/\s*b[àa])?\s*:\s*/i, '').trim();
+            const norm = foldStr(cleanRec);
+            const rNorm = foldStr(rep?.recipientRole || '');
+            const uNorm = foldStr(rep?.recipientUsername || '').replace(/\s+/g, '');
+            const isOanh = norm === 'ms oanh' || norm === 'mrs oanh' || norm === 'le thi kim oanh';
+            const isLeadershipHeading = Boolean(rep?.isConsolidated)
+              || printSalutationCtx.isRecipientLeadership === true
+              || rep?.recipientKind === 'leadership_group'
+              || isOanh
+              || norm === 'nguyen thi quynh trang'
+              || norm.includes('ban giam doc')
+              || norm.includes('ban lanh dao')
+              || rNorm.includes('giam doc')
+              || rNorm.includes('lanh dao')
+              || uNorm === 'oanhltki'
+              || uNorm === 'trangntq'
+              || (!cleanRec && rep?.recipientKind !== 'manager_group' && isMgr);
+            if (isLeadershipHeading) return 'Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng';
+            if (!cleanRec) return `Kính gửi: Quản lý / Trưởng bộ phận ${String(rep?.senderDepartment || 'Bộ phận').trim() || 'Bộ phận'}`;
+            const isGenericMgr = rep?.recipientKind === 'manager_group'
+              || norm === 'quan ly bo phan'
+              || norm === 'truong bo phan'
+              || /^quan ly\s*[\/&]\s*truong bo phan\b/.test(norm)
+              || /^quan ly bo phan\b/.test(norm);
+            return isGenericMgr ? `Kính gửi: ${cleanRec}` : `Kính Gửi Ông/Bà: ${cleanRec}`;
           })();
-      const recipientText = isLeadershipPrintHeading
-        ? "Kính gửi: Ban Giám Đốc/ Lãnh Đạo Ban Dịch Vụ Khách Hàng"
-        : (resolvedPrintRec
-          ? `Kính gửi: ${escapeHtml(resolvedPrintRec)}`
-          : `Kính gửi: Quản lý / Trưởng bộ phận ${escapeHtml(rep.senderDepartment || 'Bộ phận')}`);
+      const recipientText = escapeHtml(printSalutationLine);
 
       let sectionsHtml = '';
 
