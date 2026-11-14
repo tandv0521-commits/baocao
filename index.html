@@ -1355,6 +1355,18 @@
       line-height: 1.45;
     }
 
+    .pw-task-card.pw-task-finished::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 5px;
+      border-radius: 0 9999px 9999px 0;
+      background: #059669;
+      pointer-events: none;
+    }
+
     /* ================= SỔ TAY CÔNG VIỆC — TINH CHỈNH CHỈ DÀNH CHO ĐIỆN THOẠI (< 768px / < 640px) ================= */
     @media (max-width: 767px) {
       /* 1A. Chống auto-zoom input trên iOS & mở rộng vùng chạm chuẩn mobile cho mọi ô nhập/chọn trong Sổ tay */
@@ -26074,8 +26086,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!it) return '';
       const variant = options.variant === 'card' ? 'card' : 'table';
       const sizeCls = (variant === 'card')
-        ? 'pw-status-ctrl inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-2xs whitespace-nowrap'
-        : 'pw-status-ctrl w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold shadow-2xs whitespace-nowrap';
+        ? 'pw-status-ctrl inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-sm whitespace-nowrap'
+        : 'pw-status-ctrl w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold shadow-sm whitespace-nowrap';
+      const doneTone = 'bg-emerald-700 text-white border border-emerald-700';
+      const doneAction = 'hover:bg-emerald-800 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2';
+      const doneIcon = 'fa-circle-check text-white';
       const rawId = String(it.id || '');
       const jsSafeId = rawId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const escFn = (typeof escapeHtml === 'function')
@@ -26120,32 +26135,32 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         // phase === 'completed'
         const doneTimeSuffix = acceptedAtStr ? ` • Đã nhận việc lúc ${escFn(acceptedAtStr)}` : '';
         if (perms.canToggleCompletion) {
-          return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 transition" title="Trạng thái: ${wf.label}${doneTimeSuffix} (Nhấp để chuyển lại: Đã nhận việc)"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>${wf.label}</span></button>`;
+          return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} ${doneTone} ${doneAction} transition" title="Trạng thái: ${wf.label}${doneTimeSuffix} (Nhấp để chuyển lại: Đã nhận việc)"><i aria-hidden="true" class="fa-solid ${doneIcon}"></i><span>${wf.label}</span></button>`;
         }
-        return `<span class="${sizeCls} bg-emerald-50 text-emerald-800 border border-emerald-300 select-none" title="Tiến độ do người nhận việc cập nhật: ${wf.label}${doneTimeSuffix}"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>${wf.label}</span></span>`;
+        return `<span class="${sizeCls} ${doneTone} select-none" title="Tiến độ do người nhận việc cập nhật: ${wf.label}${doneTimeSuffix}"><i aria-hidden="true" class="fa-solid ${doneIcon}"></i><span>${wf.label}</span></span>`;
       }
 
       // Công việc cá nhân thông thường (giữ nguyên 100% quy trình hiện có)
       if (it.type === 'adhoc') {
         const isDone = (it.status === 'done' || it.isCompleted === true || it.is_completed === true);
-        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${isDone ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})"><i class="fa-solid ${isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i><span>${isDone ? 'Đã làm' : 'Chưa làm'}</span></button>`;
+        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${isDone ? `${doneTone} ${doneAction}` : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'}" title="Trạng thái: ${isDone ? 'Đã làm' : 'Chưa làm'} (Nhấp để chuyển sang: ${isDone ? 'Chưa làm' : 'Đã làm'})"><i aria-hidden="true" class="fa-solid ${isDone ? doneIcon : 'fa-clock text-amber-600'}"></i><span>${isDone ? 'Đã làm' : 'Chưa làm'}</span></button>`;
       }
       if (it.type === 'plan') {
         const isCompleted = (it.status === 'completed' || it.isCompleted === true || it.is_completed === true);
         const statusBtnStyle = isCompleted
-          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+          ? `${doneTone} ${doneAction}`
           : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300';
-        const statusIconStyle = isCompleted ? 'fa-circle-check text-emerald-600' : 'fa-clock text-sky-600';
-        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})"><i class="fa-solid ${statusIconStyle}"></i><span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span></button>`;
+        const statusIconStyle = isCompleted ? doneIcon : 'fa-clock text-sky-600';
+        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${statusBtnStyle}" title="Trạng thái: ${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'} (Nhấp để chuyển sang: ${isCompleted ? 'Đang tiến hành' : 'Đã hoàn thành'})"><i aria-hidden="true" class="fa-solid ${statusIconStyle}"></i><span>${isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'}</span></button>`;
       }
       if (it.type === 'proposal') {
         const isApproved = (it.status === 'approved_executed' || it.status === 'approved');
-        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${isApproved ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})"><i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600'}"></i><span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span></button>`;
+        return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${isApproved ? `${doneTone} ${doneAction}` : 'bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200'}" title="Trạng thái: ${isApproved ? 'Đã duyệt' : 'Chưa duyệt'} (Nhấp để chuyển sang: ${isApproved ? 'Chưa duyệt' : 'Đã duyệt'})"><i aria-hidden="true" class="fa-solid ${isApproved ? doneIcon : 'fa-hourglass-half text-purple-600'}"></i><span>${isApproved ? 'Đã duyệt' : 'Chưa duyệt'}</span></button>`;
       }
       if (it.type === 'feedback') {
         const st = it.status || 'pending';
         if (st === 'resolved' || st === 'processed') {
-          return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>Đã giải quyết</span></button>`;
+          return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition ${doneTone} ${doneAction}" title="Trạng thái: Đã giải quyết (Nhấp để chuyển sang: Chờ tiếp nhận)"><i aria-hidden="true" class="fa-solid ${doneIcon}"></i><span>Đã giải quyết</span></button>`;
         }
         if (st === 'acknowledged') {
           return `<button type="button" onclick="event.stopPropagation(); togglePersonalItemStatus('${jsSafeId}')" class="cursor-pointer ${sizeCls} transition bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-300" title="Trạng thái: Đã tiếp nhận (Nhấp để chuyển sang: Đã giải quyết)"><i class="fa-solid fa-inbox text-sky-600"></i><span>Đã tiếp nhận</span></button>`;
@@ -30093,14 +30108,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function calculatePlanTimelineStatus(item) {
-      if (item.isCompleted || item.status === 'completed' || item.status === 'done') {
+      if (item.isCompleted || item.is_completed === true || item.status === 'completed' || item.status === 'done') {
         return {
           code: 'completed',
           urgency: 'completed',
           isDueSoon: false,
           label: 'Đã hoàn thành',
-          badgeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200 font-normal italic',
-          icon: 'fa-solid fa-circle-check text-emerald-500',
+          badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-normal italic',
+          icon: 'fa-solid fa-circle-check text-emerald-700',
           accentClass: 'bg-emerald-500',
           rowTintClass: ''
         };
@@ -32172,7 +32187,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             ? buildPersonalTaskStatusControlHtml(it, { variant: 'table' })
             : (() => {
                 const fin = isPersonalTaskFinished(it);
-                return `<button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-2xs whitespace-nowrap ${fin ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-amber-50 text-amber-900 border border-amber-300'}"><span>${fin ? (it.type === 'plan' ? 'Đã hoàn thành' : 'Đã làm') : (it.type === 'plan' ? 'Đang tiến hành' : 'Chưa làm')}</span></button>`;
+                return `<button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="pw-status-ctrl cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-sm whitespace-nowrap ${fin ? 'bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-700 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2' : 'bg-amber-50 text-amber-900 border border-amber-300'}">${fin ? '<i aria-hidden="true" class="fa-solid fa-circle-check text-white"></i>' : ''}<span>${fin ? (it.type === 'plan' ? 'Đã hoàn thành' : 'Đã làm') : (it.type === 'plan' ? 'Đang tiến hành' : 'Chưa làm')}</span></button>`;
               })();
 
           // 3. Ngôi sao quan trọng
@@ -32217,16 +32232,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
           const isFinished = isPersonalTaskFinished(it);
-          // Hiệu ứng rê chuột vào từng dòng: Đổ màu sáng nhẹ dịu mắt (hổ phách nhạt / ngọc bích nhạt) để dễ quan sát
+          const titleToneClass = isFinished
+            ? 'text-emerald-950 group-hover:text-emerald-900'
+            : 'text-slate-800 group-hover:text-amber-900';
+          const completedTitleMarkHtml = isFinished
+            ? '<i aria-hidden="true" class="fa-solid fa-circle-check mr-1.5 text-[12px] text-emerald-700"></i>'
+            : '';
+          // Phân tách thị giác rõ ràng cho việc đã làm bằng nền xanh mint tươi sáng + thanh nhấn trái 5px + dấu check tiêu đề
           const rowSurfaceClass = isFinished
-            ? 'bg-emerald-50/20 border-emerald-300 hover:bg-emerald-50/60 hover:border-emerald-400'
+            ? 'pw-task-finished bg-emerald-50 bg-gradient-to-r from-emerald-100/80 via-emerald-50 to-teal-50 border-emerald-300 hover:border-emerald-400'
             : (isIncomingDeleg && it.delegation?.receipt?.status !== 'accepted'
               ? 'bg-indigo-50/25 border-indigo-300 hover:bg-indigo-50/60 hover:border-indigo-400'
               : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90');
           const leftCompletedBarHtml = isFinished
-            ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
+            ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-[5px] rounded-r-full bg-emerald-600"></span>'
             : (isIncomingDeleg && it.delegation?.receipt?.status !== 'accepted'
-              ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-indigo-500"></span>'
+              ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-indigo-500"></span>'
               : '');
 
           const transferBadgesHtml = [delegationPillsHtml, getPersonalTaskTransferBadgeHtml(it, currentUser)].filter(Boolean).join(' ');
@@ -32239,7 +32260,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs cursor-pointer" title="Xem chi tiết"><i class="fa-regular fa-eye"></i></button>`));
 
           rowsHtml += `
-        <div class="pw-task-row group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-2xs">
+        <div class="pw-task-row group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-sm">
           ${leftCompletedBarHtml}
 
           <!-- CỘT 1 (48px trên Desktop): CHỌN BÁO CÁO + QUAN TRỌNG -->
@@ -32257,12 +32278,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA) -->
           <div class="pw-task-body order-4 md:order-none w-full md:w-auto md:flex-1 min-w-0 space-y-0.5 md:space-y-1 pl-0.5 md:pl-0 md:pr-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <div class="pw-task-title font-bold md:font-semibold text-slate-800 group-hover:text-amber-900 text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
-                ${escapeHtml(it.title)}
+              <div class="pw-task-title font-bold md:font-semibold ${titleToneClass} text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
+                ${completedTitleMarkHtml}${escapeHtml(it.title)}
               </div>
               ${transferBadgesHtml ? `<div class="pw-desktop-inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
             </div>
-            ${it.content ? `<p class="pw-task-desc text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
+            ${it.content ? `<p class="pw-task-desc text-[12px] ${isFinished ? 'text-slate-600' : 'text-slate-500'} leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
             ${workDoneSnippet}
             ${fbSnippet}
           </div>
@@ -32331,8 +32352,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         let cardDueBadge = '';
         const isCardFinished = isPersonalTaskFinished(it);
+        const cardTitleToneClass = isCardFinished
+          ? 'text-emerald-950 hover:text-emerald-900'
+          : 'text-slate-800 hover:text-amber-800';
+        const completedCardTitleMarkHtml = isCardFinished
+          ? '<i aria-hidden="true" class="fa-solid fa-circle-check mr-1.5 text-[12px] text-emerald-700"></i>'
+          : '';
         const cardBorderClass = isCardFinished
-          ? 'bg-emerald-50/20 border-emerald-400/90 hover:border-emerald-500'
+          ? 'pw-task-finished bg-emerald-50 bg-gradient-to-r from-emerald-100/80 via-emerald-50 to-teal-50 border-emerald-300 hover:border-emerald-400'
           : 'bg-white border-slate-200/80 hover:border-slate-300';
         if (it.type === 'plan' && it.dueDate) {
           const t = calculatePlanTimelineStatus(it);
@@ -32385,7 +32412,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-trash-can"></i></button>`);
 
         cardsHtml += `
-      <div class="pw-task-card border ${cardBorderClass} p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
+      <div class="pw-task-card relative border ${cardBorderClass} p-4 rounded-2xl shadow-sm space-y-3 transition flex flex-col justify-between group">
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 flex-wrap">
@@ -32398,8 +32425,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               ${cardCheckEl}
             </div>
           </div>
-          <h4 class="pw-task-title font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
-          ${it.content ? `<p class="pw-task-desc text-xs text-slate-500 line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+          <h4 class="pw-task-title font-bold ${cardTitleToneClass} text-xs sm:text-sm cursor-pointer leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${completedCardTitleMarkHtml}${escapeHtml(it.title)}</h4>
+          ${it.content ? `<p class="pw-task-desc text-xs ${isCardFinished ? 'text-slate-600' : 'text-slate-500'} line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
           ${cardFields.workNote ? `<div class="pw-task-note text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><b>Công việc đã làm:</b> ${escapeHtml(cardFields.workNote)}</div>` : ''}
           ${cardDueBadge}
         </div>
@@ -36663,8 +36690,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
         const clickToggleAttr = canToggleInboxItem ? (' onclick="togglePersonalItemStatusFromInbox(\'' + escapeHtml(String(it.id)) + '\', \'' + escapeHtml(String(entry.reportId)) + '\')"') : '';
 
+        const doneTone = 'bg-emerald-700 text-white border border-emerald-700';
+        const doneAction = 'hover:bg-emerald-800 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2';
+        const doneIcon = 'fa-circle-check text-white';
+
         const renderStatusPill = (colorCls, hoverCls, iconCls, labelText, customTitle) => {
-          const baseCls = 'w-full max-w-[116px] inline-flex items-center justify-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold shadow-2xs whitespace-nowrap ' + colorCls;
+          const baseCls = 'w-full max-w-[116px] inline-flex items-center justify-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold shadow-sm whitespace-nowrap ' + colorCls;
           if (canToggleInboxItem) {
             return '<button type="button"' + clickToggleAttr + ' class="' + baseCls + ' ' + hoverCls + ' transition cursor-pointer" title="' + (customTitle || 'Bấm để cập nhật trạng thái công việc của bạn') + '">' +
               '<i class="fa-solid ' + iconCls + ' text-[10px] shrink-0"></i>' +
@@ -36689,7 +36720,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           } else if (inboxDelegWf.phase === 'accepted_pending') {
             statusBadge = renderStatusPill('bg-sky-50 text-sky-900 border border-sky-300', 'hover:bg-sky-100', 'fa-check-double text-sky-600', 'Đã nhận việc');
           } else {
-            statusBadge = renderStatusPill('bg-emerald-50 text-emerald-800 border border-emerald-300', 'hover:bg-emerald-100', 'fa-circle-check text-emerald-600', inboxDelegWf.label);
+            statusBadge = renderStatusPill(doneTone, doneAction, doneIcon, inboxDelegWf.label);
           }
           if (it.type === 'plan' && it.dueDate) {
             const t = calculatePlanTimelineStatus(it);
@@ -36702,9 +36733,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } else if (it.type === 'adhoc') {
           const isDone = (st === 'done' || it.isCompleted || it.is_completed);
           statusBadge = renderStatusPill(
-            isDone ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-amber-50 text-amber-900 border border-amber-300',
-            isDone ? 'hover:bg-emerald-100' : 'hover:bg-amber-100',
-            isDone ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600',
+            isDone ? doneTone : 'bg-amber-50 text-amber-900 border border-amber-300',
+            isDone ? doneAction : 'hover:bg-amber-100',
+            isDone ? doneIcon : 'fa-clock text-amber-600',
             isDone ? 'Đã làm' : 'Chưa làm'
           );
         } else if (it.type === 'plan') {
@@ -36712,9 +36743,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const t = calculatePlanTimelineStatus(it);
 
           statusBadge = renderStatusPill(
-            isCompleted ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-sky-50 text-sky-800 border border-sky-300',
-            isCompleted ? 'hover:bg-emerald-100' : 'hover:bg-sky-100',
-            isCompleted ? 'fa-circle-check text-emerald-600' : 'fa-clock text-sky-600',
+            isCompleted ? doneTone : 'bg-sky-50 text-sky-800 border border-sky-300',
+            isCompleted ? doneAction : 'hover:bg-sky-100',
+            isCompleted ? doneIcon : 'fa-clock text-sky-600',
             isCompleted ? 'Đã hoàn thành' : 'Đang tiến hành'
           );
 
@@ -36728,17 +36759,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         } else if (it.type === 'proposal') {
           const isApproved = (st === 'approved_executed' || st === 'approved' || it.isCompleted);
           statusBadge = renderStatusPill(
-            isApproved ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-purple-50 text-purple-900 border border-purple-200',
-            isApproved ? 'hover:bg-emerald-100' : 'hover:bg-purple-100',
-            isApproved ? 'fa-circle-check text-emerald-600' : 'fa-hourglass-half text-purple-600',
+            isApproved ? doneTone : 'bg-purple-50 text-purple-900 border border-purple-200',
+            isApproved ? doneAction : 'hover:bg-purple-100',
+            isApproved ? doneIcon : 'fa-hourglass-half text-purple-600',
             isApproved ? 'Đã duyệt' : 'Chưa duyệt'
           );
         } else {
           if (st === 'resolved' || st === 'processed' || it.isCompleted) {
             statusBadge = renderStatusPill(
-              'bg-emerald-50 text-emerald-800 border border-emerald-300',
-              'hover:bg-emerald-100',
-              'fa-circle-check text-emerald-600',
+              doneTone,
+              doneAction,
+              doneIcon,
               'Đã giải quyết'
             );
           } else if (st === 'acknowledged') {
@@ -36798,14 +36829,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const fallbackDate = entry.displayDate ? String(entry.displayDate).split(' ')[0] : '';
         const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : fallbackDate);
 
-        // 6. Kẻ viền xanh với công việc đã hoàn thành, viền xám nhẹ với công việc chưa xong (đồng nhất 100% với Sổ tay)
+        // 6. Tô nền mint tươi sáng, vạch trái 5px và dấu check tiêu đề với việc đã hoàn thành (đồng nhất 100% với Sổ tay)
         const isFinished = isPersonalTaskFinished(it);
         // Hiệu ứng rê chuột vào từng dòng trong hộp thư / báo cáo (không dùng isChecked ghi đè viền để tránh hiện tượng trễ viền xanh khi tích/bỏ tích)
         const rowSurfaceClass = isFinished
-          ? 'bg-emerald-50/20 border-emerald-300 hover:bg-emerald-50/60 hover:border-emerald-400'
+          ? 'pw-task-finished bg-emerald-50 bg-gradient-to-r from-emerald-100/80 via-emerald-50 to-teal-50 border-emerald-300 hover:border-emerald-400'
           : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90';
         const leftCompletedBarHtml = isFinished
-          ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-emerald-500"></span>'
+          ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-[5px] rounded-r-full bg-emerald-600"></span>'
           : '';
 
         // Lọc bỏ ghi chú tự động mặc định khi Quản lý sao chép vào hộp thư
@@ -36814,7 +36845,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const validStaffNote = (!isAutoMgrNote && rawNote) ? rawNote : '';
 
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden ' + rowSurfaceClass + ' hover:shadow-sm rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-3 border shadow-2xs">' +
+          '<div class="group relative w-full max-w-full overflow-hidden ' + rowSurfaceClass + ' hover:shadow-md rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-3 border shadow-sm">' +
           leftCompletedBarHtml +
 
           '<!-- KHỐI TRÁI & GIỮA (RỘNG TỐI ĐA): CHỌN/STT + PHÂN LOẠI + NỘI DUNG CÔNG VIỆC -->' +
@@ -36827,7 +36858,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
           '<div class="flex-1 min-w-0 space-y-1">' +
           '<div class="flex items-center gap-2 flex-wrap">' +
-          '<div class="font-bold text-slate-900 text-sm leading-snug break-words">' +
+          '<div class="font-bold ' + (isFinished ? 'text-emerald-950' : 'text-slate-900') + ' text-sm leading-snug break-words">' +
+          (isFinished ? '<i aria-hidden="true" class="fa-solid fa-circle-check mr-1.5 text-[12px] text-emerald-700"></i>' : '') +
           escapeHtml(it.title) +
           '</div>' +
           '<div class="inline-flex items-center gap-1.5 flex-wrap">' +
