@@ -1355,6 +1355,694 @@
       line-height: 1.45;
     }
 
+    /* ================= SỔ TAY CÔNG VIỆC — TINH CHỈNH CHỈ DÀNH CHO ĐIỆN THOẠI (< 768px / < 640px) ================= */
+    @media (max-width: 767px) {
+      /* 1A. Chống auto-zoom input trên iOS & mở rộng vùng chạm chuẩn mobile cho mọi ô nhập/chọn trong Sổ tay */
+      #personalWorkspacePageView :is(#pwSearchInput, #pwMonthFilterSelect),
+      #personalItemEditModal :is(input[type="text"], input[type="date"], select, textarea),
+      #confirmSendToInboxModal #sendInboxPeriodSelect {
+        font-size: 16px !important;
+        line-height: 1.4;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      #pwSearchInput,
+      #pwMonthFilterSelect,
+      #personalItemEditModal :is(input[type="text"], input[type="date"], select),
+      #confirmSendToInboxModal #sendInboxPeriodSelect {
+        min-height: 44px;
+      }
+
+      #pwEditContent,
+      #pwEditWorkDoneNote {
+        min-height: 96px;
+      }
+
+      /* Căn chỉnh icon tìm kiếm, mũi tên select & nút xóa với chiều cao 44px */
+      #personalWorkspacePageView [data-pw-part="month-filter-wrap"] > i:first-child,
+      #personalWorkspacePageView [data-pw-part="month-filter-wrap"] > i:last-child,
+      #personalWorkspacePageView [data-pw-part="search-wrap"] > i:first-child,
+      #personalItemEditModal [data-pw-part="edit-assignee-search-wrap"] > i:first-child {
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      #pwSearchInput {
+        padding-left: 34px !important;
+        padding-right: 44px !important;
+      }
+
+      #pwSearchClearBtn:not(.hidden) {
+        top: 50%;
+        right: 4px;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      #pwEditAssigneeSearch {
+        padding-left: 32px !important;
+        padding-right: 44px !important;
+      }
+
+      #pwEditAssigneeSearchClearBtn:not(.hidden) {
+        right: 4px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+      }
+
+      /* 1B. Header Sổ tay: bổ sung safe-area-top (do #mainAppHeader ẩn khi mở Sổ tay) & mở wrap metadata */
+      #personalWorkspacePageView [data-pw-part="header"] {
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      #personalWorkspacePageView [data-pw-part="user-meta"] {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+        line-height: 1.45;
+        font-size: 11.5px;
+        margin-top: 3px;
+      }
+
+      /* 1C. Banner cảnh báo nhắc hạn: bỏ truncate cắt chữ, ưu tiên đọc đủ nội dung */
+      #pwReminderAlertText {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+        line-height: 1.45;
+      }
+
+      #pwReminderAlertBtn {
+        min-height: 40px;
+      }
+
+      /* 1D. Thanh Tab & nút lọc phụ: đạt vùng chạm 40-44px */
+      #pwTabBtn_all,
+      #pwTabBtn_pending,
+      #pwTabBtn_assigned_by_me {
+        min-height: 42px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      #personalWorkspacePageView [data-pw-part="view-toggle"] button {
+        min-height: 40px;
+        min-width: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #pwFilterBtn_important,
+      #pwFilterBtn_due {
+        width: 42px !important;
+        height: 42px !important;
+      }
+
+      /* 1E. Danh sách Table/Card dưới 768px: chuẩn vùng chạm, 1 cột thẻ sạch, hiện nhãn "Cập nhật" */
+      #pwItemsList .pw-check-hit {
+        min-width: 40px;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      #pwItemsList .pw-star-btn {
+        width: 40px !important;
+        height: 40px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      #pwItemsList .pw-action-icon-btn {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 0 10px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #pwItemsList .pw-update-btn {
+        min-height: 40px !important;
+        width: auto !important;
+        padding: 6px 12px !important;
+        white-space: nowrap;
+      }
+
+      #pwItemsList .pw-update-btn .pw-update-label {
+        display: inline !important;
+      }
+
+      #pwItemsList .pw-task-row {
+        padding: 12px 12px 12px 14px;
+        row-gap: 8px;
+        column-gap: 8px;
+      }
+
+      #pwItemsList .pw-task-selection {
+        order: 1;
+        gap: 2px;
+      }
+
+      #pwItemsList .pw-task-actions {
+        order: 2;
+        margin-left: auto;
+        gap: 6px;
+      }
+
+      #pwItemsList .pw-task-meta {
+        order: 3;
+        width: 100%;
+        flex: 1 1 100%;
+        gap: 6px;
+      }
+
+      #pwItemsList .pw-task-body {
+        order: 4;
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      #pwItemsList .pw-task-title {
+        font-size: 14.5px;
+        line-height: 1.38;
+      }
+
+      #pwItemsList .pw-task-desc {
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-top: 3px;
+      }
+
+      #pwItemsList .pw-task-note {
+        font-size: 12.5px !important;
+        line-height: 1.45;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+        padding: 8px 10px;
+        margin-top: 8px;
+      }
+
+      #pwItemsList .pw-task-divider {
+        order: 5;
+        margin-top: 2px;
+        margin-bottom: 2px;
+      }
+
+      #pwItemsList .pw-task-time {
+        order: 6;
+      }
+
+      #pwItemsList .pw-task-status-wrap {
+        order: 7;
+      }
+
+      #pwItemsList .pw-task-due,
+      #pwItemsList .pw-task-due > span {
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+      }
+
+      #pwItemsList .pw-task-due {
+        padding-top: 4px;
+        padding-bottom: 4px;
+        font-size: 11px;
+      }
+
+      #pwItemsList .pw-status-ctrl {
+        min-height: 40px;
+        padding: 7px 12px;
+        font-size: 12px;
+        white-space: normal !important;
+        max-width: 100% !important;
+        line-height: 1.28;
+        text-align: center;
+      }
+
+      #pwItemsList .pw-task-card-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      #pwItemsList .pw-task-card {
+        padding: 13px;
+      }
+
+      /* 1F. Footer cố định đáy & khoảng đệm cuộn theo chiều cao thực tế + iOS safe-area */
+      #pwBottomStickyToolbar {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+      }
+
+      #pwItemsScrollContainer {
+        padding-bottom: calc(var(--pw-footer-height, 168px) + 16px) !important;
+        scroll-padding-bottom: calc(var(--pw-footer-height, 168px) + 16px);
+      }
+
+      /* 1G. Chuẩn hóa Bottom-Sheet cho Modal Thêm/Sửa & Modal Nhắc Việc (sửa z-[60], handle margin & vh/dvh) */
+      :is(#personalItemEditModal, #personalTaskReminderModal).fixed.inset-0 {
+        padding: 0 !important;
+        align-items: flex-end !important;
+      }
+
+      :is(#personalItemEditModal, #personalTaskReminderModal).fixed.inset-0 > div.bg-white {
+        border-top-left-radius: 26px !important;
+        border-top-right-radius: 26px !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        max-height: 90vh !important;
+        max-height: 90dvh !important;
+        padding-bottom: 0 !important;
+      }
+
+      :is(#personalItemEditModal, #personalTaskReminderModal).fixed.inset-0 > div.bg-white::before {
+        margin: 10px auto 8px !important;
+        flex: 0 0 auto;
+      }
+
+      :is(#personalItemEditModal [data-pw-part="edit-modal-body"], #personalTaskReminderModal [data-pw-part="reminder-modal-body"]) {
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      :is(#personalItemEditModal [data-pw-part="edit-modal-footer"], #personalTaskReminderModal [data-pw-part="reminder-modal-footer"]) {
+        flex-shrink: 0;
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-modal-header"] {
+        padding: 10px 16px 12px;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-modal-body"] {
+        padding: 12px 16px;
+      }
+
+      #pwEditTypeRadiosWrap label,
+      #personalItemEditModal [data-pw-part="assign-mode-label"] {
+        min-height: 44px;
+      }
+
+      #pwEditTypeRadiosWrap label > span,
+      #personalItemEditModal [data-pw-part="assign-mode-label"] > span,
+      #personalItemEditModal [data-pw-part="edit-date-label"],
+      #personalItemEditModal [data-pw-part="edit-flag-text"] {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.3;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-flag-card"] {
+        min-height: 46px;
+        padding: 10px 12px;
+      }
+
+      #personalTaskReminderModal [data-pw-part="reminder-title"] {
+        white-space: normal !important;
+        overflow: visible !important;
+        line-height: 1.3;
+      }
+
+      #personalTaskReminderModal .pw-rem-deleg-desc {
+        white-space: normal !important;
+        overflow: visible !important;
+        line-height: 1.45;
+      }
+
+      #personalTaskReminderModal .pw-rem-deleg-actions {
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      #personalTaskReminderModal .pw-rem-deleg-actions button,
+      #personalTaskReminderModal [data-pw-part="reminder-modal-footer"] button {
+        min-height: 42px;
+        white-space: normal !important;
+        line-height: 1.25;
+        text-align: center;
+      }
+
+      /* 1H. 4 Modal xác nhận của Sổ tay giữ dạng centered card, bỏ handle, cuộn an toàn khi màn thấp */
+      :is(#confirmDeletePersonalItemModal, #confirmSendToInboxModal, #confirmReReportModal, #confirmSelectReportedItemModal).fixed.inset-0 {
+        padding: 12px !important;
+        align-items: center !important;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmSendToInboxModal, #confirmReReportModal, #confirmSelectReportedItemModal).fixed.inset-0 > div.bg-white {
+        border-radius: 24px !important;
+        max-height: 88vh !important;
+        max-height: 88dvh !important;
+        overflow-y: auto !important;
+        padding-bottom: 16px !important;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmSendToInboxModal, #confirmReReportModal, #confirmSelectReportedItemModal).fixed.inset-0 > div.bg-white::before {
+        display: none !important;
+        content: none !important;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmSendToInboxModal, #confirmReReportModal) > div.bg-white {
+        padding: 16px !important;
+      }
+
+      #confirmSelectReportedItemModal > div.bg-white {
+        padding-bottom: 0 !important;
+      }
+
+      #confirmSelectReportedItemModal [data-pw-part="select-reported-header"],
+      #confirmSelectReportedItemModal [data-pw-part="select-reported-body"],
+      #confirmSelectReportedItemModal [data-pw-part="select-reported-footer"] {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+
+      #confirmSelectReportedItemModal [data-pw-part="select-reported-body"] {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmSendToInboxModal, #confirmReReportModal, #confirmSelectReportedItemModal) button[onclick] {
+        min-height: 44px;
+        white-space: normal !important;
+        line-height: 1.28;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 639px) {
+      /* 2A. Nền trang Sổ tay tràn mép gọn trên điện thoại */
+      #personalWorkspacePageView {
+        border-radius: 0 !important;
+        border-left-width: 0 !important;
+        border-right-width: 0 !important;
+        border-top-width: 0 !important;
+      }
+
+      #personalWorkspacePageView [data-pw-part="header"] h3 {
+        font-size: 14.5px;
+        line-height: 1.32;
+      }
+
+      #personalWorkspacePageView [data-pw-part="header-actions"] button {
+        min-height: 44px;
+        white-space: normal;
+        line-height: 1.25;
+        text-align: center;
+        padding: 8px 10px;
+      }
+
+      #personalWorkspacePageView [data-pw-part="inbox-btn"] {
+        position: relative;
+        overflow: visible;
+      }
+
+      #pwInboxUnreadBadge:not(.hidden) {
+        position: absolute;
+        top: -6px;
+        right: -4px;
+        z-index: 2;
+        padding: 2px 6px;
+        line-height: 1.1;
+        box-shadow: 0 2px 6px rgba(225, 29, 72, 0.28);
+      }
+
+      /* 2B. 6 Thẻ thống kê trên cùng: không cắt nhãn dài, badge "chờ nhận" không đè mép */
+      #personalWorkspacePageView [data-pw-part="summary-cards-wrap"] {
+        padding: 10px 12px;
+      }
+
+      #pwSummaryCardGrid {
+        gap: 8px;
+      }
+
+      #pwSummaryCardGrid button[id^="pwSummaryCard_"] {
+        padding: 10px 11px;
+      }
+
+      #pwSummaryCardGrid [data-pw-part="summary-card-head"] {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 4px 6px;
+      }
+
+      #pwSummaryCardGrid [data-pw-part="summary-card-label-group"] {
+        flex: 1 1 84px;
+        min-width: 0;
+      }
+
+      #pwSummaryCardGrid [data-pw-part="summary-card-label"] {
+        font-size: 10.5px;
+        line-height: 1.28;
+        white-space: normal;
+        overflow: visible;
+      }
+
+      #pwStatAssignedReceiptBadge:not(.hidden) {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.25;
+        text-align: center;
+      }
+
+      /* 2C. Banner nhắc việc: nội dung 1 hàng riêng trên, nút "Xem ngay" gọn góc phải dưới */
+      #pwReminderAlertBanner:not(.hidden) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      #pwReminderAlertBanner > div {
+        min-width: 0;
+        align-items: flex-start;
+      }
+
+      #pwReminderAlertBtn {
+        justify-self: end;
+      }
+
+      /* 2D. Bộ lọc & Context strip trên điện thoại nhỏ */
+      #personalWorkspacePageView [data-pw-part="tools-group"] {
+        gap: 8px;
+      }
+
+      #personalWorkspacePageView [data-pw-part="month-filter-wrap"],
+      #personalWorkspacePageView [data-pw-part="search-wrap"] {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+      }
+
+      #pwMonthFilterSelect {
+        width: 100%;
+      }
+
+      #pwFilterContextStrip:not(.hidden) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      #pwFilterContextSummary {
+        width: 100%;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        line-height: 1.45;
+      }
+
+      #pwFilterContextSummary > span {
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      #pwResetSummaryCardBtn {
+        min-width: 0 !important;
+        min-height: 38px;
+        align-self: flex-end;
+        padding: 6px 12px;
+      }
+
+      /* 2E. Hàng thời gian & trạng thái tách hàng rõ trên màn <= 639px */
+      #pwItemsList .pw-task-time {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+
+      #pwItemsList .pw-task-status-wrap {
+        flex: 1 1 100%;
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      #pwItemsList .pw-status-ctrl {
+        width: auto;
+        min-width: 136px;
+      }
+
+      /* 2F. Footer cố định đáy gọn 2 tầng cho Nhân viên, không che dòng cuối cho Quản lý */
+      #pwBottomStickyToolbar [data-pw-part="footer-selected-suffix"] {
+        display: none;
+      }
+
+      #pwBottomStickyToolbar [data-pw-part="footer-select-all-label"] {
+        min-height: 36px;
+      }
+
+      #pwBottomStickyToolbar [data-pw-part="footer-actions"] {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+      }
+
+      #pwBottomStickyToolbar [data-pw-part="footer-cta-pair"] {
+        display: contents;
+      }
+
+      #pwBottomStickyToolbar [data-pw-part="footer-back-btn"],
+      #pwBtnSendToInboxForManager:not(.hidden),
+      #pwBtnPushReportBottom {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        min-height: 44px;
+        white-space: normal;
+        line-height: 1.25;
+        text-align: center;
+        padding: 8px 10px;
+      }
+
+      #pwBottomStickyToolbar:has(#pwBtnSendToInboxForManager:not(.hidden)) [data-pw-part="footer-back-btn"] {
+        order: 3;
+        flex: 1 1 100%;
+        min-height: 40px;
+      }
+
+      /* 2G. Footer Modal Thêm/Sửa & Confirm Modals trên màn < 640px */
+      #personalItemEditModal [data-pw-part="edit-modal-footer"] {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 16px;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-footer-cancel-wrap"]:has(#pwEditCancelAssignmentBtn.hidden) {
+        display: none;
+      }
+
+      #pwEditCancelAssignmentBtn:not(.hidden) {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-footer-primary"] {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+      }
+
+      #personalItemEditModal [data-pw-part="edit-footer-primary"] button {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+        white-space: normal;
+        line-height: 1.25;
+      }
+
+      #confirmSendToInboxModal [data-pw-part="confirm-footer"] {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      #confirmSendToInboxModal [data-pw-part="confirm-footer"] button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmReReportModal) [data-pw-part="confirm-footer"] {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      :is(#confirmDeletePersonalItemModal, #confirmReReportModal) [data-pw-part="confirm-footer"] button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* 2H. Reminder Modal (#personalTaskReminderModal): tiêu đề tách khỏi badge để không bị bóp 3 ký tự */
+      #pwReminderItemsList .pw-rem-card {
+        padding: 11px 12px;
+      }
+
+      #pwReminderItemsList .pw-rem-top {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      #pwReminderItemsList .pw-rem-title {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.38;
+      }
+
+      #pwReminderItemsList .pw-rem-badges {
+        flex: 1 1 100%;
+        padding-left: 26px;
+        flex-wrap: wrap;
+      }
+
+      #pwReminderItemsList .pw-rem-badge {
+        white-space: normal !important;
+        max-width: 100%;
+        line-height: 1.3;
+      }
+
+      #pwReminderItemsList .pw-rem-sub {
+        padding-left: 26px;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 375px) {
+      #personalTaskReminderModal [data-pw-part="reminder-stats-grid"] {
+        gap: 6px;
+      }
+
+      #personalTaskReminderModal [data-pw-part="reminder-modal-footer"] {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -2737,7 +3425,7 @@
         class="hidden flex-1 flex flex-col w-full bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in duration-200 relative">
 
         <!-- HEADER TRANG SỔ TAY -->
-        <div
+        <div data-pw-part="header"
           class="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
           <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div
@@ -2748,7 +3436,7 @@
               <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <h3 class="text-slate-900 font-black text-[13.5px] sm:text-base leading-tight">Sổ Tay Công Việc &amp; Kế Hoạch
                   Cá Nhân</h3>
-                <span
+                <span data-pw-part="scope-badge"
                   class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Trang
                   theo dõi riêng</span>
                 <!-- Trạng thái Supabase Cloud -->
@@ -2759,7 +3447,7 @@
                   <span id="pwSyncCloudText">Đồng bộ Supabase Cloud</span>
                 </button>
               </div>
-              <p class="text-[11px] text-slate-500 font-medium leading-snug sm:truncate mt-0.5">
+              <p data-pw-part="user-meta" class="text-[11px] text-slate-500 font-medium leading-snug sm:truncate mt-0.5">
                 Họ tên: <span id="pwUserFullName" class="font-bold text-slate-800">---</span> •
                 Bộ phận: <span id="pwUserDept" class="text-slate-600 font-semibold">---</span> •
                 Chức vụ: <span id="pwUserRole" class="text-emerald-700 font-bold">---</span>
@@ -2767,7 +3455,7 @@
             </div>
           </div>
 
-          <div class="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 flex-shrink-0">
+          <div data-pw-part="header-actions" class="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 flex-shrink-0">
             <!-- Nút Thêm Công Việc mới -->
             <button type="button" onclick="openAddPersonalItemModal()"
               class="px-2.5 sm:px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl shadow-xs shadow-amber-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
@@ -2777,7 +3465,7 @@
             </button>
 
             <!-- Nút Hộp thư báo cáo / Lịch sử gửi -->
-            <button type="button" onclick="openLeadershipReportsBoxModal()"
+            <button type="button" data-pw-part="inbox-btn" onclick="openLeadershipReportsBoxModal()"
               class="relative px-2.5 sm:px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
               title="Xem lịch sử các lần đẩy báo cáo & hộp thư tiếp nhận">
               <i class="fa-solid fa-inbox text-slate-600 text-xs"></i>
@@ -2789,21 +3477,21 @@
         </div>
 
         <!-- THANH THỐNG KÊ NHANH 6 NHÓM MỤC (Chọn để lọc & tự động đồng bộ bộ đếm Tất cả / Việc chưa làm) -->
-        <div class="px-3 sm:px-6 py-2 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+        <div data-pw-part="summary-cards-wrap" class="px-3 sm:px-6 py-2 bg-slate-50 border-b border-slate-200 flex-shrink-0">
           <div id="pwSummaryCardGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 auto-rows-fr items-stretch gap-2 text-xs flex-shrink-0">
             <!-- 1. Việc được giao (Đứng trước Phát sinh) -->
             <button type="button" id="pwSummaryCard_assigned_to_me" onclick="clickPersonalSummaryCard('assigned_to_me')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-gradient-to-br from-indigo-50/55 via-white to-white border border-indigo-200/90 hover:border-indigo-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500"
               title="Bấm để lọc công việc được cấp trên giao (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200/70 flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-user-check"></i></span>
-                  <span
+                  <span data-pw-part="summary-card-label"
                     class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-indigo-950/90 font-extrabold uppercase tracking-tight leading-tight whitespace-normal break-normal">Việc được giao</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-indigo-700 font-bold bg-indigo-50/90 px-1.5 py-0.5 rounded-md border border-indigo-200/70 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatAssignedCount">0</span></span>
               </div>
@@ -2825,15 +3513,15 @@
             <button type="button" id="pwSummaryCard_adhoc" onclick="clickPersonalSummaryCard('adhoc')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-white border border-slate-200/90 hover:border-amber-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500"
               title="Bấm để lọc việc phát sinh (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-bolt"></i></span>
-                  <span
+                  <span data-pw-part="summary-card-label"
                     class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-slate-600 sm:text-slate-600 font-extrabold uppercase tracking-tight leading-tight whitespace-normal break-normal">Phát sinh</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatAdhocCount">0</span></span>
               </div>
@@ -2852,15 +3540,15 @@
             <button type="button" id="pwSummaryCard_plan" onclick="clickPersonalSummaryCard('plan')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-white border border-slate-200/90 hover:border-sky-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-sky-500"
               title="Bấm để lọc lịch &amp; kế hoạch (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-sky-50 text-sky-600 border border-sky-200/60 flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-calendar-days"></i></span>
-                  <span
+                  <span data-pw-part="summary-card-label"
                     class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-slate-600 sm:text-slate-600 font-extrabold uppercase tracking-tight leading-tight whitespace-normal break-normal">Kế hoạch</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatPlanCount">0</span></span>
               </div>
@@ -2879,15 +3567,15 @@
             <button type="button" id="pwSummaryCard_proposal" onclick="clickPersonalSummaryCard('proposal')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-white border border-slate-200/90 hover:border-purple-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-purple-500"
               title="Bấm để lọc sáng kiến &amp; đề xuất kiến nghị (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-lightbulb"></i></span>
-                  <span
+                  <span data-pw-part="summary-card-label"
                     class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-slate-600 sm:text-slate-600 font-extrabold uppercase tracking-tight leading-tight whitespace-normal break-normal">Đề xuất</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatProposalCount">0</span></span>
               </div>
@@ -2906,15 +3594,15 @@
             <button type="button" id="pwSummaryCard_feedback" onclick="clickPersonalSummaryCard('feedback')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-white border border-slate-200/90 hover:border-teal-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-teal-500"
               title="Bấm để lọc ý kiến &amp; phản ánh khó khăn (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-teal-50 text-teal-600 border border-teal-200/60 flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-105 transition"><i
                       class="fa-solid fa-comment-dots"></i></span>
-                  <span
+                  <span data-pw-part="summary-card-label"
                     class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-slate-600 sm:text-slate-600 font-extrabold uppercase tracking-tight leading-tight whitespace-normal break-normal">Ý kiến / Phản ánh</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatFeedbackCount">0</span></span>
               </div>
@@ -2933,14 +3621,14 @@
             <button type="button" id="pwSummaryCard_important" onclick="clickPersonalSummaryCard('important')" aria-pressed="false"
               class="h-full min-w-0 w-full text-left bg-gradient-to-r from-amber-50/90 to-orange-50/90 border border-amber-300 hover:border-amber-400 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl cursor-pointer transition shadow-2xs hover:shadow-sm flex flex-col justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500"
               title="Bấm để lọc các mục quan trọng đã đánh dấu ⭐ (bấm lần nữa để quay lại ban đầu)">
-              <div class="flex items-start justify-between gap-1.5 mb-1">
-                <div class="flex items-center gap-1.5 min-w-0">
+              <div data-pw-part="summary-card-head" class="flex items-start justify-between gap-1.5 mb-1">
+                <div data-pw-part="summary-card-label-group" class="flex items-center gap-1.5 min-w-0">
                   <span
                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500 text-white flex items-center justify-center text-[10px] sm:text-[11px] shrink-0 group-hover:scale-110 transition shadow-xs"><i
                       class="fa-solid fa-star"></i></span>
-                  <span class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-amber-900 font-black uppercase tracking-tight leading-tight whitespace-normal break-normal">Quan trọng</span>
+                  <span data-pw-part="summary-card-label" class="text-[10px] sm:text-[10.5px] 2xl:text-[11px] text-amber-900 font-black uppercase tracking-tight leading-tight whitespace-normal break-normal">Quan trọng</span>
                 </div>
-                <span
+                <span data-pw-part="summary-card-total"
                   class="mt-0.5 text-[9px] sm:text-[9.5px] 2xl:text-[10px] text-amber-800 font-bold bg-amber-100/80 px-1.5 py-0.5 rounded-md border border-amber-200 shrink-0 font-num tabular-nums leading-none whitespace-nowrap">Tổng
                   <span id="pwStatImportantCount">0</span></span>
               </div>
@@ -3013,9 +3701,9 @@
           </div>
 
           <!-- Các nút công cụ bổ trợ và tìm kiếm -->
-          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap md:flex-nowrap w-full xl:w-auto xl:justify-end min-w-0 shrink-0">
+          <div data-pw-part="tools-group" class="flex items-center gap-1.5 sm:gap-2 flex-wrap md:flex-nowrap w-full xl:w-auto xl:justify-end min-w-0 shrink-0">
             <!-- Chuyển đổi hiển thị Bảng / Thẻ -->
-            <div class="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs shrink-0">
+            <div data-pw-part="view-toggle" class="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs shrink-0">
               <button type="button" id="pwViewModeBtn_table" onclick="setPersonalWorkspaceViewMode('table')"
                 class="px-2.5 py-1 rounded-lg font-bold text-slate-700 hover:bg-white transition cursor-pointer shadow-2xs"
                 title="Xem dạng bảng dòng danh mục rộng rãi">
@@ -3045,7 +3733,7 @@
             </button>
 
             <!-- Bộ lọc báo cáo & công việc theo tháng -->
-            <div class="relative flex items-center flex-1 sm:flex-initial min-w-[140px] shrink-0">
+            <div data-pw-part="month-filter-wrap" class="relative flex items-center flex-1 sm:flex-initial min-w-[140px] shrink-0">
               <i class="fa-regular fa-calendar-days absolute left-2.5 text-amber-600 text-xs pointer-events-none"></i>
               <select id="pwMonthFilterSelect" onchange="onPersonalWorkspaceMonthFilterChange(this.value)"
                 class="w-full sm:w-auto pl-7 pr-6 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white text-xs font-bold text-slate-700 focus:border-amber-500 focus:outline-none transition shadow-2xs cursor-pointer appearance-none"
@@ -3056,7 +3744,7 @@
             </div>
 
             <!-- Ô tìm kiếm từ khóa -->
-            <div class="relative basis-full sm:basis-auto w-full sm:w-56 xl:w-64">
+            <div data-pw-part="search-wrap" class="relative basis-full sm:basis-auto w-full sm:w-56 xl:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
               <input type="text" id="pwSearchInput" oninput="onPersonalWorkspaceSearchInput(this.value)"
                 placeholder="Tìm kiếm nội dung công việc..."
@@ -3098,27 +3786,27 @@
           class="fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-6 py-2.5 border-t border-slate-200/95 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <div class="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2 sm:gap-3">
             <!-- Vùng trái: Chọn tất cả và Đã chọn 0 mục để tạo báo cáo -->
-            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
-              <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
+            <div data-pw-part="footer-select-row" class="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
+              <label data-pw-part="footer-select-all-label" class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800 font-black">
                 <input type="checkbox" id="pwSelectAllCheckbox" onchange="toggleSelectAllPersonalItems(this.checked)"
                   class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer" />
                 <span>Chọn tất cả</span>
               </label>
               <span class="hidden sm:inline text-xs text-slate-300 font-bold">|</span>
               <div id="pwSelectedSummaryText" class="text-[11.5px] sm:text-xs text-slate-600 sm:text-slate-700 font-medium bg-slate-100/80 sm:bg-transparent px-2.5 py-0.5 sm:p-0 rounded-full sm:rounded-none border border-slate-200/70 sm:border-0">
-                Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục để tạo báo cáo
+                Đã chọn <b id="pwSelectedCount" class="text-emerald-700 font-black">0</b> mục<span data-pw-part="footer-selected-suffix"> để tạo báo cáo</span>
               </div>
             </div>
 
             <!-- Vùng phải: Nút Về trang công việc và Tạo báo cáo (Cân đối 100% trên điện thoại, giữ nguyên góc phải trên Desktop) -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
-              <button type="button" onclick="closePersonalWorkspacePage()"
+            <div data-pw-part="footer-actions" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+              <button type="button" data-pw-part="footer-back-btn" onclick="closePersonalWorkspacePage()"
                 class="w-full sm:w-auto sm:flex-initial min-h-[44px] sm:min-h-0 justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 border border-slate-200/90 text-[12px] sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
                 <i class="fa-solid fa-arrow-left text-slate-500 text-xs shrink-0"></i>
                 <span>Về trang công việc</span>
               </button>
 
-              <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+              <div data-pw-part="footer-cta-pair" class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
                 <!-- Nút Gửi vào hộp thư để tổng hợp chung cùng nhân viên (Dành cho Quản lý) -->
                 <button type="button" id="pwBtnSendToInboxForManager" onclick="sendManagerSelectedTasksToInbox()"
                   class="hidden flex-1 sm:flex-initial min-w-0 min-h-[44px] sm:min-h-0 justify-center px-2.5 sm:px-4 py-2.5 sm:py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.98] text-white text-[12px] sm:text-sm font-black rounded-xl shadow-sm shadow-indigo-600/20 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
@@ -6142,7 +6830,7 @@
       class="bg-white border border-slate-200 rounded-3xl max-w-2xl sm:max-w-3xl lg:max-w-4xl w-full max-h-[96vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
 
       <!-- HEADER THIẾT KẾ GỌN GÀNG, TRANG TRỌNG -->
-      <div
+      <div data-pw-part="edit-modal-header"
         class="px-5 sm:px-6 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-amber-50/70 via-white to-slate-50/50">
         <div class="flex items-center gap-2.5">
           <div id="pwEditModalIconBox"
@@ -6164,7 +6852,7 @@
       </div>
 
       <!-- VÙNG NỘI DUNG THOÁNG MẮT, VỪA VẶN KHÔNG BỊ TRÀN CUỘN -->
-      <div class="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-3.5 space-y-3 custom-scroll">
+      <div data-pw-part="edit-modal-body" class="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-3.5 space-y-3 custom-scroll">
         <input type="hidden" id="pwEditItemId" value="" />
 
         <!-- THÔNG BÁO KHI ĐANG SAO CHÉP TỪ ĐẦU VIỆC ĐÃ GỬI ĐỂ TẠO ĐẦU VIỆC MỚI -->
@@ -6250,13 +6938,13 @@
             </label>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:border-amber-400 cursor-pointer transition select-none has-[:checked]:bg-amber-50 has-[:checked]:border-amber-500 has-[:checked]:text-amber-950 font-bold text-slate-700">
+            <label data-pw-part="assign-mode-label" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:border-amber-400 cursor-pointer transition select-none has-[:checked]:bg-amber-50 has-[:checked]:border-amber-500 has-[:checked]:text-amber-950 font-bold text-slate-700">
               <input type="radio" name="pwAssignModeRadio" id="pwAssignModeSelf" value="self" checked
                 onchange="onPersonalAssignmentModeChange(this.value)"
                 class="text-amber-600 focus:ring-amber-500 cursor-pointer" />
               <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-user text-amber-600"></i> Việc cá nhân (Tự thực hiện)</span>
             </label>
-            <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:border-indigo-400 cursor-pointer transition select-none has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-600 has-[:checked]:text-indigo-950 font-bold text-slate-700">
+            <label data-pw-part="assign-mode-label" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:border-indigo-400 cursor-pointer transition select-none has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-600 has-[:checked]:text-indigo-950 font-bold text-slate-700">
               <input type="radio" name="pwAssignModeRadio" id="pwAssignModeDelegate" value="delegate"
                 onchange="onPersonalAssignmentModeChange(this.value)"
                 class="text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
@@ -6266,7 +6954,7 @@
 
           <div id="pwEditAssigneePickerWrap" class="hidden space-y-2 pt-1 border-t border-indigo-200/70">
             <div class="flex flex-col sm:flex-row gap-2">
-              <div class="relative sm:w-64 shrink-0">
+              <div data-pw-part="edit-assignee-search-wrap" class="relative sm:w-64 shrink-0">
                 <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-[11px] pointer-events-none"></i>
                 <input type="text" id="pwEditAssigneeSearch"
                   autocomplete="off"
@@ -6332,7 +7020,7 @@
         <!-- 4. NGÀY THỰC HIỆN & HẠN HOÀN THÀNH (BỐ TRÍ 2 CỘT GỌN GÀNG) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="pwEditDate" id="pwEditDateLabel"
+            <label for="pwEditDate" id="pwEditDateLabel" data-pw-part="edit-date-label"
               class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1 truncate">
               Ngày phát sinh / Bắt đầu:
             </label>
@@ -6341,7 +7029,7 @@
           </div>
 
           <div id="pwEditDueDateContainer">
-            <label for="pwEditDueDate"
+            <label for="pwEditDueDate" data-pw-part="edit-date-label"
               class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1 truncate">
               Hạn hoàn thành (Deadline):
             </label>
@@ -6464,24 +7152,24 @@
         <!-- 6. ĐÁNH DẤU QUAN TRỌNG & TÍCH CHỌN ĐẨY BÁO CÁO (2 CỘT CÂN ĐỐI) -->
         <div id="pwEditFlagsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
           <!-- Đánh dấu quan trọng để nhắc nhở làm -->
-          <label id="pwEditImportantLabel"
+          <label id="pwEditImportantLabel" data-pw-part="edit-flag-card"
             class="flex items-center gap-2.5 p-2.5 rounded-xl border border-amber-200/90 bg-amber-50/70 hover:bg-amber-100/70 cursor-pointer transition select-none shadow-2xs">
             <input type="checkbox" id="pwEditImportant"
               class="w-4 h-4 text-amber-600 rounded border-amber-400 focus:ring-amber-500 cursor-pointer accent-amber-600 shrink-0" />
-            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-950 truncate">
+            <div data-pw-part="edit-flag-text" class="flex items-center gap-1.5 text-xs font-bold text-amber-950 truncate">
               <i class="fa-solid fa-star text-amber-500"></i>
               <span>Mục quan trọng (Nhắc nhở làm) ⭐</span>
             </div>
           </label>
 
           <!-- Tích chọn sẵn để đẩy vào báo cáo lãnh đạo (Tự khóa nếu việc đã gửi) -->
-          <label id="pwEditSelectedForReportLabel"
+          <label id="pwEditSelectedForReportLabel" data-pw-part="edit-flag-card"
             class="flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/70 hover:bg-emerald-100/70 cursor-pointer transition select-none shadow-2xs">
             <input type="checkbox" id="pwEditSelectedForReport" checked
               class="w-4 h-4 text-emerald-600 rounded border-emerald-400 focus:ring-emerald-500 cursor-pointer accent-emerald-600 shrink-0" />
             <div id="pwEditSelectedForReportTextWrap" class="flex items-center gap-1.5 text-xs font-bold text-emerald-950 min-w-0">
               <i id="pwEditSelectedForReportIcon" class="fa-solid fa-paper-plane text-emerald-600 shrink-0"></i>
-              <span id="pwEditSelectedForReportText" class="truncate">Đưa mục này vào báo cáo gửi cấp trên</span>
+              <span id="pwEditSelectedForReportText" data-pw-part="edit-flag-text" class="truncate">Đưa mục này vào báo cáo gửi cấp trên</span>
             </div>
           </label>
         </div>
@@ -6489,16 +7177,16 @@
       </div>
 
       <!-- FOOTER THIẾT KẾ GỌN GÀNG, NẰM NGAY CHÂN BẢNG KHÔNG CẦN CUỘN -->
-      <div
+      <div data-pw-part="edit-modal-footer"
         class="px-5 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-between gap-2.5 flex-shrink-0 bg-slate-50/60">
-        <div>
+        <div data-pw-part="edit-footer-cancel-wrap">
           <button type="button" id="pwEditCancelAssignmentBtn" onclick="confirmCancelPersonalAssignmentFromModal()"
             class="hidden px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
             <i class="fa-solid fa-ban text-xs"></i>
             <span>Hủy giao việc</span>
           </button>
         </div>
-        <div class="flex items-center justify-end gap-2.5">
+        <div data-pw-part="edit-footer-primary" class="flex items-center justify-end gap-2.5">
           <button type="button" onclick="closePersonalItemEditModal()"
             class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs">
             Hủy bỏ
@@ -6757,7 +7445,7 @@
         class="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200/80 flex flex-col min-[1340px]:flex-row min-[1340px]:items-center min-[1340px]:justify-between gap-2.5 text-xs flex-shrink-0">
 
         <!-- Nhóm Tab phân loại nằm trong track nền slate đồng nhất, cuộn ngang mượt trên màn hẹp -->
-        <div class="min-w-0 overflow-x-auto rounded-xl bg-slate-100/90 p-1 border border-slate-200/75">
+        <div id="rpBoxTabsTrack" class="min-w-0 overflow-x-auto rounded-xl bg-slate-100/90 p-1 border border-slate-200/75">
           <div id="rpBoxTabsContainer" role="group" aria-label="Nhóm nội dung báo cáo"
             class="flex w-max min-w-full items-center gap-0.5">
             <!-- 0. Người gửi -->
@@ -6821,7 +7509,7 @@
           class="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem_auto] items-center gap-2 sm:flex sm:items-center sm:justify-end shrink-0">
           <!-- Ô tìm kiếm từ khóa trong hộp thư -->
           <div class="relative col-span-3 min-w-0 sm:col-span-1 sm:w-48 min-[1340px]:w-44 2xl:w-56">
-            <label for="rpBoxSearchInput" class="sr-only">Tìm đầu việc hoặc nhân viên</label>
+            <label id="rpBoxSearchLabel" for="rpBoxSearchInput" class="sr-only">Tìm đầu việc hoặc nhân viên</label>
             <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
               aria-hidden="true"></i>
             <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()"
@@ -6830,7 +7518,7 @@
           </div>
 
           <!-- Bộ lọc theo tháng -->
-          <div class="relative min-w-0 shrink-0">
+          <div id="rpBoxMonthFilterWrap" class="relative min-w-0 shrink-0">
             <label for="rpBoxMonthFilterSelect" class="sr-only">Lọc theo tháng</label>
             <i class="fa-regular fa-calendar-days pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
               aria-hidden="true"></i>
@@ -25386,8 +26074,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!it) return '';
       const variant = options.variant === 'card' ? 'card' : 'table';
       const sizeCls = (variant === 'card')
-        ? 'inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-2xs whitespace-nowrap'
-        : 'w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold shadow-2xs whitespace-nowrap';
+        ? 'pw-status-ctrl inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-2xs whitespace-nowrap'
+        : 'pw-status-ctrl w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold shadow-2xs whitespace-nowrap';
       const rawId = String(it.id || '');
       const jsSafeId = rawId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const escFn = (typeof escapeHtml === 'function')
@@ -26966,6 +27654,45 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // 2. Chuyển đổi giữa Chế độ View Ban Đầu và Trang Sổ Tay Mới
+    let _pwFooterResizeObserver = null;
+    function syncPersonalWorkspaceFooterInset() {
+      if (typeof document === 'undefined' || typeof window === 'undefined') return;
+      const toolbar = document.getElementById('pwBottomStickyToolbar');
+      const scrollEl = document.getElementById('pwItemsScrollContainer');
+      const pwPage = document.getElementById('personalWorkspacePageView');
+      if (!scrollEl || !scrollEl.style || typeof scrollEl.style.setProperty !== 'function') return;
+
+      const isMobile = typeof window.innerWidth === 'number' && window.innerWidth < 768;
+      if (!isMobile || !toolbar || !pwPage || pwPage.classList.contains('hidden')) {
+        if (typeof scrollEl.style.removeProperty === 'function') {
+          scrollEl.style.removeProperty('--pw-footer-height');
+        }
+        return;
+      }
+
+      const measuredHeight = typeof toolbar.getBoundingClientRect === 'function'
+        ? Math.ceil(toolbar.getBoundingClientRect().height || toolbar.offsetHeight || 0)
+        : (toolbar.offsetHeight || 0);
+      if (measuredHeight > 0) {
+        scrollEl.style.setProperty('--pw-footer-height', measuredHeight + 'px');
+      }
+    }
+
+    function initPersonalWorkspaceFooterObserver() {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      if (!_pwFooterResizeObserver && typeof ResizeObserver !== 'undefined') {
+        const toolbar = document.getElementById('pwBottomStickyToolbar');
+        if (toolbar) {
+          _pwFooterResizeObserver = new ResizeObserver(() => {
+            syncPersonalWorkspaceFooterInset();
+          });
+          _pwFooterResizeObserver.observe(toolbar);
+          window.addEventListener('resize', syncPersonalWorkspaceFooterInset, { passive: true });
+        }
+      }
+      syncPersonalWorkspaceFooterInset();
+    }
+
     function openPersonalWorkspacePage() {
       closePersonalTaskReminderModal();
       if (!currentUser) {
@@ -27016,6 +27743,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         pwPage.classList.add('mt-0', 'rounded-t-none', 'border-t-0');
         pwPage.style.marginTop = '0px';
         window.scrollTo(0, 0);
+      }
+      if (typeof initPersonalWorkspaceFooterObserver === 'function') {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => initPersonalWorkspaceFooterObserver());
+        } else {
+          initPersonalWorkspaceFooterObserver();
+        }
       }
 
       // Cập nhật thông tin người dùng lên trang sổ tay
@@ -27311,11 +28045,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-user-check"></i></span>
                 <div class="min-w-0">
                   <div class="font-extrabold text-indigo-950">Công việc được cấp trên giao: <span class="text-indigo-700 font-num">${inActive.length}</span> việc cần làm ${inPendingRec.length > 0 ? `(<span class="text-rose-700 font-black font-num">${inPendingRec.length} chờ xác nhận nhận việc</span>)` : ''}</div>
-                  <div class="text-[11px] text-indigo-800/90 font-medium truncate">Vui lòng xác nhận nhận việc và cập nhật kết quả công việc đã làm.</div>
+                  <div class="pw-rem-deleg-desc text-[11px] text-indigo-800/90 font-medium truncate">Vui lòng xác nhận nhận việc và cập nhật kết quả công việc đã làm.</div>
                 </div>
               </div>
               <button type="button" onclick="openIncomingDelegationsFromLoginReminder();"
-                class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shrink-0 cursor-pointer transition whitespace-nowrap">
+                class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shrink-0 cursor-pointer transition whitespace-nowrap min-h-[38px] sm:min-h-0">
                 Xem việc được giao
               </button>
             </div>`;
@@ -27345,7 +28079,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                     <div class="font-extrabold text-violet-950">Quản lý giao việc: ${delegSummary.outgoingAwaitingReceipt.length > 0 ? `<span class="text-amber-800 font-num">${delegSummary.outgoingAwaitingReceipt.length} chờ nhận</span>` : ''}${delegSummary.outgoingAwaitingReceipt.length > 0 && delegSummary.outgoingUnreadUpdates.length > 0 ? ' • ' : ''}${delegSummary.outgoingUnreadUpdates.length > 0 ? `<span class="text-emerald-700 font-num">${delegSummary.outgoingUnreadUpdates.length} cập nhật mới</span>` : ''}</div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
+                <div class="pw-rem-deleg-actions flex items-center gap-1.5 shrink-0">
                   <button type="button" onclick="acknowledgeOutgoingDelegationsFromReminder()"
                     class="px-2.5 py-1 rounded-xl bg-white hover:bg-violet-100 text-violet-800 border border-violet-300 font-bold text-[11px] cursor-pointer transition whitespace-nowrap">Đã xem thông báo</button>
                   <button type="button" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); switchPersonalWorkspaceTab('assigned_by_me');"
@@ -27376,7 +28110,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           listEl.innerHTML = displayItems.map((it, idx) => {
             // Chỉ dùng màu cho việc khẩn cấp (quá hạn / đến hạn hôm nay = đỏ; còn ≤ 2 ngày = cam). Còn lại trung tính.
             // Định dạng tag gọn gàng, in nghiêng vừa vặn để dành tối đa không gian hiển thị tiêu đề công việc
-            const tagBase = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic font-medium ';
+            const tagBase = 'pw-rem-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic font-medium ';
             const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/80 font-normal';
             let tag = '';
             if (it.type === 'plan') {
@@ -27403,22 +28137,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const isDelegIn = (typeof isDelegatedIncomingTask === 'function' && isDelegatedIncomingTask(it, currentUser));
             const delegBadge = isDelegIn
               ? (it.delegation?.receipt?.status === 'accepted'
-                ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Giao: ' + escapeHtml(it.delegation?.assigner?.fullName || it.delegation?.assigner?.username || 'Cấp trên') + '</span>'
-                : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0 animate-pulse">Chờ nhận việc</span>')
+                ? '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Giao: ' + escapeHtml(it.delegation?.assigner?.fullName || it.delegation?.assigner?.username || 'Cấp trên') + '</span>'
+                : '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0 animate-pulse">Chờ nhận việc</span>')
               : '';
 
-            // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú (Thiết kế thanh thoát, hiện đại)
+            // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú (Desktop giữ inline; Mobile tách badge xuống dưới tiêu đề)
             return (
-              '<div class="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-amber-50/30 border border-slate-200/80 hover:border-amber-300 transition-all duration-150 cursor-pointer group select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
-              '<div class="flex items-center gap-2">' +
+              '<div class="pw-rem-card px-3.5 py-2.5 rounded-2xl bg-white hover:bg-amber-50/30 border border-slate-200/80 hover:border-amber-300 transition-all duration-150 cursor-pointer group select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
+              '<div class="pw-rem-top flex items-center gap-2">' +
               '<span class="w-5 shrink-0 text-[11.5px] font-medium text-slate-400 text-right font-num tabular-nums">' + (idx + 1) + '.</span>' +
-              '<div class="flex-1 min-w-0 truncate font-semibold text-[13.5px] text-slate-800 group-hover:text-amber-800 leading-snug tracking-[-0.01em]" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
+              '<div class="pw-rem-title flex-1 min-w-0 truncate font-semibold text-[13.5px] text-slate-800 group-hover:text-amber-800 leading-snug tracking-[-0.01em]" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
+              '<div class="pw-rem-badges flex items-center gap-1.5 shrink-0">' +
               delegBadge +
               (it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0 drop-shadow-2xs" title="Mục quan trọng"></i>' : '') +
               tag +
               '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-amber-500 shrink-0 transition-transform group-hover:translate-x-0.5"></i>' +
               '</div>' +
-              '<div class="pl-7 mt-1 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0 leading-normal font-normal">' +
+              '</div>' +
+              '<div class="pw-rem-sub pl-7 mt-1 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0 leading-normal font-normal">' +
               '<span class="shrink-0 text-slate-400 font-num tabular-nums">' + dateText + '</span>' +
               (it.content ? '<span class="text-slate-300">•</span><span class="truncate text-slate-500" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
               '</div>' +
@@ -30643,6 +31379,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           sendToInboxBtn.classList.add('hidden');
         }
       }
+      if (typeof syncPersonalWorkspaceFooterInset === 'function') {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => syncPersonalWorkspaceFooterInset());
+        } else {
+          syncPersonalWorkspaceFooterInset();
+        }
+      }
 
       // Luôn cập nhật số lượng đã chọn và trạng thái checkbox Chọn tất cả
       try {
@@ -31410,7 +32153,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             planTimeline = t;
             if (it.dueDate) {
               dueDateBadge = `
-            <span class="inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
+            <span class="pw-task-due inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
               <i class="${t.icon} text-[9.5px] md:text-[10.5px] shrink-0 not-italic"></i>
               <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
             </span>
@@ -31434,16 +32177,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
           // 3. Ngôi sao quan trọng
           const starBtn = perms.canToggleImportant
-            ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="cursor-pointer w-6 h-6 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}"><i class="fa-solid fa-star"></i></button>`
-            : `<span class="w-6 h-6 flex items-center justify-center rounded-lg text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}" title="${it.isImportant ? 'Mục quan trọng từ người giao việc' : 'Công việc được giao'}"><i class="fa-solid fa-star"></i></span>`;
+            ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="pw-star-btn cursor-pointer w-6 h-6 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}"><i class="fa-solid fa-star"></i></button>`
+            : `<span class="pw-star-btn w-6 h-6 flex items-center justify-center rounded-lg text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}" title="${it.isImportant ? 'Mục quan trọng từ người giao việc' : 'Công việc được giao'}"><i class="fa-solid fa-star"></i></span>`;
 
-          // 4. Checkbox chọn đẩy báo cáo
+          // 4. Checkbox chọn đẩy báo cáo (gói trong label .pw-check-hit để vùng chạm >= 40px trên điện thoại, giữ nguyên 100% trên desktop)
           const isRowLockedForSelect = isPersonalTaskLockedFromReportSelect(it, currentUser);
           const checkBtn = isOutgoingDeleg
-            ? `<span class="w-4 h-4 inline-flex items-center justify-center text-violet-500" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes text-xs"></i></span>`
+            ? `<span class="pw-check-hit w-4 h-4 inline-flex items-center justify-center text-violet-500" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes text-xs"></i></span>`
             : (isIncomingDeleg && !perms.canSelectForReport && !isRowLockedForSelect)
-              ? `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 bg-slate-100 cursor-not-allowed opacity-50" title="Xác nhận nhận việc trước khi chọn đưa vào báo cáo" />`
-              : `<input type="checkbox" ${(!isRowLockedForSelect && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isRowLockedForSelect ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isRowLockedForSelect ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Tích chọn mục này để tạo báo cáo'}" />`;
+              ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 bg-slate-100 cursor-not-allowed opacity-50" title="Xác nhận nhận việc trước khi chọn đưa vào báo cáo" /></label>`
+              : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isRowLockedForSelect && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isRowLockedForSelect ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isRowLockedForSelect ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Tích chọn mục này để tạo báo cáo'}" /></label>`;
 
           // 5. Nội dung công việc đã làm & phản hồi (nếu có)
           const dispFields = (typeof getPersonalTaskDisplayFields === 'function')
@@ -31451,11 +32194,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             : { workNote: it.workDoneNote || '', feedbackText: it.feedbackResponse || '' };
           let workDoneSnippet = '';
           if (dispFields.workNote) {
-            workDoneSnippet = `<div class="mt-1.5 text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-list-check mr-1 text-indigo-600"></i><b>Công việc đã làm:</b> ${escapeHtml(dispFields.workNote)}</div>`;
+            workDoneSnippet = `<div class="pw-task-note mt-1.5 text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-list-check mr-1 text-indigo-600"></i><b>Công việc đã làm:</b> ${escapeHtml(dispFields.workNote)}</div>`;
           }
           let fbSnippet = '';
           if (dispFields.feedbackText) {
-            fbSnippet = `<div class="mt-1.5 text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-reply mr-1 text-emerald-600"></i><b>Phản hồi:</b> ${escapeHtml(dispFields.feedbackText)}</div>`;
+            fbSnippet = `<div class="pw-task-note mt-1.5 text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-reply mr-1 text-emerald-600"></i><b>Phản hồi:</b> ${escapeHtml(dispFields.feedbackText)}</div>`;
           }
 
           let delegationPillsHtml = '';
@@ -31488,47 +32231,47 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
           const transferBadgesHtml = [delegationPillsHtml, getPersonalTaskTransferBadgeHtml(it, currentUser)].filter(Boolean).join(' ');
           const actionButtonsHtml = isIncomingDeleg
-            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-full md:w-auto px-2.5 h-7 md:h-8 flex items-center justify-center gap-1 rounded-lg md:rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold transition cursor-pointer shadow-2xs" title="Xem chi tiết, xác nhận nhận việc &amp; ghi công việc đã làm"><i class="fa-solid fa-clipboard-check"></i><span class="hidden sm:inline md:hidden">Cập nhật</span></button>`
+            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn w-full md:w-auto px-2.5 h-7 md:h-8 flex items-center justify-center gap-1 rounded-lg md:rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold transition cursor-pointer shadow-2xs" title="Xem chi tiết, xác nhận nhận việc &amp; ghi công việc đã làm"><i class="fa-solid fa-clipboard-check"></i><span class="pw-update-label hidden sm:inline md:hidden">Cập nhật</span></button>`
             : (isOutgoingDeleg
-              ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa nội dung giao việc &amp; xem kết quả"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Hủy giao việc này"><i class="fa-solid fa-ban"></i></button>`
+              ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa nội dung giao việc &amp; xem kết quả"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Hủy giao việc này"><i class="fa-solid fa-ban"></i></button>`
               : (perms.canEditCore || perms.canDelete
-                ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này"><i class="fa-regular fa-trash-can"></i></button>`
-                : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs cursor-pointer" title="Xem chi tiết"><i class="fa-regular fa-eye"></i></button>`));
+                ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này"><i class="fa-regular fa-trash-can"></i></button>`
+                : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs cursor-pointer" title="Xem chi tiết"><i class="fa-regular fa-eye"></i></button>`));
 
           rowsHtml += `
-        <div class="group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-2xs">
+        <div class="pw-task-row group relative ${rowSurfaceClass} hover:shadow-sm rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-2xs">
           ${leftCompletedBarHtml}
 
           <!-- CỘT 1 (48px trên Desktop): CHỌN BÁO CÁO + QUAN TRỌNG -->
-          <div class="order-1 md:order-none flex items-center gap-1.5 md:w-[48px] shrink-0">
+          <div class="pw-task-selection order-1 md:order-none flex items-center gap-1.5 md:w-[48px] shrink-0">
             ${checkBtn}
             ${starBtn}
           </div>
 
           <!-- CỘT 2 (94px trên Desktop; trên Mobile hiển thị cùng huy hiệu) -->
-          <div class="order-2 md:order-none flex items-center gap-1.5 flex-wrap flex-1 md:flex-initial md:w-[94px] min-w-0 shrink-0">
+          <div class="pw-task-meta order-2 md:order-none flex items-center gap-1.5 flex-wrap flex-1 md:flex-initial md:w-[94px] min-w-0 shrink-0">
             ${typeBadge}
             ${transferBadgesHtml ? `<div class="pw-mobile-inline-flex items-center gap-1 flex-wrap">${transferBadgesHtml}</div>` : ''}
           </div>
 
           <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA) -->
-          <div class="order-4 md:order-none w-full md:w-auto md:flex-1 min-w-0 space-y-0.5 md:space-y-1 pl-0.5 md:pl-0 md:pr-1">
+          <div class="pw-task-body order-4 md:order-none w-full md:w-auto md:flex-1 min-w-0 space-y-0.5 md:space-y-1 pl-0.5 md:pl-0 md:pr-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <div class="font-bold md:font-semibold text-slate-800 group-hover:text-amber-900 text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
+              <div class="pw-task-title font-bold md:font-semibold text-slate-800 group-hover:text-amber-900 text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
                 ${escapeHtml(it.title)}
               </div>
               ${transferBadgesHtml ? `<div class="pw-desktop-inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
             </div>
-            ${it.content ? `<p class="text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
+            ${it.content ? `<p class="pw-task-desc text-[12px] text-slate-500 leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
             ${workDoneSnippet}
             ${fbSnippet}
           </div>
 
           <!-- ĐƯỜNG KẺ PHÂN CÁCH CHÂN THẺ TRÊN MOBILE -->
-          <div class="order-5 w-full border-t border-slate-100/90 md:hidden"></div>
+          <div class="pw-task-divider order-5 w-full border-t border-slate-100/90 md:hidden"></div>
 
           <!-- CỘT 4 (254px trên Desktop): THỜI GIAN & HẠN THỰC HIỆN -->
-          <div class="order-6 md:order-none flex flex-col items-start justify-center gap-1 text-[11px] flex-1 min-w-0 md:flex-initial md:w-[254px] shrink-0">
+          <div class="pw-task-time order-6 md:order-none flex flex-col items-start justify-center gap-1 text-[11px] flex-1 min-w-0 md:flex-initial md:w-[254px] shrink-0">
             ${dateStr ? `
               <span class="inline-flex items-center gap-1 md:gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
                 <i class="fa-regular fa-calendar text-[10.5px] md:text-[11px] text-slate-400"></i>
@@ -31540,12 +32283,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           </div>
 
           <!-- CỘT 5 (132px trên Desktop): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
-          <div class="order-7 md:order-none shrink-0 flex items-center justify-end md:justify-center md:w-[132px]">
+          <div class="pw-task-status-wrap order-7 md:order-none shrink-0 flex items-center justify-end md:justify-center md:w-[132px]">
             ${statusHtml}
           </div>
 
           <!-- CỘT 6 (68px trên Desktop) -->
-          <div class="order-3 md:order-none flex items-center justify-end gap-1 md:w-[68px] shrink-0">
+          <div class="pw-task-actions order-3 md:order-none flex items-center justify-end gap-1 md:w-[68px] shrink-0">
             ${actionButtonsHtml}
           </div>
         </div>
@@ -31595,7 +32338,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const t = calculatePlanTimelineStatus(it);
           cardDueBadge = `
         <div class="pt-1">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num font-normal italic ${t.badgeClass}">
+          <span class="pw-task-due inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num font-normal italic ${t.badgeClass}">
             <i class="${t.icon} text-[10px] shrink-0 not-italic"></i>
             <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
           </span>
@@ -31628,21 +32371,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           ? buildPersonalTaskStatusControlHtml(it, { variant: 'card' })
           : '';
         const cardStarEl = cardPerms.canToggleImportant
-          ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng"><i class="fa-solid fa-star"></i></button>`
-          : `<span class="p-1 text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}"><i class="fa-solid fa-star"></i></span>`;
+          ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="pw-star-btn p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng"><i class="fa-solid fa-star"></i></button>`
+          : `<span class="pw-star-btn p-1 text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}"><i class="fa-solid fa-star"></i></span>`;
         const cardCheckEl = cardIsOut
-          ? `<span class="p-1 text-violet-500 text-xs" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes"></i></span>`
+          ? `<span class="pw-check-hit p-1 text-violet-500 text-xs" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes"></i></span>`
           : (cardIsIn && !cardPerms.canSelectForReport && !isPersonalTaskLockedFromReportSelect(it, currentUser))
-            ? `<input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 opacity-50 cursor-not-allowed" title="Cần xác nhận nhận việc trước khi chọn báo cáo" />`
-            : `<input type="checkbox" ${(!isPersonalTaskLockedFromReportSelect(it, currentUser) && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Chọn đưa vào báo cáo'}" />`;
+            ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 opacity-50 cursor-not-allowed" title="Cần xác nhận nhận việc trước khi chọn báo cáo" /></label>`
+            : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isPersonalTaskLockedFromReportSelect(it, currentUser) && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Chọn đưa vào báo cáo'}" /></label>`;
         const cardActionsEl = cardIsIn
-          ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition cursor-pointer flex items-center gap-1"><i class="fa-solid fa-clipboard-check"></i><span>Cập nhật</span></button>`
+          ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition cursor-pointer flex items-center gap-1"><i class="fa-solid fa-clipboard-check"></i><span class="pw-update-label">Cập nhật</span></button>`
           : (cardIsOut
-            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer" title="Chỉnh sửa giao việc"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-xs transition cursor-pointer" title="Hủy giao việc"><i class="fa-solid fa-ban"></i></button>`
-            : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-trash-can"></i></button>`);
+            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer" title="Chỉnh sửa giao việc"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-xs transition cursor-pointer" title="Hủy giao việc"><i class="fa-solid fa-ban"></i></button>`
+            : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-trash-can"></i></button>`);
 
         cardsHtml += `
-      <div class="border ${cardBorderClass} p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
+      <div class="pw-task-card border ${cardBorderClass} p-4 rounded-2xl shadow-2xs space-y-3 transition flex flex-col justify-between group">
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 flex-wrap">
@@ -31650,14 +32393,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               ${cardDelegBadge}
               ${getPersonalTaskTransferBadgeHtml(it, currentUser)}
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 shrink-0">
               ${cardStarEl}
               ${cardCheckEl}
             </div>
           </div>
-          <h4 class="font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
-          ${it.content ? `<p class="text-xs text-slate-500 line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
-          ${cardFields.workNote ? `<div class="text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><b>Công việc đã làm:</b> ${escapeHtml(cardFields.workNote)}</div>` : ''}
+          <h4 class="pw-task-title font-bold text-slate-800 text-xs sm:text-sm cursor-pointer hover:text-amber-800 leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${escapeHtml(it.title)}</h4>
+          ${it.content ? `<p class="pw-task-desc text-xs text-slate-500 line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
+          ${cardFields.workNote ? `<div class="pw-task-note text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><b>Công việc đã làm:</b> ${escapeHtml(cardFields.workNote)}</div>` : ''}
           ${cardDueBadge}
         </div>
         <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -31672,7 +32415,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
 
       container.innerHTML = `
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    <div class="pw-task-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       ${cardsHtml}
     </div>
   `;
@@ -34169,9 +34912,45 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let rpBoxSourceReportFilter = ''; // ID lượt gửi đang được mở để xem các đầu việc bên trong
     let rpBoxSelectedTaskKeys = new Set();
 
-    function switchRpBoxTab(tab) {
-      rpBoxActiveTab = tab;
-      if (tab === 'senders') rpBoxSourceReportFilter = '';
+    function isRpBoxValidStaffSourceReport(reportId, user = currentUser) {
+      const idStr = String(reportId || '').trim();
+      if (!idStr || !user) return null;
+      const reports = (typeof getLeadershipReportsShared === 'function') ? getLeadershipReportsShared() : [];
+      const rep = Array.isArray(reports) ? reports.find(r => r && String(r.id) === idStr) : null;
+      if (!rep) return null;
+      if (typeof canUserAccessReport === 'function' && !canUserAccessReport(user, rep)) return null;
+      if (typeof isSenderOfReport === 'function' && !isSenderOfReport(user, rep)) return null;
+      if (typeof isRpBoxSummaryReport === 'function' && isRpBoxSummaryReport(rep)) return null;
+      return rep;
+    }
+
+    function normalizeRpBoxStaffState(user = currentUser) {
+      if (!user || isUserReportManagerOrLeadership(user)) return null;
+      if (typeof rpBoxViewMode !== 'undefined') rpBoxViewMode = 'inbox';
+      if (typeof rpBoxConsolidationFilter !== 'undefined') rpBoxConsolidationFilter = 'all';
+      const curSource = (typeof rpBoxSourceReportFilter !== 'undefined') ? String(rpBoxSourceReportFilter || '').trim() : '';
+      const validSourceRep = curSource ? isRpBoxValidStaffSourceReport(curSource, user) : null;
+      if (!validSourceRep) {
+        if (curSource && typeof document !== 'undefined' && document && typeof document.getElementById === 'function') {
+          const searchInput = document.getElementById('rpBoxSearchInput');
+          if (searchInput) searchInput.value = '';
+        }
+        if (typeof rpBoxSourceReportFilter !== 'undefined') rpBoxSourceReportFilter = '';
+        if (typeof rpBoxActiveTab !== 'undefined') rpBoxActiveTab = 'senders';
+        return null;
+      }
+      if (typeof rpBoxSourceReportFilter !== 'undefined') rpBoxSourceReportFilter = String(validSourceRep.id);
+      const validDetailTabs = ['all', 'adhoc', 'plan', 'proposal', 'feedback'];
+      if (typeof rpBoxActiveTab !== 'undefined' && !validDetailTabs.includes(rpBoxActiveTab)) {
+        rpBoxActiveTab = 'all';
+      }
+      return validSourceRep;
+    }
+
+    function syncRpBoxTabButtonsUI(activeTab, opts = {}) {
+      if (typeof document === 'undefined' || !document || typeof document.getElementById !== 'function') return;
+      const isManagerOrAbove = !!opts.isManagerOrAbove;
+      const hasValidStaffSource = !!opts.hasValidStaffSource;
       const tabs = ['senders', 'all', 'adhoc', 'plan', 'proposal', 'feedback'];
       const tabActiveMap = {
         senders: { btn: 'font-bold bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200/80', badge: 'bg-indigo-100 text-indigo-800' },
@@ -34186,19 +34965,66 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const countBase = 'inline-flex min-w-[1.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums';
 
       tabs.forEach(t => {
-        const isActive = t === tab;
+        const isActive = t === activeTab;
         const style = tabActiveMap[t] || tabActiveMap.all;
         const btn = document.getElementById('rpBoxTab_' + t);
         if (btn) {
           btn.className = tabBase + ' ' + (isActive ? style.btn : tabIdle);
           if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-pressed', String(isActive));
+          if (btn.classList) {
+            let shouldHide = false;
+            if (!isManagerOrAbove) {
+              shouldHide = hasValidStaffSource ? (t === 'senders') : (t !== 'senders');
+            }
+            if (shouldHide) btn.classList.add('hidden');
+            else btn.classList.remove('hidden');
+          }
         }
         const badge = document.getElementById('rpBoxCount_' + t);
         if (badge) {
           badge.className = countBase + ' ' + (isActive ? style.badge : 'bg-slate-200/80 text-slate-600');
         }
       });
+    }
 
+    function switchRpBoxTab(tab) {
+      const hasUser = (typeof currentUser !== 'undefined' && !!currentUser);
+      const isManagerOrAbove = hasUser ? isUserReportManagerOrLeadership(currentUser) : false;
+      let nextTab = tab;
+      let hasValidStaffSource = false;
+
+      if (hasUser && !isManagerOrAbove) {
+        const curSource = (typeof rpBoxSourceReportFilter !== 'undefined') ? String(rpBoxSourceReportFilter || '').trim() : '';
+        if (nextTab === 'senders') {
+          if (curSource && typeof document !== 'undefined' && document && typeof document.getElementById === 'function') {
+            const searchInput = document.getElementById('rpBoxSearchInput');
+            if (searchInput) searchInput.value = '';
+          }
+          rpBoxSourceReportFilter = '';
+          hasValidStaffSource = false;
+        } else {
+          const validRep = isRpBoxValidStaffSourceReport(curSource, currentUser);
+          if (!validRep) {
+            if (curSource && typeof document !== 'undefined' && document && typeof document.getElementById === 'function') {
+              const searchInput = document.getElementById('rpBoxSearchInput');
+              if (searchInput) searchInput.value = '';
+            }
+            rpBoxSourceReportFilter = '';
+            nextTab = 'senders';
+            hasValidStaffSource = false;
+          } else {
+            hasValidStaffSource = true;
+            if (!['all', 'adhoc', 'plan', 'proposal', 'feedback'].includes(nextTab)) {
+              nextTab = 'all';
+            }
+          }
+        }
+      } else {
+        if (nextTab === 'senders') rpBoxSourceReportFilter = '';
+      }
+
+      rpBoxActiveTab = nextTab;
+      syncRpBoxTabButtonsUI(rpBoxActiveTab, { isManagerOrAbove, hasValidStaffSource });
       renderLeadershipReportsBoxUI();
     }
 
@@ -34336,9 +35162,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (!isManagerOrAbove) {
         // NGƯỜI GỬI (NHÂN VIÊN / CHUYÊN VIÊN):
-        // Chỉ có thông tin gửi đi, không có phần tích chọn và không hiển thị phần tạo báo cáo lịch sử
+        // Luôn mở thẳng vào thẻ "Đã gửi" (chưa mở chi tiết thư nào), xóa từ khóa tìm chi tiết cũ, giữ nguyên bộ lọc tháng
+        rpBoxActiveTab = 'senders';
+        const searchInput = document.getElementById('rpBoxSearchInput');
+        if (searchInput) searchInput.value = '';
         if (titleEl) titleEl.innerText = "Lịch Sử Gửi Báo Cáo Của Bạn";
-        if (subTitleEl) subTitleEl.innerText = "Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo";
+        if (subTitleEl) subTitleEl.innerText = "Danh sách từng lượt báo cáo bạn đã gửi cho Quản lý / Ban Lãnh đạo";
         if (leaderDeptWrapper) leaderDeptWrapper.classList.add('hidden');
         if (btnHistory) btnHistory.classList.add('hidden');
         if (multiBar) multiBar.classList.add('hidden');
@@ -35214,7 +36043,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function openRpBoxSenderRecordTasks(reportId) {
-      const rep = getLeadershipReportsShared().find(r => r && String(r.id) === String(reportId));
+      const isManagerOrAbove = (typeof currentUser !== 'undefined' && currentUser)
+        ? isUserReportManagerOrLeadership(currentUser)
+        : false;
+      const rep = (!isManagerOrAbove && typeof isRpBoxValidStaffSourceReport === 'function')
+        ? isRpBoxValidStaffSourceReport(reportId, currentUser)
+        : getLeadershipReportsShared().find(r => r && String(r.id) === String(reportId));
       if (!rep || !canUserAccessReport(currentUser, rep) || isRpBoxSummaryReport(rep)) {
         showToast('Không tìm thấy đầu việc của lượt gửi này!', true);
         return;
@@ -35228,28 +36062,80 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function clearRpBoxSourceReportFilter(backToSenders) {
+      const isManagerOrAbove = (typeof currentUser !== 'undefined' && currentUser)
+        ? isUserReportManagerOrLeadership(currentUser)
+        : false;
+      const hadSource = !!(typeof rpBoxSourceReportFilter !== 'undefined' && rpBoxSourceReportFilter);
       rpBoxSourceReportFilter = '';
+      if (!isManagerOrAbove) {
+        if (hadSource) {
+          const searchInput = document.getElementById('rpBoxSearchInput');
+          if (searchInput) searchInput.value = '';
+        }
+        switchRpBoxTab('senders');
+        return;
+      }
       switchRpBoxTab(backToSenders ? 'senders' : 'all');
     }
 
     function updateRpBoxSourceBanner() {
       const banner = document.getElementById('rpBoxSourceBanner');
       if (!banner) return;
+      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
       let report = null;
       if (rpBoxSourceReportFilter) {
-        report = getLeadershipReportsShared().find(r => r && String(r.id) === String(rpBoxSourceReportFilter)) || null;
-        if (!report || !canUserAccessReport(currentUser, report)) { rpBoxSourceReportFilter = ''; report = null; }
+        report = (!isManagerOrAbove && typeof isRpBoxValidStaffSourceReport === 'function')
+          ? isRpBoxValidStaffSourceReport(rpBoxSourceReportFilter, currentUser)
+          : (getLeadershipReportsShared().find(r => r && String(r.id) === String(rpBoxSourceReportFilter)) || null);
+        if (!report || !canUserAccessReport(currentUser, report) || (!isManagerOrAbove && (!isSenderOfReport(currentUser, report) || isRpBoxSummaryReport(report)))) {
+          rpBoxSourceReportFilter = '';
+          report = null;
+        }
       }
       if (!report || rpBoxActiveTab === 'senders' || rpBoxViewMode === 'history') {
         banner.classList.add('hidden');
         banner.innerHTML = '';
         return;
       }
-      const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
-      const who = isManagerOrAbove ? (report.senderFullName || report.senderUsername || 'Nhân sự') : 'Bạn';
       const when = formatRpBoxSendDateTime(report);
       const rawItems = Array.isArray(report.items) ? report.items : (report.items && report.items.tasks ? report.items.tasks : []);
       const total = rawItems.filter(it => it && !(typeof isSampleTaskItem === 'function' && isSampleTaskItem(it))).length;
+
+      if (!isManagerOrAbove) {
+        const rawRecDisplay = (report.recipientFullName || report.recipientUsername || report.recipientId != null)
+          ? ((typeof resolvePersonFullDisplayName === 'function')
+            ? resolvePersonFullDisplayName({ id: report.recipientId, username: report.recipientUsername, fullName: report.recipientFullName, role: report.recipientRole }, { mode: 'snapshot', snapshotName: report.recipientFullName })
+            : (report.recipientFullName || report.recipientUsername))
+          : '';
+        const recipientLabel = rawRecDisplay || [report.recipientRole, report.recipientDepartment].filter(Boolean).join(' - ') || 'Quản lý bộ phận';
+        let periodText = 'Kỳ chưa xác định';
+        if (report.periodMonth && report.periodYear) {
+          periodText = 'Kỳ T' + parseInt(report.periodMonth, 10) + '/' + parseInt(report.periodYear, 10);
+        } else if (typeof parseMonthYearFromAnyDate === 'function') {
+          const parsedPeriod = parseMonthYearFromAnyDate(report.displayDate || report.submissionDate);
+          const pm = parsedPeriod && (parsedPeriod.m || parsedPeriod.month);
+          const py = parsedPeriod && (parsedPeriod.y || parsedPeriod.year);
+          if (pm && py) {
+            periodText = 'Kỳ T' + pm + '/' + py;
+          }
+        }
+        const safeRepId = escapeHtml(String(report.id));
+        banner.innerHTML =
+          '<div class="flex items-center gap-2 flex-wrap min-w-0">' +
+          '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] shrink-0"><i class="fa-solid fa-envelope-open-text text-[10px]"></i>Đang xem lượt gửi</span>' +
+          '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-white text-indigo-800 border border-indigo-200 max-w-full shadow-2xs"><i class="fa-solid fa-paper-plane text-[9px] text-indigo-500 shrink-0"></i><span class="break-words [overflow-wrap:anywhere]">Gửi đến: ' + escapeHtml(recipientLabel) + '</span></span>' +
+          '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200 shrink-0 font-num">' + escapeHtml(periodText) + '</span>' +
+          '<span class="text-slate-600 font-medium break-words">Gửi lúc <b class="font-num text-slate-800">' + escapeHtml(when.date || '---') + (when.time ? ' ' + escapeHtml(when.time) : '') + '</b> · <b class="font-num text-slate-800">' + total + '</b> đầu việc</span>' +
+          '</div>' +
+          '<div class="flex items-center gap-2 flex-wrap shrink-0">' +
+          '<button type="button" onclick="clearRpBoxSourceReportFilter(true)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap"><i class="fa-solid fa-arrow-left text-[10px]"></i><span>Quay lại Đã gửi</span></button>' +
+          '<button type="button" onclick="downloadRpBoxSenderRecordWord(\'' + safeRepId + '\')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" title="Tải file Word đầy đủ của lượt gửi này"><i class="fa-solid fa-file-word text-blue-600 text-xs"></i><span>Tải Word</span></button>' +
+          '</div>';
+        banner.classList.remove('hidden');
+        return;
+      }
+
+      const who = report.senderFullName || report.senderUsername || 'Nhân sự';
       banner.innerHTML =
         '<div class="flex items-center gap-2 flex-wrap min-w-0">' +
         '<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] shrink-0"><i class="fa-solid fa-eye text-[10px]"></i>Đang xem lượt gửi</span>' +
@@ -35465,7 +36351,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!container) return;
 
       const isManagerOrAbove = isUserReportManagerOrLeadership(currentUser);
-      if (!isManagerOrAbove) rpBoxViewMode = 'inbox';
+      const staffValidSourceRep = !isManagerOrAbove
+        ? ((typeof normalizeRpBoxStaffState === 'function') ? normalizeRpBoxStaffState(currentUser) : null)
+        : null;
+      if (!isManagerOrAbove) {
+        rpBoxViewMode = 'inbox';
+        if (typeof rpBoxConsolidationFilter !== 'undefined') rpBoxConsolidationFilter = 'all';
+      }
 
       // Cập nhật danh sách tháng trên bộ lọc tháng của Hộp thư
       populateRpBoxMonthFilter();
@@ -35481,6 +36373,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const histBtnIcon = document.getElementById('rpBoxHistoryBtnIcon');
       const histBtnText = document.getElementById('rpBoxHistoryBtnText');
       const multiBar = document.getElementById('rpBoxMultiSelectBar');
+      const monthFilterWrap = document.getElementById('rpBoxMonthFilterWrap');
+      const searchInputEl = document.getElementById('rpBoxSearchInput');
+      const searchLabelEl = document.getElementById('rpBoxSearchLabel');
+      const tabsTrack = document.getElementById('rpBoxTabsTrack');
 
       const tabsContainer = document.getElementById('rpBoxTabsContainer');
       const btnHistory = document.getElementById('btnToggleRpBoxHistory');
@@ -35488,7 +36384,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const sendersTabBtn = document.getElementById('rpBoxTab_senders');
       const sendersTabLabel = document.getElementById('rpBoxSendersTabLabel');
       if (sendersTabBtn) {
-        sendersTabBtn.classList.remove('hidden');
         sendersTabBtn.title = isManagerOrAbove ? 'Xem các lượt gửi báo cáo vào hộp thư' : 'Xem các báo cáo bạn đã gửi';
       }
       if (sendersTabLabel) sendersTabLabel.innerText = isManagerOrAbove ? 'Người gửi' : 'Đã gửi';
@@ -35497,12 +36392,37 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!isManagerOrAbove) {
         if (btnHistory) btnHistory.classList.add('hidden');
         if (multiBar) multiBar.classList.add('hidden');
+        if (tabsTrack) tabsTrack.classList.remove('hidden');
         if (tabsContainer) tabsContainer.classList.remove('hidden');
+        if (monthFilterWrap) {
+          if (staffValidSourceRep) monthFilterWrap.classList.add('hidden');
+          else monthFilterWrap.classList.remove('hidden');
+        }
+        if (searchInputEl) {
+          searchInputEl.placeholder = staffValidSourceRep
+            ? 'Tìm trong lượt gửi này...'
+            : 'Tìm người nhận, nội dung báo cáo...';
+        }
+        if (searchLabelEl) {
+          searchLabelEl.innerText = staffValidSourceRep
+            ? 'Tìm công việc trong lượt gửi đang xem'
+            : 'Tìm người nhận hoặc nội dung báo cáo đã gửi';
+        }
         if (boxTitle) boxTitle.innerText = "Lịch Sử Gửi Báo Cáo Của Bạn";
-        if (boxSub) boxSub.innerText = rpBoxActiveTab === 'senders' ? 'Danh sách từng lượt báo cáo bạn đã gửi cho Quản lý / Ban Lãnh đạo' : 'Danh sách các đầu việc bạn đã gửi cho Quản lý / Ban Lãnh đạo';
+        if (boxSub) {
+          boxSub.innerText = staffValidSourceRep
+            ? 'Các đầu việc trong lượt báo cáo đã chọn'
+            : 'Danh sách từng lượt báo cáo bạn đã gửi cho Quản lý / Ban Lãnh đạo';
+        }
+        if (typeof syncRpBoxTabButtonsUI === 'function') {
+          syncRpBoxTabButtonsUI(rpBoxActiveTab, { isManagerOrAbove: false, hasValidStaffSource: !!staffValidSourceRep });
+        }
       } else {
         // NẾU LÀ QUẢN LÝ / BAN GIÁM ĐỐC:
         if (btnHistory) btnHistory.classList.remove('hidden');
+        if (monthFilterWrap) monthFilterWrap.classList.remove('hidden');
+        if (searchInputEl) searchInputEl.placeholder = 'Tìm việc, nhân viên...';
+        if (searchLabelEl) searchLabelEl.innerText = 'Tìm đầu việc hoặc nhân viên';
 
         if (rpBoxViewMode === 'history') {
           const uName = currentUser.fullName || currentUser.username || '';
@@ -35511,6 +36431,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           if (histBtnIcon) histBtnIcon.className = "fa-solid fa-inbox text-purple-600 text-xs";
           if (histBtnText) histBtnText.innerText = "Quay lại Hộp thư nhận việc";
           if (multiBar) multiBar.classList.add('hidden');
+          if (tabsTrack) tabsTrack.classList.add('hidden');
           if (tabsContainer) tabsContainer.classList.add('hidden');
           renderRpBoxHistoryUI(container, historyReports);
           return;
@@ -35525,7 +36446,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (histBtnIcon) histBtnIcon.className = "fa-solid fa-clock-rotate-left text-purple-600 text-xs";
         if (histBtnText) histBtnText.innerText = "Lịch sử báo cáo";
         if (multiBar) multiBar.classList.remove('hidden');
+        if (tabsTrack) tabsTrack.classList.remove('hidden');
         if (tabsContainer) tabsContainer.classList.remove('hidden');
+        if (typeof syncRpBoxTabButtonsUI === 'function') {
+          syncRpBoxTabButtonsUI(rpBoxActiveTab, { isManagerOrAbove: true, hasValidStaffSource: false });
+        }
       }
 
       const allEntries = getRpBoxScopedEntries();
@@ -35623,6 +36548,29 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       updateRpBoxMultiSelectBar(filteredEntries);
 
       if (filteredEntries.length === 0) {
+        if (!isManagerOrAbove && staffValidSourceRep) {
+          const hasAnyInLetter = allEntries.length > 0;
+          const staffEmptyTitle = hasAnyInLetter
+            ? 'Không có đầu việc phù hợp trong lượt gửi này'
+            : 'Lượt gửi này chưa có đầu việc nào';
+          const staffEmptyHint = hasAnyInLetter
+            ? (keyword
+              ? 'Thử thay đổi từ khóa tìm kiếm hoặc chọn thẻ "Tất cả" để xem lại toàn bộ đầu việc trong lượt gửi.'
+              : 'Chọn thẻ "Tất cả" để xem các phân loại công việc khác trong lượt gửi này.')
+            : 'Bấm "Quay lại Đã gửi" để chọn lượt báo cáo khác hoặc tải file Word gốc.';
+          const showResetCatBtn = hasAnyInLetter && rpBoxActiveTab !== 'all';
+          container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
+            '<div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 border border-slate-200/80 flex items-center justify-center text-2xl mx-auto shadow-2xs">' +
+            '<i class="fa-solid fa-inbox"></i>' +
+            '</div>' +
+            '<div class="space-y-1">' +
+            '<p class="text-sm font-black text-slate-700">' + staffEmptyTitle + '</p>' +
+            '<p class="text-xs text-slate-400">' + staffEmptyHint + '</p>' +
+            (showResetCatBtn ? '<button type="button" onclick="switchRpBoxTab(\'all\')" class="mt-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer">Xem tất cả trong lượt gửi</button>' : '') +
+            '</div>' +
+            '</div>';
+          return;
+        }
         const emptyConsTitle = activeConsFilter === 'unconsolidated' ? 'Tất cả đầu việc trong mục này đều đã được tổng hợp' : (activeConsFilter === 'draft' ? 'Chưa có đầu việc nào đang ở trạng thái Đã tạo nháp' : (activeConsFilter === 'sent' ? 'Chưa có đầu việc nào ở trạng thái Đã tạo báo cáo' : 'Chưa có đầu việc nào trong danh mục này'));
         const emptyConsHint = activeConsFilter !== 'all' ? 'Bấm "Mọi trạng thái" trên thanh lọc tổng hợp để xem lại toàn bộ đầu việc.' : 'Các đầu việc được gửi báo cáo hoặc chuyển vào hộp thư sẽ hiển thị tại đây.';
         container.innerHTML = '<div class="py-16 text-center max-w-sm mx-auto space-y-3 bg-white rounded-2xl border border-dashed border-slate-200/90">' +
@@ -41111,7 +42059,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
             <i class="fa-solid fa-bell"></i>
           </div>
           <div class="min-w-0">
-            <h3 class="font-bold text-[15px] sm:text-[17px] leading-snug tracking-normal text-white truncate">Nhắc Nhở Công Việc Cần Làm</h3>
+            <h3 data-pw-part="reminder-title" class="font-bold text-[15px] sm:text-[17px] leading-snug tracking-normal text-white truncate">Nhắc Nhở Công Việc Cần Làm</h3>
             <p class="text-[11px] sm:text-xs text-amber-50/95 font-normal mt-0.5 leading-snug">Nhiệm vụ cá nhân chưa hoàn thành &amp; sắp đến hạn cần ưu tiên xử lý</p>
           </div>
         </div>
@@ -41122,7 +42070,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- BODY MỞ RỘNG DIỆN TÍCH, KHÔNG GIAN THOÁNG ĐÃNG -->
-      <div class="p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 overflow-y-auto custom-scroll flex-1">
+      <div data-pw-part="reminder-modal-body" class="p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 overflow-y-auto custom-scroll flex-1">
 
         <!-- DÒNG LỜI CHÀO & HƯỚNG DẪN -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
@@ -41133,7 +42081,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         </div>
 
         <!-- 3 Ô THỐNG KÊ TRÊN CÙNG 1 DÒNG CẢ TRÊN ĐIỆN THOẠI VÀ MÁY TÍNH -->
-        <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-xs">
+        <div data-pw-part="reminder-stats-grid" class="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-xs">
           <!-- Thẻ 1: Chưa làm -->
           <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-amber-50 to-orange-50/70 border-2 border-amber-300 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
             <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
@@ -41200,7 +42148,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- FOOTER THIẾT KẾ CÂN ĐỐI, 2 NÚT TRÊN 1 DÒNG, KÝ TỰ KHÔNG BỊ XUỐNG DÒNG -->
-      <div
+      <div data-pw-part="reminder-modal-footer"
         class="px-3 sm:px-6 py-2.5 sm:py-3 border-t border-slate-100 bg-slate-50 grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2 sm:gap-3 flex-shrink-0">
         <button type="button" onclick="closePersonalTaskReminderModal()"
           class="w-full sm:w-auto px-2 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 text-[11px] sm:text-[13px] font-bold sm:font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap inline-flex items-center justify-center">
@@ -41246,7 +42194,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         <p class="pt-1 text-[11px] text-amber-800 font-bold">Bạn có chắc chắn muốn tiếp tục đưa các mục này vào báo cáo
           mới không?</p>
       </div>
-      <div class="flex items-center justify-end gap-2 pt-1">
+      <div data-pw-part="confirm-footer" class="flex items-center justify-end gap-2 pt-1">
         <button type="button" onclick="closeConfirmReReportModal()"
           class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
           Hủy bỏ
@@ -41328,7 +42276,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- FOOTER -->
-      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+      <div data-pw-part="confirm-footer" class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
         <button type="button" onclick="closeConfirmSendToInboxModal()"
           class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
           Hủy bỏ
@@ -41379,7 +42327,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- FOOTER -->
-      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+      <div data-pw-part="confirm-footer" class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
         <button type="button" onclick="closeConfirmDeletePersonalItemModal()"
           class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold transition cursor-pointer">
           Hủy bỏ
@@ -41705,7 +42653,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       class="bg-white rounded-3xl max-w-[540px] w-full shadow-[0_24px_60px_-15px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150">
 
       <!-- HEADER: MẶT PHẲNG TRẮNG SẠCH, KHOẢNG THỞ RỘNG, PHÂN CẤP CHỮ RÕ NÉT -->
-      <div class="px-6 sm:px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 bg-white">
+      <div data-pw-part="select-reported-header" class="px-6 sm:px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 bg-white">
         <div class="flex items-start gap-3.5 min-w-0">
           <div
             class="w-11 h-11 rounded-2xl bg-indigo-50/90 text-indigo-600 ring-1 ring-indigo-200/70 flex items-center justify-center text-base shrink-0 mt-0.5">
@@ -41728,7 +42676,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- BODY: KHÔNG LỒNG KHUNG RỐI MẮT, CHỮ DỄ ĐỌC CỠ 13.5-15.5PX -->
-      <div class="px-6 sm:px-7 py-5 sm:py-6 space-y-5 bg-white">
+      <div data-pw-part="select-reported-body" class="px-6 sm:px-7 py-5 sm:py-6 space-y-5 bg-white">
         <!-- KHỐI TÓM TẮT ĐẦU VIỆC ĐANG CHỌN -->
         <div class="rounded-2xl bg-slate-50/85 ring-1 ring-slate-200/70 px-4 py-3.5 sm:px-5 sm:py-4 space-y-2.5">
           <div class="flex items-start justify-between gap-3">
@@ -41771,7 +42719,7 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       </div>
 
       <!-- FOOTER CÂN ĐỐI, RÕ RÀNG -->
-      <div
+      <div data-pw-part="select-reported-footer"
         class="px-6 sm:px-7 py-4 bg-slate-50/60 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
         <button type="button" id="confirmSelectReportedCloseBtn" onclick="closeConfirmSelectReportedItemModal()"
           class="min-h-[42px] px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-800 ring-1 ring-slate-200/90 text-[13.5px] font-semibold transition whitespace-nowrap cursor-pointer text-center">
