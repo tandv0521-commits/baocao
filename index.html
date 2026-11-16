@@ -556,8 +556,8 @@
       font-style: italic !important;
       font-weight: 400 !important;
       font-size: 11.5px !important;
-      color: #94a3b8 !important;
-      opacity: 0.9 !important;
+      color: #64748b !important;
+      opacity: 1 !important;
       letter-spacing: -0.01em !important;
     }
 
@@ -566,8 +566,8 @@
       font-style: italic !important;
       font-weight: 400 !important;
       font-size: 11.5px !important;
-      color: #94a3b8 !important;
-      opacity: 0.9 !important;
+      color: #64748b !important;
+      opacity: 1 !important;
       letter-spacing: -0.01em !important;
     }
 
@@ -576,8 +576,8 @@
       font-style: italic !important;
       font-weight: 400 !important;
       font-size: 11.5px !important;
-      color: #94a3b8 !important;
-      opacity: 0.9 !important;
+      color: #64748b !important;
+      opacity: 1 !important;
       letter-spacing: -0.01em !important;
     }
 
@@ -586,8 +586,8 @@
       font-style: italic !important;
       font-weight: 400 !important;
       font-size: 11.5px !important;
-      color: #94a3b8 !important;
-      opacity: 0.9 !important;
+      color: #64748b !important;
+      opacity: 1 !important;
       letter-spacing: -0.01em !important;
     }
 
@@ -708,8 +708,8 @@
 
     /* Khoảng đệm cuộn an toàn chống che khuất ô bởi các cột cố định */
     #tableScrollContainer {
-      scroll-padding-left: 615px;
-      scroll-padding-right: 130px;
+      scroll-padding-left: 650px;
+      scroll-padding-right: 102px;
     }
 
     /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Tối ưu chống che lấp ngày */
@@ -802,19 +802,19 @@
       .col-fixed-name {
         position: sticky !important;
         left: 44px;
-        width: 275px;
-        min-width: 275px;
-        max-width: 275px;
+        width: 220px;
+        min-width: 220px;
+        max-width: 220px;
         z-index: 35 !important;
         background-color: #ffffff !important;
       }
 
       .col-fixed-task {
         position: sticky !important;
-        left: 319px;
-        width: 310px;
-        min-width: 310px;
-        max-width: 310px;
+        left: 264px;
+        width: 380px;
+        min-width: 380px;
+        max-width: 380px;
         box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.08) !important;
         z-index: 35 !important;
         background-color: #ffffff !important;
@@ -823,9 +823,9 @@
       .col-fixed-total {
         position: sticky !important;
         right: 0;
-        width: 125px;
-        min-width: 125px;
-        max-width: 125px;
+        width: 96px;
+        min-width: 96px;
+        max-width: 96px;
         box-shadow: -4px 0 10px -2px rgba(15, 23, 42, 0.08) !important;
         z-index: 35 !important;
         background-color: #f8fafc !important;
@@ -845,7 +845,7 @@
 
       thead .col-fixed-task {
         position: sticky !important;
-        left: 319px;
+        left: 264px;
         z-index: 60 !important;
       }
 
@@ -869,8 +869,7 @@
     tr.matrix-row-hover>td.col-fixed-task,
     tbody tr:hover>td.col-fixed-task {
       background-color: #f0fdf4 !important;
-      color: #065f46 !important;
-      font-weight: 700 !important;
+      color: #064e3b !important;
       opacity: 1 !important;
     }
 
@@ -888,27 +887,35 @@
       opacity: 1 !important;
     }
 
+    .col-today-header {
+      background-color: #ecfdf5 !important;
+      box-shadow: inset 0 3px 0 #059669 !important;
+    }
+
     th.matrix-col-highlight {
-      background-color: #a7f3d0 !important;
-      color: #064e3b !important;
-      box-shadow: inset 0 -3px 0 #059669 !important;
+      background-color: #ecfdf5 !important;
+      color: #065f46 !important;
+      box-shadow: inset 0 -2px 0 #10b981 !important;
       transition: background-color 0.1s ease;
     }
 
+    th.col-today-header.matrix-col-highlight {
+      box-shadow: inset 0 3px 0 #059669, inset 0 -2px 0 #10b981 !important;
+    }
+
     td.matrix-col-highlight:not(.matrix-cell-active) {
-      background-color: rgba(16, 185, 129, 0.14) !important;
+      background-color: rgba(16, 185, 129, 0.08) !important;
     }
 
     tr.matrix-row-hover>td.matrix-col-highlight:not(.matrix-cell-active) {
-      background-color: #d1fae5 !important;
+      background-color: #ecfdf5 !important;
     }
 
-    td.matrix-cell-active {
-      background-color: #a7f3d0 !important;
-      outline: 2px solid #059669 !important;
-      outline-offset: -2px;
+    td.matrix-day-td.matrix-cell-active {
+      background-color: #d1fae5 !important;
+      outline: none !important;
       z-index: 20 !important;
-      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25) !important;
+      box-shadow: inset 0 0 0 2px #059669 !important;
     }
 
     /* ================= CHẾ ĐỘ THU GỌN (COMPACT DENSITY) CHO MÁY TÍNH ================= */
@@ -950,9 +957,9 @@
     }
 
     thead .col-fixed-name {
-      background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
-      color: #065f46 !important;
-      border-bottom: 2px solid #86efac !important;
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+      color: #334155 !important;
+      border-bottom: 2px solid #cbd5e1 !important;
     }
 
     thead .col-fixed-task {
@@ -1028,7 +1035,7 @@
     }
 
     .col-sunday-cell {
-      background-color: #fff1f2/40 !important;
+      background-color: rgba(255, 241, 242, 0.52) !important;
     }
 
     /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN: z-index được điều chỉnh thấp hơn cột cố định (10 < 25) */
@@ -3251,7 +3258,7 @@
               class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300">NHÂN
               VIÊN</span>
           </div>
-          <p id="userDeptLabel" class="text-[10px] sm:text-[11px] text-slate-400 font-semibold truncate">Bộ phận</p>
+          <p id="userDeptLabel" class="text-[10px] sm:text-[11px] text-slate-500 font-semibold truncate">Bộ phận</p>
         </div>
       </div>
 
@@ -3277,7 +3284,7 @@
           class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 hover:border-teal-300 active:scale-95 text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
           title="Tải file .xlsx chuẩn in ấn & báo cáo">
           <i class="fa-solid fa-file-excel text-teal-600 text-xs sm:text-sm"></i>
-          <span class="hidden sm:inline">Xuất bảng Excel</span>
+          <span class="max-sm:hidden sm:inline">Xuất bảng Excel</span>
           <span class="sm:hidden">Xuất Excel</span>
         </button>
 
@@ -3297,7 +3304,7 @@
             data-tooltip="Danh mục chức năng"
             class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 hover:border-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-95">
             <i class="fa-solid fa-bars-staggered text-emerald-700 text-xs"></i>
-            <span class="text-slate-700 font-bold hidden sm:inline">Chức năng</span>
+            <span class="text-slate-700 font-bold max-sm:hidden sm:inline">Chức năng</span>
             <i id="headerActionsChevron"
               class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200"></i>
           </button>
@@ -3638,7 +3645,7 @@
                       <i class="fa-solid fa-layer-group"></i>
                     </span>
                     <div class="min-w-0 flex flex-col leading-tight">
-                      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Bộ
+                      <span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider select-none">Bộ
                         phận:</span>
                       <span id="filterDeptPickerText"
                         class="truncate font-bold text-slate-800 max-w-[140px] sm:max-w-[200px]">Tất cả ban DVKH</span>
@@ -3677,7 +3684,7 @@
                       🌟
                     </span>
                     <div class="min-w-0 flex flex-col leading-tight">
-                      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Họ và
+                      <span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider select-none">Họ và
                         tên:</span>
                       <span id="filterStaffPickerText"
                         class="truncate font-bold text-emerald-800 max-w-[140px] sm:max-w-[200px]">Tất cả nhân
@@ -3717,12 +3724,12 @@
                       <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
                     <div class="min-w-0 flex flex-col leading-tight flex-1">
-                      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none">Tìm
+                      <span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider select-none">Tìm
                         kiếm:</span>
                       <input type="text" id="adminStaffSearchInput" oninput="onAdminStaffSearchInput(this.value)"
                         onfocus="onAdminStaffSearchFocus()" placeholder="Tìm kiếm nhân sự..." autocomplete="off"
                         autocorrect="off" autocapitalize="off" spellcheck="false"
-                        class="w-full min-w-[90px] sm:w-36 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none p-0 m-0 border-0 leading-tight truncate" />
+                        class="w-full min-w-[110px] sm:w-44 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-500 placeholder:font-normal focus:outline-none p-0 m-0 border-0 leading-tight truncate" />
                     </div>
                   </div>
                   <button type="button" id="btnClearStaffSearch"
@@ -3758,7 +3765,7 @@
                   class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
                   <i class="fa-solid fa-users"></i>
                 </span>
-                <span class="hidden sm:inline">Toàn ban DVKH</span>
+                <span class="max-sm:hidden sm:inline">Toàn ban DVKH</span>
               </button>
             </div>
           </div>
@@ -3767,7 +3774,7 @@
           <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
             <div id="staffTitleContainer" class="flex items-center gap-2 min-w-0 flex-wrap">
               <span id="staffTitleDot"
-                class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+                class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
               <span class="text-xs sm:text-sm font-bold text-slate-700 truncate">
                 <span id="displayViewingStaffName" class="text-emerald-700 font-black">---</span>
               </span>
@@ -3789,7 +3796,7 @@
             <div id="matrixDateNavGroup" class="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
               <!-- Nút Chuyển Mật Độ Hiển Thị: Thu gọn / Tiêu chuẩn (Dành cho máy tính) -->
               <button type="button" id="btnToggleMatrixDensity" onclick="toggleMatrixDensity()"
-                class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
+                class="max-sm:hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition shadow-2xs active:scale-95 cursor-pointer">
                 <i id="densityToggleIcon" class="fa-solid fa-compress text-emerald-700 text-[11px]"></i>
                 <span id="densityToggleText">Thu gọn</span>
               </button>
@@ -3825,7 +3832,7 @@
         <!-- ================= 1. BẢNG MA TRẬN NỘI DUNG CÔNG VIỆC ================= -->
         <div id="matrixCard"
           class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
-          <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll max-h-[540px]">
+          <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll min-h-[320px] max-h-[600px] md:max-h-[calc(100vh-225px)]">
             <table class="sheet-table text-left text-xs whitespace-nowrap min-w-full">
               <thead class="sticky top-0 z-40 border-b border-slate-200">
                 <tr id="tableHeaderRow" class="text-slate-700 font-bold uppercase text-[11px] tracking-wider">
@@ -3841,7 +3848,7 @@
 
           <!-- BẢNG CHÚ THÍCH KÝ HIỆU BÁO CÁO & NGÀY NGHỈ (PHƯƠNG ÁN 1) -->
           <div id="matrixSymbolLegendBar"
-            class="hidden sm:flex border-t border-slate-200/90 bg-slate-50/80 px-3.5 py-2 flex-wrap items-center justify-between gap-2 text-[11px] select-none">
+            class="hidden max-sm:hidden sm:flex border-t border-slate-200/90 bg-slate-50/80 px-3.5 py-2 flex-wrap items-center justify-between gap-2 text-[11px] select-none">
             <div class="flex items-center gap-1.5 text-slate-500 font-bold">
               <i class="fa-solid fa-tags text-emerald-600 text-[11px]"></i>
               <span class="text-slate-700">Quy chuẩn ký hiệu:</span>
@@ -8782,7 +8789,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (stickyTaskHeader) {
         stickyLeftEdge = stickyTaskHeader.getBoundingClientRect().right;
       } else {
-        stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 610);
+        stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 644);
       }
 
       // Xác định mép trái của cột cố định Tổng cộng bên phải
@@ -14022,7 +14029,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const resetBtn = document.getElementById('btnResetFollowUpFilter');
         if (resetBtn) resetBtn.classList.add('hidden');
         const dotEl = document.getElementById('staffTitleDot');
-        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+        if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0";
         clearFollowUpCardActiveState();
 
         renderMatrixDirectorEmptyState(fullPeriodMatrixCache);
@@ -14069,7 +14076,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
       const dotEl = document.getElementById('staffTitleDot');
-      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0";
       clearFollowUpCardActiveState();
 
       let filteredGroups = fullPeriodMatrixCache.staffGroups || [];
@@ -14168,7 +14175,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         titleEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-emerald-800 font-black"><i class="fa-solid fa-chart-line text-emerald-600"></i>Tổng quan điều hành ban DVKH</span>`;
       }
       const dotEl = document.getElementById('staffTitleDot');
-      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0";
       const resetBtn = document.getElementById('btnResetFollowUpFilter');
       if (resetBtn) resetBtn.classList.add('hidden');
 
@@ -15472,19 +15479,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         let headerStyle = "bg-slate-50 text-slate-600 border-b-2 border-slate-200";
         if (isToday) {
-          headerStyle = "bg-emerald-50 text-emerald-800 font-black border-b-2 border-emerald-500 shadow-2xs";
+          headerStyle = "col-today-header bg-emerald-50 text-emerald-900 font-black border-b-2 border-emerald-500 shadow-2xs";
         } else if (isSunday) {
           headerStyle = "col-sunday-header bg-rose-50 text-rose-700 font-black border-b-2 border-rose-300";
         }
 
         th.id = `th-col-${dc.colIndex}`;
         th.setAttribute('data-col-index', dc.colIndex);
-        th.className = `py-2 px-1.5 min-w-[52px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
+        th.className = `py-2 px-1.5 min-w-[54px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
             <span class="text-xs font-black font-num" title="Ngày ${dc.label}">${dc.dayNum < 10 ? '0' + dc.dayNum : dc.dayNum}</span>
-            <span class="text-[10px] font-bold mt-0.5 ${isSunday ? 'text-rose-600 font-black' : (isToday ? 'text-emerald-700 font-black' : 'text-slate-400')}">${dayOfWeekStr}</span>
-            ${isToday ? '<span class="text-[8px] bg-emerald-200 text-emerald-900 font-bold px-1 rounded mt-0.5 tracking-tighter">Hôm nay</span>' : ''}
+            <span class="text-[10px] font-bold mt-0.5 ${isSunday ? 'text-rose-600 font-black' : (isToday ? 'text-emerald-700 font-black' : 'text-slate-500')}">${dayOfWeekStr}</span>
+            ${isToday ? '<span class="text-[9px] leading-none bg-emerald-600 text-white font-extrabold px-1.5 py-0.5 rounded-full mt-0.5 whitespace-nowrap shadow-2xs">Hôm nay</span>' : ''}
           </div>
         `;
 
@@ -15671,7 +15678,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             } else if (isSunday) {
               cellBgClass = "col-sunday-cell bg-rose-50/25";
             } else if (isFuture) {
-              cellBgClass = "bg-slate-50/50 cursor-not-allowed select-none opacity-60";
+              cellBgClass = "bg-slate-50/70 cursor-not-allowed select-none";
             }
 
             let cellContentHtml = '';
@@ -15744,7 +15751,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   cellContentHtml = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border bg-slate-100 text-slate-700 border-slate-200 max-w-[50px] truncate" title="${escapeHtml(rawVal)}">${escapeHtml(rawVal)}</span>`;
                 }
               } else if (isFuture) {
-                cellContentHtml = `<span class="text-[10px] text-slate-300 font-num select-none" title="Chưa đến ngày báo cáo (Chỉ được báo cáo từ ngày 01 đến hôm nay)">·</span>`;
+                cellContentHtml = `<span class="text-[11px] text-slate-400/80 font-num select-none" title="Chưa đến ngày báo cáo (Chỉ được báo cáo từ ngày 01 đến hôm nay)">·</span>`;
               } else {
                 cellContentHtml = '';
               }
@@ -15769,7 +15776,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             }
           }
 
-          const guideHtml = t.guide ? `<span class="italic text-[10px] text-slate-400 block mt-0.5 leading-snug break-words">${escapeHtml(cleanTaskGuide(t.guide))}</span>` : '';
+          const guideHtml = t.guide ? `<span class="text-[11px] font-normal text-slate-500 block mt-0.5 leading-snug break-words">${escapeHtml(cleanTaskGuide(t.guide))}</span>` : '';
 
           const taskBadgeHtml = (totalStaffRows > 1)
             ? `<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold shrink-0 border border-emerald-200/90 font-num select-none mt-0.5">${tIdx + 1}</span>`
@@ -17190,13 +17197,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         if (lblYesterday) {
           const yStr = yesterdayNum >= 1 ? (yesterdayNum < 10 ? '0' + yesterdayNum : yesterdayNum) : '';
-          lblYesterday.innerHTML = `Hôm qua ${yStr ? '<span class="hidden md:inline text-[10px] opacity-75 font-num">(' + yStr + ')</span>' : ''}`;
+          lblYesterday.innerHTML = `Hôm qua ${yStr ? '<span class="max-md:hidden md:inline text-[10px] opacity-75 font-num">(' + yStr + ')</span>' : ''}`;
         }
         btnYesterday.removeAttribute('data-tooltip');
 
         if (lblToday) {
           const tStr = (todayNum < 10 ? '0' + todayNum : todayNum);
-          lblToday.innerHTML = `Hôm nay <span class="hidden md:inline text-[10px] opacity-90 font-num">(${tStr})</span>`;
+          lblToday.innerHTML = `Hôm nay <span class="max-md:hidden md:inline text-[10px] opacity-90 font-num">(${tStr})</span>`;
         }
         btnToday.removeAttribute('data-tooltip');
 
@@ -18762,7 +18769,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
       if (resetBtn) resetBtn.classList.remove('hidden');
-      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping flex-shrink-0";
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0";
 
       // Đánh dấu active item trong cả 2 danh sách theo dõi & thi đua
       setFollowUpCardActive(evt ? (evt.currentTarget || evt.target) : null, displayName);
@@ -18807,7 +18814,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const resetBtn = document.getElementById('btnResetFollowUpFilter');
       if (resetBtn) resetBtn.classList.add('hidden');
       const dotEl = document.getElementById('staffTitleDot');
-      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0";
+      if (dotEl) dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0";
 
       clearFollowUpCardActiveState();
 

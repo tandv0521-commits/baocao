@@ -1,5 +1,5 @@
 // Service Worker for Báo Cáo Ban DVKH - Nhựa Tiền Phong PWA
-const CACHE_NAME = 'baocao-dvkh-pwa-v224';
+const CACHE_NAME = 'baocao-dvkh-pwa-v225';
 const STATIC_ASSETS = [
   './',
   './index.html',
