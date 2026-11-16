@@ -2371,7 +2371,7 @@
 
       #pwReminderItemsList .pw-rem-badges {
         flex: 1 1 100%;
-        padding-left: 26px;
+        padding-left: 0;
         flex-wrap: wrap;
       }
 
@@ -2382,7 +2382,7 @@
       }
 
       #pwReminderItemsList .pw-rem-sub {
-        padding-left: 26px;
+        padding-left: 0;
         flex-wrap: wrap;
       }
 
@@ -28546,6 +28546,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (countD) countD.innerText = overdueOrDueItems.length;
       if (countImp) countImp.innerText = importantPendingItems.length;
 
+      // Phân cấp thị giác 3 ô thống kê: số 0 lùi về nền xám, số > 0 giữ màu ngữ nghĩa nổi bật
+      const reminderStatTones = {
+        pwReminderStat_pending: pendingItems.length,
+        pwReminderStat_due: overdueOrDueItems.length,
+        pwReminderStat_important: importantPendingItems.length
+      };
+      Object.keys(reminderStatTones).forEach(statId => {
+        const tile = document.getElementById(statId);
+        if (tile && typeof tile.setAttribute === 'function') {
+          tile.setAttribute('data-tone', reminderStatTones[statId] > 0 ? 'active' : 'zero');
+        }
+      });
+      const listCountEl = document.getElementById('pwReminderListCount');
+      if (listCountEl) listCountEl.innerText = pendingItems.length;
+
       const delegBannerEl = document.getElementById('pwReminderDelegationBanner');
       if (delegBannerEl) {
         let delegBlocksHtml = '';
@@ -28617,16 +28632,25 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const listEl = document.getElementById('pwReminderItemsList');
       if (listEl) {
         const displayItems = pendingItems.slice(0, 12);
-        // Số hàng mỗi cột = nửa số việc (làm tròn lên) → cột trái đầy trước, phần còn lại sang cột phải
-        listEl.style.setProperty('--pw-rows', Math.max(1, Math.ceil(displayItems.length / 2)));
+        // Ít việc (≤ 3): trải 1 cột để không bỏ trống nửa phải; từ 4 việc: 2 cột xếp dọc (cột trái đầy trước)
+        const useTwoCols = displayItems.length >= 4;
+        listEl.className = useTwoCols ? 'grid grid-cols-1 md:grid-cols-2 gap-2 text-xs' : 'grid grid-cols-1 gap-2 text-xs';
+        listEl.style.setProperty('--pw-rows', Math.max(1, useTwoCols ? Math.ceil(displayItems.length / 2) : displayItems.length));
         if (displayItems.length === 0) {
-          listEl.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-500 italic">Bạn không có đầu việc cá nhân tồn đọng; hãy theo dõi thông báo giao việc phía trên.</div>';
+          listEl.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-500">Bạn không có đầu việc cá nhân tồn đọng; hãy theo dõi thông báo giao việc phía trên.</div>';
         } else {
-          listEl.innerHTML = displayItems.map((it, idx) => {
-            // Chỉ dùng màu cho việc khẩn cấp (quá hạn / đến hạn hôm nay = đỏ; còn ≤ 2 ngày = cam). Còn lại trung tính.
-            // Định dạng tag gọn gàng, in nghiêng vừa vặn để dành tối đa không gian hiển thị tiêu đề công việc
-            const tagBase = 'pw-rem-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums italic font-medium ';
-            const neutralTag = 'bg-slate-50 text-slate-600 border-slate-200/80 font-normal';
+          // Nhận diện loại việc bằng icon + màu thống nhất với 6 thẻ tổng quan trong Sổ tay
+          const remTypeMetaMap = {
+            plan: { label: 'Kế hoạch', icon: 'fa-solid fa-calendar-days', chip: 'bg-sky-50 text-sky-600 border-sky-200', text: 'text-sky-700' },
+            adhoc: { label: 'Phát sinh', icon: 'fa-solid fa-bolt', chip: 'bg-amber-50 text-amber-600 border-amber-200', text: 'text-amber-700' },
+            proposal: { label: 'Đề xuất', icon: 'fa-solid fa-lightbulb', chip: 'bg-purple-50 text-purple-600 border-purple-200', text: 'text-purple-700' },
+            feedback: { label: 'Phản ánh', icon: 'fa-solid fa-comment-dots', chip: 'bg-teal-50 text-teal-600 border-teal-200', text: 'text-teal-700' }
+          };
+          const tagBase = 'pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] leading-4 whitespace-nowrap border shrink-0 font-num tabular-nums ';
+          listEl.innerHTML = displayItems.map((it) => {
+            const meta = remTypeMetaMap[it.type] || remTypeMetaMap.adhoc;
+            // Mức khẩn: critical = quá hạn / đến hạn hôm nay; soon = còn ≤ 2 ngày; normal = còn lại
+            let urgency = 'normal';
             let tag = '';
             if (it.type === 'plan') {
               if (it.dueDate) {
@@ -28635,48 +28659,52 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 const _today = new Date(); _today.setHours(0, 0, 0, 0);
                 const _due = new Date(parseInt(_p[0], 10), parseInt(_p[1], 10) - 1, parseInt(_p[2], 10));
                 const diffDays = Math.round((_due.getTime() - _today.getTime()) / 86400000);
-                let cls = neutralTag, icon = 'fa-regular fa-clock text-slate-400';
-                if (diffDays <= 0) { cls = 'bg-rose-50 text-rose-700 border-rose-200/90 font-medium'; icon = 'fa-solid fa-triangle-exclamation text-rose-500'; }
-                else if (diffDays <= 2) { cls = 'bg-amber-50 text-amber-800 border-amber-200/90 font-medium'; icon = 'fa-solid fa-hourglass-half text-amber-600'; }
+                let cls = 'bg-slate-50 text-slate-600 border-slate-200 font-medium', icon = 'fa-regular fa-clock text-slate-400';
+                if (diffDays <= 0) { urgency = 'critical'; cls = 'bg-rose-100 text-rose-800 border-rose-300 font-semibold'; icon = 'fa-solid fa-triangle-exclamation text-rose-600'; }
+                else if (diffDays <= 2) { urgency = 'soon'; cls = 'bg-amber-50 text-amber-800 border-amber-300 font-semibold'; icon = 'fa-solid fa-hourglass-half text-amber-600'; }
                 const lbl = (tl && tl.label) ? tl.label : 'Hạn';
-                tag = '<span class="' + tagBase + cls + '"><i class="' + icon + ' text-[9px] not-italic"></i><span class="italic">' + lbl + ' · ' + formatVNDate(it.dueDate) + '</span></span>';
+                tag = '<span class="' + tagBase + cls + '"><i class="' + icon + ' text-[9px]"></i><span>' + lbl + ' · ' + formatVNDate(it.dueDate) + '</span></span>';
               } else {
-                tag = '<span class="' + tagBase + neutralTag + '"><span class="italic">Kế hoạch</span></span>';
+                tag = '<span class="' + tagBase + 'bg-slate-50 text-slate-500 border-slate-200 font-medium">Chưa đặt hạn</span>';
               }
-            } else {
-              const typeLabel = it.type === 'adhoc' ? 'Phát sinh' : (it.type === 'proposal' ? 'Đề xuất' : 'Phản ánh');
-              tag = '<span class="' + tagBase + neutralTag + '"><span class="italic">' + typeLabel + '</span></span>';
             }
 
-            const dateText = it.date ? formatVNDate(it.date) : 'Đang theo dõi';
+            const cardTone = urgency === 'critical'
+              ? 'bg-rose-50/60 border-rose-200 hover:border-rose-300'
+              : (urgency === 'soon' ? 'bg-white border-amber-200 hover:border-amber-300' : 'bg-white border-slate-200 hover:border-slate-300');
+            const dateText = it.date ? 'Ghi nhận ' + formatVNDate(it.date) : 'Đang theo dõi';
             const isDelegIn = (typeof isDelegatedIncomingTask === 'function' && isDelegatedIncomingTask(it, currentUser));
             const delegBadge = isDelegIn
               ? (it.delegation?.receipt?.status === 'accepted'
-                ? '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Giao: ' + escapeHtml(it.delegation?.assigner?.fullName || it.delegation?.assigner?.username || 'Cấp trên') + '</span>'
-                : '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0 animate-pulse">Chờ nhận việc</span>')
+                ? '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] leading-4 font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 whitespace-nowrap"><i class="fa-solid fa-user-check text-[9px]"></i>Giao: ' + escapeHtml(it.delegation?.assigner?.fullName || it.delegation?.assigner?.username || 'Cấp trên') + '</span>'
+                : '<span class="pw-rem-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] leading-4 font-bold bg-amber-100 text-amber-900 border border-amber-300 shrink-0 whitespace-nowrap"><i class="fa-solid fa-bell text-[9px] text-amber-600"></i>Chờ nhận việc</span>')
               : '';
+            const starHtml = it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0" title="Mục quan trọng"></i>' : '';
 
-            // Thẻ gọn 2 dòng: [STT] Tiêu đề ........ ⭐ [Nhãn] ›  /  Ngày ghi nhận · Ghi chú (Desktop giữ inline; Mobile tách badge xuống dưới tiêu đề)
+            // Thẻ 2 dòng: [Icon loại] Tiêu đề ........ [Giao] ⭐ [Hạn] ›  /  Loại · Ghi nhận ngày · Ghi chú
             return (
-              '<div class="pw-rem-card px-3.5 py-2.5 rounded-2xl bg-white hover:bg-amber-50/30 border border-slate-200/80 hover:border-amber-300 transition-all duration-150 cursor-pointer group select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-xs" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
+              '<div class="pw-rem-card flex items-start gap-3 px-3 py-2.5 rounded-xl border ' + cardTone + ' hover:shadow-sm transition-all duration-150 cursor-pointer group select-none" title="Bấm để xem &amp; cập nhật" onclick="closePersonalTaskReminderModal(); openPersonalWorkspacePage(); setTimeout(() => openPersonalItemEditModal(\'' + it.id + '\'), 120);">' +
+              '<span class="w-8 h-8 mt-0.5 rounded-lg border ' + meta.chip + ' flex items-center justify-center shrink-0" title="' + meta.label + '"><i class="' + meta.icon + ' text-[12px]"></i></span>' +
+              '<div class="min-w-0 flex-1">' +
               '<div class="pw-rem-top flex items-center gap-2">' +
-              '<span class="w-5 shrink-0 text-[11.5px] font-medium text-slate-400 text-right font-num tabular-nums">' + (idx + 1) + '.</span>' +
-              '<div class="pw-rem-title flex-1 min-w-0 truncate font-semibold text-[13.5px] text-slate-800 group-hover:text-amber-800 leading-snug tracking-[-0.01em]" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
+              '<div class="pw-rem-title flex-1 min-w-0 truncate font-semibold text-[13.5px] text-slate-800 group-hover:text-slate-950 leading-snug" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>' +
               '<div class="pw-rem-badges flex items-center gap-1.5 shrink-0">' +
               delegBadge +
-              (it.isImportant ? '<i class="fa-solid fa-star text-amber-400 text-xs shrink-0 drop-shadow-2xs" title="Mục quan trọng"></i>' : '') +
+              starHtml +
               tag +
-              '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-amber-500 shrink-0 transition-transform group-hover:translate-x-0.5"></i>' +
+              '<i class="fa-solid fa-angle-right text-[10px] text-slate-300 group-hover:text-slate-500 shrink-0 transition-transform group-hover:translate-x-0.5"></i>' +
               '</div>' +
               '</div>' +
-              '<div class="pw-rem-sub pl-7 mt-1 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0 leading-normal font-normal">' +
-              '<span class="shrink-0 text-slate-400 font-num tabular-nums">' + dateText + '</span>' +
-              (it.content ? '<span class="text-slate-300">•</span><span class="truncate text-slate-500" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
+              '<div class="pw-rem-sub mt-0.5 flex items-center gap-1.5 text-[11.5px] text-slate-500 min-w-0 leading-normal">' +
+              '<span class="shrink-0 font-semibold ' + meta.text + '">' + meta.label + '</span>' +
+              '<span class="text-slate-300">·</span>' +
+              '<span class="shrink-0 font-num tabular-nums">' + dateText + '</span>' +
+              (it.content ? '<span class="text-slate-300">·</span><span class="truncate" title="' + escapeHtml(it.content) + '">' + escapeHtml(it.content) + '</span>' : '') +
+              '</div>' +
               '</div>' +
               '</div>'
             );
           }).join('');
-
         }
       }
 
@@ -28754,6 +28782,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function openPersonalWorkspaceFromReminder() {
       closePersonalTaskReminderModal();
       openPersonalWorkspacePage();
+    }
+
+    // Bấm ô thống kê trong Bảng nhắc nhở -> mở Sổ tay với đúng bộ lọc tương ứng (đếm trên tất cả các tháng)
+    function openPersonalWorkspaceFromReminderStat(kind) {
+      closePersonalTaskReminderModal();
+      openPersonalWorkspacePage();
+      if (typeof pwFilterMonth !== 'undefined') pwFilterMonth = 'ALL';
+      if (kind === 'due' && typeof filterPersonalWorkspaceDueToday === 'function') {
+        filterPersonalWorkspaceDueToday();
+      } else if (kind === 'important' && typeof viewPendingImportantTasks === 'function') {
+        viewPendingImportantTasks();
+      } else if (typeof switchPersonalWorkspaceTab === 'function') {
+        if (typeof pwSelectedSummaryCard !== 'undefined') pwSelectedSummaryCard = '';
+        switchPersonalWorkspaceTab('pending');
+      }
     }
 
     async function acknowledgeOutgoingDelegationsFromReminder() {
@@ -42645,71 +42688,74 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
       <!-- BODY MỞ RỘNG DIỆN TÍCH, KHÔNG GIAN THOÁNG ĐÃNG -->
       <div data-pw-part="reminder-modal-body" class="p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 overflow-y-auto custom-scroll flex-1">
 
-        <!-- DÒNG LỜI CHÀO & HƯỚNG DẪN -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
-          <div>Xin chào <b id="pwReminderUserGreeting" class="text-slate-900 font-bold">Nhân sự</b>! Dưới đây là các đầu
-            việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:</div>
-          <div class="text-[11px] sm:text-xs text-amber-700 font-semibold flex items-center gap-1.5 shrink-0"><i
-              class="fa-solid fa-hand-pointer text-[10.5px]"></i> Bấm vào từng mục để xem &amp; cập nhật nhanh</div>
-        </div>
+        <!-- DÒNG LỜI CHÀO -->
+        <div class="text-xs sm:text-[13px] text-slate-600 leading-relaxed">Xin chào <b id="pwReminderUserGreeting" class="text-slate-900 font-bold">Nhân sự</b>! Dưới đây là các đầu
+          việc phát sinh chưa làm và kế hoạch công việc cần ưu tiên xử lý:</div>
 
-        <!-- 3 Ô THỐNG KÊ TRÊN CÙNG 1 DÒNG CẢ TRÊN ĐIỆN THOẠI VÀ MÁY TÍNH -->
+        <!-- 3 Ô THỐNG KÊ BẤM ĐƯỢC (MỞ SỔ TAY ĐÚNG BỘ LỌC) — SỐ 0 LÙI VỀ NỀN, SỐ > 0 NỔI BẬT THEO MÀU NGỮ NGHĨA -->
+        <style>
+          #personalTaskReminderModal .pw-rem-stat[data-tone="zero"] { background-color: #fff; border-color: rgb(226 232 240); }
+          #personalTaskReminderModal .pw-rem-stat[data-tone="zero"] .pw-rem-stat-icon { background-color: rgb(248 250 252); color: rgb(148 163 184); border-color: rgb(226 232 240); }
+          #personalTaskReminderModal .pw-rem-stat[data-tone="zero"] .pw-rem-stat-num { color: rgb(148 163 184); }
+          #personalTaskReminderModal .pw-rem-stat[data-tone="zero"] .pw-rem-stat-label { color: rgb(100 116 139); }
+        </style>
         <div data-pw-part="reminder-stats-grid" class="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-xs">
           <!-- Thẻ 1: Chưa làm -->
-          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-amber-50 to-orange-50/70 border-2 border-amber-300 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
-            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
-              <i class="fa-solid fa-hourglass-half"></i>
-            </div>
-            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
-              <div class="text-[10px] sm:text-xs font-extrabold text-amber-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight">Chưa làm</div>
-              <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Phát sinh &amp; kế hoạch</div>
-            </div>
-            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
-              <span id="pwReminderCountPending" class="text-base sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
-              <span class="text-[10px] sm:text-xs font-semibold text-amber-800">việc</span>
-            </div>
-          </div>
+          <button type="button" id="pwReminderStat_pending" data-tone="zero" onclick="openPersonalWorkspaceFromReminderStat('pending')" title="Mở Sổ tay và xem tất cả việc chưa hoàn thành"
+            class="pw-rem-stat min-w-0 text-left rounded-2xl border border-orange-200 bg-orange-50/40 hover:border-orange-300 hover:shadow-sm px-2.5 py-2 sm:px-3.5 sm:py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-2 gap-y-1.5 sm:gap-3 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-1">
+            <span class="pw-rem-stat-icon order-1 w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border border-orange-200 bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-hourglass-half text-[11px] sm:text-sm"></i></span>
+            <span class="order-3 sm:order-2 w-full sm:w-auto sm:flex-1 min-w-0">
+              <span class="pw-rem-stat-label block text-[11px] sm:text-[13px] font-semibold text-slate-800 leading-tight truncate">Chưa làm</span>
+              <span class="max-sm:hidden block text-[11px] text-slate-500 leading-snug mt-0.5 truncate">Tất cả việc chưa hoàn thành</span>
+            </span>
+            <span class="order-2 sm:order-3 ml-auto flex items-baseline gap-1 leading-none whitespace-nowrap">
+              <span id="pwReminderCountPending" class="pw-rem-stat-num text-lg sm:text-2xl font-bold text-slate-900 font-num tabular-nums transition-colors">0</span>
+              <span class="text-[10.5px] sm:text-xs font-medium text-slate-500">việc</span>
+            </span>
+          </button>
 
           <!-- Thẻ 2: Đến hạn / Quá hạn -->
-          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-rose-50 to-pink-50/70 border-2 border-rose-300 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
-            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-500 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
-              <i class="fa-solid fa-calendar-xmark"></i>
-            </div>
-            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
-              <div class="text-[10px] sm:text-xs font-extrabold text-rose-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight" title="Đến hạn / Quá hạn">
-                <span class="sm:hidden">Đến / Quá hạn</span>
-                <span class="hidden sm:inline">Đến hạn / Quá hạn</span>
-              </div>
-              <div class="text-[10.5px] text-rose-800/80 font-medium hidden sm:block">Ưu tiên xử lý</div>
-            </div>
-            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
-              <span id="pwReminderCountDue" class="text-base sm:text-xl font-extrabold text-rose-950 font-num tabular-nums">0</span>
-              <span class="text-[10px] sm:text-xs font-semibold text-rose-800">kế hoạch</span>
-            </div>
-          </div>
+          <button type="button" id="pwReminderStat_due" data-tone="zero" onclick="openPersonalWorkspaceFromReminderStat('due')" title="Mở Sổ tay và xem kế hoạch đến hạn / quá hạn"
+            class="pw-rem-stat min-w-0 text-left rounded-2xl border border-rose-300 bg-rose-50/70 hover:border-rose-400 hover:shadow-sm px-2.5 py-2 sm:px-3.5 sm:py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-2 gap-y-1.5 sm:gap-3 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1">
+            <span class="pw-rem-stat-icon order-1 w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border border-rose-600 bg-rose-600 text-white flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-calendar-xmark text-[11px] sm:text-sm"></i></span>
+            <span class="order-3 sm:order-2 w-full sm:w-auto sm:flex-1 min-w-0">
+              <span class="pw-rem-stat-label block text-[11px] sm:text-[13px] font-semibold text-slate-800 leading-tight truncate" title="Đến hạn / Quá hạn"><span class="sm:hidden">Đến / Quá hạn</span><span class="max-sm:hidden">Đến hạn / Quá hạn</span></span>
+              <span class="max-sm:hidden block text-[11px] text-slate-500 leading-snug mt-0.5 truncate">Kế hoạch cần xử lý ngay</span>
+            </span>
+            <span class="order-2 sm:order-3 ml-auto flex items-baseline gap-1 leading-none whitespace-nowrap">
+              <span id="pwReminderCountDue" class="pw-rem-stat-num text-lg sm:text-2xl font-bold text-rose-700 font-num tabular-nums transition-colors">0</span>
+              <span class="text-[10.5px] sm:text-xs font-medium text-slate-500">kế hoạch</span>
+            </span>
+          </button>
 
           <!-- Thẻ 3: Quan trọng -->
-          <div class="px-2.5 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-gradient-to-br sm:bg-gradient-to-r from-amber-100/60 via-yellow-50 to-amber-50 border-2 border-amber-400 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-y-1.5 gap-x-1 sm:gap-3 shadow-xs hover:shadow-sm transition-all min-w-0">
-            <div class="order-1 w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-[11px] sm:text-sm shadow-xs shrink-0">
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <div class="order-3 sm:order-2 w-full sm:w-auto min-w-0">
-              <div class="text-[10px] sm:text-xs font-extrabold text-amber-950 uppercase tracking-tight sm:tracking-wide truncate leading-tight">Quan trọng</div>
-              <div class="text-[10.5px] text-amber-800/80 font-medium hidden sm:block">Đánh dấu gắn sao</div>
-            </div>
-            <div class="order-2 sm:order-3 sm:ml-auto whitespace-nowrap flex items-baseline gap-1 leading-none">
-              <span id="pwReminderCountImportant" class="text-base sm:text-xl font-extrabold text-amber-950 font-num tabular-nums">0</span>
-              <span class="text-[10px] sm:text-xs font-semibold text-amber-800">mục</span>
-            </div>
-          </div>
+          <button type="button" id="pwReminderStat_important" data-tone="zero" onclick="openPersonalWorkspaceFromReminderStat('important')" title="Mở Sổ tay và xem việc quan trọng chưa hoàn thành"
+            class="pw-rem-stat min-w-0 text-left rounded-2xl border border-amber-300 bg-amber-50/50 hover:border-amber-400 hover:shadow-sm px-2.5 py-2 sm:px-3.5 sm:py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-2 gap-y-1.5 sm:gap-3 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1">
+            <span class="pw-rem-stat-icon order-1 w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border border-amber-200 bg-amber-100 text-amber-500 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-star text-[11px] sm:text-sm"></i></span>
+            <span class="order-3 sm:order-2 w-full sm:w-auto sm:flex-1 min-w-0">
+              <span class="pw-rem-stat-label block text-[11px] sm:text-[13px] font-semibold text-slate-800 leading-tight truncate">Quan trọng</span>
+              <span class="max-sm:hidden block text-[11px] text-slate-500 leading-snug mt-0.5 truncate">Việc gắn sao chưa hoàn thành</span>
+            </span>
+            <span class="order-2 sm:order-3 ml-auto flex items-baseline gap-1 leading-none whitespace-nowrap">
+              <span id="pwReminderCountImportant" class="pw-rem-stat-num text-lg sm:text-2xl font-bold text-amber-700 font-num tabular-nums transition-colors">0</span>
+              <span class="text-[10.5px] sm:text-xs font-medium text-slate-500">mục</span>
+            </span>
+          </button>
         </div>
 
         <!-- THÔNG BÁO GIAO VIỆC ĐƯỢC GIAO / ĐÃ GIAO KHI ĐĂNG NHẬP -->
         <div id="pwReminderDelegationBanner" class="hidden space-y-2"></div>
 
-        <!-- DANH SÁCH CÔNG VIỆC BỐ TRÍ DẠNG LƯỚI 2 CỘT RỘNG RÃI (XEM NHIỀU HƠN, KHÔNG PHẢI CUỘN NHIỀU) -->
+        <!-- TIÊU ĐỀ DANH SÁCH VIỆC CẦN XỬ LÝ -->
+        <div data-pw-part="reminder-list-head" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-1">
+          <div class="text-[13px] sm:text-sm font-bold text-slate-800 flex items-center gap-2">Việc cần xử lý
+            <span id="pwReminderListCount" class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold font-num tabular-nums leading-none">0</span>
+          </div>
+          <div class="text-[11px] sm:text-xs text-slate-500 flex items-center gap-1.5"><i class="fa-solid fa-hand-pointer text-[10.5px] text-amber-600"></i><span>Bấm vào từng mục để xem &amp; cập nhật nhanh</span></div>
+        </div>
+
+        <!-- DANH SÁCH CÔNG VIỆC: ≤ 3 VIỆC TRẢI 1 CỘT; TỪ 4 VIỆC XẾP 2 CỘT DỌC (CỘT TRÁI ĐẦY TRƯỚC) -->
         <style>
-          /* Màn hình rộng: xếp 2 cột theo chiều dọc (cột trái 1→6, cột phải 7→12) */
           @media (min-width: 768px) {
             #pwReminderItemsList { grid-auto-flow: column; grid-template-rows: repeat(var(--pw-rows, 6), auto); }
           }
