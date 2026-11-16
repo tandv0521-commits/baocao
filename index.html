@@ -708,7 +708,7 @@
 
     /* Khoảng đệm cuộn an toàn chống che khuất ô bởi các cột cố định */
     #tableScrollContainer {
-      scroll-padding-left: 650px;
+      scroll-padding-left: 654px;
       scroll-padding-right: 102px;
     }
 
@@ -802,19 +802,19 @@
       .col-fixed-name {
         position: sticky !important;
         left: 44px;
-        width: 220px;
-        min-width: 220px;
-        max-width: 220px;
+        width: 244px;
+        min-width: 244px;
+        max-width: 244px;
         z-index: 35 !important;
         background-color: #ffffff !important;
       }
 
       .col-fixed-task {
         position: sticky !important;
-        left: 264px;
-        width: 380px;
-        min-width: 380px;
-        max-width: 380px;
+        left: 288px;
+        width: 360px;
+        min-width: 360px;
+        max-width: 360px;
         box-shadow: 4px 0 10px -2px rgba(15, 23, 42, 0.08) !important;
         z-index: 35 !important;
         background-color: #ffffff !important;
@@ -845,7 +845,7 @@
 
       thead .col-fixed-task {
         position: sticky !important;
-        left: 264px;
+        left: 288px;
         z-index: 60 !important;
       }
 
@@ -966,12 +966,14 @@
       background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
       color: #334155 !important;
       border-bottom: 2px solid #cbd5e1 !important;
+      border-right: 2px solid #cbd5e1 !important;
     }
 
     thead .col-fixed-total {
       background: linear-gradient(180deg, #f8fafc 0%, #ecfdf5 100%) !important;
       color: #047857 !important;
       border-bottom: 2px solid #6ee7b7 !important;
+      border-left: 2px solid #cbd5e1 !important;
     }
 
     tbody td.col-fixed-tt,
@@ -1000,6 +1002,11 @@
       /* Xanh ngọc Tiền Phong thanh thoát, sắc nét, êm dịu */
     }
 
+    .person-row-final td {
+      border-bottom: 1px solid #e2e8f0 !important;
+      /* Viền đáy thanh mảnh cho hàng cuối cùng của bảng, hòa hợp với chân thẻ */
+    }
+
     .person-row-inner td {
       border-bottom: 1px solid #e8edf2 !important;
       /* Nét kẻ mảnh dịu mắt giữa các đầu việc của cùng 1 người */
@@ -1020,11 +1027,21 @@
       border-right: 1px solid #e2e8f0 !important;
     }
 
+    td.person-merged-tt.person-merged-final,
+    td.person-merged-name.person-merged-final,
+    td.person-merged-leave-cell.person-merged-final {
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+
     td.col-fixed-task {
       border-right: 2px solid #cbd5e1 !important;
       /* Ngăn cách rõ ràng giữa Cột nội dung công việc và các cột ngày */
       background-color: #ffffff !important;
       opacity: 1 !important;
+    }
+
+    td.col-fixed-total {
+      border-left: 2px solid #cbd5e1 !important;
     }
 
     /* Màu nhận diện cột ngày Chủ nhật (CN) */
@@ -3831,8 +3848,8 @@
 
         <!-- ================= 1. BẢNG MA TRẬN NỘI DUNG CÔNG VIỆC ================= -->
         <div id="matrixCard"
-          class="flex-1 bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
-          <div id="tableScrollContainer" class="flex-1 overflow-x-auto overflow-y-auto custom-scroll min-h-[320px] max-h-[600px] md:max-h-[calc(100vh-225px)]">
+          class="flex-none w-full bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-col">
+          <div id="tableScrollContainer" class="w-full overflow-x-auto overflow-y-auto custom-scroll max-h-[600px] md:max-h-[calc(100vh-225px)]">
             <table class="sheet-table text-left text-xs whitespace-nowrap min-w-full">
               <thead class="sticky top-0 z-40 border-b border-slate-200">
                 <tr id="tableHeaderRow" class="text-slate-700 font-bold uppercase text-[11px] tracking-wider">
@@ -8789,7 +8806,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (stickyTaskHeader) {
         stickyLeftEdge = stickyTaskHeader.getBoundingClientRect().right;
       } else {
-        stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 644);
+        stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 648);
       }
 
       // Xác định mép trái của cột cố định Tổng cộng bên phải
@@ -10325,15 +10342,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   </span>
                   ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-300 shrink-0">Tôi</span>' : ''}
                 </div>
-                <!-- VIỆC CÁ NHÂN & BỘ PHẬN KHO TRÊN CÙNG 1 DÒNG GỌN GÀNG, TRÁNH DÀN TRẢI -->
-                <div class="flex items-center gap-1.5 mt-0.5 min-w-0 flex-nowrap">
+                <!-- VIỆC CÁ NHÂN & BỘ PHẬN KHO GỌN GÀNG, TỰ XUỐNG DÒNG KHI BỘ PHẬN DÀI -->
+                <div class="flex items-center gap-x-1.5 gap-y-0.5 mt-0.5 min-w-0 flex-wrap">
                   <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs">
                     <i class="fa-solid fa-user-tag text-[7.5px] text-indigo-500 shrink-0"></i>
                     <span class="whitespace-nowrap">Việc cá nhân</span>
                   </span>
                   ${deptName ? `
-                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-500 font-medium truncate min-w-0" title="${escapeHtml(deptName)}">
-                      <i class="fa-solid fa-warehouse text-[7.5px] text-indigo-400 shrink-0"></i>
+                    <span class="inline-flex items-center gap-1 text-[8.5px] sm:text-[9px] text-slate-600 font-medium min-w-0 max-w-full" title="${escapeHtml(deptName)}">
+                      <i class="fa-solid fa-warehouse text-[7.5px] text-indigo-500 shrink-0"></i>
                       <span class="truncate">${escapeHtml(deptName)}</span>
                     </span>
                   ` : ''}
@@ -10372,8 +10389,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   ${isCurrent ? '<span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">Tôi</span>' : ''}
                 </div>
 
-                <!-- Thẻ Bộ Phận & Vai trò trên cùng 1 dòng gọn gàng -->
-                <div class="flex items-center gap-1.5 mt-0.5 min-w-0 flex-nowrap">
+                <!-- Thẻ Bộ Phận & Vai trò gọn gàng, không cắt cụt tên bộ phận dài -->
+                <div class="flex items-center gap-x-1.5 gap-y-0.5 mt-0.5 min-w-0 flex-wrap">
                   <div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100/90 border border-slate-200/80 text-slate-600 text-[9px] sm:text-[9.5px] font-medium leading-tight truncate min-w-0 shadow-2xs" title="${escapeHtml(displayDept)}">
                     <i class="fa-regular fa-building text-[8px] text-emerald-600 shrink-0"></i>
                     <span class="truncate text-slate-700">${escapeHtml(displayDept)}</span>
@@ -15392,8 +15409,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const card = document.getElementById('matrixCard');
       if (!card || card.dataset.compactEmpty !== '1') return;
       card.dataset.compactEmpty = '';
-      card.classList.remove('flex-none');
-      card.classList.add('flex-1');
+      card.classList.remove('flex-1');
+      card.classList.add('flex-none');
       const banner = document.getElementById('matrixStaffEmptyBanner');
       if (banner) banner.classList.add('hidden');
       const tc = document.getElementById('tableScrollContainer');
@@ -15541,6 +15558,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       data.staffGroups.forEach((grp, gIdx) => {
         const totalStaffRows = grp.tasks.length;
         const autoSTT = gIdx + 1;
+        const isLastStaffGroup = (gIdx === data.staffGroups.length - 1);
+        const mergedFinalCls = isLastStaffGroup ? ' person-merged-final' : '';
 
         // Tiền tính toán trước ký hiệu nghỉ của từng ngày cho nhóm nhân sự (tránh tính lặp lại O(N*M))
         const staffLeaveSymByCol = {};
@@ -15555,20 +15574,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         grp.tasks.forEach((t, tIdx) => {
           const isLastTask = (tIdx === totalStaffRows - 1);
+          const rowEndClass = isLastTask ? (isLastStaffGroup ? 'person-row-final' : 'person-row-last') : 'person-row-inner';
           const tr = document.createElement('tr');
-          tr.className = `${isLastTask ? 'person-row-last' : 'person-row-inner'} hover:bg-slate-50/80 transition`;
+          tr.className = `${rowEndClass} hover:bg-slate-50/80 transition`;
           const currentRowIndex = globalRowCounter++;
 
           let ttCellHtml = '';
           let nameCellHtml = '';
           if (tIdx === 0) {
             ttCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-tt person-merged-tt py-2 sm:py-3 px-1 sm:px-2 text-center font-bold text-slate-400 text-xs align-middle bg-white font-num">
+              <td rowspan="${totalStaffRows}" class="col-fixed-tt person-merged-tt${mergedFinalCls} py-2 sm:py-3 px-1 sm:px-2 text-center font-bold text-slate-500 text-xs align-middle bg-white font-num">
                 ${autoSTT}
               </td>
             `;
             nameCellHtml = `
-              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name py-2 sm:py-3.5 px-1.5 sm:px-3 text-left font-bold text-slate-900 align-middle bg-white">
+              <td rowspan="${totalStaffRows}" class="col-fixed-name person-merged-name${mergedFinalCls} py-2 sm:py-3.5 px-1.5 sm:px-3 text-left font-bold text-slate-900 align-middle bg-white">
                 <div class="w-full max-w-full overflow-hidden">
                   ${formatStaffNameHtml(grp.staffName, grp.department, grp.isPersonalInShared, grp.personalRole, totalStaffRows)}
                 </div>
@@ -15648,7 +15668,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 }
 
                 dayCellsHtml += `
-                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell matrix-day-td py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" data-col="${dc.dayNum}" data-col-index="${cIdx}" style="background-color: ${staffLeaveSym.bg} !important; border-bottom: 2px solid #059669 !important;">
+                  <td rowspan="${totalStaffRows}" class="person-merged-leave-cell${mergedFinalCls} matrix-day-td py-1 px-1 border-r border-slate-200 text-center align-middle relative font-num" data-col="${dc.dayNum}" data-col-index="${cIdx}" style="background-color: ${staffLeaveSym.bg} !important;">
                     <div class="flex items-center justify-center h-full w-full">
                       ${mergedInputHtml}
                     </div>
@@ -17131,7 +17151,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (stickyTaskHeader) {
         leftVisibleEdge = stickyTaskHeader.getBoundingClientRect().right;
       } else {
-        leftVisibleEdge = containerRect.left + (isMobile ? 164 : 609);
+        leftVisibleEdge = containerRect.left + (isMobile ? 164 : 648);
       }
 
       // 2. Xác định mép trái cột cố định Tổng cộng bên phải trên màn hình (trên desktop >= 768px)
