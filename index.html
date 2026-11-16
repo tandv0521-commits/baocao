@@ -1213,7 +1213,6 @@
       font-feature-settings: "tnum" 1, "zero" 0 !important;
     }
 
-    #leadershipReportPreviewModal,
     #confirmReReportModal,
     #confirmSendToInboxModal,
     #confirmDeletePersonalItemModal,
@@ -1223,6 +1222,44 @@
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Chuẩn hóa font chữ hiện đại, nét mượt cho Modal chuyển / xem trước báo cáo */
+    #leadershipReportPreviewModal,
+    #leadershipReportPreviewModal h2,
+    #leadershipReportPreviewModal h3,
+    #leadershipReportPreviewModal h4,
+    #leadershipReportPreviewModal p,
+    #leadershipReportPreviewModal span,
+    #leadershipReportPreviewModal div,
+    #leadershipReportPreviewModal label,
+    #leadershipReportPreviewModal select,
+    #leadershipReportPreviewModal textarea,
+    #leadershipReportPreviewModal button {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    #leadershipReportPreviewModal i[class*="fa-"],
+    #leadershipReportPreviewModal .fa,
+    #leadershipReportPreviewModal .fa-solid,
+    #leadershipReportPreviewModal .fa-regular {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+
+    #leadershipReportPreviewModal .font-num,
+    #leadershipReportPreviewModal .tabular-nums {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
+    }
+
+    #leadershipReportPreviewModal textarea::placeholder {
+      color: #64748b;
+      opacity: 1;
     }
 
     /* Chuẩn hóa riêng font chữ hiện đại, nét mượt cho Modal thông báo đầu việc đã gửi */
@@ -7827,102 +7864,121 @@
 
       <!-- HEADER -->
       <div
-        class="px-5 py-3.5 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-2.5">
+        class="px-5 py-3.5 border-b border-emerald-700/20 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
           <div
-            class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md text-white flex items-center justify-center font-bold text-base shadow-inner">
+            class="w-10 h-10 rounded-2xl bg-white/15 text-white flex items-center justify-center font-bold text-base shrink-0 border border-white/15">
             <i class="fa-solid fa-file-lines"></i>
           </div>
-          <div>
-            <h3 id="rpPreviewModalTitle" class="text-white font-black text-sm sm:text-base leading-tight">Báo Cáo Công
+          <div class="min-w-0">
+            <h3 id="rpPreviewModalTitle" class="text-white font-bold text-base leading-tight truncate">Báo Cáo Công
               Việc &amp; Đề Xuất</h3>
-            <p id="rpPreviewModalSubtitle" class="text-[11px] text-emerald-100/90 font-medium">Kiểm tra nội dung, sao
-              chép hoặc gửi trực tiếp lên hệ thống</p>
+            <p id="rpPreviewModalSubtitle" class="text-xs text-emerald-100/90 font-medium mt-0.5 truncate">Kiểm tra
+              nội dung, tải file Word hoặc gửi trực tiếp lên hệ thống</p>
           </div>
         </div>
         <button type="button" data-mobile-close onclick="closeLeadershipReportPreviewModal()"
-          class="w-8 h-8 rounded-xl bg-white/15 hover:bg-rose-500 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-white/25 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/25 group">
+          aria-label="Đóng hộp thoại báo cáo"
+          class="w-8 h-8 rounded-xl bg-white/15 hover:bg-rose-500 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-white/25 hover:border-rose-500 shadow-2xs group">
           <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
         </button>
       </div>
 
       <!-- VĂN BẢN BÁO CÁO CHÍNH THỨC -->
       <div id="leadershipReportPrintArea"
-        class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scroll bg-slate-50/70">
+        class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scroll bg-slate-100/75">
 
-        <div class="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
-          <!-- TIÊU ĐỀ DOANH NGHIỆP TRANG TRỌNG -->
-          <div class="text-center pb-3 border-b-2 border-slate-200">
-            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN
-              PHONG</p>
-            <p class="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">BAN DỊCH VỤ KHÁCH HÀNG</p>
-
-            <!-- KHỐI CHỌN NGƯỜI TIẾP NHẬN BÁO CÁO: QUẢN LÝ / PHÓ GIÁM ĐỐC -->
-            <div
-              class="bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200/90 rounded-2xl p-3 sm:p-3.5 mb-2 shadow-2xs space-y-2 text-left">
+        <!-- THANH THIẾT LẬP NGƯỜI NHẬN & KỲ BÁO CÁO -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3.5 sm:p-4">
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+            <div class="sm:col-span-8 space-y-1.5">
               <div class="flex items-center justify-between gap-2 flex-wrap">
                 <label for="rpRecipientSelect"
-                  class="text-xs font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
-                  <i class="fa-solid fa-user-check text-emerald-600 text-sm"></i>
-                  <span>Chỉ định người tiếp nhận báo cáo:</span>
+                  class="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wide">
+                  <i class="fa-solid fa-user-check text-emerald-600 text-xs"></i>
+                  <span>Chỉ định người tiếp nhận báo cáo</span>
                 </label>
-                <span
-                  class="text-[10px] text-emerald-800 font-bold bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                <span id="rpRecipientRoleBadge"
+                  class="text-[11px] text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200/90 px-2.5 py-0.5 rounded-full whitespace-nowrap">
                   Quản lý • Phó Giám Đốc • Giám Đốc
                 </span>
               </div>
               <div class="relative">
                 <select id="rpRecipientSelect" onchange="onReportRecipientSelectChange(this.value, true)"
-                  class="w-full bg-white border border-emerald-300 text-xs font-bold text-slate-800 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs cursor-pointer">
-                  <!-- Nạp tự động các tài khoản Quản lý & Phó Giám Đốc -->
+                  class="appearance-none w-full h-10 bg-slate-50/75 hover:bg-white border border-slate-200/90 hover:border-emerald-400 focus:bg-white focus:border-emerald-500 text-[13px] font-semibold text-slate-800 rounded-xl pl-3.5 pr-9 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none shadow-2xs transition cursor-pointer">
+                  <!-- Nạp tự động danh sách người tiếp nhận theo phân cấp -->
                 </select>
+                <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400"
+                  aria-hidden="true"></i>
               </div>
-              <p class="text-[11px] text-slate-500 italic">Báo cáo sẽ được chuyển thẳng tới tài khoản được chọn để xem
-                xét, tổng hợp và xử lý.</p>
             </div>
 
-            <h2 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wide mt-2">BÁO CÁO CÔNG VIỆC CÁ
-              NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
-            <p id="rpPreviewRecipientText" class="text-xs font-bold text-slate-700 mt-1">Kính gửi: Quản lý bộ phận</p>
-            <div class="mt-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-xs text-slate-500 not-italic">
-              <div class="inline-flex items-center gap-1.5">
-                <label for="rpPeriodSelect" class="font-medium text-slate-500">Kỳ báo cáo:</label>
-                <div class="relative inline-flex items-center">
-                  <select id="rpPeriodSelect" onchange="onLeadershipPreviewPeriodChange(this.value)"
-                    aria-label="Chọn kỳ báo cáo"
-                    class="appearance-none h-8 pl-3 pr-7 rounded-xl border border-emerald-200/90 bg-emerald-50/90 hover:bg-emerald-100/80 text-xs font-bold text-emerald-900 font-num tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition shadow-2xs cursor-pointer">
-                  </select>
-                  <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600/85"
-                    aria-hidden="true"></i>
-                </div>
-                <span id="rpPeriodText" class="hidden font-bold text-slate-700">Tháng 11/2026</span>
+            <div class="sm:col-span-4 space-y-1.5">
+              <label for="rpPeriodSelect"
+                class="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wide sm:min-h-[22px]">
+                <i class="fa-regular fa-calendar text-emerald-600 text-xs"></i>
+                <span>Kỳ báo cáo</span>
+              </label>
+              <div class="relative">
+                <select id="rpPeriodSelect" onchange="onLeadershipPreviewPeriodChange(this.value)"
+                  aria-label="Chọn kỳ báo cáo"
+                  class="appearance-none w-full h-10 bg-slate-50/75 hover:bg-white border border-slate-200/90 hover:border-emerald-400 focus:bg-white focus:border-emerald-500 text-[13px] font-semibold text-slate-800 font-num tabular-nums rounded-xl pl-3.5 pr-9 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none shadow-2xs transition cursor-pointer">
+                </select>
+                <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400"
+                  aria-hidden="true"></i>
               </div>
-              <span class="text-slate-300 select-none hidden sm:inline" aria-hidden="true">&bull;</span>
-              <span class="inline-flex items-center gap-1 text-slate-500">
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-2.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info text-emerald-600/80 text-[11px] shrink-0" aria-hidden="true"></i>
+            <span>Báo cáo sẽ được chuyển thẳng tới tài khoản được chọn để xem xét, tổng hợp và xử lý.</span>
+          </p>
+        </div>
+
+        <!-- TỜ VĂN BẢN BÁO CÁO CHÍNH THỨC -->
+        <div class="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs space-y-5">
+          <!-- TIÊU ĐỀ DOANH NGHIỆP TRANG TRỌNG -->
+          <div class="text-center pb-4 border-b border-slate-200/90 space-y-1.5">
+            <div class="space-y-0.5">
+              <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">CÔNG TY CP NHỰA THIẾU NIÊN
+                TIỀN PHONG</p>
+              <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">BAN DỊCH VỤ KHÁCH HÀNG</p>
+            </div>
+            <div class="w-16 h-0.5 bg-emerald-600/35 mx-auto rounded-full my-1.5" aria-hidden="true"></div>
+            <h2 class="text-base sm:text-[18px] font-bold text-slate-900 uppercase tracking-tight leading-snug pt-0.5">
+              BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ</h2>
+            <p id="rpPreviewRecipientText" class="text-[13px] font-semibold text-slate-700">Kính gửi: Quản lý bộ phận</p>
+            <div class="pt-0.5 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+              <span class="inline-flex items-center gap-1">
+                <span>Kỳ báo cáo:</span>
+                <span id="rpPeriodText" class="font-semibold text-slate-700 font-num tabular-nums">Tháng 11/2026</span>
+              </span>
+              <span class="text-slate-300 select-none" aria-hidden="true">&bull;</span>
+              <span class="inline-flex items-center gap-1">
                 <span>Ngày lập:</span>
-                <span id="rpDateText" class="font-bold text-slate-700 font-num tabular-nums">--/--/----</span>
+                <span id="rpDateText" class="font-semibold text-slate-700 font-num tabular-nums">--/--/----</span>
               </span>
             </div>
           </div>
 
           <!-- THÔNG TIN NGƯỜI BÁO CÁO (2 CỘT CÂN ĐỐI, BỎ CỘT CHỨC VỤ) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50/90 border border-slate-200/80 p-3.5 sm:p-4 rounded-2xl text-xs">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-200">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50/75 border border-slate-200/80 px-4 py-3 rounded-xl text-xs">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-xl bg-emerald-100/90 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-200/80">
                 <i class="fa-solid fa-user"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Người báo cáo</span>
-                <p id="rpFullName" class="font-extrabold text-slate-800 text-sm sm:text-base leading-snug truncate">---</p>
+                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Người báo cáo</span>
+                <p id="rpFullName" class="font-bold text-slate-900 text-sm leading-snug truncate">---</p>
               </div>
             </div>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-200">
+            <div class="flex items-center gap-3 min-w-0 sm:border-l sm:border-slate-200/80 sm:pl-4">
+              <div class="w-9 h-9 rounded-xl bg-sky-100/90 text-sky-700 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-200/80">
                 <i class="fa-solid fa-building-user"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Bộ phận / Tổ kho</span>
-                <p id="rpDept" class="font-bold text-slate-700 text-xs sm:text-sm leading-snug truncate">---</p>
+                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Bộ phận / Tổ kho</span>
+                <p id="rpDept" class="font-bold text-slate-900 text-sm leading-snug truncate">---</p>
               </div>
             </div>
             <span id="rpRole" class="hidden" aria-hidden="true"></span>
@@ -7932,55 +7988,55 @@
           <div id="rpSectionsContainer" class="space-y-4 text-xs">
             <!-- 1. Công việc phát sinh trong tháng -->
             <div id="rpSectionAdhoc">
-              <h4
-                class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-amber-200 text-amber-900">
+              <h3
+                class="font-bold text-amber-900 uppercase tracking-wide flex items-center gap-2 pb-1.5 border-b border-amber-200">
                 <i class="fa-solid fa-bolt text-amber-500 text-xs"></i>
                 <span>I. Công việc phát sinh trong tháng</span>
-              </h4>
-              <div id="rpAdhocList" class="mt-2 space-y-1.5 pl-2"></div>
+              </h3>
+              <div id="rpAdhocList" class="mt-2.5 space-y-2"></div>
             </div>
 
             <!-- 2. Kế hoạch thực hiện công việc (Lịch làm việc) -->
             <div id="rpSectionPlan">
-              <h4
-                class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-sky-200 text-sky-900">
+              <h3
+                class="font-bold text-sky-900 uppercase tracking-wide flex items-center gap-2 pb-1.5 border-b border-sky-200">
                 <i class="fa-solid fa-calendar-days text-sky-500 text-xs"></i>
                 <span>II. Kế hoạch thực hiện công việc &amp; Lịch làm việc</span>
-              </h4>
-              <div id="rpPlanList" class="mt-2 space-y-1.5 pl-2"></div>
+              </h3>
+              <div id="rpPlanList" class="mt-2.5 space-y-2"></div>
             </div>
 
             <!-- 3. Đề xuất kiến nghị -->
             <div id="rpSectionProposal">
-              <h4
-                class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-purple-200 text-purple-900">
+              <h3
+                class="font-bold text-purple-900 uppercase tracking-wide flex items-center gap-2 pb-1.5 border-b border-purple-200">
                 <i class="fa-solid fa-lightbulb text-purple-500 text-xs"></i>
                 <span>III. Đề xuất &amp; Sáng kiến kiến nghị</span>
-              </h4>
-              <div id="rpProposalList" class="mt-2 space-y-1.5 pl-2"></div>
+              </h3>
+              <div id="rpProposalList" class="mt-2.5 space-y-2"></div>
             </div>
 
             <!-- 4. Ý kiến đóng góp & Phản ánh -->
             <div id="rpSectionFeedback">
-              <h4
-                class="font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-teal-200 text-teal-900">
+              <h3
+                class="font-bold text-teal-900 uppercase tracking-wide flex items-center gap-2 pb-1.5 border-b border-teal-200">
                 <i class="fa-solid fa-comment-dots text-teal-500 text-xs"></i>
                 <span>IV. Ý kiến đóng góp &amp; Phản ánh khó khăn</span>
-              </h4>
-              <div id="rpFeedbackList" class="mt-2 space-y-1.5 pl-2"></div>
+              </h3>
+              <div id="rpFeedbackList" class="mt-2.5 space-y-2"></div>
             </div>
           </div>
 
           <!-- Ô LỜI NHẮN GỬI LÃNH ĐẠO -->
-          <div class="pt-2 border-t border-slate-100">
+          <div class="pt-3 border-t border-slate-200/80">
             <label id="rpLeaderNoteLabel" for="rpLeaderNoteInput"
-              class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
               <i class="fa-solid fa-message text-emerald-600"></i>
               <span>Ý kiến / Lời nhắn thêm gửi Ban Lãnh đạo (tùy chọn):</span>
             </label>
             <textarea id="rpLeaderNoteInput" rows="2"
               placeholder="Ghi chú thêm thông tin hoặc nguyện vọng gửi lãnh đạo phụ trách..."
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+              class="w-full bg-slate-50/75 border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-500 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition"></textarea>
           </div>
         </div>
 
@@ -7988,11 +8044,11 @@
 
       <!-- FOOTER BUTTONS -->
       <div data-rp-part="footer"
-        class="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        class="px-5 py-3.5 border-t border-slate-200/90 bg-white flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
         <div class="flex items-center gap-2">
           <!-- Nút tải File Word chuẩn báo cáo doanh nghiệp -->
           <button type="button" onclick="exportPreviewReportToWord()"
-            class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            class="h-9 px-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-300 text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
             title="Tải file Word (.doc) chuẩn mẫu báo cáo doanh nghiệp">
             <i class="fa-solid fa-file-word text-blue-600 text-sm"></i>
             <span>Tải File Word</span>
@@ -8001,12 +8057,12 @@
 
         <div class="flex items-center gap-2">
           <button type="button" onclick="closeLeadershipReportPreviewModal()"
-            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition cursor-pointer">
+            class="h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition inline-flex items-center justify-center cursor-pointer">
             Đóng
           </button>
 
           <button type="button" onclick="submitLeadershipReport()"
-            class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm shadow-emerald-700/20 transition flex items-center gap-1.5 cursor-pointer">
+            class="h-9 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.99] text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-700/20 transition inline-flex items-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-paper-plane text-xs"></i>
             <span id="rpSubmitBtnText">Xác Nhận Gửi Báo Cáo</span>
           </button>
@@ -29673,10 +29729,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return safe.replace(/\r\n|\r|\n/g, '<br>');
       };
 
-      const renderSectionItemsHtml = (list, sectionAccentColor) => {
+      const renderSectionItemsHtml = (list) => {
         if (!list || list.length === 0) {
           return `
-        <div style="margin-top: 4pt; margin-bottom: 9pt; margin-left: 12pt; font-size: 10.5pt; color: #64748b; font-style: italic;">
+        <div style="margin: 4pt 0 6pt 10pt; mso-para-margin: 0pt; mso-para-margin-top: 4pt; mso-para-margin-bottom: 6pt; font-size: 10.5pt; color: #64748b; font-style: italic; line-height: 1.4;">
           (Không có nội dung ghi nhận trong kỳ báo cáo)
         </div>
       `;
@@ -29696,26 +29752,34 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             if (authorName) {
               const rawEsc = rawAuthorItemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               if (rawEsc) cleanTitle = cleanTitle.replace(new RegExp(`\\s*[\\-\\—\\–]\\s*${rawEsc}$`, 'i'), '').trim();
-              staffSuffix = ` <span style="font-size: 9.5pt; font-weight: normal; font-style: italic; color: #047857;">- ${escapeHtml(authorName)}</span>`;
+              staffSuffix = ` <span style="font-size: 10pt; font-weight: normal; font-style: italic; color: #047857;">&mdash; ${escapeHtml(authorName)}</span>`;
             }
           }
 
+
+
           const detailBody = formatWordMultilineText(it.content);
-          const workDoneBody = (typeof formatWordMultilineText === 'function')
-            ? formatWordMultilineText((it.delegation && it.delegation.assigneeWorkNote) || it.workDoneNote || '')
-            : '';
-          const detailHtml = (detailBody || workDoneBody)
-            ? `
-          <div style="margin-top: 2.5pt; margin-bottom: 4pt; margin-left: 24pt; border-left: 2pt solid ${sectionAccentColor}; padding-left: 8pt; font-size: 11pt; color: #1e293b; line-height: 1.45;">
-            ${detailBody ? `<div><span style="font-weight: bold; color: #475569;">Nội dung chi tiết:</span> ${detailBody}</div>` : ''}
-            ${workDoneBody ? `<div style="margin-top: 2pt;"><span style="font-weight: bold; color: #047857;">Công việc đã làm / Kết quả:</span> ${workDoneBody}</div>` : ''}
-          </div>
-        `
+          const workDoneBody = formatWordMultilineText((it.delegation && it.delegation.assigneeWorkNote) || it.workDoneNote || '');
+          const fbRaw = (it.delegation && !it.delegationCorrupt ? it.delegation.feedbackText : '') || (!it.delegationCorrupt ? it.feedbackResponse : '') || '';
+          const feedbackBody = formatWordMultilineText(fbRaw);
+
+          const subLines = [];
+          if (detailBody) {
+            subLines.push(`<div style="margin: 2pt 0 0 0; mso-para-margin: 0pt; mso-para-margin-top: 2pt; font-size: 10.5pt; color: #334155; line-height: 1.45;"><span style="color: #64748b;">&ndash;</span> <span style="font-weight: bold; color: #475569;">Nội dung chi tiết:</span> <span style="color: #1e293b;">${detailBody}</span></div>`);
+          }
+          if (workDoneBody) {
+            subLines.push(`<div style="margin: 2pt 0 0 0; mso-para-margin: 0pt; mso-para-margin-top: 2pt; font-size: 10.5pt; color: #334155; line-height: 1.45;"><span style="color: #047857;">&ndash;</span> <span style="font-weight: bold; color: #047857;">Công việc đã làm / Kết quả:</span> <span style="color: #0f172a;">${workDoneBody}</span></div>`);
+          }
+          if (feedbackBody) {
+            subLines.push(`<div style="margin: 2pt 0 0 0; mso-para-margin: 0pt; mso-para-margin-top: 2pt; font-size: 10.5pt; color: #334155; line-height: 1.45;"><span style="color: #64748b;">&ndash;</span> <span style="font-weight: bold; color: #475569;">Phản hồi:</span> <span style="color: #1e293b;">${feedbackBody}</span></div>`);
+          }
+          const detailHtml = subLines.length > 0
+            ? `<div style="margin: 2pt 0 0 24pt; mso-para-margin: 0pt; mso-para-margin-top: 2pt;">${subLines.join('')}</div>`
             : '';
 
           return `
-        <div style="margin-top: 5pt; margin-bottom: 7pt; page-break-inside: avoid;">
-          <div style="font-size: 11.5pt; font-weight: bold; color: #0f172a; line-height: 1.4; margin-left: 12pt;">
+        <div style="margin-top: ${idx === 0 ? '2pt' : '7pt'}; margin-bottom: 4pt; mso-para-margin: 0pt; mso-para-margin-top: ${idx === 0 ? '2pt' : '7pt'}; mso-para-margin-bottom: 4pt; page-break-inside: avoid;">
+          <div style="margin: 0 0 0 10pt; mso-para-margin: 0pt; font-size: 11.5pt; font-weight: bold; color: #0f172a; line-height: 1.4;">
             ${idx + 1}. ${escapeHtml(cleanTitle)}${staffSuffix}
           </div>
           ${detailHtml}
@@ -29724,24 +29788,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }).join('');
       };
 
-      const sectionsHtml = `
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 1.25pt solid #d97706; color: #92400e;">I. CÔNG VIỆC PHÁT SINH TRONG THÁNG</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(adhocList, '#d97706')}</div>
+      const sectionDefs = [
+        ['I. CÔNG VIỆC PHÁT SINH TRONG THÁNG', adhocList, 'border-bottom: 1.25pt solid #d97706', '#92400e'],
+        ['II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC', planList, 'border-bottom: 1.25pt solid #0284c7', '#0369a1'],
+        ['III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ', propList, 'border-bottom: 1.25pt solid #7e22ce', '#6d28d9'],
+        ['IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN', feedList, 'border-bottom: 1.25pt solid #0f766e', '#0f766e']
+      ];
+      const sectionsHtml = sectionDefs.map(([heading, list, borderRule, textColor], sIdx) => `
+    <div style="margin-top: ${sIdx === 0 ? '4pt' : '15pt'}; margin-bottom: 8pt; mso-para-margin: 0pt;">
+      <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; margin-bottom: 6pt; page-break-after: avoid;">
+        <tr>
+          <td style="padding: 2pt 0 4.5pt 0; ${borderRule}; color: ${textColor}; font-size: 11.5pt; font-weight: bold; text-transform: uppercase; line-height: 1.3; mso-para-margin: 0pt; mso-para-margin-top: 0pt; mso-para-margin-bottom: 0pt;">
+            ${heading}
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top: 4pt; mso-para-margin: 0pt;">${renderSectionItemsHtml(list)}</div>
     </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 1.25pt solid #0284c7; color: #0369a1;">II. KẾ HOẠCH THỰC HIỆN CÔNG VIỆC &amp; LỊCH LÀM VIỆC</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(planList, '#0284c7')}</div>
-    </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 1.25pt solid #7e22ce; color: #6d28d9;">III. ĐỀ XUẤT &amp; SÁNG KIẾN KIẾN NGHỊ</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(propList, '#7e22ce')}</div>
-    </div>
-    <div style="margin-top: 14pt; margin-bottom: 8pt;">
-      <div class="sec-heading" style="border-bottom: 1.25pt solid #0f766e; color: #0f766e;">IV. Ý KIẾN ĐÓNG GÓP &amp; PHẢN ÁNH KHÓ KHĂN</div>
-      <div style="margin-top: 6pt;">${renderSectionItemsHtml(feedList, '#0f766e')}</div>
-    </div>
-  `;
+  `).join('');
 
       const now = new Date();
       const dateOnlyStr = (rep.displayDate ? String(rep.displayDate).split(' ')[0] : '') || `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
@@ -29950,30 +30014,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         : 'BÁO CÁO CÔNG VIỆC CÁ NHÂN &amp; ĐỀ XUẤT KIẾN NGHỊ';
 
       const metadataHtml = isConsolidated
-        ? `
-        <table class="info-card">
-          <tr>
-            <td style="width: 55%;">
-              <span style="color: #475569;">Người tổng hợp:</span> <b>${escapeHtml(signers.authorName || rep.senderFullName || 'Quản lý bộ phận')}</b>
-            </td>
-            <td style="width: 45%; text-align: right;">
-              <span style="color: #475569;">Phạm vi:</span> <b style="color: #047857;">Toàn bộ phận</b>
-            </td>
-          </tr>
-        </table>
-      `
-        : `
-        <table class="info-card">
-          <tr>
-            <td style="width: 50%;">
-              <span style="color: #475569;">Họ và tên:</span> <b>${escapeHtml(authorSignerName)}</b>
-            </td>
-            <td style="width: 50%; text-align: right;">
-              <span style="color: #475569;">Bộ phận:</span> <b>${escapeHtml(rep.senderDepartment || 'Bộ phận')}</b>
-            </td>
-          </tr>
-        </table>
-      `;
+        ? `<div class="author-meta"><span style="color: #475569;">Người tổng hợp:</span> <b style="color: #0f172a;">${escapeHtml(signers.authorName || rep.senderFullName || 'Quản lý bộ phận')}</b><span style="color: #94a3b8;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><span style="color: #475569;">Phạm vi:</span> <b style="color: #047857;">Toàn bộ phận</b></div>`
+        : `<div class="author-meta"><span style="color: #475569;">Họ và tên:</span> <b style="color: #0f172a;">${escapeHtml(authorSignerName)}</b><span style="color: #94a3b8;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><span style="color: #475569;">Bộ phận:</span> <b style="color: #0f172a;">${escapeHtml(rep.senderDepartment || 'Bộ phận')}</b></div>`;
 
       const signatureTableHtml = shouldOmitManagerSigner
         ? `
@@ -30076,28 +30118,32 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           line-height: 1.45;
           color: #000000;
         }
-        .header-box {
+        .masthead-box {
           margin-bottom: 12pt;
           padding-bottom: 8pt;
           border-bottom: 1.5pt solid #047857;
         }
-        .corp-sub { font-size: 10.5pt; font-weight: bold; color: #334155; text-transform: uppercase; }
-        .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; }
-        .doc-title { font-size: 14pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 9pt; text-align: center; }
-        .recipient { font-size: 11.5pt; font-weight: bold; color: #0f172a; margin-top: 4pt; text-align: center; }
-        .period-date { font-size: 10.5pt; font-style: italic; color: #475569; margin-top: 3pt; text-align: center; }
-
-        .info-card {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 12pt;
+        .corp-sub { font-size: 9.5pt; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.15pt; line-height: 1.25; }
+        .corp-main { font-size: 11.5pt; font-weight: bold; color: #047857; text-transform: uppercase; margin-top: 2pt; line-height: 1.25; }
+        .meta-period { font-size: 9.5pt; font-weight: bold; color: #0f172a; line-height: 1.3; }
+        .meta-date { font-size: 9.5pt; font-style: italic; color: #475569; margin-top: 2pt; line-height: 1.3; }
+        .title-block {
+          text-align: center;
+          margin-top: 2pt;
+          margin-bottom: 14pt;
+          mso-para-margin: 0pt;
+          mso-para-margin-top: 2pt;
+          mso-para-margin-bottom: 14pt;
         }
-        .info-card td { padding: 3pt 4pt; vertical-align: top; border: none; font-size: 11pt; }
+        .doc-title { font-size: 14.5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; line-height: 1.3; letter-spacing: 0.2pt; text-align: center; mso-para-margin: 0pt; }
+        .recipient { font-size: 11.5pt; font-weight: bold; color: #1e293b; margin-top: 5pt; line-height: 1.35; text-align: center; mso-para-margin: 0pt; mso-para-margin-top: 5pt; }
+        .author-meta { font-size: 11pt; color: #334155; margin-top: 4pt; line-height: 1.35; text-align: center; mso-para-margin: 0pt; mso-para-margin-top: 4pt; }
         .sec-heading {
           font-size: 11.5pt;
           font-weight: bold;
           text-transform: uppercase;
-          padding-bottom: 3pt;
+          line-height: 1.35;
+          padding-bottom: 3.5pt;
         }
         .sig-table {
           width: 100%;
@@ -30121,25 +30167,35 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     </head>
     <body>
       <div class="Section1">
-        <div class="header-box">
-          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; margin-bottom: 4pt;">
+        <div class="masthead-box">
+          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="width: 20%; vertical-align: middle; text-align: left; padding: 0;">
-                <img src="tienphong_logo2.png" width="76" height="43" style="width: 57pt; height: 32.5pt; border: 0; display: block;" alt="Nhựa Tiền Phong" />
+              <td style="width: 69%; vertical-align: middle; text-align: left; padding: 0;">
+                <table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: left; padding: 0 9pt 0 0; width: 60pt;">
+                      <img src="tienphong_logo2.png" width="80" height="45" style="width: 60pt; height: 34pt; border: 0; display: block;" alt="Nhựa Tiền Phong" />
+                    </td>
+                    <td style="vertical-align: middle; text-align: left; border-left: 1.5pt solid #047857; padding: 1pt 0 1pt 9pt;">
+                      <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
+                      <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
+                    </td>
+                  </tr>
+                </table>
               </td>
-              <td style="width: 60%; vertical-align: middle; text-align: center; padding: 0;">
-                <div class="corp-sub">CÔNG TY CP NHỰA THIẾU NIÊN TIỀN PHONG</div>
-                <div class="corp-main">BAN DỊCH VỤ KHÁCH HÀNG</div>
+              <td style="width: 31%; vertical-align: middle; text-align: right; padding: 0 0 0 6pt;">
+                <div class="meta-period">Kỳ báo cáo: Tháng ${mPad}/${y}</div>
+                <div class="meta-date">Ngày lập: ${dateOnlyStr}</div>
               </td>
-              <td style="width: 20%; vertical-align: middle; padding: 0;">&nbsp;</td>
             </tr>
           </table>
-          <div class="doc-title">${docTitleText}</div>
-          <div class="recipient">${recipientText}</div>
-          <div class="period-date">Kỳ báo cáo: Tháng ${mPad}/${y} &bull; Ngày lập: ${dateOnlyStr}</div>
         </div>
 
-        ${metadataHtml}
+        <div class="title-block">
+          <div class="doc-title">${docTitleText}</div>
+          <div class="recipient">${recipientText}</div>
+          ${metadataHtml}
+        </div>
 
         ${sectionsHtml}
 
@@ -34986,32 +35042,60 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function getActivePreviewReportRecipient() {
+      const senderRoleInfo = (typeof getPersonalWorkspaceReportingRole === 'function')
+        ? getPersonalWorkspaceReportingRole(currentUser)
+        : { isStaff: true };
+      const allowMgr = Boolean(senderRoleInfo && senderRoleInfo.isStaff);
+      const isAllowed = (rec) => {
+        if (!rec) return false;
+        if (allowMgr) return true;
+        const r = removeAccents(String(rec.role || '')).toLowerCase().trim();
+        return r.includes('giam doc');
+      };
       const select = document.getElementById('rpRecipientSelect');
-      if (currentSelectedRecipient && (!select || !select.value || String(currentSelectedRecipient.id) === String(select.value))) {
+      if (currentSelectedRecipient && isAllowed(currentSelectedRecipient) && (!select || !select.value || String(currentSelectedRecipient.id) === String(select.value))) {
         return currentSelectedRecipient;
       }
       if (select && select.value && Array.isArray(currentReportRecipientsList)) {
         const found = currentReportRecipientsList.find(x => String(x.id) === String(select.value));
-        if (found) return found;
+        if (found && isAllowed(found)) return found;
       }
-      return currentSelectedRecipient || null;
+      return isAllowed(currentSelectedRecipient) ? currentSelectedRecipient : null;
     }
 
     function loadReportRecipientsOptions(customUserList) {
       const select = document.getElementById('rpRecipientSelect');
       if (!select) return;
 
+      const senderRoleInfo = (typeof getPersonalWorkspaceReportingRole === 'function')
+        ? getPersonalWorkspaceReportingRole(currentUser)
+        : (() => {
+            const r = removeAccents(String(currentUser?.role || '')).toLowerCase().trim();
+            const isLeader = r.includes('giam doc');
+            const isManager = !isLeader && (r.includes('quan ly') || r.includes('truong'));
+            return { isStaff: !isLeader && !isManager, isManager, isLeader };
+          })();
+      const allowManagerRecipients = Boolean(senderRoleInfo && senderRoleInfo.isStaff);
+
+      const roleBadgeEl = document.getElementById('rpRecipientRoleBadge');
+      if (roleBadgeEl) {
+        roleBadgeEl.innerText = allowManagerRecipients
+          ? 'Quản lý • Phó Giám Đốc • Giám Đốc'
+          : 'Phó Giám Đốc • Giám Đốc';
+      }
+
       let userList = customUserList || (globalInitData?.allUsers && Array.isArray(globalInitData.allUsers) && globalInitData.allUsers.length > 0 ? globalInitData.allUsers :
         (adminManageUsersCache?.users && Array.isArray(adminManageUsersCache.users)) ? adminManageUsersCache.users : []);
 
-      // CHỈ CHẤP NHẬN: Quản lý, Phó Giám Đốc, Giám Đốc (loại bỏ hoàn toàn Trưởng nhóm, Tổ trưởng, Admin, v.v.)
+      // Nhân viên: chọn Quản lý, Phó Giám Đốc, Giám Đốc.
+      // Quản lý / Lãnh đạo: CHỈ chọn cấp cao hơn là Phó Giám Đốc, Giám Đốc (loại bỏ Quản lý ngang cấp).
       let filtered = (userList || []).filter(u => {
         if (!u || !u.role) return false;
         const r = removeAccents(u.role).toLowerCase().trim();
         const isDeputy = r.includes('pho giam doc');
         const isDir = r.includes('giam doc') && !r.includes('pho');
         const isMgr = r.includes('quan ly');
-        return isDeputy || isDir || isMgr;
+        return allowManagerRecipients ? (isDeputy || isDir || isMgr) : (isDeputy || isDir);
       }).map(u => {
         const rawFull = u.full_name || u.fullName || u.username;
         const resolvedFull = (typeof resolvePersonFullDisplayName === 'function')
@@ -35026,18 +35110,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           fullName: resolvedFull,
           full_name: resolvedFull,
           rawFullName: rawFull,
-          role: u.role || 'Quản lý',
+          role: u.role || (allowManagerRecipients ? 'Quản lý' : 'Phó Giám Đốc'),
           department: getRecipientDeptName(u)
         };
       });
 
       if (filtered.length === 0) {
-        filtered = [
-          { id: 1141, username: 'thuytm', fullName: 'Trần Minh Thùy', full_name: 'Trần Minh Thùy', role: 'Quản lý', department: 'Bộ phận tính giá' },
-          { id: 1145, username: 'hoangdh', fullName: 'Đinh Huy Hoàng', full_name: 'Đinh Huy Hoàng', role: 'Quản lý', department: 'Bộ phận phân xe 10m + xuất khẩu' },
-          { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', full_name: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
-          { id: 1140, username: 'oanhltki', fullName: 'Lê Thị Kim Oanh', full_name: 'Lê Thị Kim Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
-        ];
+        filtered = allowManagerRecipients
+          ? [
+              { id: 1141, username: 'thuytm', fullName: 'Trần Minh Thùy', full_name: 'Trần Minh Thùy', role: 'Quản lý', department: 'Bộ phận tính giá' },
+              { id: 1145, username: 'hoangdh', fullName: 'Đinh Huy Hoàng', full_name: 'Đinh Huy Hoàng', role: 'Quản lý', department: 'Bộ phận phân xe 10m + xuất khẩu' },
+              { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', full_name: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
+              { id: 1140, username: 'oanhltki', fullName: 'Lê Thị Kim Oanh', full_name: 'Lê Thị Kim Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
+            ]
+          : [
+              { id: 1213, username: 'trangntq', fullName: 'Nguyễn Thị Quỳnh Trang', full_name: 'Nguyễn Thị Quỳnh Trang', role: 'Phó Giám Đốc', department: 'Ban Giám Đốc' },
+              { id: 1140, username: 'oanhltki', fullName: 'Lê Thị Kim Oanh', full_name: 'Lê Thị Kim Oanh', role: 'Giám Đốc', department: 'Ban Giám Đốc' }
+            ];
       }
 
       // Loại trừ chính mình nếu bản thân người gửi là Quản lý/Lãnh đạo
@@ -35059,20 +35148,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       const userDept = currentUser?.department || '';
-      const senderRoleInfo = (typeof getPersonalWorkspaceReportingRole === 'function')
-        ? getPersonalWorkspaceReportingRole(currentUser)
-        : { isStaff: true };
 
       filtered.sort((a, b) => {
         // 0. Mặc định người tiếp nhận báo cáo của nhân viên gửi cho quản lý là "Trần Minh Thùy"
         const aPref = isPreferredDefaultReportRecipient(a) ? 1 : 0;
         const bPref = isPreferredDefaultReportRecipient(b) ? 1 : 0;
-        if (senderRoleInfo.isStaff && aPref !== bPref) return bPref - aPref;
+        if (allowManagerRecipients && aPref !== bPref) return bPref - aPref;
 
-        // 1. Quản lý cùng bộ phận với người gửi (nếu có) lên đầu
-        const aDeptMatch = isDeptEquivalent(a.department, userDept) ? 1 : 0;
-        const bDeptMatch = isDeptEquivalent(b.department, userDept) ? 1 : 0;
-        if (aDeptMatch !== bDeptMatch) return bDeptMatch - aDeptMatch;
+        // 1. Quản lý cùng bộ phận với người gửi (nếu có) lên đầu (chỉ áp dụng cho nhân viên)
+        if (allowManagerRecipients) {
+          const aDeptMatch = isDeptEquivalent(a.department, userDept) ? 1 : 0;
+          const bDeptMatch = isDeptEquivalent(b.department, userDept) ? 1 : 0;
+          if (aDeptMatch !== bDeptMatch) return bDeptMatch - aDeptMatch;
+        }
 
         // 2. Thứ tự chức vụ: Quản lý -> Phó Giám Đốc -> Giám Đốc
         const getRoleRank = (rStr) => {
@@ -35086,7 +35174,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const rankB = getRoleRank(b.role);
         if (rankA !== rankB) return rankA - rankB;
 
-        if (aPref !== bPref) return bPref - aPref;
+        if (allowManagerRecipients && aPref !== bPref) return bPref - aPref;
 
         return (a.fullName || '').localeCompare(b.fullName || '', 'vi');
       });
@@ -35098,7 +35186,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }).join('');
 
       if (currentReportRecipientsList.length > 0) {
-        const defaultRecipient = currentReportRecipientsList.find(isPreferredDefaultReportRecipient) || currentReportRecipientsList[0];
+        const defaultRecipient = (allowManagerRecipients ? currentReportRecipientsList.find(isPreferredDefaultReportRecipient) : null) || currentReportRecipientsList[0];
         const keepManual = _rpRecipientManuallySelected
           && currentSelectedRecipient?.id
           && currentReportRecipientsList.some(x => String(x.id) === String(currentSelectedRecipient.id));
@@ -35318,18 +35406,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             let tag = '';
             if (badgeType === 'plan' && it.dueDate) {
               const tl = calculatePlanTimelineStatus(it);
-              tag = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs leading-none font-semibold border whitespace-nowrap font-num shadow-2xs ${tl.badgeClass}"><i class="${tl.icon} text-[10px] shrink-0 not-italic"></i><span class="whitespace-nowrap font-medium">${tl.label} (Hạn: ${formatVNDate(it.dueDate)})</span></span>`;
+              tag = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] leading-none font-semibold border whitespace-nowrap font-num ${tl.badgeClass}"><i class="${tl.icon} text-[10px] shrink-0 not-italic"></i><span class="whitespace-nowrap font-semibold">${tl.label} (Hạn: ${formatVNDate(it.dueDate)})</span></span>`;
             }
             return `
-          <div class="flex items-start justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/90 shadow-2xs hover:bg-slate-50 transition-all">
+          <div class="flex items-start justify-between gap-3 p-3 sm:px-3.5 sm:py-3 rounded-xl bg-slate-50/55 border border-slate-200/85 hover:border-slate-300/90 transition-colors">
             <div class="min-w-0 flex-1">
               <div class="font-bold text-slate-800 text-xs sm:text-[13.5px] leading-snug flex items-baseline gap-1.5">
-                <span class="text-slate-400 font-medium shrink-0">${idx + 1}.</span>
-                <span class="font-bold text-slate-800">${escapeHtml(it.title)}</span>
+                <span class="text-slate-400 font-semibold font-num tabular-nums shrink-0">${idx + 1}.</span>
+                <span class="font-bold text-slate-800 text-xs sm:text-[13.5px]">${escapeHtml(it.title)}</span>
                 ${it.isImportant ? '<span class="text-amber-500 text-xs ml-0.5" title="Quan trọng">⭐</span>' : ''}
               </div>
-              ${it.content ? `<div class="text-xs text-slate-600 mt-1.5 ml-4 pl-2.5 border-l-2 border-emerald-300 leading-relaxed bg-white/60 p-1.5 rounded-r-lg">${escapeHtml(it.content)}</div>` : ''}
-              ${(it.workDoneNote || it.delegation?.assigneeWorkNote) ? `<div class="text-xs text-indigo-900 mt-1.5 ml-4 pl-2.5 border-l-2 border-indigo-400 leading-relaxed bg-indigo-50/70 p-1.5 rounded-r-lg"><b>Công việc đã làm:</b> ${escapeHtml(it.workDoneNote || it.delegation?.assigneeWorkNote)}</div>` : ''}
+              ${it.content ? `<div class="text-xs text-slate-600 mt-1.5 ml-4 pl-2.5 border-l-2 border-emerald-300 leading-relaxed">${escapeHtml(it.content)}</div>` : ''}
+              ${(it.workDoneNote || it.delegation?.assigneeWorkNote) ? `<div class="text-xs text-emerald-900 mt-1.5 ml-4 pl-2.5 border-l-2 border-emerald-500/75 leading-relaxed"><span class="font-semibold text-emerald-800">Công việc đã làm:</span> ${escapeHtml(it.workDoneNote || it.delegation?.assigneeWorkNote)}</div>` : ''}
             </div>
             ${tag ? `<div class="shrink-0 pt-0.5">${tag}</div>` : ''}
           </div>
@@ -35337,7 +35425,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }).join('');
         } else {
           list.innerHTML = `
-        <div class="py-2.5 px-3.5 text-xs text-slate-400 font-medium italic bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[40px] flex items-center gap-2">
+        <div class="py-2.5 px-3.5 text-xs text-slate-400 italic bg-slate-50/45 rounded-xl border border-dashed border-slate-200/90 flex items-center gap-2">
           <i class="fa-regular fa-folder-open text-slate-300 text-xs"></i>
           <span>(Không có nội dung ghi nhận trong kỳ báo cáo / để trống)</span>
         </div>
