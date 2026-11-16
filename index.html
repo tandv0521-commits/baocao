@@ -1181,7 +1181,38 @@
     }
 
     /* Chuẩn hóa font chữ và định dạng giao diện các hộp thoại báo cáo */
+/* Chuẩn hóa font Plus Jakarta Sans + Inter đồng nhất với Sổ tay cho Hộp thư & Lịch sử gửi báo cáo */
     #leadershipReportsBoxModal,
+    #leadershipReportsBoxModal button,
+    #leadershipReportsBoxModal input,
+    #leadershipReportsBoxModal select,
+    #leadershipReportsBoxModal span,
+    #leadershipReportsBoxModal div,
+    #leadershipReportsBoxModal p,
+    #leadershipReportsBoxModal h3,
+    #leadershipReportsBoxModal b {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    #leadershipReportsBoxModal i[class*="fa-"],
+    #leadershipReportsBoxModal .fa,
+    #leadershipReportsBoxModal .fa-solid,
+    #leadershipReportsBoxModal .fa-regular,
+    #leadershipReportsBoxModal .fa-brands {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+
+    #leadershipReportsBoxModal .font-num,
+    #leadershipReportsBoxModal .tabular-nums {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+      font-variant-numeric: tabular-nums lining-nums normal !important;
+      -webkit-font-feature-settings: "tnum" 1, "zero" 0 !important;
+      font-feature-settings: "tnum" 1, "zero" 0 !important;
+    }
+
     #leadershipReportPreviewModal,
     #confirmReReportModal,
     #confirmSendToInboxModal,
@@ -1365,6 +1396,128 @@
       border-radius: 0 9999px 9999px 0;
       background: #059669;
       pointer-events: none;
+    }
+
+    /* Hệ cột dùng chung giữa Header và từng dòng danh sách Sổ tay trên màn hình >= 768px */
+    @media (min-width: 768px) {
+      #pwItemsList .pw-table-columns {
+        display: grid;
+        grid-template-columns: 52px 96px minmax(0, 1fr) 256px 136px 76px;
+        align-items: center;
+        column-gap: 12px;
+        padding-left: 16px;
+        padding-right: 12px;
+      }
+
+      #pwItemsList .pw-table-columns.pw-desktop-flex {
+        display: grid !important;
+      }
+
+      #pwItemsList .pw-task-row {
+        min-height: 68px;
+      }
+
+      #pwItemsList .pw-task-row > :is(
+        .pw-task-selection,
+        .pw-task-meta,
+        .pw-task-body,
+        .pw-task-time,
+        .pw-task-status-wrap,
+        .pw-task-actions
+      ) {
+        width: auto;
+        min-width: 0;
+        flex: initial;
+        order: 0;
+      }
+
+      #pwItemsList .pw-task-selection {
+        justify-content: center;
+      }
+
+      #pwItemsList .pw-task-meta {
+        justify-content: center;
+      }
+
+      #pwItemsList .pw-task-meta > span {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      #pwItemsList .pw-task-actions {
+        justify-content: center;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      #pwItemsList .pw-table-columns {
+        grid-template-columns: 52px 86px minmax(0, 1fr) 204px 128px 72px;
+        column-gap: 8px;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+
+    .pw-task-card.pw-task-overdue::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 5px;
+      border-radius: 0 9999px 9999px 0;
+      background: #e11d48;
+      pointer-events: none;
+    }
+
+    /* Hệ cột Grid dùng chung giữa Header & từng lượt gửi trong Hộp thư / Lịch sử gửi (>= 1280px) */
+    @media (min-width: 1280px) {
+      #rpBoxReportsList .rp-sender-columns.rp-sender-cols-staff {
+        display: grid !important;
+        grid-template-columns: 36px minmax(0, 1fr) 136px 128px;
+        align-items: center;
+        column-gap: 14px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      #rpBoxReportsList .rp-sender-columns.rp-sender-cols-mgr {
+        display: grid !important;
+        grid-template-columns: 36px minmax(0, 1fr) 136px 156px 164px;
+        align-items: center;
+        column-gap: 14px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      #rpBoxReportsList .rp-sender-columns .rp-sender-main,
+      #rpBoxReportsList .rp-sender-columns .rp-sender-row-meta {
+        display: contents;
+      }
+
+      #rpBoxReportsList .rp-sender-columns .rp-row-number {
+        width: auto;
+        justify-self: center;
+      }
+
+      #rpBoxReportsList .rp-sender-columns .rp-sender-dates {
+        width: auto;
+        min-width: 0;
+        align-items: center;
+        justify-self: center;
+      }
+
+      #rpBoxReportsList .rp-sender-columns .rp-sender-cons {
+        width: auto;
+        min-width: 0;
+        justify-self: center;
+      }
+
+      #rpBoxReportsList .rp-sender-columns .rp-sender-actions {
+        width: auto;
+        margin-left: 0;
+        justify-content: flex-end;
+      }
     }
 
     /* ================= SỔ TAY CÔNG VIỆC — TINH CHỈNH CHỈ DÀNH CHO ĐIỆN THOẠI (< 768px / < 640px) ================= */
@@ -4221,18 +4374,18 @@
           </div>
         </div>
 
-        <!-- THANH NGỮ CẢNH PHẠM VI LỌC & NÚT QUAY LẠI BAN ĐẦU -->
+        <!-- THANH NGỮ CẢNH PHẠM VI LỌC & ĐẶT LẠI BỘ LỌC -->
         <div id="pwFilterContextStrip"
-          class="px-3 sm:px-6 py-1.5 border-b border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-2 text-xs min-h-[38px] flex-shrink-0">
-          <div id="pwFilterContextSummary" class="flex items-center gap-1.5 flex-wrap min-w-0 text-slate-600">
+          class="px-3 sm:px-5 py-1.5 border-b border-slate-200/80 bg-slate-50/90 flex items-center justify-between gap-2 text-xs min-h-[40px] flex-shrink-0">
+          <div id="pwFilterContextSummary" class="flex-1 flex items-center gap-1.5 flex-wrap min-w-0 text-slate-600">
             <i class="fa-solid fa-layer-group text-emerald-600 text-[11px] shrink-0"></i>
             <span>Phạm vi: <b class="text-slate-800 font-bold">Tất cả công việc cá nhân</b></span>
           </div>
           <button type="button" id="pwResetSummaryCardBtn" onclick="resetPersonalSummaryCardFilter()" disabled
-            class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white/70 text-slate-400 text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition opacity-60 cursor-not-allowed whitespace-nowrap min-w-[132px] justify-center"
-            title="Quay lại trạng thái ban đầu (chưa chọn thẻ lớn phía trên &amp; bỏ lọc phụ)">
+            class="inline-flex min-h-[32px] px-2.5 py-1 rounded-lg border border-transparent bg-transparent text-slate-400 text-xs font-medium items-center gap-1.5 shrink-0 transition-colors cursor-not-allowed whitespace-nowrap justify-center"
+            title="Đang ở trạng thái mặc định">
             <i class="fa-solid fa-rotate-left text-[10px]"></i>
-            <span>Quay lại ban đầu</span>
+            <span>Đặt lại bộ lọc</span>
           </button>
         </div>
 
@@ -7868,7 +8021,7 @@
   <div id="leadershipReportsBoxModal"
     class="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div id="leadershipReportsBoxDialog"
-      class="bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-[1500px] w-full min-h-[60vh] max-h-[95vh] sm:max-h-[94vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
+      class="bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-[1500px] w-full min-h-[380px] max-h-[95vh] sm:max-h-[93vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 duration-150">
 
       <!-- HEADER HỘP THƯ HIỆN ĐẠI, SANG TRỌNG -->
       <div data-rp-part="box-header"
@@ -7879,7 +8032,7 @@
             <i class="fa-solid fa-inbox"></i>
           </div>
           <div class="min-w-0">
-            <h3 id="rpBoxModalTitle" class="text-slate-900 font-black text-base sm:text-lg leading-tight truncate">Hộp
+            <h3 id="rpBoxModalTitle" class="text-slate-900 font-bold text-base sm:text-lg tracking-[-0.01em] leading-snug truncate">Hộp
               Thư Báo Cáo Lãnh Đạo &amp; Lịch Sử Gửi</h3>
             <p id="rpBoxModalSubtitle" class="text-xs text-slate-500 font-medium mt-0.5 truncate">Xem lại các đầu việc
               đã gửi báo cáo, thông tin nhân viên &amp; tích chọn tổng hợp</p>
@@ -7897,7 +8050,7 @@
           </button>
           <!-- Nút Đóng -->
           <button type="button" data-mobile-close onclick="closeLeadershipReportsBoxModal()"
-            class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/60 hover:border-rose-500 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 group">
+            class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-rose-500 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-slate-200/80 hover:border-rose-500 shadow-sm hover:shadow-md hover:shadow-rose-500/20 group">
             <i class="fa-solid fa-xmark text-sm group-hover:rotate-90 transition-transform duration-200"></i>
           </button>
         </div>
@@ -7971,13 +8124,13 @@
         <div data-rp-part="filters"
           class="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem_auto] items-center gap-2 sm:flex sm:items-center sm:justify-end shrink-0">
           <!-- Ô tìm kiếm từ khóa trong hộp thư -->
-          <div data-rp-part="search-wrap" class="relative col-span-3 min-w-0 sm:col-span-1 sm:w-48 min-[1340px]:w-44 2xl:w-56">
+          <div data-rp-part="search-wrap" class="relative col-span-3 min-w-0 sm:col-span-1 sm:w-56 min-[1340px]:w-64">
             <label id="rpBoxSearchLabel" for="rpBoxSearchInput" class="sr-only">Tìm đầu việc hoặc nhân viên</label>
             <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
               aria-hidden="true"></i>
             <input type="text" id="rpBoxSearchInput" oninput="renderLeadershipReportsBoxUI()"
               placeholder="Tìm việc, nhân viên..."
-              class="h-8 w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white pl-8 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition font-medium" />
+              class="h-8 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 focus:bg-white pl-8 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition font-medium" />
           </div>
 
           <!-- Bộ lọc theo tháng -->
@@ -7986,8 +8139,8 @@
             <i class="fa-regular fa-calendar-days pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
               aria-hidden="true"></i>
             <select id="rpBoxMonthFilterSelect" onchange="onRpBoxMonthFilterChange(this.value)"
-              class="h-8 w-full min-w-0 pl-7 pr-6 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white focus:bg-white text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer appearance-none"
-              title="Lọc báo cáo & đầu việc theo tháng">
+              class="h-8 w-full min-w-0 pl-7 pr-6 rounded-xl border border-slate-200/90 bg-slate-50/70 hover:bg-white focus:bg-white text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer appearance-none"
+              title="Lọc báo cáo &amp; đầu việc theo tháng">
               <option value="ALL">Tất cả các tháng</option>
             </select>
             <i class="fa-solid fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"
@@ -7997,13 +8150,13 @@
           <!-- Nút Làm mới -->
           <button type="button" id="rpBoxRefreshBtn" onclick="fetchLeadershipReportsFromSupabase(true)"
             aria-label="Làm mới danh sách báo cáo"
-            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 border border-slate-200 hover:border-emerald-200 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-            title="Làm mới & tải báo cáo mới nhất">
+            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 border border-slate-200/90 hover:border-emerald-200 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            title="Làm mới &amp; tải báo cáo mới nhất">
             <i id="rpBoxRefreshIcon" class="fa-solid fa-rotate text-xs" aria-hidden="true"></i>
           </button>
 
           <span id="rpBoxReportsCountBadge"
-            class="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-slate-200/90 bg-slate-100/85 px-2.5 text-[11px] font-bold font-num tabular-nums text-slate-700">0 đầu việc</span>
+            class="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-slate-200/90 bg-slate-100/80 px-3 text-xs font-semibold font-num tabular-nums text-slate-700">0 đầu việc</span>
         </div>
 
       </div>
@@ -8129,17 +8282,16 @@
 
       <!-- FOOTER -->
       <div data-rp-part="footer"
-        class="px-5 sm:px-6 py-3 border-t border-slate-200/80 bg-white flex items-center justify-between flex-shrink-0">
-        <span class="text-[11px] text-slate-400 font-medium hidden sm:inline-flex items-center gap-1.5">
-          <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+        class="px-5 sm:px-6 py-3 border-t border-slate-200/80 bg-white flex items-center justify-between gap-3 flex-shrink-0">
+        <span class="max-sm:hidden sm:inline-flex text-xs text-slate-500 font-medium items-center gap-1.5">
+          <i aria-hidden="true" class="fa-solid fa-shield-halved text-emerald-600"></i>
           <span>Dữ liệu báo cáo được đồng bộ thời gian thực theo phân quyền bộ phận</span>
         </span>
         <button type="button" onclick="closeLeadershipReportsBoxModal()"
-          class="ml-auto px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition cursor-pointer">
+          class="ml-auto px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200/90 shadow-sm transition cursor-pointer">
           Đóng hộp thư
         </button>
       </div>
-
     </div>
   </div>
 
@@ -26586,8 +26738,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (!it) return '';
       const variant = options.variant === 'card' ? 'card' : 'table';
       const sizeCls = (variant === 'card')
-        ? 'pw-status-ctrl inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-sm whitespace-nowrap'
-        : 'pw-status-ctrl w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold shadow-sm whitespace-nowrap';
+        ? 'pw-status-ctrl inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold shadow-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2'
+        : 'pw-status-ctrl w-auto md:w-full max-w-[132px] min-h-[32px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-semibold shadow-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 focus-visible:ring-offset-2';
       const doneTone = 'bg-emerald-700 text-white border border-emerald-700';
       const doneAction = 'hover:bg-emerald-800 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2';
       const doneIcon = 'fa-circle-check text-white';
@@ -30519,6 +30671,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (typeof event.preventDefault === 'function') event.preventDefault();
       }
       if (!reportId || !currentUser) return;
+      const rep = getLeadershipReportsShared().find(r => r && String(r.id) === String(reportId));
+      if (rep && isSenderOfReport(currentUser, rep)) return;
       const currentRead = isRpBoxReportRead(reportId, currentUser);
       const newRead = !currentRead;
       setRpBoxReportReadStatus(reportId, newRead, currentUser);
@@ -30533,7 +30687,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const readSet = getInboxReadReportIds(userKey);
       let count = 0;
       records.forEach(rec => {
-        if (rec && rec.report && rec.report.id) {
+        if (rec && rec.report && rec.report.id && !isSenderOfReport(currentUser, rec.report)) {
           const idStr = String(rec.report.id);
           if (!readSet.has(idStr)) {
             readSet.add(idStr);
@@ -30673,7 +30827,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           urgency: 'completed',
           isDueSoon: false,
           label: 'Đã hoàn thành',
-          badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-normal italic',
+          badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold not-italic',
           icon: 'fa-solid fa-circle-check text-emerald-700',
           accentClass: 'bg-emerald-500',
           rowTintClass: ''
@@ -30685,8 +30839,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           urgency: 'none',
           isDueSoon: false,
           label: 'Sẽ làm',
-          badgeClass: 'bg-sky-50 text-sky-600 border-sky-200 font-normal italic',
-          icon: 'fa-regular fa-calendar text-sky-500',
+          badgeClass: 'bg-slate-100 text-slate-700 border-slate-200 font-semibold not-italic',
+          icon: 'fa-regular fa-calendar text-slate-500',
           accentClass: 'bg-sky-400',
           rowTintClass: ''
         };
@@ -30708,8 +30862,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: false,
           days: Math.abs(diffDays),
           label: `Quá hạn ${Math.abs(diffDays)} ngày`,
-          badgeClass: 'bg-rose-50 text-rose-600 border-rose-300 font-normal italic',
-          icon: 'fa-solid fa-triangle-exclamation text-rose-500 animate-pulse',
+          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-semibold not-italic',
+          icon: 'fa-solid fa-triangle-exclamation text-rose-700',
           accentClass: 'bg-rose-500',
           rowTintClass: ''
         };
@@ -30720,8 +30874,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: false,
           days: 0,
           label: 'Đến hạn hôm nay',
-          badgeClass: 'bg-red-50 text-red-600 border-red-300 font-normal italic',
-          icon: 'fa-solid fa-bell text-red-500 animate-bounce',
+          badgeClass: 'bg-red-100 text-red-800 border-red-300 font-semibold not-italic',
+          icon: 'fa-solid fa-bell text-red-700',
           accentClass: 'bg-red-500',
           rowTintClass: ''
         };
@@ -30732,8 +30886,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: true,
           days: 1,
           label: 'Đến hạn ngày mai',
-          badgeClass: 'bg-orange-50 text-orange-600 border-orange-300 font-normal italic',
-          icon: 'fa-solid fa-fire-flame-curved text-orange-500',
+          badgeClass: 'bg-amber-100 text-amber-900 border-amber-300 font-semibold not-italic',
+          icon: 'fa-regular fa-clock text-amber-700',
           accentClass: 'bg-orange-500',
           rowTintClass: ''
         };
@@ -30744,8 +30898,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: true,
           days: 2,
           label: 'Còn 2 ngày',
-          badgeClass: 'bg-amber-50 text-orange-600 border-amber-300 font-normal italic',
-          icon: 'fa-solid fa-stopwatch text-amber-500',
+          badgeClass: 'bg-amber-50 text-amber-900 border-amber-300 font-semibold not-italic',
+          icon: 'fa-regular fa-clock text-amber-700',
           accentClass: 'bg-amber-500',
           rowTintClass: ''
         };
@@ -30756,8 +30910,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: false,
           days: diffDays,
           label: `Còn ${diffDays} ngày`,
-          badgeClass: 'bg-violet-50 text-violet-600 border-violet-200 font-normal italic',
-          icon: 'fa-solid fa-hourglass-half text-violet-500',
+          badgeClass: 'bg-slate-100 text-slate-700 border-slate-200 font-semibold not-italic',
+          icon: 'fa-regular fa-calendar text-slate-500',
           accentClass: 'bg-violet-500',
           rowTintClass: ''
         };
@@ -30768,8 +30922,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           isDueSoon: false,
           days: diffDays,
           label: `Còn ${diffDays} ngày`,
-          badgeClass: 'bg-sky-50 text-sky-600 border-sky-200 font-normal italic',
-          icon: 'fa-regular fa-calendar-check text-sky-500',
+          badgeClass: 'bg-slate-100 text-slate-700 border-slate-200 font-semibold not-italic',
+          icon: 'fa-regular fa-calendar text-slate-500',
           accentClass: 'bg-sky-400',
           rowTintClass: ''
         };
@@ -31790,16 +31944,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       if (resetBtn) {
+        const resetBase = 'inline-flex min-h-[32px] px-2.5 py-1 rounded-lg border text-xs font-medium items-center gap-1.5 shrink-0 transition-colors whitespace-nowrap justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-1';
         resetBtn.disabled = !hasAnyNonDefault;
-        if (hasCard) {
-          resetBtn.className = "px-2.5 py-1 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition cursor-pointer shadow-2xs whitespace-nowrap min-w-[132px] justify-center";
-          resetBtn.title = "Bỏ chọn thẻ phía trên &amp; quay lại hiển thị toàn bộ công việc ban đầu";
-        } else if (hasAnyNonDefault) {
-          resetBtn.className = "px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition cursor-pointer shadow-2xs whitespace-nowrap min-w-[132px] justify-center";
-          resetBtn.title = isAssignmentTab ? "Quay lại danh sách Tất cả công việc cá nhân" : "Đặt lại bộ lọc về trạng thái ban đầu";
+        if (hasAnyNonDefault) {
+          resetBtn.className = resetBase + ' border-slate-300 bg-white hover:bg-slate-50 text-slate-700 cursor-pointer';
+          resetBtn.title = hasCard
+            ? 'Bỏ chọn thẻ phía trên & đặt lại bộ lọc về mặc định'
+            : (isAssignmentTab ? 'Quay lại danh sách Tất cả công việc cá nhân' : 'Đặt lại bộ lọc về mặc định');
         } else {
-          resetBtn.className = "px-2.5 py-1 rounded-lg border border-slate-200 bg-white/70 text-slate-400 text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition opacity-60 cursor-not-allowed whitespace-nowrap min-w-[132px] justify-center";
-          resetBtn.title = "Đang ở trạng thái ban đầu (chưa chọn thẻ lớn nào)";
+          resetBtn.className = resetBase + ' border-transparent bg-transparent text-slate-400 cursor-not-allowed opacity-70';
+          resetBtn.title = 'Đang ở trạng thái mặc định';
         }
       }
     }
@@ -32728,37 +32882,74 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
+      // Helpers trình bày thời hạn & ngày ghi nhận thẳng cột (icon 14px -> nhãn 48px -> ngày tabular -> pill trạng thái), giữ đồng đều chiều cao 68px giữa các hàng
+      const renderTaskDueHtml = (taskItem, timeline, finishedFlag) => {
+        if (!taskItem || taskItem.type !== 'plan' || !taskItem.dueDate) return '';
+        const t = timeline || calculatePlanTimelineStatus(taskItem);
+        const dueDateFormatted = escapeHtml(formatVNDate(taskItem.dueDate));
+        const iconCls = finishedFlag
+          ? 'fa-regular fa-calendar-check text-emerald-700'
+          : (t.code === 'overdue'
+            ? 'fa-regular fa-calendar-xmark text-rose-600'
+            : (t.code === 'duetoday'
+              ? 'fa-regular fa-calendar-check text-red-600'
+              : (t.isDueSoon ? 'fa-regular fa-calendar-check text-amber-600' : 'fa-regular fa-calendar text-slate-400')));
+        const labelToneCls = finishedFlag ? 'text-emerald-900/80' : 'text-slate-500';
+        const dateToneCls = finishedFlag
+          ? 'text-emerald-950'
+          : (t.code === 'overdue' ? 'text-rose-700' : 'text-slate-800');
+        const urgencyPill = finishedFlag
+          ? ''
+          : `<span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold not-italic leading-none whitespace-nowrap shrink-0 ${t.badgeClass}" title="${escapeHtml(t.label)} — Hạn: ${dueDateFormatted}">${escapeHtml(t.label)}</span>`;
+        return `
+          <div class="pw-task-due flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] not-italic leading-4">
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
+              <i aria-hidden="true" class="${iconCls} w-3.5 text-center text-[11px] shrink-0"></i>
+              <span class="w-[48px] shrink-0 font-medium ${labelToneCls}">Thời hạn:</span>
+              <time datetime="${escapeHtml(taskItem.dueDate)}" class="font-num tabular-nums font-semibold shrink-0 ${dateToneCls}">${dueDateFormatted}</time>
+            </span>
+            ${urgencyPill}
+          </div>`;
+      };
+
+      const renderTaskRecordedHtml = (dateText, finishedFlag) => {
+        if (!dateText) return '';
+        return `
+          <div class="flex min-w-0 items-center gap-1.5 text-[11px] leading-4 ${finishedFlag ? 'text-emerald-900/75' : 'text-slate-500'} whitespace-nowrap">
+            <i aria-hidden="true" class="fa-regular fa-clock w-3.5 text-center text-[11px] shrink-0 ${finishedFlag ? 'text-emerald-700/75' : 'text-slate-400'}"></i>
+            <span class="w-[48px] shrink-0 font-medium">Ghi nhận:</span>
+            <span class="font-num tabular-nums font-semibold shrink-0 ${finishedFlag ? 'text-emerald-950/90' : 'text-slate-700'}">${escapeHtml(dateText)}</span>
+          </div>`;
+      };
+
+      const renderTaskNotesHtml = (fields) => {
+        if (!fields) return '';
+        const notes = [
+          ['Công việc đã làm', fields.workNote, 'fa-solid fa-list-check text-slate-500'],
+          ['Phản hồi', fields.feedbackText, 'fa-solid fa-reply text-emerald-700']
+        ]
+          .filter(([, val]) => String(val || '').trim())
+          .map(([lbl, val, iconCls]) => `<div class="pw-task-note inline-flex items-baseline gap-1.5 max-w-full bg-white/85 border border-slate-200/90 rounded-lg py-0.5 px-2.5 text-[11.5px] leading-5 text-slate-700 whitespace-pre-line break-words"><i aria-hidden="true" class="${iconCls} text-[10px] shrink-0"></i><span><span class="font-semibold text-slate-800">${lbl}:</span> ${escapeHtml(val)}</span></div>`)
+          .join('');
+        return notes ? `<div class="flex flex-wrap items-start gap-1.5 pt-0.5">${notes}</div>` : '';
+      };
+
+      const renderTypePill = (type) => {
+        const typeMap = {
+          adhoc: { label: 'Phát sinh', icon: 'fa-solid fa-bolt text-amber-600', cls: 'bg-amber-50 text-amber-900 border-amber-200/90' },
+          plan: { label: 'Kế hoạch', icon: 'fa-solid fa-calendar-days text-sky-600', cls: 'bg-sky-50 text-sky-900 border-sky-200/90' },
+          proposal: { label: 'Đề xuất', icon: 'fa-solid fa-lightbulb text-purple-600', cls: 'bg-purple-50 text-purple-900 border-purple-200/90' },
+          feedback: { label: 'Ý kiến', icon: 'fa-solid fa-comment-dots text-teal-600', cls: 'bg-teal-50 text-teal-900 border-teal-200/90' }
+        };
+        const cfg = typeMap[type] || typeMap.adhoc;
+        return `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border shrink-0 whitespace-nowrap md:w-full ${cfg.cls}"><i aria-hidden="true" class="${cfg.icon} text-[10px]"></i><span>${cfg.label}</span></span>`;
+      };
+
       // ================= RENDER DẠNG BẢNG RỘNG CHUYÊN NGHIỆP =================
       if (pwViewMode === 'table') {
         let rowsHtml = '';
-        items.forEach((it, idx) => {
-          // 1. Phân loại & Icon đồng bộ kích thước gọn gàng
-          let typeBadge = '';
-          if (it.type === 'adhoc') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-bolt text-amber-500 text-[9.5px] md:text-[10px]"></i><span>Phát sinh</span></span>`;
-          } else if (it.type === 'plan') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-sky-50 text-sky-900 border border-sky-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-calendar-days text-sky-500 text-[9.5px] md:text-[10px]"></i><span>Kế hoạch</span></span>`;
-          } else if (it.type === 'proposal') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-purple-50 text-purple-900 border border-purple-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-lightbulb text-purple-500 text-[9.5px] md:text-[10px]"></i><span>Đề xuất</span></span>`;
-          } else if (it.type === 'feedback') {
-            typeBadge = `<span class="inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg md:rounded-xl text-[10.5px] md:text-[11px] font-extrabold bg-teal-50 text-teal-900 border border-teal-200/90 shadow-2xs shrink-0 whitespace-nowrap md:w-[94px]"><i class="fa-solid fa-comment-dots text-teal-500 text-[9.5px] md:text-[10px]"></i><span>Ý kiến</span></span>`;
-          }
-
-          // 2. Trạng thái & Huy hiệu thời hạn 1 dòng (đồng bộ nhận việc -> hoàn thành ở cột Trạng thái)
-          let dueDateBadge = '';
-          let planTimeline = null;
-          if (it.type === 'plan') {
-            const t = calculatePlanTimelineStatus(it);
-            planTimeline = t;
-            if (it.dueDate) {
-              dueDateBadge = `
-            <span class="pw-task-due inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg text-[10px] md:text-[11px] leading-none border shadow-2xs whitespace-nowrap shrink-0 w-fit font-num font-normal italic ${t.badgeClass}" title="${t.label} - Hạn thực hiện: ${formatVNDate(it.dueDate)}">
-              <i class="${t.icon} text-[9.5px] md:text-[10.5px] shrink-0 not-italic"></i>
-              <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
-            </span>
-          `;
-            }
-          }
+        items.forEach((it) => {
+          const typeBadge = renderTypePill(it.type);
 
           const isDelegated = (typeof isDelegatedTaskItem === 'function') ? isDelegatedTaskItem(it) : false;
           const isIncomingDeleg = (typeof isDelegatedIncomingTask === 'function') ? isDelegatedIncomingTask(it, currentUser) : false;
@@ -32767,133 +32958,129 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             ? getPersonalTaskPermissions(it, currentUser)
             : { canEditCore: true, canDelete: true, canToggleCompletion: true, canToggleImportant: true, canSelectForReport: true, canCancelAssignment: false };
 
+          const isFinished = isPersonalTaskFinished(it);
+          const planTimeline = (it.type === 'plan') ? calculatePlanTimelineStatus(it) : null;
+          const isOverdue = !isFinished && planTimeline && planTimeline.code === 'overdue';
+          const waitingReceipt = isIncomingDeleg && it.delegation?.receipt?.status !== 'accepted';
+          const dueDateBadge = renderTaskDueHtml(it, planTimeline, isFinished);
+
           const statusHtml = (typeof buildPersonalTaskStatusControlHtml === 'function')
             ? buildPersonalTaskStatusControlHtml(it, { variant: 'table' })
             : (() => {
-                const fin = isPersonalTaskFinished(it);
-                return `<button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="pw-status-ctrl cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition shadow-sm whitespace-nowrap ${fin ? 'bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-700 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2' : 'bg-amber-50 text-amber-900 border border-amber-300'}">${fin ? '<i aria-hidden="true" class="fa-solid fa-circle-check text-white"></i>' : ''}<span>${fin ? (it.type === 'plan' ? 'Đã hoàn thành' : 'Đã làm') : (it.type === 'plan' ? 'Đang tiến hành' : 'Chưa làm')}</span></button>`;
+                return `<button type="button" onclick="togglePersonalItemStatus('${it.id}')" class="pw-status-ctrl cursor-pointer w-auto md:w-full max-w-[132px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1 md:py-1.5 rounded-xl text-[11px] md:text-xs font-semibold transition shadow-sm whitespace-nowrap ${isFinished ? 'bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-700 hover:border-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2' : 'bg-amber-50 text-amber-900 border border-amber-300'}">${isFinished ? '<i aria-hidden="true" class="fa-solid fa-circle-check text-white"></i>' : ''}<span>${isFinished ? (it.type === 'plan' ? 'Đã hoàn thành' : 'Đã làm') : (it.type === 'plan' ? 'Đang tiến hành' : 'Chưa làm')}</span></button>`;
               })();
 
           // 3. Ngôi sao quan trọng
           const starBtn = perms.canToggleImportant
-            ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="pw-star-btn cursor-pointer w-6 h-6 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}"><i class="fa-solid fa-star"></i></button>`
-            : `<span class="pw-star-btn w-6 h-6 flex items-center justify-center rounded-lg text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}" title="${it.isImportant ? 'Mục quan trọng từ người giao việc' : 'Công việc được giao'}"><i class="fa-solid fa-star"></i></span>`;
+            ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" aria-pressed="${it.isImportant ? 'true' : 'false'}" aria-label="${it.isImportant ? 'Bỏ đánh dấu quan trọng' : 'Đánh dấu quan trọng'}" class="pw-star-btn cursor-pointer w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-1 ${it.isImportant ? 'text-amber-500 scale-110' : 'text-slate-300 hover:text-amber-400'}" title="${it.isImportant ? 'Mục quan trọng (Bấm để bỏ ghim)' : 'Đánh dấu quan trọng ⭐'}"><i aria-hidden="true" class="fa-solid fa-star"></i></button>`
+            : `<span class="pw-star-btn w-7 h-7 flex items-center justify-center rounded-lg text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-300'}" title="${it.isImportant ? 'Mục quan trọng từ người giao việc' : 'Công việc được giao'}"><i aria-hidden="true" class="fa-solid fa-star"></i></span>`;
 
-          // 4. Checkbox chọn đẩy báo cáo (gói trong label .pw-check-hit để vùng chạm >= 40px trên điện thoại, giữ nguyên 100% trên desktop)
+          // 4. Checkbox chọn đẩy báo cáo (gói trong label .pw-check-hit để vùng chạm >= 40px trên điện thoại)
           const isRowLockedForSelect = isPersonalTaskLockedFromReportSelect(it, currentUser);
           const checkBtn = isOutgoingDeleg
-            ? `<span class="pw-check-hit w-4 h-4 inline-flex items-center justify-center text-violet-500" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes text-xs"></i></span>`
+            ? `<span class="pw-check-hit w-4 h-4 inline-flex items-center justify-center text-violet-500" title="Công việc bạn đã giao"><i aria-hidden="true" class="fa-solid fa-share-nodes text-xs"></i></span>`
             : (isIncomingDeleg && !perms.canSelectForReport && !isRowLockedForSelect)
-              ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 bg-slate-100 cursor-not-allowed opacity-50" title="Xác nhận nhận việc trước khi chọn đưa vào báo cáo" /></label>`
-              : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isRowLockedForSelect && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isRowLockedForSelect ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isRowLockedForSelect ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Tích chọn mục này để tạo báo cáo'}" /></label>`;
+              ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled aria-label="Xác nhận nhận việc trước khi chọn đưa vào báo cáo" class="w-4 h-4 rounded border-slate-200 bg-slate-100 cursor-not-allowed opacity-50" title="Xác nhận nhận việc trước khi chọn đưa vào báo cáo" /></label>`
+              : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isRowLockedForSelect && it.selectedForReport) ? 'checked' : ''} aria-label="${isRowLockedForSelect ? 'Đầu việc đã gửi báo cáo' : 'Chọn đưa vào báo cáo'}" onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isRowLockedForSelect ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-sky-600 focus:ring-sky-500 accent-sky-600'} cursor-pointer" title="${isRowLockedForSelect ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Tích chọn mục này để tạo báo cáo'}" /></label>`;
 
           // 5. Nội dung công việc đã làm & phản hồi (nếu có)
           const dispFields = (typeof getPersonalTaskDisplayFields === 'function')
             ? getPersonalTaskDisplayFields(it)
             : { workNote: it.workDoneNote || '', feedbackText: it.feedbackResponse || '' };
-          let workDoneSnippet = '';
-          if (dispFields.workNote) {
-            workDoneSnippet = `<div class="pw-task-note mt-1.5 text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-list-check mr-1 text-indigo-600"></i><b>Công việc đã làm:</b> ${escapeHtml(dispFields.workNote)}</div>`;
-          }
-          let fbSnippet = '';
-          if (dispFields.feedbackText) {
-            fbSnippet = `<div class="pw-task-note mt-1.5 text-[11px] text-emerald-800 bg-emerald-50/90 border border-emerald-200 rounded-xl px-2.5 py-1.5 font-medium"><i class="fa-solid fa-reply mr-1 text-emerald-600"></i><b>Phản hồi:</b> ${escapeHtml(dispFields.feedbackText)}</div>`;
-          }
+          const notesHtml = renderTaskNotesHtml(dispFields);
 
           let delegationPillsHtml = '';
           if (isDelegated && !it.delegationCorrupt && it.delegation) {
             if (isIncomingDeleg) {
               const assignerDisplay = it.delegation.assigner?.fullName || it.delegation.assigner?.username || 'Cấp trên';
-              delegationPillsHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 shrink-0 shadow-2xs"><i class="fa-solid fa-user-tie text-[9px]"></i> Giao bởi: ${escapeHtml(assignerDisplay)}</span>`;
+              delegationPillsHtml = `<span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap shrink-0 bg-indigo-50/90 text-indigo-800 border-indigo-200/90"><i aria-hidden="true" class="fa-solid fa-user-tie w-3 shrink-0 text-center text-[10px] leading-none text-indigo-600"></i><span>Giao bởi: ${escapeHtml(assignerDisplay)}</span></span>`;
             } else if (isOutgoingDeleg) {
               const assigneeDisplay = it.userFullname || it.username || 'Nhân sự';
-              delegationPillsHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-800 border border-violet-200 shrink-0 shadow-2xs"><i class="fa-solid fa-user-check text-[9px]"></i> Giao cho: ${escapeHtml(assigneeDisplay)}</span>`;
+              delegationPillsHtml = `<span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap shrink-0 bg-violet-50/90 text-violet-800 border-violet-200/90"><i aria-hidden="true" class="fa-solid fa-user-check w-3 shrink-0 text-center text-[10px] leading-none text-violet-600"></i><span>Giao cho: ${escapeHtml(assigneeDisplay)}</span></span>`;
             }
           } else if (isDelegated && it.delegationCorrupt) {
-            delegationPillsHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">Dữ liệu giao việc lỗi (Chỉ đọc)</span>`;
+            delegationPillsHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">Dữ liệu giao việc lỗi (Chỉ đọc)</span>`;
           }
 
           const dateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
 
-          const isFinished = isPersonalTaskFinished(it);
           const titleToneClass = isFinished
             ? 'text-emerald-950 group-hover:text-emerald-900'
-            : 'text-slate-800 group-hover:text-amber-900';
+            : 'text-slate-900 group-hover:text-slate-950';
           const completedTitleMarkHtml = isFinished
             ? '<i aria-hidden="true" class="fa-solid fa-circle-check mr-1.5 text-[12px] text-emerald-700"></i>'
             : '';
-          // Phân tách thị giác rõ ràng cho việc đã làm bằng nền xanh mint tươi sáng + thanh nhấn trái 5px + dấu check tiêu đề
+          // Phân tách thị giác rõ ràng: Đã hoàn thành = nền mint + vạch 5px emerald; Quá hạn chưa xong = nền trắng + vạch 5px rose; Chờ nhận = vạch indigo; Còn lại = trắng sạch hover slate
           const rowSurfaceClass = isFinished
             ? 'pw-task-finished bg-emerald-50 bg-gradient-to-r from-emerald-100/80 via-emerald-50 to-teal-50 border-emerald-300 hover:border-emerald-400'
-            : (isIncomingDeleg && it.delegation?.receipt?.status !== 'accepted'
-              ? 'bg-indigo-50/25 border-indigo-300 hover:bg-indigo-50/60 hover:border-indigo-400'
-              : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90');
+            : (isOverdue
+              ? 'pw-task-overdue bg-white border-rose-300 hover:bg-rose-50/45 hover:border-rose-400'
+              : (waitingReceipt
+                ? 'bg-indigo-50/25 border-indigo-300 hover:bg-indigo-50/60 hover:border-indigo-400'
+                : 'bg-white border-slate-200/90 hover:bg-slate-50/90 hover:border-slate-300'));
           const leftCompletedBarHtml = isFinished
             ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-[5px] rounded-r-full bg-emerald-600"></span>'
-            : (isIncomingDeleg && it.delegation?.receipt?.status !== 'accepted'
-              ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-indigo-500"></span>'
-              : '');
+            : (isOverdue
+              ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-[5px] rounded-r-full bg-rose-600"></span>'
+              : (waitingReceipt
+                ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-indigo-500"></span>'
+                : ''));
 
           const transferBadgesHtml = [delegationPillsHtml, getPersonalTaskTransferBadgeHtml(it, currentUser)].filter(Boolean).join(' ');
+          const actionEditCls = 'pw-action-icon-btn w-8 h-8 flex items-center justify-center rounded-lg bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200/90 hover:border-sky-300 text-xs transition cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-1';
+          const actionDelCls = 'pw-action-icon-btn w-8 h-8 flex items-center justify-center rounded-lg bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200/90 hover:border-rose-300 text-xs transition cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-1';
           const actionButtonsHtml = isIncomingDeleg
-            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn w-full md:w-auto px-2.5 h-7 md:h-8 flex items-center justify-center gap-1 rounded-lg md:rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold transition cursor-pointer shadow-2xs" title="Xem chi tiết, xác nhận nhận việc &amp; ghi công việc đã làm"><i class="fa-solid fa-clipboard-check"></i><span class="pw-update-label hidden sm:inline md:hidden">Cập nhật</span></button>`
+            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn w-full md:w-auto px-2.5 h-8 flex items-center justify-center gap-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 hover:border-indigo-300 text-[11px] font-semibold transition cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-1" title="Xem chi tiết, xác nhận nhận việc &amp; ghi công việc đã làm"><i aria-hidden="true" class="fa-solid fa-clipboard-check"></i><span class="pw-update-label hidden sm:inline md:hidden">Cập nhật</span></button>`
             : (isOutgoingDeleg
-              ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa nội dung giao việc &amp; xem kết quả"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Hủy giao việc này"><i class="fa-solid fa-ban"></i></button>`
+              ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" aria-label="Chỉnh sửa giao việc" class="${actionEditCls}" title="Chỉnh sửa nội dung giao việc &amp; xem kết quả"><i aria-hidden="true" class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" aria-label="Hủy giao việc" class="${actionDelCls}" title="Hủy giao việc này"><i aria-hidden="true" class="fa-solid fa-ban"></i></button>`
               : (perms.canEditCore || perms.canDelete
-                ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200/70 hover:border-amber-300 text-xs transition cursor-pointer shadow-2xs" title="Chỉnh sửa chi tiết"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-800 border border-slate-200/70 hover:border-rose-300 text-xs transition cursor-pointer shadow-2xs" title="Xóa mục này"><i class="fa-regular fa-trash-can"></i></button>`
-                : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs cursor-pointer" title="Xem chi tiết"><i class="fa-regular fa-eye"></i></button>`));
+                ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" aria-label="Chỉnh sửa công việc" class="${actionEditCls}" title="Chỉnh sửa chi tiết"><i aria-hidden="true" class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" aria-label="Xóa công việc" class="${actionDelCls}" title="Xóa mục này"><i aria-hidden="true" class="fa-regular fa-trash-can"></i></button>`
+                : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" aria-label="Xem chi tiết công việc" class="${actionEditCls}" title="Xem chi tiết"><i aria-hidden="true" class="fa-regular fa-eye"></i></button>`));
 
           rowsHtml += `
-        <div class="pw-task-row group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl px-3 py-2.5 md:pl-4 md:pr-3 md:py-3 transition-all duration-200 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-2 gap-x-2 md:gap-3 border shadow-sm">
+        <div class="pw-task-row pw-table-columns group relative ${rowSurfaceClass} hover:shadow-md rounded-2xl px-3 py-2.5 md:py-3 transition-colors duration-150 flex flex-wrap items-center justify-between gap-y-2 gap-x-2 border shadow-sm">
           ${leftCompletedBarHtml}
 
-          <!-- CỘT 1 (48px trên Desktop): CHỌN BÁO CÁO + QUAN TRỌNG -->
-          <div class="pw-task-selection order-1 md:order-none flex items-center gap-1.5 md:w-[48px] shrink-0">
+          <!-- CỘT 1 (52px trên Desktop): CHỌN BÁO CÁO + QUAN TRỌNG -->
+          <div class="pw-task-selection order-1 flex items-center gap-1.5 shrink-0">
             ${checkBtn}
             ${starBtn}
           </div>
 
-          <!-- CỘT 2 (94px trên Desktop; trên Mobile hiển thị cùng huy hiệu) -->
-          <div class="pw-task-meta order-2 md:order-none flex items-center gap-1.5 flex-wrap flex-1 md:flex-initial md:w-[94px] min-w-0 shrink-0">
+          <!-- CỘT 2 (96px trên Desktop; trên Mobile hiển thị cùng huy hiệu) -->
+          <div class="pw-task-meta order-2 flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
             ${typeBadge}
-            ${transferBadgesHtml ? `<div class="pw-mobile-inline-flex items-center gap-1 flex-wrap">${transferBadgesHtml}</div>` : ''}
+            ${transferBadgesHtml ? `<div class="pw-mobile-inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
           </div>
 
-          <!-- CỘT 3 (flex-1 min-w-0 - RỘNG TỐI ĐA) -->
-          <div class="pw-task-body order-4 md:order-none w-full md:w-auto md:flex-1 min-w-0 space-y-0.5 md:space-y-1 pl-0.5 md:pl-0 md:pr-1">
+          <!-- CỘT 3 (minmax(0, 1fr) trên Desktop - RỘNG TỐI ĐA, huy hiệu đứng gọn cùng hàng tiêu đề để giữ chiều cao đồng đều) -->
+          <div class="pw-task-body order-4 w-full min-w-0 space-y-1 pl-0.5 md:pl-0 md:pr-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <div class="pw-task-title font-bold md:font-semibold ${titleToneClass} text-[13.5px] md:text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em]" onclick="openPersonalItemEditModal('${it.id}')">
+              <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-task-title inline-block w-fit max-w-full bg-transparent border-0 p-0 text-left font-semibold ${titleToneClass} text-[14px] leading-snug break-words cursor-pointer transition tracking-[-0.01em] rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-1">
                 ${completedTitleMarkHtml}${escapeHtml(it.title)}
-              </div>
-              ${transferBadgesHtml ? `<div class="pw-desktop-inline-flex items-center gap-1.5 flex-wrap">${transferBadgesHtml}</div>` : ''}
+              </button>
+              ${transferBadgesHtml ? `<div class="pw-desktop-inline-flex items-center gap-1.5 flex-wrap shrink-0">${transferBadgesHtml}</div>` : ''}
             </div>
-            ${it.content ? `<p class="pw-task-desc text-[12px] ${isFinished ? 'text-slate-600' : 'text-slate-500'} leading-relaxed break-words font-normal mt-0.5 tracking-normal">${escapeHtml(it.content)}</p>` : ''}
-            ${workDoneSnippet}
-            ${fbSnippet}
+            ${it.content ? `<p class="pw-task-desc text-[12px] text-slate-600 leading-relaxed break-words line-clamp-3 font-normal tracking-normal" title="${escapeHtml(it.content)}">${escapeHtml(it.content)}</p>` : ''}
+            ${notesHtml}
           </div>
 
           <!-- ĐƯỜNG KẺ PHÂN CÁCH CHÂN THẺ TRÊN MOBILE -->
-          <div class="pw-task-divider order-5 w-full border-t border-slate-100/90 md:hidden"></div>
+          <div class="pw-task-divider order-5 w-full border-t ${isFinished ? 'border-emerald-200/70' : 'border-slate-200/70'} md:hidden"></div>
 
-          <!-- CỘT 4 (254px trên Desktop): THỜI GIAN & HẠN THỰC HIỆN -->
-          <div class="pw-task-time order-6 md:order-none flex flex-col items-start justify-center gap-1 text-[11px] flex-1 min-w-0 md:flex-initial md:w-[254px] shrink-0">
-            ${dateStr ? `
-              <span class="inline-flex items-center gap-1 md:gap-1.5 font-semibold font-num text-slate-600 whitespace-nowrap leading-none">
-                <i class="fa-regular fa-calendar text-[10.5px] md:text-[11px] text-slate-400"></i>
-                <span class="text-slate-400 font-medium">Ghi nhận:</span>
-                <span class="text-slate-700 font-bold">${dateStr}</span>
-              </span>
-            ` : ''}
+          <!-- CỘT 4 (256px trên Desktop): THỜI HẠN -> NGÀY GHI NHẬN (căn thẳng hàng icon/nhãn/ngày) -->
+          <div class="pw-task-time order-6 flex flex-col items-start justify-center gap-1.5 text-[11px] flex-1 min-w-0">
             ${dueDateBadge}
+            ${renderTaskRecordedHtml(dateStr, isFinished)}
           </div>
 
-          <!-- CỘT 5 (132px trên Desktop): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
-          <div class="pw-task-status-wrap order-7 md:order-none shrink-0 flex items-center justify-end md:justify-center md:w-[132px]">
+          <!-- CỘT 5 (136px trên Desktop): TRẠNG THÁI (BẤM ĐỂ CHUYỂN NHANH) -->
+          <div class="pw-task-status-wrap order-7 shrink-0 flex items-center justify-end md:justify-center">
             ${statusHtml}
           </div>
 
-          <!-- CỘT 6 (68px trên Desktop) -->
-          <div class="pw-task-actions order-3 md:order-none flex items-center justify-end gap-1 md:w-[68px] shrink-0">
+          <!-- CỘT 6 (76px trên Desktop): THAO TÁC -->
+          <div class="pw-task-actions order-3 flex items-center justify-end gap-1.5 shrink-0">
             ${actionButtonsHtml}
           </div>
         </div>
@@ -32901,17 +33088,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
 
         container.innerHTML = `
-      <div class="pw-desktop-flex items-center justify-between gap-4 pl-4 pr-3 py-2.5 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 border border-slate-200/90 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-slate-600 select-none shadow-2xs">
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-          <span class="w-[48px] shrink-0 text-center text-slate-500 font-bold">Chọn</span>
-          <span class="w-[94px] shrink-0 text-slate-500 font-bold">Phân loại</span>
-          <span class="flex-1 min-w-0 text-slate-700 font-extrabold">Nội dung công việc</span>
-        </div>
-        <div class="flex items-center justify-end gap-3 shrink-0">
-          <span class="w-[254px] shrink-0 text-slate-500 font-bold">Thời gian &amp; Hạn thực hiện</span>
-          <span class="w-[132px] shrink-0 text-center text-slate-500 font-bold">Trạng thái</span>
-          <span class="w-[68px] shrink-0 text-center text-slate-500 font-bold">Thao tác</span>
-        </div>
+      <div class="pw-desktop-flex pw-table-columns items-center py-2.5 bg-slate-100/80 border border-slate-200/90 rounded-xl text-[11px] font-semibold uppercase tracking-wide leading-4 text-slate-600 select-none">
+        <div class="text-center">Chọn<span class="sr-only"> đưa vào báo cáo và đánh dấu quan trọng</span></div>
+        <div class="text-center">Phân loại</div>
+        <div class="text-slate-700 font-bold">Nội dung công việc</div>
+        <div>Thời gian &amp; Hạn thực hiện</div>
+        <div class="text-center">Trạng thái</div>
+        <div class="text-center">Thao tác</div>
       </div>
       <div class="flex flex-col space-y-2 w-full pt-0.5">
         ${rowsHtml}
@@ -32923,39 +33106,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // ================= RENDER DẠNG THẺ (CARD VIEW) =================
       let cardsHtml = '';
       items.forEach(it => {
-        let typeBadge = '';
-        if (it.type === 'adhoc') {
-          typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-200"><i class="fa-solid fa-bolt text-amber-500 text-[9px]"></i><span>Phát sinh</span></span>`;
-        } else if (it.type === 'plan') {
-          typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-sky-50 text-sky-900 border border-sky-200"><i class="fa-solid fa-calendar text-sky-500 text-[9px]"></i><span>Kế hoạch</span></span>`;
-        } else if (it.type === 'proposal') {
-          typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-purple-50 text-purple-900 border border-purple-200"><i class="fa-solid fa-lightbulb text-purple-500 text-[9px]"></i><span>Đề xuất</span></span>`;
-        } else if (it.type === 'feedback') {
-          typeBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-teal-50 text-teal-900 border border-teal-200"><i class="fa-solid fa-comment text-teal-500 text-[9px]"></i><span>Ý kiến</span></span>`;
-        }
+        const typeBadge = renderTypePill(it.type).replace('md:w-full ', '');
 
-        let cardDueBadge = '';
         const isCardFinished = isPersonalTaskFinished(it);
+        const cardTimeline = (it.type === 'plan') ? calculatePlanTimelineStatus(it) : null;
+        const cardDueBadge = renderTaskDueHtml(it, cardTimeline, isCardFinished);
+        const cardIsOverdue = !isCardFinished && cardTimeline && cardTimeline.code === 'overdue';
         const cardTitleToneClass = isCardFinished
           ? 'text-emerald-950 hover:text-emerald-900'
-          : 'text-slate-800 hover:text-amber-800';
+          : 'text-slate-900 hover:text-slate-950';
         const completedCardTitleMarkHtml = isCardFinished
           ? '<i aria-hidden="true" class="fa-solid fa-circle-check mr-1.5 text-[12px] text-emerald-700"></i>'
           : '';
         const cardBorderClass = isCardFinished
           ? 'pw-task-finished bg-emerald-50 bg-gradient-to-r from-emerald-100/80 via-emerald-50 to-teal-50 border-emerald-300 hover:border-emerald-400'
-          : 'bg-white border-slate-200/80 hover:border-slate-300';
-        if (it.type === 'plan' && it.dueDate) {
-          const t = calculatePlanTimelineStatus(it);
-          cardDueBadge = `
-        <div class="pt-1">
-          <span class="pw-task-due inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] leading-none border shadow-2xs whitespace-nowrap font-num font-normal italic ${t.badgeClass}">
-            <i class="${t.icon} text-[10px] shrink-0 not-italic"></i>
-            <span class="whitespace-nowrap font-normal italic">${t.label} (Hạn: ${formatVNDate(it.dueDate)})</span>
-          </span>
-        </div>
-      `;
-        }
+          : (cardIsOverdue
+            ? 'pw-task-overdue bg-white border-rose-300 hover:bg-rose-50/45 hover:border-rose-400'
+            : 'bg-white border-slate-200/80 hover:border-slate-300');
 
         const cardIsDeleg = (typeof isDelegatedTaskItem === 'function') ? isDelegatedTaskItem(it) : false;
         const cardIsIn = (typeof isDelegatedIncomingTask === 'function') ? isDelegatedIncomingTask(it, currentUser) : false;
@@ -32970,55 +33137,63 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (cardIsDeleg && !it.delegationCorrupt && it.delegation) {
           if (cardIsIn) {
             const assignerDisplay = it.delegation.assigner?.fullName || it.delegation.assigner?.username || 'Cấp trên';
-            cardDelegBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200"><i class="fa-solid fa-user-tie text-[9px]"></i> Giao bởi: ${escapeHtml(assignerDisplay)}</span>`;
+            cardDelegBadge = `<span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap shrink-0 bg-indigo-50/90 text-indigo-800 border-indigo-200/90"><i aria-hidden="true" class="fa-solid fa-user-tie w-3 shrink-0 text-center text-[10px] leading-none text-indigo-600"></i><span>Giao bởi: ${escapeHtml(assignerDisplay)}</span></span>`;
           } else if (cardIsOut) {
             const assigneeDisplay = it.userFullname || it.username || 'Nhân sự';
-            cardDelegBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-800 border border-violet-200"><i class="fa-solid fa-user-check text-[9px]"></i> Giao cho: ${escapeHtml(assigneeDisplay)}</span>`;
+            cardDelegBadge = `<span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap shrink-0 bg-violet-50/90 text-violet-800 border-violet-200/90"><i aria-hidden="true" class="fa-solid fa-user-check w-3 shrink-0 text-center text-[10px] leading-none text-violet-600"></i><span>Giao cho: ${escapeHtml(assigneeDisplay)}</span></span>`;
           }
         } else if (cardIsDeleg && it.delegationCorrupt) {
-          cardDelegBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Dữ liệu giao việc lỗi (Chỉ đọc)</span>`;
+          cardDelegBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Dữ liệu giao việc lỗi (Chỉ đọc)</span>`;
         }
+        const cardMetadataHtml = [cardDelegBadge, getPersonalTaskTransferBadgeHtml(it, currentUser)].filter(Boolean).join(' ');
+        const cardNotesHtml = renderTaskNotesHtml(cardFields);
+        const cardDateStr = it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '');
         const cardStatusHtml = (typeof buildPersonalTaskStatusControlHtml === 'function')
           ? buildPersonalTaskStatusControlHtml(it, { variant: 'card' })
           : '';
         const cardStarEl = cardPerms.canToggleImportant
-          ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" class="pw-star-btn p-1 rounded-lg text-sm transition ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng"><i class="fa-solid fa-star"></i></button>`
-          : `<span class="pw-star-btn p-1 text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-200'}"><i class="fa-solid fa-star"></i></span>`;
+          ? `<button type="button" onclick="togglePersonalItemImportant('${it.id}')" aria-pressed="${it.isImportant ? 'true' : 'false'}" aria-label="${it.isImportant ? 'Bỏ đánh dấu quan trọng' : 'Đánh dấu quan trọng'}" class="pw-star-btn w-7 h-7 flex items-center justify-center rounded-lg hover:bg-amber-100 text-sm transition cursor-pointer ${it.isImportant ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'}" title="Đánh dấu quan trọng"><i aria-hidden="true" class="fa-solid fa-star"></i></button>`
+          : `<span class="pw-star-btn w-7 h-7 flex items-center justify-center text-sm ${it.isImportant ? 'text-amber-500' : 'text-slate-300'}"><i aria-hidden="true" class="fa-solid fa-star"></i></span>`;
         const cardCheckEl = cardIsOut
-          ? `<span class="pw-check-hit p-1 text-violet-500 text-xs" title="Công việc bạn đã giao"><i class="fa-solid fa-share-nodes"></i></span>`
+          ? `<span class="pw-check-hit p-1 text-violet-500 text-xs" title="Công việc bạn đã giao"><i aria-hidden="true" class="fa-solid fa-share-nodes"></i></span>`
           : (cardIsIn && !cardPerms.canSelectForReport && !isPersonalTaskLockedFromReportSelect(it, currentUser))
-            ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled class="w-4 h-4 rounded border-slate-200 opacity-50 cursor-not-allowed" title="Cần xác nhận nhận việc trước khi chọn báo cáo" /></label>`
-            : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isPersonalTaskLockedFromReportSelect(it, currentUser) && it.selectedForReport) ? 'checked' : ''} onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-emerald-600 focus:ring-emerald-500 accent-emerald-600'} cursor-pointer" title="${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Chọn đưa vào báo cáo'}" /></label>`;
+            ? `<label class="pw-check-hit inline-flex items-center justify-center cursor-not-allowed"><input type="checkbox" disabled aria-label="Cần xác nhận nhận việc trước khi chọn báo cáo" class="w-4 h-4 rounded border-slate-200 opacity-50 cursor-not-allowed" title="Cần xác nhận nhận việc trước khi chọn báo cáo" /></label>`
+            : `<label class="pw-check-hit inline-flex items-center justify-center cursor-pointer"><input type="checkbox" ${(!isPersonalTaskLockedFromReportSelect(it, currentUser) && it.selectedForReport) ? 'checked' : ''} aria-label="Chọn đưa vào báo cáo" onchange="togglePersonalItemReportSelect('${it.id}', this.checked, this)" class="w-4 h-4 rounded ${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'text-slate-400 border-slate-300 accent-slate-400 opacity-75 hover:opacity-100 focus:ring-indigo-400' : 'text-sky-600 focus:ring-sky-500 accent-sky-600'} cursor-pointer" title="${isPersonalTaskLockedFromReportSelect(it, currentUser) ? 'Đầu việc đã gửi hộp thư/báo cáo (không thể chọn lại — bấm để Sao chép & Tạo việc mới chỉnh sửa)' : 'Chọn đưa vào báo cáo'}" /></label>`;
+        const cardEditBtnCls = 'pw-action-icon-btn w-8 h-8 flex items-center justify-center rounded-lg bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 border border-slate-200/90 hover:border-sky-300 text-xs transition cursor-pointer shadow-sm';
+        const cardDelBtnCls = 'pw-action-icon-btn w-8 h-8 flex items-center justify-center rounded-lg bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200/90 hover:border-rose-300 text-xs transition cursor-pointer shadow-sm';
         const cardActionsEl = cardIsIn
-          ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition cursor-pointer flex items-center gap-1"><i class="fa-solid fa-clipboard-check"></i><span class="pw-update-label">Cập nhật</span></button>`
+          ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-update-btn px-2.5 h-8 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold transition cursor-pointer shadow-sm flex items-center gap-1"><i aria-hidden="true" class="fa-solid fa-clipboard-check"></i><span class="pw-update-label">Cập nhật</span></button>`
           : (cardIsOut
-            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer" title="Chỉnh sửa giao việc"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-xs transition cursor-pointer" title="Hủy giao việc"><i class="fa-solid fa-ban"></i></button>`
-            : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" class="pw-action-icon-btn p-1.5 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 text-xs transition cursor-pointer"><i class="fa-regular fa-trash-can"></i></button>`);
+            ? `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" aria-label="Chỉnh sửa giao việc" class="${cardEditBtnCls}" title="Chỉnh sửa giao việc"><i aria-hidden="true" class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="confirmCancelPersonalAssignment('${it.id}')" aria-label="Hủy giao việc" class="${cardDelBtnCls}" title="Hủy giao việc"><i aria-hidden="true" class="fa-solid fa-ban"></i></button>`
+            : `<button type="button" onclick="openPersonalItemEditModal('${it.id}')" aria-label="Chỉnh sửa công việc" class="${cardEditBtnCls}" title="Chỉnh sửa chi tiết"><i aria-hidden="true" class="fa-regular fa-pen-to-square"></i></button><button type="button" onclick="deletePersonalItem('${it.id}')" aria-label="Xóa công việc" class="${cardDelBtnCls}" title="Xóa mục này"><i aria-hidden="true" class="fa-regular fa-trash-can"></i></button>`);
 
         cardsHtml += `
-      <div class="pw-task-card relative border ${cardBorderClass} p-4 rounded-2xl shadow-sm space-y-3 transition flex flex-col justify-between group">
+      <div class="pw-task-card relative border ${cardBorderClass} p-4 rounded-2xl shadow-sm space-y-3 transition-colors flex flex-col justify-between group">
         <div class="space-y-2">
           <div class="pw-card-head flex items-center justify-between gap-2">
             <div class="pw-card-badges flex items-center gap-1.5 flex-wrap">
               ${typeBadge}
-              ${cardDelegBadge}
-              ${getPersonalTaskTransferBadgeHtml(it, currentUser)}
             </div>
             <div class="flex items-center gap-1 shrink-0">
               ${cardStarEl}
               ${cardCheckEl}
             </div>
           </div>
-          <h4 class="pw-task-title font-bold ${cardTitleToneClass} text-xs sm:text-sm cursor-pointer leading-snug" onclick="openPersonalItemEditModal('${it.id}')">${completedCardTitleMarkHtml}${escapeHtml(it.title)}</h4>
-          ${it.content ? `<p class="pw-task-desc text-xs ${isCardFinished ? 'text-slate-600' : 'text-slate-500'} line-clamp-3 leading-relaxed">${escapeHtml(it.content)}</p>` : ''}
-          ${cardFields.workNote ? `<div class="pw-task-note text-[11px] text-indigo-900 bg-indigo-50/90 border border-indigo-200 rounded-xl px-2.5 py-1.5 font-medium"><b>Công việc đã làm:</b> ${escapeHtml(cardFields.workNote)}</div>` : ''}
-          ${cardDueBadge}
+          <button type="button" onclick="openPersonalItemEditModal('${it.id}')" class="pw-task-title block w-full bg-transparent border-0 p-0 text-left font-semibold ${cardTitleToneClass} text-[14px] cursor-pointer leading-snug break-words rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-1">${completedCardTitleMarkHtml}${escapeHtml(it.title)}</button>
+          ${it.content ? `<p class="pw-task-desc text-xs text-slate-600 line-clamp-3 leading-relaxed break-words" title="${escapeHtml(it.content)}">${escapeHtml(it.content)}</p>` : ''}
+          ${cardMetadataHtml ? `<div class="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 pt-0.5">${cardMetadataHtml}</div>` : ''}
+          ${cardNotesHtml}
         </div>
-        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span class="text-[11px] text-slate-500 font-semibold font-num shrink-0"><i class="fa-regular fa-calendar text-slate-400 mr-1"></i>Ghi nhận: ${it.date ? formatVNDate(it.date) : (it.createdAt ? formatVNDate(it.createdAt) : '')}</span>
-          <div class="pw-card-controls flex items-center gap-1.5 flex-wrap justify-end ml-auto">
+        <div class="mt-auto pt-2.5 border-t ${isCardFinished ? 'border-emerald-200/80' : 'border-slate-100'} space-y-2 text-xs">
+          <div class="space-y-1.5">
+            ${cardDueBadge}
+            ${renderTaskRecordedHtml(cardDateStr, isCardFinished)}
+          </div>
+          <div class="pw-card-controls flex items-center justify-between gap-2 flex-wrap">
             ${cardStatusHtml}
-            ${cardActionsEl}
+            <div class="flex items-center gap-1.5 ml-auto">
+              ${cardActionsEl}
+            </div>
           </div>
         </div>
       </div>
@@ -33026,7 +33201,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
 
       container.innerHTML = `
-    <div class="pw-task-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    <div class="pw-task-card-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
       ${cardsHtml}
     </div>
   `;
@@ -35562,22 +35737,33 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (typeof document === 'undefined' || !document || typeof document.getElementById !== 'function') return;
       const isManagerOrAbove = !!opts.isManagerOrAbove;
       const hasValidStaffSource = !!opts.hasValidStaffSource;
+      const tabsTrack = document.getElementById('rpBoxTabsTrack');
+      if (tabsTrack) {
+        const isSingleStaffTab = !isManagerOrAbove && !hasValidStaffSource;
+        tabsTrack.className = isSingleStaffTab
+          ? 'min-w-0 overflow-x-auto'
+          : 'min-w-0 overflow-x-auto rounded-xl bg-slate-100/90 p-1 border border-slate-200/75';
+      }
+
       const tabs = ['senders', 'all', 'adhoc', 'plan', 'proposal', 'feedback'];
       const tabActiveMap = {
-        senders: { btn: 'font-bold bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200/80', badge: 'bg-indigo-100 text-indigo-800' },
-        all: { btn: 'font-bold bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200/80', badge: 'bg-emerald-100 text-emerald-800' },
-        adhoc: { btn: 'font-bold bg-white text-amber-800 shadow-sm ring-1 ring-amber-200/80', badge: 'bg-amber-100 text-amber-800' },
-        plan: { btn: 'font-bold bg-white text-sky-700 shadow-sm ring-1 ring-sky-200/80', badge: 'bg-sky-100 text-sky-800' },
-        proposal: { btn: 'font-bold bg-white text-purple-700 shadow-sm ring-1 ring-purple-200/80', badge: 'bg-purple-100 text-purple-800' },
-        feedback: { btn: 'font-bold bg-white text-teal-700 shadow-sm ring-1 ring-teal-200/80', badge: 'bg-teal-100 text-teal-800' }
+        senders: { btn: 'font-semibold bg-indigo-50/90 text-indigo-800 border border-indigo-200/90 shadow-sm', badge: 'bg-indigo-100 text-indigo-800' },
+        all: { btn: 'font-semibold bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200/80', badge: 'bg-emerald-100 text-emerald-800' },
+        adhoc: { btn: 'font-semibold bg-white text-amber-800 shadow-sm ring-1 ring-amber-200/80', badge: 'bg-amber-100 text-amber-800' },
+        plan: { btn: 'font-semibold bg-white text-sky-700 shadow-sm ring-1 ring-sky-200/80', badge: 'bg-sky-100 text-sky-800' },
+        proposal: { btn: 'font-semibold bg-white text-purple-700 shadow-sm ring-1 ring-purple-200/80', badge: 'bg-purple-100 text-purple-800' },
+        feedback: { btn: 'font-semibold bg-white text-teal-700 shadow-sm ring-1 ring-teal-200/80', badge: 'bg-teal-100 text-teal-800' }
       };
       const tabBase = 'rp-box-tab-btn inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 sm:px-3 text-xs transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500';
-      const tabIdle = 'font-semibold text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent';
-      const countBase = 'inline-flex min-w-[1.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-bold font-num tabular-nums';
+      const tabIdle = 'font-medium text-slate-600 hover:bg-white/75 hover:text-slate-900 border border-transparent';
+      const countBase = 'inline-flex min-w-[1.25rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold font-num tabular-nums';
 
       tabs.forEach(t => {
         const isActive = t === activeTab;
-        const style = tabActiveMap[t] || tabActiveMap.all;
+        let style = tabActiveMap[t] || tabActiveMap.all;
+        if (t === 'senders' && (isManagerOrAbove || hasValidStaffSource)) {
+          style = { btn: 'font-semibold bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-200/80', badge: 'bg-indigo-100 text-indigo-800' };
+        }
         const btn = document.getElementById('rpBoxTab_' + t);
         if (btn) {
           btn.className = tabBase + ' ' + (isActive ? style.btn : tabIdle);
@@ -37702,7 +37888,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num bg-slate-200/90 text-slate-700">' + totalSenderCount + '</span>' +
           '</button>' +
           '<button type="button" onclick="setRpBoxReadFilter(\'unread\')" class="' + (rfUnreadActive ? unreadBtnActive : btnIdle) + '" title="Chỉ hiển thị các báo cáo chưa đọc">' +
-          '<span class="w-2 h-2 rounded-full ' + (unreadSenderCount > 0 ? 'bg-blue-600 animate-pulse' : 'bg-slate-400') + '"></span>' +
+          '<span class="w-2 h-2 rounded-full ' + (unreadSenderCount > 0 ? 'bg-blue-600' : 'bg-slate-400') + '"></span>' +
           '<span>Chưa đọc</span>' +
           '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold font-num ' + (unreadSenderCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-200/80 text-slate-600') + '">' + unreadSenderCount + '</span>' +
           '</button>' +
@@ -37750,23 +37936,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
+      const gridColsCls = isManagerOrAbove ? 'rp-sender-columns rp-sender-cols-mgr' : 'rp-sender-columns rp-sender-cols-staff';
       const headerHtml =
-        '<div class="hidden xl:!flex items-center justify-between gap-4 pl-4 pr-3 py-2 bg-slate-100/90 border border-slate-200/80 rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 select-none mb-2">' +
-        '<div class="flex items-center gap-3 flex-1 min-w-0">' +
-        '<span class="w-[28px] shrink-0 text-center">STT</span>' +
-        '<span class="flex-1 min-w-0">' + (isManagerOrAbove ? 'Người gửi &amp; nội dung gửi' : 'Báo cáo đã gửi &amp; người nhận') + '</span>' +
-        '</div>' +
-        '<div class="flex items-center justify-end gap-3 shrink-0">' +
-        '<span class="w-[112px] shrink-0 text-center">Ngày giờ gửi</span>' +
-        (isManagerOrAbove ? '<span class="w-[152px] shrink-0 text-center">Tổng hợp báo cáo</span>' : '') +
-        '<span class="' + (isManagerOrAbove ? 'w-[152px]' : 'w-[112px]') + ' shrink-0 text-center">Thao tác</span>' +
-        '</div>' +
+        '<div class="hidden xl:!grid ' + gridColsCls + ' py-2.5 bg-slate-100/85 border border-slate-200/80 rounded-xl text-[11px] font-semibold uppercase tracking-wide leading-4 text-slate-600 select-none mb-2">' +
+        '<span class="text-center">STT</span>' +
+        '<span>' + (isManagerOrAbove ? 'Người gửi &amp; nội dung gửi' : 'Báo cáo đã gửi &amp; người nhận') + '</span>' +
+        '<span class="text-center">Ngày giờ gửi</span>' +
+        (isManagerOrAbove ? '<span class="text-center">Tổng hợp báo cáo</span>' : '') +
+        '<span class="text-center">Thao tác</span>' +
         '</div>';
 
       const typeChip = function (n, cls, icon, title) {
         if (!n) return '';
-        return '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ' + cls + '" title="' + title + '">' +
-          '<i class="fa-solid ' + icon + ' text-[9px]"></i><span class="font-num">' + n + '</span></span>';
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] leading-4 font-semibold border shrink-0 whitespace-nowrap ' + cls + '" title="' + title + '">' +
+          '<i aria-hidden="true" class="fa-solid ' + icon + ' text-[9.5px]"></i><span class="font-num tabular-nums">' + n + '</span></span>';
       };
 
       const rowsHtml = filtered.map(function (rec, idx) {
@@ -37792,87 +37975,89 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           : '';
         const recipientName = rawRecDisplay || [r.recipientRole, r.recipientDepartment].filter(Boolean).join(' - ') || 'Quản lý bộ phận';
         const recipientPill = (!isCopy && !isManagerOrAbove)
-          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 max-w-full"><i class="fa-solid fa-paper-plane text-[9px] shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">Gửi đến: ' + escapeHtml(recipientName) + '</span></span>'
+          ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] leading-4 font-semibold bg-indigo-50/90 text-indigo-800 border border-indigo-200/90 shrink-0 max-w-full whitespace-nowrap"><i aria-hidden="true" class="fa-solid fa-paper-plane text-[9.5px] text-indigo-600 shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">Gửi đến: ' + escapeHtml(recipientName) + '</span></span>'
           : '';
         const deptPill = r.senderDepartment
-          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0 max-w-full"><i class="fa-solid fa-building text-[9px] text-slate-400 shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">' + escapeHtml(r.senderDepartment) + '</span></span>'
+          ? '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] leading-4 font-medium bg-slate-50 text-slate-600 border border-slate-200/80 shrink-0 max-w-full whitespace-nowrap"><i aria-hidden="true" class="fa-solid fa-building text-[9.5px] text-slate-400 shrink-0"></i><span class="min-w-0 break-words [overflow-wrap:anywhere]">' + escapeHtml(r.senderDepartment) + '</span></span>'
           : '';
         const periodPill = (r.periodMonth && r.periodYear)
-          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 shrink-0 font-num">Kỳ T' + r.periodMonth + '/' + r.periodYear + '</span>'
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] leading-4 font-semibold bg-slate-100/90 text-slate-700 border border-slate-200/80 shrink-0 font-num tabular-nums whitespace-nowrap">Kỳ T' + r.periodMonth + '/' + r.periodYear + '</span>'
           : '';
-        const consolidatedPill = (isManagerOrAbove && rec.consolidated > 0)
-          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0"><i class="fa-solid fa-circle-check text-[9px]"></i><span>Đã tổng hợp <span class="font-num">' + rec.consolidated + '/' + rec.total + '</span></span></span>'
+        const canToggleRead = isManagerOrAbove && !isOwn;
+        const isRead = isOwn || (typeof isRpBoxReportRead === 'function' ? isRpBoxReportRead(r.id, currentUser) : true);
+        const isUnread = canToggleRead && !isRead;
+        const cardBgClass = isUnread
+          ? 'bg-blue-50/35 border border-blue-300/90 hover:bg-blue-50/65 hover:border-blue-400 hover:shadow-md'
+          : 'bg-white border border-slate-200/90 hover:bg-slate-50/90 hover:border-slate-300 hover:shadow-md';
+        const unreadLeftBarHtml = isUnread
+          ? '<span aria-hidden="true" class="pointer-events-none absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-blue-600"></span>'
           : '';
-
-        const isRead = isSenderOfReport(currentUser, r) || (typeof isRpBoxReportRead === 'function' ? isRpBoxReportRead(r.id, currentUser) : true);
-        const cardBgClass = (isManagerOrAbove && !isRead)
-          ? 'bg-blue-50/25 border-blue-300/90 hover:bg-blue-50/60 hover:border-blue-400 hover:shadow-sm'
-          : 'bg-white border-slate-200/90 hover:bg-amber-50/45 hover:border-amber-300/90 hover:shadow-sm';
-        const unreadLeftBarHtml = (isManagerOrAbove && !isRead)
-          ? '<span class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-blue-500 shadow-xs"></span>'
-          : '';
-        const readStatusPill = isManagerOrAbove
-          ? (!isRead
-              ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300 shrink-0 shadow-2xs"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>Chưa đọc</span>'
-              : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0"><i class="fa-solid fa-check text-[9px] text-slate-400"></i>Đã đọc</span>')
+        // Chỉ hiển thị nhãn "Chưa đọc" cho thư nhân sự gửi đến chưa đọc; không lặp lại nhãn "Đã đọc" trên thư đã đọc hoặc báo cáo tự chuyển (isOwn).
+        const readStatusPill = isUnread
+          ? '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] leading-4 font-semibold bg-blue-100 text-blue-800 border border-blue-300 shrink-0 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>Chưa đọc</span>'
           : '';
 
         return (
-          '<div class="group relative w-full max-w-full overflow-hidden ' + cardBgClass + ' rounded-2xl pl-4 pr-3 py-3 transition-all duration-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 xl:gap-4 shadow-2xs' + (isSummary ? '' : ' cursor-pointer') + '"' +
+          '<div class="group relative w-full max-w-full overflow-hidden ' + cardBgClass + ' ' + gridColsCls + ' rounded-2xl px-4 py-3.5 transition-all duration-150 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 shadow-sm' + (isSummary ? '' : ' cursor-pointer') + '"' +
           (isSummary ? '' : ' onclick="openRpBoxSenderRecordTasks(\'' + escapeHtml(String(r.id)) + '\')" title="Bấm để xem các đầu việc của lượt gửi này"') + '>' +
           unreadLeftBarHtml +
 
           '<div class="rp-sender-main flex items-center gap-3 flex-1 min-w-0">' +
-          '<span class="rp-row-number w-[28px] shrink-0 text-center text-[11px] font-black text-slate-400 font-num">' + (idx + 1) + '</span>' +
+          '<span class="rp-row-number w-[28px] shrink-0 text-center text-xs font-semibold text-slate-400 font-num tabular-nums">' + (idx + 1) + '</span>' +
+          '<div class="flex items-center gap-3.5 min-w-0 flex-1">' +
           '<div class="rp-row-avatar relative w-10 h-10 shrink-0">' +
-          '<div class="w-10 h-10 rounded-full bg-gradient-to-br ' + avatarCls + ' text-white flex items-center justify-center font-black text-sm shadow-xs">' + escapeHtml(initial) + '</div>' +
-          '<span class="absolute -right-0.5 -bottom-0.5 w-4 h-4 rounded-full ' + cornerCls + ' text-white border-2 border-white flex items-center justify-center"><i class="fa-solid ' + cornerIcon + ' text-[7px]"></i></span>' +
+          '<div class="w-10 h-10 rounded-full bg-gradient-to-br ' + avatarCls + ' text-white flex items-center justify-center font-bold text-sm shadow-sm">' + escapeHtml(initial) + '</div>' +
+          '<span class="absolute -right-0.5 -bottom-0.5 w-4 h-4 rounded-full ' + cornerCls + ' text-white border-2 border-white flex items-center justify-center"><i aria-hidden="true" class="fa-solid ' + cornerIcon + ' text-[7px]"></i></span>' +
           '</div>' +
-          '<div class="min-w-0 flex-1 space-y-1">' +
-          '<div class="flex items-center gap-1.5 flex-wrap text-[13.5px] leading-snug">' +
-          '<b class="font-extrabold text-slate-900 break-words [overflow-wrap:anywhere]">' + escapeHtml(isManagerOrAbove ? senderName : 'Bạn') + '</b>' +
-          '<span class="text-slate-500 font-medium">' + actionText + '</span>' +
+          '<div class="min-w-0 flex-1 space-y-1.5">' +
+          '<div class="flex items-center gap-2 flex-wrap text-[14px] leading-snug">' +
+          '<b class="font-semibold text-slate-900 break-words [overflow-wrap:anywhere]">' + escapeHtml(isManagerOrAbove ? senderName : 'Bạn') + '</b>' +
+          '<span class="text-slate-500 font-normal">' + actionText + '</span>' +
+          recipientPill +
+          readStatusPill +
+          periodPill +
           '</div>' +
           '<div class="flex items-center gap-1.5 flex-wrap">' +
-          '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0"><i class="fa-solid fa-list-check text-[9px] text-slate-500"></i><span class="font-num">' + rec.total + '</span> đầu việc</span>' +
-          typeChip(rec.counts.adhoc, 'bg-amber-50 text-amber-800 border-amber-200', 'fa-bolt text-amber-500', 'Việc phát sinh') +
-          typeChip(rec.counts.plan, 'bg-sky-50 text-sky-800 border-sky-200', 'fa-calendar-days text-sky-500', 'Kế hoạch') +
-          typeChip(rec.counts.proposal, 'bg-purple-50 text-purple-800 border-purple-200', 'fa-lightbulb text-purple-500', 'Đề xuất') +
-          typeChip(rec.counts.feedback, 'bg-teal-50 text-teal-800 border-teal-200', 'fa-comment-dots text-teal-500', 'Ý kiến / Phản ánh') +
-          readStatusPill + deptPill + recipientPill + periodPill + consolidatedPill +
-          (isSummary ? '' : '<span class="rp-open-hint hidden group-hover:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0"><i class="fa-solid fa-eye text-[9px]"></i><span>Bấm để xem đầu việc</span></span>') +
+          '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] leading-4 font-semibold bg-slate-100/90 text-slate-700 border border-slate-200/80 shrink-0 whitespace-nowrap"><i aria-hidden="true" class="fa-solid fa-list-check text-[9.5px] text-slate-500"></i><span class="font-num tabular-nums">' + rec.total + '</span> đầu việc</span>' +
+          typeChip(rec.counts.adhoc, 'bg-amber-50 text-amber-900 border-amber-200/90', 'fa-bolt text-amber-600', 'Việc phát sinh') +
+          typeChip(rec.counts.plan, 'bg-sky-50 text-sky-900 border-sky-200/90', 'fa-calendar-days text-sky-600', 'Kế hoạch') +
+          typeChip(rec.counts.proposal, 'bg-purple-50 text-purple-900 border-purple-200/90', 'fa-lightbulb text-purple-600', 'Đề xuất') +
+          typeChip(rec.counts.feedback, 'bg-teal-50 text-teal-900 border-teal-200/90', 'fa-comment-dots text-teal-600', 'Ý kiến / Phản ánh') +
+          deptPill +
+          (isSummary ? '' : '<span class="rp-open-hint hidden group-hover:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] leading-4 font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shrink-0 whitespace-nowrap"><i aria-hidden="true" class="fa-solid fa-eye text-[9.5px]"></i><span>Xem đầu việc</span></span>') +
+          '</div>' +
           '</div>' +
           '</div>' +
           '</div>' +
 
-          '<div class="flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
-          '<div class="flex flex-col items-start xl:items-center justify-center gap-1.5 text-[11px] w-[112px] shrink-0">' +
-          '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-700 whitespace-nowrap leading-none"><i class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
-          (when.time ? '<span class="inline-flex items-center gap-1.5 font-semibold font-num text-slate-500 whitespace-nowrap leading-none"><i class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
+          '<div class="rp-sender-row-meta flex flex-wrap items-center justify-between xl:justify-end gap-2.5 xl:gap-3 w-full xl:w-auto min-w-0 xl:shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">' +
+          '<div class="rp-sender-dates flex flex-col items-start xl:items-center justify-center gap-1 text-[11px] w-[124px] shrink-0">' +
+          '<span class="inline-flex items-center gap-1.5 font-semibold font-num tabular-nums text-slate-800 whitespace-nowrap leading-4"><i aria-hidden="true" class="fa-regular fa-calendar text-[11px] text-slate-400"></i><span>' + escapeHtml(when.date || '---') + '</span></span>' +
+          (when.time ? '<span class="inline-flex items-center gap-1.5 font-medium font-num tabular-nums text-slate-500 whitespace-nowrap leading-4"><i aria-hidden="true" class="fa-regular fa-clock text-[11px] text-slate-400"></i><span>' + escapeHtml(when.time) + '</span></span>' : '') +
           '</div>' +
           (isManagerOrAbove ? (
-            '<div class="w-[152px] shrink-0 flex items-center justify-center">' +
-            (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
-              (rec.canOpenHistory ? '<button type="button" onclick="event.stopPropagation();setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap cursor-pointer transition" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs whitespace-nowrap select-none" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
-              '<i class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
+            '<div class="rp-sender-cons w-[152px] shrink-0 flex items-center justify-center">' +
+            (rec.isSummary ? ('<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-300 shadow-sm whitespace-nowrap" title="Báo cáo tổng hợp do Quản lý lập và gửi lên"><i aria-hidden="true" class="fa-solid fa-file-signature text-purple-600"></i><span>Báo cáo tổng hợp</span></span>') : rec.consolidated > 0 ? (
+              (rec.canOpenHistory ? '<button type="button" onclick="event.stopPropagation();setRpBoxViewMode(\'history\')" class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-sm whitespace-nowrap cursor-pointer transition" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc) - Bấm để xem Lịch sử báo cáo">' : '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-sm whitespace-nowrap select-none" title="' + (rec.consolidatedMode === 'draft' ? 'Đã tổng hợp tạo nháp' : 'Đã tổng hợp tạo báo cáo') + ' (' + rec.consolidated + '/' + rec.total + ' đầu việc)">') +
+              '<i aria-hidden="true" class="fa-solid fa-file-circle-check text-indigo-600"></i>' +
               '<span>' + (rec.consolidatedMode === 'draft' ? 'Đã tạo nháp' : 'Đã tạo báo cáo') + (rec.consolidated < rec.total ? ' (' + rec.consolidated + '/' + rec.total + ')' : '') + '</span>' +
               (rec.canOpenHistory ? '</button>' : '</span>')
             ) : (
-              '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-400 border border-slate-200/90 whitespace-nowrap" title="Chưa tổng hợp tạo báo cáo">' +
-              '<i class="fa-regular fa-clock text-[11px] text-slate-300"></i>' +
+              '<span class="w-full max-w-[152px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200/90 whitespace-nowrap" title="Chưa tổng hợp tạo báo cáo">' +
+              '<i aria-hidden="true" class="fa-regular fa-clock text-[11px] text-slate-400"></i>' +
               '<span>Chưa tổng hợp</span>' +
               '</span>'
             )) +
             '</div>'
           ) : '') +
-          '<div class="rp-sender-actions flex items-center justify-end gap-2 shrink-0 ml-auto xl:ml-0 ' + (isManagerOrAbove ? 'w-[152px]' : 'w-[112px]') + '">' +
-          (isManagerOrAbove ? (
-            '<button type="button" onclick="event.stopPropagation();toggleRpBoxReportReadStatus(\'' + escapeHtml(String(r.id)) + '\', event)" title="' + (isRead ? 'Đánh dấu là CHƯA ĐỌC' : 'Đánh dấu là ĐÃ ĐỌC') + '" class="h-8 w-8 rounded-xl shrink-0 inline-flex items-center justify-center border transition cursor-pointer shadow-2xs ' + (isRead ? 'bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 border-slate-200' : 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-300') + '">' +
-            '<i class="' + (isRead ? 'fa-regular fa-envelope-open text-xs' : 'fa-solid fa-envelope text-blue-600 text-xs') + '"></i>' +
+          '<div class="rp-sender-actions flex items-center justify-end gap-2 shrink-0 ml-auto xl:ml-0 ' + (isManagerOrAbove ? 'w-[160px]' : 'w-[120px]') + '">' +
+          (canToggleRead ? (
+            '<button type="button" onclick="event.stopPropagation();toggleRpBoxReportReadStatus(\'' + escapeHtml(String(r.id)) + '\', event)" aria-label="' + (isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc') + '" title="' + (isRead ? 'Đánh dấu là CHƯA ĐỌC' : 'Đánh dấu là ĐÃ ĐỌC') + '" class="h-9 w-9 rounded-xl shrink-0 inline-flex items-center justify-center border transition cursor-pointer ' + (isRead ? 'bg-slate-50/75 hover:bg-blue-50 text-slate-400 hover:text-blue-700 border-slate-200/80 hover:border-blue-300 shadow-2xs' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300 shadow-sm') + '">' +
+            '<i aria-hidden="true" class="' + (isRead ? 'fa-regular fa-envelope text-xs' : 'fa-solid fa-envelope-circle-check text-blue-600 text-xs') + '"></i>' +
             '</button>'
           ) : '') +
-          '<button type="button" onclick="event.stopPropagation();downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-[112px] h-8 shrink-0 inline-flex items-center justify-center gap-2 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[11.5px] font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">' +
-          '<i class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
+          '<button type="button" onclick="event.stopPropagation();downloadRpBoxSenderRecordWord(\'' + escapeHtml(String(r.id)) + '\')" title="Tải file Word báo cáo: ' + escapeHtml(fileName) + '" class="w-[116px] h-9 shrink-0 inline-flex items-center justify-center gap-2 px-3 rounded-xl bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 hover:border-blue-300 text-xs font-semibold whitespace-nowrap transition cursor-pointer shadow-sm active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">' +
+          '<i aria-hidden="true" class="fa-solid fa-file-word text-blue-600 text-sm shrink-0"></i>' +
           '<span>Tải Word</span>' +
           '</button>' +
           '</div>' +
