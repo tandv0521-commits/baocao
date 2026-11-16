@@ -9136,7 +9136,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (!authData || !authData.username || !authData.password) return;
 
         const uFound = (users || []).find(u => u.username && u.username.toLowerCase() === authData.username.toLowerCase().trim());
-        if (!uFound || uFound.status === 'Khóa') return;
+        const isAutoLocked = uFound && (typeof isAccountLockedOrPaused === 'function' ? isAccountLockedOrPaused(uFound.status) : uFound.status === 'Khóa');
+        if (!uFound || isAutoLocked) return;
 
         const isValid = await verifyEnterprisePassword(authData.password, uFound.password_hash);
         if (isValid) {
@@ -10787,13 +10788,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             currentUser = null;
           } else {
             // 2. Xác thực lại với dữ liệu người dùng thật từ CSDL để chống người dùng sửa biến/localStorage
-            const verified = (users || []).find(u => (u.id === parsed.id || (u.username && u.username.toLowerCase() === (parsed.username || '').toLowerCase())) && (u.status || '').toLowerCase() !== 'locked');
+            const verified = (users || []).find(u => {
+              const sameIdentity = (u.id === parsed.id || (u.username && u.username.toLowerCase() === (parsed.username || '').toLowerCase()));
+              if (!sameIdentity) return false;
+              const locked = (typeof isAccountLockedOrPaused === 'function')
+                ? isAccountLockedOrPaused(u.status)
+                : (u.status === 'Khóa' || (u.status || '').toLowerCase() === 'locked');
+              return !locked;
+            });
             if (verified) {
               // 3. KIỂM TRA MẬT KHẨU CÓ BỊ THAY ĐỔI TỪ THIẾT BỊ KHÁC KHÔNG
+              // Khi isFromCache === true (đọc cache cũ ở 0ms), chờ bản tươi từ Supabase (isFromCache === false) trước khi hủy phiên
               if (parsed.password_hash && verified.password_hash && parsed.password_hash !== verified.password_hash) {
-                localStorage.removeItem('ops_portal_session_final_v48');
-                currentUser = null;
-                showLoginErrorGeneral("Mật khẩu đã thay đổi", "Mật khẩu tài khoản đã được thay đổi từ một thiết bị khác. Vui lòng đăng nhập lại bằng mật khẩu mới!", true);
+                if (!isFromCache) {
+                  localStorage.removeItem('ops_portal_session_final_v48');
+                  currentUser = null;
+                  showLoginErrorGeneral("Mật khẩu đã thay đổi", "Mật khẩu tài khoản đã được thay đổi từ một thiết bị khác. Vui lòng đăng nhập lại bằng mật khẩu mới!", true);
+                }
               } else {
                 const d = depts.find(x => x.id === verified.department_id);
                 currentUser = Object.freeze({
@@ -10825,7 +10836,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 }
                 initMainDashboard();
               }
-            } else {
+            } else if (!isFromCache) {
               localStorage.removeItem('ops_portal_session_final_v48');
               currentUser = null;
             }
@@ -12908,7 +12919,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           username = user.username;
         }
 
-        if (user.status === 'Khóa') {
+        const isUserLocked = (uObj) => !!uObj && (typeof isAccountLockedOrPaused === 'function' ? isAccountLockedOrPaused(uObj.status) : uObj.status === 'Khóa');
+        if (isUserLocked(user)) {
           resetLoginButton();
           showLoginErrorGeneral("Tài khoản đã bị khóa", "Tài khoản này đã bị Quản trị viên vô hiệu hóa. Vui lòng liên hệ phòng CNTT hoặc Ban DVKH!");
           return;
@@ -12923,7 +12935,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             if (liveUser) {
               user = liveUser;
               username = liveUser.username;
-              if (liveUser.status === 'Khóa') {
+              if (isUserLocked(liveUser)) {
                 resetLoginButton();
                 showLoginErrorGeneral("Tài khoản đã bị khóa", "Tài khoản này đã bị Quản trị viên vô hiệu hóa. Vui lòng liên hệ phòng CNTT hoặc Ban DVKH!");
                 return;
@@ -25345,6 +25357,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           sessionDate: todayKey
         });
         localStorage.setItem('ops_portal_session_final_v48', JSON.stringify(currentUser));
+        if (typeof syncPersonnelDirectoryCaches === 'function') {
+          syncPersonnelDirectoryCaches([{ id: currentUser.id, username: currentUser.username, password_hash: newP }]);
+        }
+        try { localStorage.removeItem('ops_portal_init_cache_v6'); } catch (e) { }
 
         // Cập nhật lại mật khẩu ghi nhớ nếu người dùng đang bật ghi nhớ
         const rememberedRaw = localStorage.getItem('ops_portal_remembered_auth_v49');
