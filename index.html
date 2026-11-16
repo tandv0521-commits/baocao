@@ -2906,7 +2906,7 @@
                 class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
               <input type="text" id="loginUsernameInput" oninput="hideLoginError()"
                 onkeydown="if(event.key==='Enter') handleLogin()" placeholder="Nhập tên đăng nhập" autofocus
-                autocomplete="username"
+                autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
                 class="w-full bg-white/90 border border-white/80 rounded-2xl pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 font-semibold focus:ring-4 focus:ring-emerald-400/30 focus:border-emerald-500 focus:bg-white focus:outline-none transition shadow-sm placeholder:italic placeholder:font-normal placeholder:text-[11px] placeholder:text-slate-400" />
             </div>
           </div>
@@ -12834,16 +12834,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       try {
         let user = null;
+        let usedMemoryFastPath = false;
 
         // BƯỚC 1: FAST-PATH ZERO-LATENCY (TÌM KIẾM TRONG BỘ NHỚ RAM ĐÃ TẢI SẴN)
-        // Khi người dùng chọn từ dropdown hoặc danh sách đã tải, thông tin user đã có sẵn 100% trong RAM.
-        // Xác thực ngay tại chỗ không phụ thuộc vào độ trễ mạng hoặc máy chủ Supabase bận giờ cao điểm!
+        // Chỉ áp dụng khi bản ghi trong RAM có password_hash hợp lệ và không phải tài khoản quản trị hệ thống
         if (globalInitData && globalInitData.allUsers && globalInitData.allUsers.length > 0) {
           const uFound = globalInitData.allUsers.find(u => {
             const uName = (u.username || '').toLowerCase();
             return uName === username.toLowerCase() || uName === cleanUsername.toLowerCase();
           });
-          if (uFound) {
+          const isSysAdminCandidate = uFound && (
+            (typeof isSystemAdmin === 'function' && isSystemAdmin(uFound.role, uFound.username)) ||
+            (uFound.username || '').toLowerCase() === 'admin'
+          );
+          if (uFound && !isSysAdminCandidate && uFound.password_hash) {
             username = uFound.username;
             let deptName = "Chưa phân bổ";
             if (globalInitData.departments) {
@@ -12868,29 +12872,39 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               password_hash: uFound.password_hash,
               departments: { id: uFound.department_id, name: deptName }
             };
+            usedMemoryFastPath = true;
           }
         }
 
-        // BƯỚC 2: NẾU CHƯA CÓ TRONG RAM (User mới tinh nhập từ tab Username), TRUY VẤN SUPABASE VỚI TIMEOUT BẢO VỆ 4.5S
-        if (!user) {
+        const fetchLiveUserRecord = async () => {
+          const candidates = Array.from(new Set([
+            username,
+            cleanUsername,
+            username.toLowerCase(),
+            cleanUsername.toLowerCase()
+          ].map(v => String(v || '').replace(/[(),]/g, '').trim()).filter(Boolean)));
+          const orFilter = candidates.map(c => `username.eq.${c}`).join(',');
           const fetchPromise = supabase
             .from('users')
             .select('*, departments(id, name)')
-            .or(`username.eq.${username},username.eq.${cleanUsername}`)
+            .or(orFilter)
             .limit(1);
-
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Máy chủ phản hồi chậm do quá tải mạng. Vui lòng bấm thử lại!")), 4500)
           );
-
           const { data: users, error } = await Promise.race([fetchPromise, timeoutPromise]);
           if (error) throw error;
-          if (!users || users.length === 0) {
+          return (users && users.length > 0) ? users[0] : null;
+        };
+
+        // BƯỚC 2: TRUY VẤN SUPABASE TRỰC TIẾP (khi chưa có trong RAM, là tài khoản admin, hoặc thiếu password_hash)
+        if (!user) {
+          user = await fetchLiveUserRecord();
+          if (!user) {
             resetLoginButton();
             showLoginErrorGeneral("Tài khoản không tồn tại", `Tên đăng nhập "${escapeHtml(username)}" không tồn tại trên hệ thống!`);
             return;
           }
-          user = users[0];
           username = user.username;
         }
 
@@ -12901,7 +12915,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
 
         // 3. XÁC THỰC MẬT KHẨU BẢO MẬT DOANH NGHIỆP (TƯƠNG THÍCH MÃ HÓA SHA-256 LẪN MẬT KHẨU CŨ)
-        const isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
+        let isPasswordValid = await verifyEnterprisePassword(password, user.password_hash);
+        // Nếu mật khẩu không khớp với cache RAM/localStorage cũ -> đối chiếu lại với Supabase trước khi kết luận sai
+        if (!isPasswordValid && usedMemoryFastPath && typeof supabase !== 'undefined' && supabase) {
+          try {
+            const liveUser = await fetchLiveUserRecord();
+            if (liveUser) {
+              user = liveUser;
+              username = liveUser.username;
+              if (liveUser.status === 'Khóa') {
+                resetLoginButton();
+                showLoginErrorGeneral("Tài khoản đã bị khóa", "Tài khoản này đã bị Quản trị viên vô hiệu hóa. Vui lòng liên hệ phòng CNTT hoặc Ban DVKH!");
+                return;
+              }
+              isPasswordValid = await verifyEnterprisePassword(password, liveUser.password_hash);
+              if (isPasswordValid && typeof syncPersonnelDirectoryCaches === 'function') {
+                syncPersonnelDirectoryCaches([liveUser]);
+              }
+            }
+          } catch (_liveErr) { }
+        }
         if (!isPasswordValid) {
           const failedCount = recordFailedLoginAttempt(username);
           resetLoginButton();
@@ -29016,7 +29049,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (u.username) byUser.set(_cleanReportIdentityUsername(u.username), u);
       });
 
-      const merged = cloudUsers.map(cu => {
+      const validCloudUsers = cloudUsers.filter(cu => {
+        if (!cu) return false;
+        const uName = (cu.username || '').toLowerCase();
+        const fName = (cu.full_name || cu.fullName || '').trim();
+        const role = (cu.role || '').toLowerCase();
+        const isSysAdmin = (typeof isSystemAdmin === 'function')
+          ? isSystemAdmin(cu.role, cu.username)
+          : /^(admin|administrator|quantri|quantrivien|quantrihethong)$/.test(uName);
+        if (isSysAdmin || uName === 'admin') return false;
+        if (uName.startsWith('group_') || uName.startsWith('nhom_kho_')) return false;
+        if (role.includes('nhom gop')) return false;
+        if (/^\s*1[\.\)]/i.test(fName) && fName.includes('2.')) return false;
+        return true;
+      });
+      if (validCloudUsers.length === 0) return;
+
+      const merged = validCloudUsers.map(cu => {
         const prev = (cu.id != null && byId.get(String(cu.id))) || (cu.username && byUser.get(_cleanReportIdentityUsername(cu.username))) || {};
         return {
           ...prev,
