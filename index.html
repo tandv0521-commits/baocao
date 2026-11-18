@@ -912,10 +912,13 @@
     }
 
     td.matrix-day-td.matrix-cell-active {
-      background-color: #d1fae5 !important;
+      box-shadow: inset 0 0 0 2px #059669 !important;
       outline: none !important;
       z-index: 20 !important;
-      box-shadow: inset 0 0 0 2px #059669 !important;
+    }
+
+    td.matrix-day-td.matrix-cell-active:not([style*="background-color"]) {
+      background-color: #ffffff !important;
     }
 
     /* ================= CHẾ ĐỘ THU GỌN (COMPACT DENSITY) CHO MÁY TÍNH ================= */
@@ -1055,9 +1058,13 @@
       background-color: rgba(255, 241, 242, 0.52) !important;
     }
 
-    /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN: z-index được điều chỉnh thấp hơn cột cố định (10 < 25) */
+    /* Ô NHẬP LIỆU TRỰC TIẾP TRÊN MA TRẬN: 1 khung chọn duy nhất mượt như Excel, không lồng viền kép */
     .matrix-input-cell {
+      box-sizing: border-box;
+      display: block;
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
       height: 100%;
       min-height: 38px;
       padding: 0 4px;
@@ -1068,16 +1075,25 @@
       font-size: 12px;
       font-weight: 700;
       color: #0f172a;
-      transition: all 0.15s ease-in-out;
-      border-radius: 6px;
+      border-radius: 0;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+
+    .matrix-input-cell::selection {
+      background-color: #a7f3d0;
+      color: #064e3b;
     }
 
     .matrix-input-cell:focus {
-      background-color: #ffffff !important;
-      border-color: #059669 !important;
-      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25) !important;
-      z-index: 10 !important;
+      outline: none !important;
+      box-shadow: none !important;
       position: relative;
+      z-index: 10 !important;
+    }
+
+    .matrix-input-cell:not(.matrix-badge-cell):focus {
+      background-color: transparent !important;
+      border-color: transparent !important;
     }
 
     .matrix-input-cell.cell-saving {
@@ -1106,11 +1122,11 @@
       letter-spacing: normal !important;
     }
 
-    .matrix-input-cell.matrix-badge-cell:focus {
+    .matrix-input-cell.matrix-badge-cell:not(.matrix-leave-badge):focus {
       background-color: #ffffff !important;
       color: #0f172a !important;
-      border-color: #059669 !important;
-      box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.3) !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
       font-weight: 700 !important;
       cursor: text;
     }
@@ -1119,24 +1135,10 @@
       box-shadow: 0 2px 8px -1px rgba(5, 150, 105, 0.25);
     }
 
-
-
     /* ================= CẢI THIỆN GIAO DIỆN (UI/UX) DI ĐỘNG & LÀM ĐẸP MODAL / BẢNG BIỂU ================= */
     #tableScrollContainer {
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
-    }
-
-    /* Tối ưu hiệu ứng ô nhập liệu trực quan */
-    .matrix-input-cell {
-      border-radius: 7px !important;
-      transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
-    }
-
-    .matrix-input-cell:focus {
-      background-color: #ffffff !important;
-      border-color: #059669 !important;
-      box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.3) !important;
     }
 
     /* Tối ưu Modal trên Di Động: Tự động chuyển thành Bottom Sheet hiện đại (Loại trừ #loginScreen) */
@@ -3907,13 +3909,13 @@
           </div>
         </div>
 
-        <!-- ================= 2. THEO DÕI TIẾN ĐỘ, THI ĐUA & NHỊP ĐỘ CÔNG VIỆC ================= -->
+        <!-- ================= 2. THEO DÕI TIẾN ĐỘ, THỐNG KÊ ĐẦU VIỆC MA TRẬN & NHỊP ĐỘ CÔNG VIỆC ================= -->
         <section id="analyticsSection" class="hidden space-y-3 sm:space-y-3.5 pt-1">
-          <!-- DÒNG 1: HAI BẢNG THEO DÕI ĐÔN ĐỐC & THI ĐUA TRÌNH BÀY NGANG HÀNG TRÊN CÙNG MỘT DÒNG (50 - 50) -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-            <!-- 1. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (TỐI ƯU CÂN ĐỐI TRÊN MOBILE) -->
+          <!-- DÒNG 1: HAI BẢNG KIỂM SOÁT TIẾN ĐỘ & THỐNG KÊ ĐẦU VIỆC / THI ĐUA NGANG HÀNG (50 - 50) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
+            <!-- 1. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ -->
             <div id="deptLeaderboardCard"
-              class="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col justify-between">
+              class="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col">
               <div class="flex items-center justify-between gap-2 pb-2 sm:pb-2.5 border-b border-slate-100">
                 <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
                   <span id="followUpCardIconBox"
@@ -3924,7 +3926,7 @@
                     <h4 id="followUpCardTitle"
                       class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Theo Dõi &
                       Đôn Đốc</h4>
-                    <p id="followUpCardSubtitle" class="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">Tiến
+                    <p id="followUpCardSubtitle" class="text-[10px] sm:text-[11px] text-slate-500 truncate mt-0.5">Tiến
                       độ báo cáo tính đến ngày ...</p>
                   </div>
                 </div>
@@ -3935,76 +3937,77 @@
                 </div>
               </div>
 
-              <!-- Tab Chuyển Đổi Nhanh: [Chưa báo cáo] & [Đã báo cáo] -->
-              <div
+              <!-- Dải chỉ số kiểm soát nhanh trích xuất trực tiếp từ Ma trận -->
+              <div id="followUpSummaryMetricsBar" class="hidden"></div>
+
+              <!-- Tab Chuyển Đổi Nhanh: [Cần bổ sung] & [Đã đủ ngày] (Tự động ẩn khi chỉ xem 1 nhân sự để tránh tab 0 dư thừa) -->
+              <div id="followUpTabsWrapper"
                 class="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100/80 rounded-xl text-[10.5px] sm:text-[11px] font-bold">
                 <button type="button" id="tabBtnPending" onclick="switchFollowUpViewTab('pending')"
                   class="flex-1 py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg bg-white text-amber-900 shadow-2xs flex items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer">
                   <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[9.5px] sm:text-[10px]"></i>
-                  <span class="whitespace-nowrap">Chưa báo cáo</span>
+                  <span id="tabLabelPending" class="whitespace-nowrap">Cần bổ sung</span>
                   <span id="tabCountPending"
                     class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-100 text-amber-900 font-num font-black">0</span>
                 </button>
                 <button type="button" id="tabBtnCompleted" onclick="switchFollowUpViewTab('completed')"
                   class="flex-1 py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg text-slate-500 hover:text-emerald-800 hover:bg-white/60 flex items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer">
                   <i class="fa-solid fa-circle-check text-emerald-600 text-[9.5px] sm:text-[10px]"></i>
-                  <span class="whitespace-nowrap">Đã báo cáo</span>
+                  <span id="tabLabelCompleted" class="whitespace-nowrap">Đã đủ ngày</span>
                   <span id="tabCountCompleted"
                     class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-800 font-num font-black">0</span>
                 </button>
               </div>
 
               <div id="deptLeaderboardList"
-                class="flex-1 space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1.5 pr-1.5 sm:pr-2.5">
+                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
                 <!-- Danh sách Cần đôn đốc / Theo dõi sẽ render tự động bằng JS -->
               </div>
             </div>
 
-            <!-- 2. BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (TỐI ƯU CÂN ĐỐI TRÊN MOBILE) -->
+            <!-- 2. BẢNG THỐNG KÊ ĐẦU VIỆC MA TRẬN & THI ĐUA BÁM SÁT -->
             <div id="progressCompetitionCard"
-              class="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col justify-between">
+              class="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col">
               <div class="flex items-center justify-between gap-2 pb-2 sm:pb-2.5 border-b border-slate-100">
                 <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-                  <span
+                  <span id="competitionCardIconBox"
                     class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs">
-                    <i class="fa-solid fa-medal"></i>
+                    <i id="competitionCardIcon" class="fa-solid fa-layer-group"></i>
                   </span>
                   <div class="min-w-0 flex-1">
-                    <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Thi Đua
-                      Bám Sát</h4>
+                    <h4 id="competitionCardTitle" class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Thống Kê Đầu Việc &amp; Sản Lượng</h4>
                     <p id="insightLeaderboardSubtitle"
-                      class="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">Đã hoàn thành đủ báo cáo...</p>
+                      class="text-[10px] sm:text-[11px] text-slate-500 truncate mt-0.5">Tổng hợp trực tiếp từ bảng ma trận...</p>
                   </div>
                 </div>
                 <div class="shrink-0">
                   <span id="insightLeaderboardBadge"
-                    class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200 font-num whitespace-nowrap shadow-2xs">0
-                    hoàn thành</span>
+                    class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 font-num whitespace-nowrap shadow-2xs">0
+                    đầu việc</span>
                 </div>
               </div>
 
-              <!-- Dải vinh danh siêu gọn, không bao giờ bị vỡ dòng trên điện thoại -->
-              <div
-                class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-emerald-50/50 rounded-xl sm:rounded-2xl border border-emerald-100 text-[10px] sm:text-[11px] font-semibold text-emerald-900 flex items-center justify-between gap-2">
+              <!-- Dải tóm tắt sản lượng / chuyển đổi chế độ xem -->
+              <div id="competitionCardSubBanner"
+                class="px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-50/90 rounded-xl sm:rounded-2xl border border-slate-200/80 text-[10px] sm:text-[11px] font-semibold text-slate-700 flex items-center justify-between gap-2">
                 <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate">
-                  <i class="fa-solid fa-trophy text-amber-500 shrink-0 text-xs"></i>
-                  <span class="truncate">Vinh danh hoàn thành báo cáo</span>
+                  <i class="fa-solid fa-table-list text-emerald-600 shrink-0 text-xs"></i>
+                  <span class="truncate">Chi tiết sản lượng &amp; tần suất từng đầu việc</span>
                 </span>
                 <span
-                  class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-bold shrink-0 whitespace-nowrap">Cập
-                  nhật tức thì</span>
+                  class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-bold shrink-0 whitespace-nowrap">Nhấp việc để lọc biểu đồ</span>
               </div>
 
               <div id="insightAttentionTasks"
-                class="flex-1 space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1.5 pr-1.5 sm:pr-2.5">
-                <!-- Danh sách vinh danh thi đua sẽ render tự động bằng JS -->
+                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
+                <!-- Danh sách thống kê đầu việc / vinh danh thi đua sẽ render tự động bằng JS -->
               </div>
             </div>
           </div>
 
-          <!-- DÒNG 2: BẢNG NHỊP ĐỘ PHÁT SINH 1 DÒNG RIÊNG BIỆT (TỐI ƯU CÂN ĐỐI TRÊN MOBILE) -->
+          <!-- DÒNG 2: BẢNG NHỊP ĐỘ PHÁT SINH & TRẠNG THÁI NGÀY -->
           <div id="activityRhythmCard"
-            class="w-full bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col justify-between">
+            class="w-full bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col">
             <!-- Dòng tiêu đề chính đồng bộ cân đối với bảng Thi Đua Bám Sát -->
             <div class="flex items-center justify-between gap-2 pb-2 sm:pb-2.5 border-b border-slate-100">
               <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
@@ -4050,9 +4053,9 @@
                   </div>
                 </div>
 
-                <!-- 2 thẻ thống kê chia 2 cột cân xứng 50/50 trên mobile -->
+                <!-- 4 thẻ thống kê trích xuất từ Ma trận (chia 2x2 trên mobile, 1 hàng ngang trên desktop) -->
                 <div id="rhythmTaskStatBadges"
-                  class="grid grid-cols-2 sm:flex items-center gap-1.5 w-full sm:w-auto shrink-0 text-[10.5px] sm:text-[11px] font-bold">
+                  class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 w-full sm:w-auto shrink-0 text-[10.5px] sm:text-[11px] font-bold">
                   <span id="rhythmSelectedTaskTotal"
                     class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-emerald-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
                     <i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i>
@@ -4060,8 +4063,18 @@
                   </span>
                   <span id="rhythmSelectedTaskDays"
                     class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-sky-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-day text-sky-600 text-[10px]"></i>
-                    <span>0/30 ngày</span>
+                    <i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i>
+                    <span>Phát sinh: 0/0 ngày</span>
+                  </span>
+                  <span id="rhythmSelectedTaskLeave"
+                    class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-indigo-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-umbrella-beach text-indigo-500 text-[10px]"></i>
+                    <span>Nghỉ: 0 ngày</span>
+                  </span>
+                  <span id="rhythmSelectedTaskMissing"
+                    class="px-2.5 py-1 rounded-xl bg-white border border-slate-200/90 text-slate-700 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                    <span>Đủ tiến độ</span>
                   </span>
                 </div>
               </div>
@@ -8820,11 +8833,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // 1. Nếu ô bị che hoặc chạm sát mép cột Nội dung việc bên trái -> Đẩy sang phải
       if (cellRect.left < stickyLeftEdge + padding) {
         const diff = (stickyLeftEdge + padding) - cellRect.left;
+        _matrixProgrammaticScrollUntil = Date.now() + 450;
         container.scrollBy({ left: -diff, behavior: 'smooth' });
       }
       // 2. Nếu ô bị che hoặc chạm sát mép cột Tổng cộng bên phải -> Đẩy sang trái
       else if (cellRect.right > stickyRightEdge - padding) {
         const diff = cellRect.right - (stickyRightEdge - padding);
+        _matrixProgrammaticScrollUntil = Date.now() + 450;
         container.scrollBy({ left: diff, behavior: 'smooth' });
       }
     }
@@ -12710,6 +12725,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         document.getElementById('modalEntryDate').value = `${currentSelectedYear}-${mStr}-01`;
       }
 
+      _matrixPeriodFetchToken++;
+      schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
       fullPeriodMatrixCache = null;
       loadMatrixData(false);
     }
@@ -13371,6 +13388,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       ensurePeriodDropdownPopulated();
       setupRoleControls();
+      ensureMatrixUserScrollTracker();
+      schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
       preloadAdminDataInBackground();
       setupDailyReportsRealtimeListener();
 
@@ -13387,18 +13406,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const scrollContainer = document.getElementById('tableScrollContainer');
       if (scrollContainer) {
         scrollContainer.classList.remove('hidden');
+        ensureMatrixUserScrollTracker();
 
-        // Tự động đẩy cột hiển thị khi người dùng click hoặc focus ô trên bảng
+        // Tự động đẩy nhẹ nếu ô bị che bởi cột cố định khi người dùng chủ động click hoặc focus
         if (!scrollContainer.dataset.listenerBound) {
           scrollContainer.dataset.listenerBound = "true";
-          scrollContainer.addEventListener('focusin', (e) => {
-            if (e.target && e.target.classList.contains('matrix-input-cell')) {
-              scrollMatrixCellIntoView(e.target);
-            }
-          });
           scrollContainer.addEventListener('click', (e) => {
-            const cell = e.target.closest('td');
-            if (cell && !cell.classList.contains('col-fixed-tt') && !cell.classList.contains('col-fixed-name') && !cell.classList.contains('col-fixed-task') && !cell.classList.contains('col-fixed-total')) {
+            if (_restoringMatrixCellFocus) return;
+            const cell = e.target.closest('td.matrix-day-td');
+            if (cell) {
               scrollMatrixCellIntoView(cell);
             }
           });
@@ -13417,8 +13433,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         setTimeout(() => {
           const syncM = currentSelectedMonth;
           const syncY = currentSelectedYear;
+          const reqToken = _matrixPeriodFetchToken;
           fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
-            if (fresh) {
+            if (fresh && reqToken === _matrixPeriodFetchToken && Number(syncM) === Number(currentSelectedMonth) && Number(syncY) === Number(currentSelectedYear)) {
               applyFreshMatrixSafely(fresh, syncY, syncM, '');
             }
           }).catch(() => { });
@@ -14808,20 +14825,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       applyClientFilterAndRender();
       refreshReportingProgressRealtime();
 
-      if (tableContainer) {
-        tableContainer.scrollLeft = prevScrollLeft;
-        tableContainer.scrollTop = prevScrollTop;
-      }
+      restoreMatrixScrollSafely(prevScrollLeft, prevScrollTop);
 
       if (activeInputMeta) {
         const restoredInp = document.querySelector(`input[data-task-id="${activeInputMeta.taskId}"][data-day="${activeInputMeta.day}"]`);
         if (restoredInp) {
           restoredInp.dataset.oldValue = activeInputMeta.oldValue;
           restoredInp.value = activeInputMeta.val;
-          restoredInp.focus();
-          try {
-            restoredInp.setSelectionRange(activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
-          } catch (e) { }
+          focusMatrixInputWithoutScroll(restoredInp, activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
         }
       }
 
@@ -15362,8 +15373,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               // Cập nhật ngầm trong nền không gây gián đoạn hay hiện vòng xoay
               const syncM = currentSelectedMonth;
               const syncY = currentSelectedYear;
+              const reqToken = _matrixPeriodFetchToken;
               fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
-                if (fresh) {
+                if (fresh && reqToken === _matrixPeriodFetchToken && Number(syncM) === Number(currentSelectedMonth) && Number(syncY) === Number(currentSelectedYear)) {
                   applyFreshMatrixSafely(fresh, syncY, syncM, '');
                 }
               }).catch(() => { });
@@ -15385,14 +15397,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       loading.classList.remove('hidden');
       analyticsSection.classList.add('hidden');
 
+      const reqM = currentSelectedMonth;
+      const reqY = currentSelectedYear;
+      const reqToken = _matrixPeriodFetchToken;
       try {
-        const matrix = await fetchMatrixFromSupabase(currentSelectedMonth, currentSelectedYear);
+        const matrix = await fetchMatrixFromSupabase(reqM, reqY);
+        if (reqToken !== _matrixPeriodFetchToken || Number(reqM) !== Number(currentSelectedMonth) || Number(reqY) !== Number(currentSelectedYear)) {
+          return;
+        }
         loading.classList.add('hidden');
         fullPeriodMatrixCache = matrix;
         currentMatrixData = matrix;
         cachedPreloadMatrix = matrix;
         try {
-          localStorage.setItem(`ops_matrix_active_cache_${currentSelectedYear}_${currentSelectedMonth}`, JSON.stringify(matrix));
+          localStorage.setItem(`ops_matrix_active_cache_${reqY}_${reqM}`, JSON.stringify(matrix));
         } catch (e) { }
         applyClientFilterAndRender();
         setupDailyReportsRealtimeListener();
@@ -15471,8 +15489,114 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
 
+    // ================= BỘ ĐIỀU PHỐI CUỘN & TRẠNG THÁI CHỌN Ô MA TRẬN =================
+    let _matrixNavGeneration = 0;
+    let _matrixPeriodFetchToken = 0;
+    let _matrixPendingNavIntent = null;
+    let _matrixPendingScrollTimer = null;
+    let _matrixProgrammaticScrollUntil = 0;
+    let _matrixLastKnownScrollLeft = 0;
+    let _matrixUserManuallyScrolled = false;
+    let _restoringMatrixCellFocus = false;
+
+    function cancelPendingMatrixAutoScroll(clearIntent = true) {
+      if (_matrixPendingScrollTimer) {
+        clearTimeout(_matrixPendingScrollTimer);
+        _matrixPendingScrollTimer = null;
+      }
+      if (clearIntent) {
+        _matrixPendingNavIntent = null;
+      }
+    }
+
+    function schedulePeriodDefaultNavIntent(year, month) {
+      _matrixNavGeneration++;
+      cancelPendingMatrixAutoScroll(false);
+      _matrixUserManuallyScrolled = false;
+      _matrixPendingNavIntent = {
+        type: 'period_default',
+        year: Number(year),
+        month: Number(month),
+        gen: _matrixNavGeneration
+      };
+    }
+
+    function restoreMatrixScrollSafely(scrollLeft, scrollTop) {
+      const container = document.getElementById('tableScrollContainer');
+      if (!container) return;
+      _matrixProgrammaticScrollUntil = Date.now() + 180;
+      const prevBehavior = container.style.scrollBehavior;
+      container.style.scrollBehavior = 'auto';
+      container.scrollLeft = Math.max(0, Number(scrollLeft) || 0);
+      container.scrollTop = Math.max(0, Number(scrollTop) || 0);
+      _matrixLastKnownScrollLeft = container.scrollLeft;
+      requestAnimationFrame(() => {
+        if (container) container.style.scrollBehavior = prevBehavior || '';
+      });
+    }
+
+    function focusMatrixInputWithoutScroll(inputElem, selStart = null, selEnd = null) {
+      if (!inputElem) return;
+      _restoringMatrixCellFocus = true;
+      try {
+        try {
+          inputElem.focus({ preventScroll: true });
+        } catch (e) {
+          inputElem.focus();
+        }
+        if (typeof selStart === 'number' && typeof selEnd === 'number') {
+          try {
+            inputElem.setSelectionRange(selStart, selEnd);
+          } catch (e) { }
+        }
+      } finally {
+        _restoringMatrixCellFocus = false;
+      }
+    }
+
+    function ensureMatrixUserScrollTracker() {
+      const container = document.getElementById('tableScrollContainer');
+      if (!container || container.dataset.userScrollTrackerInit === 'true') return;
+      container.dataset.userScrollTrackerInit = 'true';
+      _matrixLastKnownScrollLeft = container.scrollLeft || 0;
+
+      const markManualInteraction = () => {
+        if (_restoringMatrixCellFocus) return;
+        _matrixUserManuallyScrolled = true;
+        cancelPendingMatrixAutoScroll(true);
+      };
+
+      container.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaX || 0) > 0 || e.shiftKey) {
+          markManualInteraction();
+          setActiveDateNavButton('other');
+        }
+      }, { passive: true });
+      container.addEventListener('touchstart', markManualInteraction, { passive: true });
+      container.addEventListener('pointerdown', (e) => {
+        if (!e.target.closest('button')) {
+          markManualInteraction();
+        }
+      });
+      container.addEventListener('scroll', () => {
+        const curLeft = container.scrollLeft || 0;
+        const delta = Math.abs(curLeft - _matrixLastKnownScrollLeft);
+        _matrixLastKnownScrollLeft = curLeft;
+        if (Date.now() > _matrixProgrammaticScrollUntil && delta > 3) {
+          _matrixUserManuallyScrolled = true;
+          cancelPendingMatrixAutoScroll(true);
+          setActiveDateNavButton('other');
+        }
+      }, { passive: true });
+    }
+
     // ================= RENDER BẢNG MA TRẬN, ẨN SỐ 0 & PHÂN QUYỀN NHẬP TRỰC TIẾP =================
     function renderMatrixTable(data) {
+      const tableContainer = document.getElementById('tableScrollContainer');
+      const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
+      const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
+      ensureMatrixUserScrollTracker();
+
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
       tbody.innerHTML = '';
@@ -15830,89 +15954,168 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       initMatrixCrosshairTracker();
       applySavedMatrixDensity();
 
-      updateDateNavButtons();
-      const now = new Date();
-      const isCurrentMonthNow = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
-      if (isCurrentMonthNow) {
-        setTimeout(() => { scrollToToday(true); }, 250);
+      const pendingNav = _matrixPendingNavIntent;
+      const hasValidPeriodNav = Boolean(
+        pendingNav &&
+        pendingNav.type === 'period_default' &&
+        !_matrixUserManuallyScrolled &&
+        Number(pendingNav.year) === Number(currentSelectedYear) &&
+        Number(pendingNav.month) === Number(currentSelectedMonth)
+      );
+
+      updateDateNavButtons(!hasValidPeriodNav);
+
+      if (hasValidPeriodNav) {
+        const capturedGen = pendingNav.gen;
+        const capturedY = Number(currentSelectedYear);
+        const capturedM = Number(currentSelectedMonth);
+        cancelPendingMatrixAutoScroll(false);
+        _matrixPendingScrollTimer = setTimeout(() => {
+          _matrixPendingScrollTimer = null;
+          if (
+            capturedGen !== _matrixNavGeneration ||
+            _matrixUserManuallyScrolled ||
+            !_matrixPendingNavIntent ||
+            capturedY !== Number(currentSelectedYear) ||
+            capturedM !== Number(currentSelectedMonth)
+          ) {
+            return;
+          }
+          _matrixPendingNavIntent = null;
+          const now = new Date();
+          const isCurrentMonthNow = (capturedM === (now.getMonth() + 1)) && (capturedY === now.getFullYear());
+          if (isCurrentMonthNow) {
+            scrollToToday(true);
+          } else {
+            scrollColumnToCenter(1, true);
+            setActiveDateNavButton('other');
+          }
+        }, 120);
       } else {
-        setTimeout(() => {
-          scrollColumnToCenter(1, true);
-          setActiveDateNavButton('other');
-        }, 250);
+        restoreMatrixScrollSafely(prevScrollLeft, prevScrollTop);
       }
     }
 
     // ================= TIỆN ÍCH QUAN SÁT MA TRẬN: CROSSHAIR TRACKER & DENSITY TOGGLE =================
     function initMatrixCrosshairTracker() {
       const tbody = document.getElementById('sheetTableBody');
-      if (!tbody || tbody.dataset.crosshairInit === "true") return;
+      if (!tbody) return;
+      // Làm mới dấu chiếu focus mỗi khi bảng render lại các dòng mới
+      tbody.querySelectorAll('td.matrix-cell-active').forEach(el => el.classList.remove('matrix-cell-active'));
+      if (tbody.dataset.crosshairInit === "true") return;
       tbody.dataset.crosshairInit = "true";
 
-      let currentHoveredCol = null;
-      let currentHoveredRow = null;
+      let currentCrosshairCol = null;
+      let currentCrosshairRow = null;
+      let currentHoveredCell = null;
+      let currentFocusedCell = null;
 
-      function clearCrosshairColHighlight() {
+      function clearCrosshairHighlights() {
+        if (currentCrosshairRow) {
+          currentCrosshairRow.classList.remove('matrix-row-hover');
+          currentCrosshairRow = null;
+        }
         document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
         tbody.querySelectorAll('td.matrix-day-td[data-col]').forEach(el => el.classList.remove('matrix-col-highlight'));
-        currentHoveredCol = null;
+        currentCrosshairCol = null;
       }
 
-      function handleCellTracking(cell) {
-        if (!cell) return;
+      function applyCrosshairForCell(cell) {
+        if (!cell || !tbody.contains(cell)) {
+          clearCrosshairHighlights();
+          return;
+        }
         const colDay = cell.dataset.col;
         const row = cell.closest('tr');
 
-        if (currentHoveredRow !== row) {
-          if (currentHoveredRow) currentHoveredRow.classList.remove('matrix-row-hover');
+        if (currentCrosshairRow !== row) {
+          if (currentCrosshairRow) currentCrosshairRow.classList.remove('matrix-row-hover');
           if (row) row.classList.add('matrix-row-hover');
-          currentHoveredRow = row;
+          currentCrosshairRow = row;
         }
 
-        if (currentHoveredCol !== colDay) {
-          clearCrosshairColHighlight();
+        if (currentCrosshairCol !== colDay) {
+          document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
+          tbody.querySelectorAll('td.matrix-day-td.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
           if (colDay !== undefined && colDay !== null && colDay !== '') {
             const th = document.getElementById(`th-col-${colDay}`);
             if (th) th.classList.add('matrix-col-highlight');
-            const sameColCells = tbody.querySelectorAll(`td.matrix-day-td[data-col="${colDay}"]`);
-            sameColCells.forEach(c => c.classList.add('matrix-col-highlight'));
-            currentHoveredCol = colDay;
+            tbody.querySelectorAll(`td.matrix-day-td[data-col="${colDay}"]`).forEach(c => c.classList.add('matrix-col-highlight'));
+            currentCrosshairCol = colDay;
+          } else {
+            currentCrosshairCol = null;
           }
         }
+      }
 
-        cell.classList.add('matrix-cell-active');
+      function setFocusedCell(cell) {
+        if (currentFocusedCell && currentFocusedCell !== cell) {
+          currentFocusedCell.classList.remove('matrix-cell-active');
+        }
+        tbody.querySelectorAll('td.matrix-cell-active').forEach(el => {
+          if (el !== cell) el.classList.remove('matrix-cell-active');
+        });
+        currentFocusedCell = (cell && tbody.contains(cell)) ? cell : null;
+        if (currentFocusedCell) {
+          currentFocusedCell.classList.add('matrix-cell-active');
+        }
       }
 
       tbody.addEventListener('mouseover', function (e) {
         const cell = e.target.closest('td.matrix-day-td');
-        if (!cell) return;
-        handleCellTracking(cell);
+        if (!cell || (e.relatedTarget && cell.contains(e.relatedTarget))) return;
+        currentHoveredCell = cell;
+        applyCrosshairForCell(cell);
       });
 
       tbody.addEventListener('mouseout', function (e) {
         const cell = e.target.closest('td.matrix-day-td');
-        if (cell) cell.classList.remove('matrix-cell-active');
+        if (!cell || (e.relatedTarget && cell.contains(e.relatedTarget))) return;
+        if (currentHoveredCell === cell) {
+          currentHoveredCell = null;
+          const nextCell = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('td.matrix-day-td') : null;
+          if (!nextCell || !tbody.contains(nextCell)) {
+            applyCrosshairForCell(currentFocusedCell);
+          }
+        }
       });
 
       tbody.addEventListener('focusin', function (e) {
+        const isInput = Boolean(e.target && e.target.classList && e.target.classList.contains('matrix-input-cell'));
         const cell = e.target.closest('td.matrix-day-td');
-        if (cell) handleCellTracking(cell);
+        if (isInput && cell) {
+          _matrixUserManuallyScrolled = true;
+          cancelPendingMatrixAutoScroll(true);
+          setFocusedCell(cell);
+          applyCrosshairForCell(cell);
+        }
       });
 
       tbody.addEventListener('focusout', function (e) {
         const cell = e.target.closest('td.matrix-day-td');
-        if (cell) cell.classList.remove('matrix-cell-active');
+        if (!cell) return;
+        const nextFocus = e.relatedTarget;
+        if (nextFocus && cell.contains(nextFocus)) return;
+        requestAnimationFrame(() => {
+          const activeEl = document.activeElement;
+          const activeTd = (activeEl && activeEl.classList && activeEl.classList.contains('matrix-input-cell'))
+            ? activeEl.closest('td.matrix-day-td')
+            : null;
+          if (activeTd && tbody.contains(activeTd)) {
+            setFocusedCell(activeTd);
+          } else {
+            setFocusedCell(null);
+            applyCrosshairForCell(currentHoveredCell);
+          }
+        });
       });
 
       const tableContainer = document.getElementById('tableScrollContainer');
       if (tableContainer && !tableContainer.dataset.crosshairLeaveInit) {
         tableContainer.dataset.crosshairLeaveInit = "true";
         tableContainer.addEventListener('mouseleave', function () {
-          if (currentHoveredRow) {
-            currentHoveredRow.classList.remove('matrix-row-hover');
-            currentHoveredRow = null;
-          }
-          clearCrosshairColHighlight();
+          currentHoveredCell = null;
+          applyCrosshairForCell(currentFocusedCell);
         });
       }
     }
@@ -15992,6 +16195,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function handleMatrixCellFocus(inputElem) {
+      if (_restoringMatrixCellFocus) return;
+      _matrixUserManuallyScrolled = true;
+      cancelPendingMatrixAutoScroll(true);
       scrollMatrixCellIntoView(inputElem);
       inputElem.select();
     }
@@ -16268,7 +16474,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           persistActiveMatrixCaches(saveYear, saveMonth);
 
           inputElem.classList.remove('cell-saving');
+          const tcMerge = document.getElementById('tableScrollContainer');
+          const mergeLeft = tcMerge ? tcMerge.scrollLeft : 0;
+          const mergeTop = tcMerge ? tcMerge.scrollTop : 0;
           applyClientFilterAndRender();
+          restoreMatrixScrollSafely(mergeLeft, mergeTop);
           refreshReportingProgressRealtime();
           broadcastMatrixChange('cell_saved', {
             targetYear: saveYear,
@@ -16277,12 +16487,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           });
           showToast(`Đã gộp ngày nghỉ (${symInfo.code}) cho ${staffGrp.staffName}`);
           setTimeout(() => {
-            const restoredInp = document.querySelector(`input[data-day="${dayNum}"][data-is-leave-merged="true"]`)
+            const restoredInp = document.querySelector(`input[data-user-id="${effectiveUserId}"][data-day="${dayNum}"][data-is-leave-merged="true"]`)
               || document.querySelector(`input[data-task-id="${taskId}"][data-day="${dayNum}"]`);
             if (restoredInp) {
-              restoredInp.focus();
+              focusMatrixInputWithoutScroll(restoredInp);
             }
-          }, 60);
+          }, 40);
           return;
         } catch (err) {
           inputElem.classList.remove('cell-saving');
@@ -16376,7 +16586,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           persistActiveMatrixCaches(saveYear, saveMonth);
 
           inputElem.classList.remove('cell-saving');
+          const tcUnmerge = document.getElementById('tableScrollContainer');
+          const unmergeLeft = tcUnmerge ? tcUnmerge.scrollLeft : 0;
+          const unmergeTop = tcUnmerge ? tcUnmerge.scrollTop : 0;
           applyClientFilterAndRender();
+          restoreMatrixScrollSafely(unmergeLeft, unmergeTop);
           refreshReportingProgressRealtime();
           broadcastMatrixChange('cell_saved', {
             targetYear: saveYear,
@@ -16387,9 +16601,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           setTimeout(() => {
             const restoredInp = document.querySelector(`input[data-task-id="${taskId}"][data-day="${dayNum}"]`);
             if (restoredInp) {
-              restoredInp.focus();
+              focusMatrixInputWithoutScroll(restoredInp);
             }
-          }, 60);
+          }, 40);
           return;
         } catch (err) {
           inputElem.classList.remove('cell-saving');
@@ -16916,8 +17130,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       try {
         const refreshM = currentSelectedMonth;
         const refreshY = currentSelectedYear;
+        const reqToken = _matrixPeriodFetchToken;
         const fresh = await fetchMatrixFromSupabase(refreshM, refreshY);
-        if (fresh && fresh.staffGroups) {
+        if (fresh && fresh.staffGroups && reqToken === _matrixPeriodFetchToken && Number(refreshM) === Number(currentSelectedMonth) && Number(refreshY) === Number(currentSelectedYear)) {
           applyFreshMatrixSafely(fresh, refreshY, refreshM, senderName);
         }
       } catch (err) {
@@ -17171,6 +17386,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // 5. Khoảng cách delta cần cuộn: nếu cột đang lệch phải, deltaX > 0 -> cuộn sang phải để cột dịch về giữa
       const deltaX = currentThCenterOnScreen - targetCenterOnScreen;
       const finalScrollLeft = Math.max(0, container.scrollLeft + deltaX);
+      _matrixProgrammaticScrollUntil = Date.now() + (isSmooth ? 750 : 180);
 
       container.scrollTo({
         left: finalScrollLeft,
@@ -17200,7 +17416,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       scrollColumnToCenter(colIndex, true);
     }
 
-    function updateDateNavButtons() {
+    function updateDateNavButtons(preserveActiveState = false) {
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
 
@@ -17227,13 +17443,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
         btnToday.removeAttribute('data-tooltip');
 
-        setActiveDateNavButton('today');
+        if (!preserveActiveState) {
+          setActiveDateNavButton('today');
+        }
       } else {
         if (lblYesterday) lblYesterday.innerText = `Đầu tháng`;
         if (lblToday) lblToday.innerText = `Về hôm nay`;
         btnYesterday.removeAttribute('data-tooltip');
         btnToday.removeAttribute('data-tooltip');
-        setActiveDateNavButton('other');
+        if (!preserveActiveState) {
+          setActiveDateNavButton('other');
+        }
       }
     }
 
@@ -17272,6 +17492,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function scrollToYesterday() {
+      cancelPendingMatrixAutoScroll(true);
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
       if (!isCurrentPeriod) {
@@ -17306,6 +17527,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     function scrollToToday(isSilent = false) {
+      if (!isSilent) {
+        cancelPendingMatrixAutoScroll(true);
+        _matrixUserManuallyScrolled = false;
+      }
       const now = new Date();
       const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
 
@@ -17343,10 +17568,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
 
     function scrollToStartOfMonth() {
+      cancelPendingMatrixAutoScroll(true);
       setActiveDateNavButton('other');
       currentNavActiveDay = 1;
       const container = document.getElementById('tableScrollContainer');
       if (container) {
+        _matrixProgrammaticScrollUntil = Date.now() + 750;
         container.scrollTo({ left: 0, behavior: 'smooth' });
         highlightColumnPulse(1);
         showToast("Đã cuộn về Ngày 01 đầu tháng");
@@ -17637,92 +17864,362 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
 
-      // CỘT 3: BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (Cập nhật nhân sự & nhóm gộp đã hoàn thành báo cáo)
+      // CỘT PHẢI: THỐNG KÊ SẢN LƯỢNG ĐẦU VIỆC MA TRẬN & THI ĐUA BÁM SÁT TIẾN ĐỘ
+      renderRightAnalyticsCard(rawData || fullPeriodMatrixCache || currentMatrixData, precalculatedProgressData);
+    }
+
+    let _rightAnalyticsCardMode = 'auto'; // 'auto' | 'tasks' | 'competition'
+
+    function switchRightAnalyticsCardMode(mode) {
+      _rightAnalyticsCardMode = mode;
+      const baseData = currentMatrixData || fullPeriodMatrixCache;
+      if (!baseData) return;
+      const scopedData = getScopedDataForCurrentUser(baseData);
+      const progressData = _cachedFollowUpProgressData || getDailyReportingProgressData(scopedData);
+      renderRightAnalyticsCard(scopedData, progressData);
+    }
+
+    function selectTaskFromAnalyticsCard(taskKey) {
+      const nextKey = (currentRhythmSelectedTaskKey === taskKey) ? 'ALL' : taskKey;
+      const select = document.getElementById('rhythmTaskSelect');
+      if (select) {
+        select.value = nextKey;
+      }
+      onRhythmTaskSelect(nextKey);
+      const baseData = currentMatrixData || fullPeriodMatrixCache;
+      if (baseData) {
+        const scopedData = getScopedDataForCurrentUser(baseData);
+        renderRightAnalyticsCard(scopedData, _cachedFollowUpProgressData);
+      }
+    }
+
+    function computeMatrixTaskBreakdown(data, targetDayNum = 31, currentDayNum = 31, isCurrentPeriod = false) {
+      const taskRows = [];
+      if (!data || !Array.isArray(data.staffGroups)) return taskRows;
+      const dayCols = Array.isArray(data.dayCols) ? data.dayCols : [];
+
+      data.staffGroups.forEach((grp, gIdx) => {
+        if (isStaffGroupLockedOrPaused(grp)) return;
+        const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
+        const isPersonalInShared = !!grp.isPersonalInShared;
+        const isGroup = isGroupDept && !isPersonalInShared;
+        const cleanStaff = (grp.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+
+        (grp.tasks || []).forEach((t, tIdx) => {
+          const tName = (t.taskName || '').trim();
+          if (!tName) return;
+          const key = `t_${gIdx}_${tIdx}_${t.taskId || tIdx}`;
+          const dailyValues = t.dailyValues || {};
+
+          let activeDaysEval = 0;
+          let activeDaysMonth = 0;
+          let leaveDaysEval = 0;
+          let numericSumEval = 0;
+          let numericCountEval = 0;
+          let maxVal = 0;
+          let peakDayLabel = '';
+          let peakValDisplay = '';
+          let lastActiveLabel = '';
+          let lastActiveValDisplay = '';
+          let todayValDisplay = '';
+
+          dayCols.forEach(dc => {
+            const raw = dailyValues[dc.colIndex];
+            const strVal = (raw !== undefined && raw !== null) ? String(raw).trim() : '';
+            const isValidEntry = (strVal !== '' && strVal !== '-' && strVal !== '·' && strVal !== '0');
+            const isLeave = isValidEntry && isLeaveSymbolValue(strVal);
+            const isWork = isValidEntry && !isLeave;
+            const isEval = dc.dayNum <= targetDayNum;
+            const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
+
+            if (isToday && isValidEntry) {
+              const sym = getSmartSymbolInfo(strVal);
+              todayValDisplay = sym ? sym.code : (!t.isTextMode && !isNaN(parseFloat(strVal.replace(/,/g, ''))) ? formatNumberWithCommas(parseFloat(strVal.replace(/,/g, ''))) : strVal);
+            }
+
+            if (isLeave && isEval) {
+              leaveDaysEval++;
+            }
+
+            if (isWork) {
+              activeDaysMonth++;
+              if (isEval) {
+                activeDaysEval++;
+                lastActiveLabel = dc.label;
+                lastActiveValDisplay = strVal;
+              }
+              const cleanNum = parseFloat(strVal.replace(/,/g, ''));
+              if (!t.isTextMode && !isNaN(cleanNum)) {
+                if (isEval) {
+                  numericSumEval += cleanNum;
+                  numericCountEval++;
+                }
+                if (cleanNum > maxVal) {
+                  maxVal = cleanNum;
+                  peakDayLabel = dc.label;
+                  peakValDisplay = formatNumberWithCommas(cleanNum);
+                }
+              }
+            }
+          });
+
+          let monthTotalDisplay = '-';
+          if (t.monthTotal !== undefined && t.monthTotal !== null && t.monthTotal !== '' && t.monthTotal !== '-' && t.monthTotal !== 0) {
+            monthTotalDisplay = (typeof t.monthTotal === 'number')
+              ? (formatNumberWithCommas(t.monthTotal) || '-')
+              : String(t.monthTotal);
+          } else if (numericCountEval > 0) {
+            monthTotalDisplay = formatNumberWithCommas(Math.round(numericSumEval * 100) / 100);
+          } else if (activeDaysMonth > 0) {
+            monthTotalDisplay = `${activeDaysMonth} ngày`;
+          }
+
+          let avgPerActiveDay = '';
+          if (!t.isTextMode && numericCountEval > 0) {
+            const avg = numericSumEval / numericCountEval;
+            const rounded = avg >= 100 ? Math.round(avg) : Math.round(avg * 10) / 10;
+            avgPerActiveDay = formatNumberWithCommas(rounded);
+          }
+
+          taskRows.push({
+            key,
+            idx: taskRows.length + 1,
+            taskId: t.taskId,
+            taskName: tName,
+            isTextMode: !!t.isTextMode,
+            staffName: cleanStaff || grp.staffName || '',
+            department: grp.department || '',
+            isGroup,
+            monthTotal: t.monthTotal,
+            monthTotalDisplay,
+            activeDaysEval,
+            activeDaysMonth,
+            leaveDaysEval,
+            numericSumEval,
+            avgPerActiveDay,
+            peakDayLabel: peakDayLabel || lastActiveLabel,
+            peakValDisplay: peakValDisplay || lastActiveValDisplay,
+            todayValDisplay
+          });
+        });
+      });
+
+      return taskRows;
+    }
+
+    function renderRightAnalyticsCard(rawData, precalculatedProgressData = null) {
       const leaderboardBox = document.getElementById('insightAttentionTasks');
       const leaderboardBadge = document.getElementById('insightLeaderboardBadge');
       const leaderboardSubtitle = document.getElementById('insightLeaderboardSubtitle');
+      const cardTitle = document.getElementById('competitionCardTitle');
+      const cardIconBox = document.getElementById('competitionCardIconBox');
+      const cardIcon = document.getElementById('competitionCardIcon');
+      const subBanner = document.getElementById('competitionCardSubBanner');
 
-      if (leaderboardBox) {
-        leaderboardBox.innerHTML = '';
-        const progressData = precalculatedProgressData || getDailyReportingProgressData(rawData || fullPeriodMatrixCache || currentMatrixData);
-        const { targetDateLabel, completedList } = progressData;
+      if (!leaderboardBox) return;
+      const scopedData = getScopedDataForCurrentUser(rawData || fullPeriodMatrixCache || currentMatrixData);
+      const progressData = precalculatedProgressData || getDailyReportingProgressData(scopedData);
+      const { targetDateLabel, targetDayNum, totalDaysToEval, pendingList, completedList, currentDayNum, isCurrentPeriod } = progressData;
 
-        const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
-        const activeCompletedList = isManagerOrAdmin ? completedList : completedList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+      const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
+      const activePendingList = isManagerOrAdmin ? pendingList : pendingList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+      const activeCompletedList = isManagerOrAdmin ? completedList : completedList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+      const allScopedEntities = [...activePendingList, ...activeCompletedList];
+      const isSingleEntityScope = (allScopedEntities.length <= 1);
+
+      const taskMetrics = computeMatrixTaskBreakdown(scopedData, targetDayNum, currentDayNum, isCurrentPeriod);
+      const activeTaskCount = taskMetrics.filter(t => t.activeDaysMonth > 0).length;
+      const totalOccurrencesEval = taskMetrics.reduce((acc, t) => acc + t.activeDaysEval, 0);
+
+      // Quyết định chế độ hiển thị:
+      // - Khi xem 1 cá nhân / 1 nhóm: luôn hiển thị Bảng Thống Kê Đầu Việc & Sản Lượng Ma Trận (tránh trùng lặp hoàn toàn với cột trái)
+      // - Khi xem nhiều nhân sự / toàn ban: cho phép chuyển đổi giữa [Sản lượng đầu việc] và [Thi đua bám sát]
+      let effectiveMode = 'tasks';
+      if (!isSingleEntityScope) {
+        if (_rightAnalyticsCardMode === 'tasks' || _rightAnalyticsCardMode === 'competition') {
+          effectiveMode = _rightAnalyticsCardMode;
+        } else {
+          effectiveMode = activeCompletedList.length > 0 ? 'competition' : 'tasks';
+        }
+      }
+
+      if (effectiveMode === 'tasks') {
+        if (cardTitle) cardTitle.innerText = 'Thống Kê Đầu Việc & Sản Lượng';
+        if (cardIconBox) cardIconBox.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs';
+        if (cardIcon) cardIcon.className = 'fa-solid fa-layer-group';
 
         if (leaderboardSubtitle) {
-          let scopeText = "";
-          if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
-            scopeText = `Nhân sự: ${currentSelectedStaff} • `;
-          } else if (currentSelectedDept && currentSelectedDept !== "TẤT CẢ") {
-            scopeText = `Bộ phận: ${currentSelectedDept} • `;
-          }
-          leaderboardSubtitle.innerText = isManagerOrAdmin
-            ? `${scopeText}Đã hoàn thành đủ báo cáo đến ngày ${targetDateLabel}`
-            : `Đã hoàn thành đủ báo cáo đến ngày ${targetDateLabel}`;
+          const ownerLabel = isSingleEntityScope && allScopedEntities[0]
+            ? `${allScopedEntities[0].displayName} • `
+            : (currentSelectedDept && currentSelectedDept !== 'TẤT CẢ' ? `${currentSelectedDept} • ` : '');
+          leaderboardSubtitle.innerText = `${ownerLabel}Trích xuất từ ma trận tính đến ngày ${targetDateLabel}`;
         }
 
         if (leaderboardBadge) {
-          if (isManagerOrAdmin) {
-            leaderboardBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-200/90 font-num whitespace-nowrap shadow-2xs";
-            leaderboardBadge.innerText = `${activeCompletedList.length} hoàn thành`;
+          leaderboardBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 font-num whitespace-nowrap shadow-2xs';
+          leaderboardBadge.innerText = `${activeTaskCount}/${taskMetrics.length} việc phát sinh`;
+        }
+
+        if (subBanner) {
+          if (isSingleEntityScope) {
+            const filterHint = currentRhythmSelectedTaskKey !== 'ALL'
+              ? `<button type="button" onclick="selectTaskFromAnalyticsCard('ALL')" class="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-black transition cursor-pointer shrink-0 shadow-2xs">✕ Bỏ lọc biểu đồ</button>`
+              : `<span class="text-[9.5px] text-emerald-700 font-num font-bold shrink-0 whitespace-nowrap">Tổng: ${totalOccurrencesEval} lượt phát sinh</span>`;
+            subBanner.innerHTML = `
+              <span class="flex items-center gap-1.5 min-w-0 flex-1 truncate text-slate-700">
+                <i class="fa-solid fa-chart-Simple text-emerald-600 shrink-0 text-xs"></i>
+                <span class="truncate">Nhấp vào từng đầu việc để lọc biểu đồ nhịp độ bên dưới</span>
+              </span>
+              ${filterHint}
+            `;
           } else {
-            if (activeCompletedList.length > 0) {
-              leaderboardBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-200/90 font-num whitespace-nowrap shadow-2xs";
-              leaderboardBadge.innerText = "Đã hoàn thành";
-            } else {
-              leaderboardBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-amber-50 text-amber-800 border border-amber-200 font-num whitespace-nowrap shadow-2xs";
-              leaderboardBadge.innerText = "Chưa hoàn thành";
-            }
+            subBanner.innerHTML = `
+              <div class="flex items-center gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl text-[10.5px] font-bold">
+                <button type="button" onclick="switchRightAnalyticsCardMode('tasks')" class="flex-1 py-1 px-2 rounded-lg bg-white text-emerald-950 font-black shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/60">
+                  <i class="fa-solid fa-layer-group text-emerald-600 text-[10px]"></i>
+                  <span>Sản lượng đầu việc (${taskMetrics.length})</span>
+                </button>
+                <button type="button" onclick="switchRightAnalyticsCardMode('competition')" class="flex-1 py-1 px-2 rounded-lg text-slate-500 hover:text-emerald-800 flex items-center justify-center gap-1.5 cursor-pointer transition">
+                  <i class="fa-solid fa-medal text-amber-500 text-[10px]"></i>
+                  <span>Thi đua đủ ngày (${activeCompletedList.length}/${allScopedEntities.length})</span>
+                </button>
+              </div>
+            `;
           }
         }
 
-        if (activeCompletedList.length === 0) {
-          leaderboardBox.innerHTML = isManagerOrAdmin
-            ? `<div class="py-4 px-3 text-center bg-slate-50/70 rounded-2xl border border-slate-200/80 text-slate-500 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-inbox text-slate-400 text-sm"></i><span>Chưa ghi nhận nhân sự/nhóm hoàn thành báo cáo đến ngày <b>${targetDateLabel}</b></span></div>`
-            : `<div class="py-4 px-3 text-center bg-slate-50/70 rounded-2xl border border-slate-200/80 text-slate-500 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-clock-rotate-left text-amber-500 text-sm"></i><span>Bạn còn ngày chưa nộp báo cáo tính đến ngày <b>${targetDateLabel}</b></span></div>`;
-        } else {
-          let html = '';
-          activeCompletedList.forEach(item => {
-            html += `
-              <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
-                   class="followup-item-card p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-emerald-200/90 bg-emerald-50/40 hover:bg-emerald-100/70 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 sm:gap-2.5 group shadow-2xs"
-                   data-theme="emerald"
-                   data-staff-name="${escapeHtml(item.displayName)}"
-                   >
-                <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                    <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 flex-nowrap">
-                      <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
-                      ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
-                    </div>
-                    <p class="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 truncate">
-                      <span class="font-medium text-slate-600">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
-                      <span class="text-slate-300 mx-1">•</span>
-                      <span class="text-emerald-700 font-bold font-num">
-                        ${item.targetDayLeaveInfo ? `Đã báo nghỉ (${item.targetDayLeaveInfo.code})` : 'Hoàn thành xuất sắc'}
-                      </span>
-                    </p>
+        if (taskMetrics.length === 0) {
+          leaderboardBox.innerHTML = `<div class="py-6 px-3 text-center bg-slate-50/70 rounded-2xl border border-slate-200/80 text-slate-500 text-xs">Chưa có đầu việc được phân công trong phạm vi này.</div>`;
+          return;
+        }
+
+        let rowsHtml = '';
+        taskMetrics.forEach(t => {
+          const isSelected = (currentRhythmSelectedTaskKey === t.key);
+          const hasActivity = t.activeDaysMonth > 0;
+          const freqPct = totalDaysToEval > 0 ? Math.min(100, Math.round((t.activeDaysEval / totalDaysToEval) * 100)) : 0;
+          const ownerChip = !isSingleEntityScope
+            ? `<span class="text-slate-400 mx-1">•</span><span class="text-slate-600 font-semibold truncate">${escapeHtml(t.isGroup ? t.department : t.staffName)}</span>`
+            : '';
+
+          rowsHtml += `
+            <div onclick="selectTaskFromAnalyticsCard('${escapeJsStr(t.key)}')"
+                 class="matrix-task-stat-row p-2.5 rounded-2xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs ${isSelected ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/40' : (hasActivity ? 'border-slate-200/90 bg-white hover:border-emerald-300 hover:bg-emerald-50/30' : 'border-slate-200/70 bg-slate-50/50 hover:bg-slate-100/60')}"
+                 data-task-key="${escapeHtml(t.key)}"
+                 title="Nhấp để xem diễn biến từng ngày của đầu việc này trên biểu đồ">
+              <div class="flex items-start gap-2 min-w-0 flex-1">
+                <span class="w-6 h-6 rounded-lg ${isSelected ? 'bg-emerald-600 text-white' : (hasActivity ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-200/70 text-slate-500')} flex items-center justify-center text-[10.5px] font-black font-num shrink-0 mt-0.5">
+                  ${t.idx}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <p class="text-xs font-bold ${isSelected ? 'text-emerald-950' : 'text-slate-800'} truncate group-hover:text-emerald-900 transition" title="${escapeHtml(t.taskName)}">${escapeHtml(t.taskName)}</p>
+                  </div>
+                  <div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] text-slate-500 mt-0.5 font-num">
+                    <span class="${t.activeDaysEval > 0 ? 'text-emerald-700 font-bold' : 'text-slate-400'}">Phát sinh: ${t.activeDaysEval}/${totalDaysToEval} ngày (${freqPct}%)</span>
+                    ${t.avgPerActiveDay ? `<span class="text-slate-300">•</span><span class="text-sky-700 font-semibold">TB: ${t.avgPerActiveDay}/ngày</span>` : ''}
+                    ${t.peakDayLabel && t.peakValDisplay ? `<span class="text-slate-300">•</span><span class="text-amber-800 font-semibold">Cao nhất: ${escapeHtml(t.peakValDisplay)} (${t.peakDayLabel.split('/')[0]})</span>` : ''}
+                    ${ownerChip}
                   </div>
                 </div>
-                <div class="text-right shrink-0">
-                  <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase ${item.targetDayLeaveInfo ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
-                    <i class="fa-solid fa-check text-emerald-600 text-[8.5px] sm:text-[9px]"></i>
-                    <span>Đủ ${item.reportedDaysCount}/${progressData.totalDaysToEval} ngày</span>
-                  </span>
-                  <p class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này'}</p>
-                </div>
               </div>
-            `;
-          });
-          leaderboardBox.innerHTML = html;
-          if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
-            setFollowUpCardActive(null, currentSelectedStaff);
-          }
+              <div class="text-right shrink-0">
+                <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-black ${hasActivity ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/90' : 'bg-slate-100 text-slate-500 border border-slate-200'} font-num whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
+                  <span class="text-[9px] font-semibold text-slate-400 uppercase">Tổng:</span>
+                  <span>${escapeHtml(t.monthTotalDisplay)}</span>
+                </span>
+                <p class="text-[9.5px] ${t.todayValDisplay ? 'text-emerald-700 font-bold' : 'text-slate-400'} font-num mt-0.5">
+                  ${isCurrentPeriod ? (t.todayValDisplay ? `Hôm nay: ${escapeHtml(t.todayValDisplay)}` : 'Hôm nay: —') : `Kỳ: ${t.activeDaysMonth} ngày`}
+                </p>
+              </div>
+            </div>
+          `;
+        });
+        leaderboardBox.innerHTML = rowsHtml;
+        return;
+      }
+
+      // CHẾ ĐỘ 2: BẢNG THI ĐUA BÁM SÁT TIẾN ĐỘ (Dành cho xem Bộ phận / Toàn ban)
+      if (cardTitle) cardTitle.innerText = 'Thi Đua Bám Sát';
+      if (cardIconBox) cardIconBox.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs';
+      if (cardIcon) cardIcon.className = 'fa-solid fa-medal';
+
+      if (leaderboardSubtitle) {
+        let scopeText = '';
+        if (currentSelectedDept && currentSelectedDept !== 'TẤT CẢ') {
+          scopeText = `Bộ phận: ${currentSelectedDept} • `;
         }
+        leaderboardSubtitle.innerText = `${scopeText}Đã hoàn thành đủ báo cáo đến ngày ${targetDateLabel}`;
+      }
+
+      if (leaderboardBadge) {
+        leaderboardBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-200/90 font-num whitespace-nowrap shadow-2xs';
+        leaderboardBadge.innerText = `${activeCompletedList.length}/${allScopedEntities.length} đủ 100%`;
+      }
+
+      if (subBanner) {
+        subBanner.innerHTML = `
+          <div class="flex items-center gap-1 w-full bg-slate-100/90 p-0.5 rounded-xl text-[10.5px] font-bold">
+            <button type="button" onclick="switchRightAnalyticsCardMode('tasks')" class="flex-1 py-1 px-2 rounded-lg text-slate-500 hover:text-emerald-800 flex items-center justify-center gap-1.5 cursor-pointer transition">
+              <i class="fa-solid fa-layer-group text-emerald-600 text-[10px]"></i>
+              <span>Sản lượng đầu việc (${taskMetrics.length})</span>
+            </button>
+            <button type="button" onclick="switchRightAnalyticsCardMode('competition')" class="flex-1 py-1 px-2 rounded-lg bg-white text-emerald-950 font-black shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/60">
+              <i class="fa-solid fa-medal text-amber-500 text-[10px]"></i>
+              <span>Thi đua đủ ngày (${activeCompletedList.length}/${allScopedEntities.length})</span>
+            </button>
+          </div>
+        `;
+      }
+
+      const listToRender = activeCompletedList.length > 0
+        ? activeCompletedList
+        : [...allScopedEntities].sort((a, b) => (b.reportedDaysCount - a.reportedDaysCount) || (a.unreportedDaysCount - b.unreportedDaysCount)).slice(0, 6);
+
+      if (listToRender.length === 0) {
+        leaderboardBox.innerHTML = `<div class="py-4 px-3 text-center bg-slate-50/70 rounded-2xl border border-slate-200/80 text-slate-500 text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-inbox text-slate-400 text-sm"></i><span>Chưa có dữ liệu thi đua tính đến ngày <b>${targetDateLabel}</b></span></div>`;
+        return;
+      }
+
+      let html = '';
+      listToRender.forEach(item => {
+        const isFull = item.unreportedDaysCount === 0;
+        html += `
+          <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
+               class="followup-item-card p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border ${isFull ? 'border-emerald-200/90 bg-emerald-50/40 hover:bg-emerald-100/70' : 'border-slate-200/90 bg-slate-50/50 hover:bg-slate-100/70'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 sm:gap-2.5 group shadow-2xs"
+               data-theme="${isFull ? 'emerald' : 'amber'}"
+               data-staff-name="${escapeHtml(item.displayName)}">
+            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+              <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isFull ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-nowrap">
+                  <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
+                  ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
+                </div>
+                <p class="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 truncate font-num">
+                  <span class="font-medium text-slate-600">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
+                  <span class="text-slate-300 mx-1">•</span>
+                  <span class="${isFull ? 'text-emerald-700' : 'text-amber-700'} font-bold">
+                    Phát sinh: ${item.activeWorkDaysCount || 0} ngày${item.leaveOnlyDaysCount ? ` • Nghỉ: ${item.leaveOnlyDaysCount} ngày` : ''}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase ${isFull ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
+                <i class="fa-solid ${isFull ? 'fa-check text-emerald-600' : 'fa-chart-line text-amber-700'} text-[8.5px] sm:text-[9px]"></i>
+                <span>${isFull ? `Đủ ${item.reportedDaysCount}/${totalDaysToEval} ngày` : `Đạt ${item.coveragePct}% (${item.reportedDaysCount}/${totalDaysToEval})`}</span>
+              </span>
+              <p class="text-[9px] sm:text-[9.5px] ${isFull ? 'text-emerald-700' : 'text-amber-700'} font-num font-medium mt-0.5">${isFull ? (item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này') : `Thiếu ${item.unreportedDaysCount} ngày`}</p>
+            </div>
+          </div>
+        `;
+      });
+      leaderboardBox.innerHTML = html;
+      if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
+        setFollowUpCardActive(null, currentSelectedStaff);
       }
     }
 
@@ -17736,6 +18233,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (cachedRhythmData) {
         renderActivityRhythmChart(cachedRhythmData, cachedDailyActiveTasksMap);
       }
+      document.querySelectorAll('.matrix-task-stat-row').forEach(row => {
+        const isSel = row.getAttribute('data-task-key') === taskKey;
+        row.classList.toggle('border-emerald-500', isSel);
+        row.classList.toggle('bg-emerald-50/70', isSel);
+        row.classList.toggle('ring-1', isSel);
+        row.classList.toggle('ring-emerald-500/40', isSel);
+      });
     }
 
     function navigateRhythmTask(direction) {
@@ -17757,10 +18261,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const scaleModeLabel = document.getElementById('rhythmChartScaleMode');
       const totalBadge = document.getElementById('rhythmSelectedTaskTotal');
       const daysBadge = document.getElementById('rhythmSelectedTaskDays');
+      const leaveBadge = document.getElementById('rhythmSelectedTaskLeave');
+      const missingBadge = document.getElementById('rhythmSelectedTaskMissing');
 
       if (!container) return;
 
-      // Chuẩn hóa dữ liệu đầu vào: hỗ trợ cả (data, dailyMap) và (dailyMap, dayCols)
       let data = null;
       let dayCols = [];
       let dailyMap = {};
@@ -17782,39 +18287,77 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (!dayCols || dayCols.length === 0) return;
 
-      // NẾU dailyMap CHƯA ĐƯỢC TÍNH HOẶC RỖNG: TỰ ĐỘNG TÍNH THEO DATA STAFFGROUPS HIỆN TẠI
-      if (!dailyMap || Object.keys(dailyMap).length === 0) {
+      // Xây dựng bảng trạng thái tổng hợp từng ngày từ dữ liệu ma trận (phân biệt rõ: Phát sinh | Nghỉ quy chuẩn | Thiếu báo cáo | Hôm nay | Tương lai)
+      const now = new Date();
+      const todayMonth = now.getMonth() + 1;
+      const todayYear = now.getFullYear();
+      const isCurrentPeriod = (currentSelectedMonth === todayMonth) && (currentSelectedYear === todayYear);
+      const isPastPeriod = (currentSelectedYear < todayYear) || (currentSelectedYear === todayYear && currentSelectedMonth < todayMonth);
+      const currentDayNum = now.getDate();
+      const targetDayNum = isCurrentPeriod
+        ? (currentDayNum > 1 ? currentDayNum - 1 : 1)
+        : (isPastPeriod ? (dayCols[dayCols.length - 1]?.dayNum || 30) : 1);
+      const evalDaysCount = dayCols.filter(dc => dc.dayNum <= targetDayNum).length || 1;
+
+      const dayStatusByCol = {};
+      dayCols.forEach(dc => {
+        dayStatusByCol[dc.colIndex] = {
+          workTasksCount: 0,
+          leaveCodes: [],
+          leaveTitles: [],
+          anyEntry: false,
+          isEvaluated: dc.dayNum <= targetDayNum,
+          isToday: isCurrentPeriod && dc.dayNum === currentDayNum,
+          isFuture: isCurrentPeriod && dc.dayNum > currentDayNum
+        };
+      });
+
+      const needRebuildDailyMap = (!dailyMap || Object.keys(dailyMap).length === 0);
+      if (needRebuildDailyMap) {
         dailyMap = {};
         dayCols.forEach(dc => { dailyMap[dc.label] = 0; });
-        if (data && data.staffGroups) {
-          data.staffGroups.forEach(grp => {
-            (grp.tasks || []).forEach(t => {
-              dayCols.forEach(dc => {
-                const raw = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
-                if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
-                  const strVal = String(raw).trim();
-                  if (strVal !== '-' && strVal !== '·' && strVal !== '0') {
-                    // BỎ QUA KÝ HIỆU NGÀY NGHỈ (HT, P, Ô, O, CT, VR, H, L...): Hiển thị trống vì nghỉ không có việc phát sinh
-                    if (!isLeaveSymbolValue(strVal)) {
+      }
+
+      if (data && data.staffGroups) {
+        data.staffGroups.forEach(grp => {
+          if (isStaffGroupLockedOrPaused(grp)) return;
+          (grp.tasks || []).forEach(t => {
+            dayCols.forEach(dc => {
+              const raw = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
+              if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+                const strVal = String(raw).trim();
+                if (strVal !== '-' && strVal !== '·' && strVal !== '0') {
+                  const st = dayStatusByCol[dc.colIndex];
+                  st.anyEntry = true;
+                  if (isLeaveSymbolValue(strVal)) {
+                    const sym = getSmartSymbolInfo(strVal);
+                    const code = sym ? sym.code : strVal.toUpperCase();
+                    if (!st.leaveCodes.includes(code)) {
+                      st.leaveCodes.push(code);
+                      st.leaveTitles.push(sym ? `${sym.code} (${sym.title})` : code);
+                    }
+                  } else {
+                    st.workTasksCount++;
+                    if (needRebuildDailyMap) {
                       dailyMap[dc.label] = (dailyMap[dc.label] || 0) + 1;
                     }
                   }
                 }
-              });
+              }
             });
           });
-        }
-        cachedDailyActiveTasksMap = dailyMap;
+        });
       }
+      cachedDailyActiveTasksMap = dailyMap;
 
       if (lastDayLabel && dayCols.length > 0) {
         lastDayLabel.innerText = `Ngày ${dayCols[dayCols.length - 1].label}`;
       }
 
-      // Trích xuất toàn bộ danh sách đầu việc có trong ma trận (đã giới hạn theo quyền hạn)
       const allTasks = [];
       if (data && data.staffGroups) {
         data.staffGroups.forEach((grp, gIdx) => {
+          if (isStaffGroupLockedOrPaused(grp)) return;
           const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
           const isPersonalInShared = !!grp.isPersonalInShared;
           const isGroup = isGroupDept && !isPersonalInShared;
@@ -17837,11 +18380,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       }
 
-      // Cập nhật các tùy chọn trong dropdown Đầu việc (Tối ưu hóa tránh render lại DOM khi không đổi danh mục việc)
       if (taskSelect) {
         const prevSelected = currentRhythmSelectedTaskKey;
         const isExec = isCurrentUserExecutiveOrManager();
-        const isSingleStaffScope = !!(data && data.queryStaff && data.queryStaff !== "TẤT CẢ");
+        const isSingleStaffScope = !!(data && data.queryStaff && data.queryStaff !== 'TẤT CẢ');
         let allOptionLabel = (!isExec && currentUser)
           ? `📊 [Tổng hợp] ${allTasks.length} đầu việc (${currentUser.fullName || 'Của bạn'})`
           : `📊 [Tổng hợp] Toàn bộ ${allTasks.length} đầu việc trong kỳ`;
@@ -17849,15 +18391,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           allOptionLabel = `📊 [Tổng hợp] ${allTasks.length} đầu việc • ${data.queryStaff}`;
         }
 
-        const taskSignature = `${allTasks.length}_${data && data.queryStaff ? data.queryStaff : ''}_${data && data.queryDept ? data.queryDept : ''}_v2`;
+        const taskIdsSig = allTasks.map(t => `${t.key}:${t.taskName}`).join('|');
+        const taskSignature = `${currentSelectedYear}_${currentSelectedMonth}_${data && data.queryStaff ? data.queryStaff : ''}_${data && data.queryDept ? data.queryDept : ''}_${taskIdsSig}`;
         if (taskSelect.dataset.signature !== taskSignature) {
           taskSelect.dataset.signature = taskSignature;
           const selectFrag = document.createDocumentFragment();
 
           const allOpt = document.createElement('option');
-          allOpt.value = "ALL";
+          allOpt.value = 'ALL';
           allOpt.innerText = allOptionLabel;
-          if (prevSelected === "ALL") allOpt.selected = true;
+          if (prevSelected === 'ALL') allOpt.selected = true;
           selectFrag.appendChild(allOpt);
 
           allTasks.forEach((t, idx) => {
@@ -17877,71 +18420,94 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
           taskSelect.innerHTML = '';
           taskSelect.appendChild(selectFrag);
-        } else {
-          if (taskSelect.value !== currentRhythmSelectedTaskKey) {
-            taskSelect.value = currentRhythmSelectedTaskKey;
-          }
+        } else if (taskSelect.value !== currentRhythmSelectedTaskKey) {
+          taskSelect.value = currentRhythmSelectedTaskKey;
         }
 
-        // Kiểm tra tính hợp lệ của lựa chọn hiện tại
         if (prevSelected !== 'ALL' && !allTasks.some(t => t.key === prevSelected)) {
           currentRhythmSelectedTaskKey = 'ALL';
           taskSelect.value = 'ALL';
         }
       }
 
-      const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
-      const currentDayNum = now.getDate();
+      const legendHtml = `
+        <span class="inline-flex items-center flex-wrap gap-2 text-[9.5px] font-bold text-slate-500">
+          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-amber-400 inline-block"></span>Cao điểm</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-emerald-500 inline-block"></span>Có số liệu</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-indigo-400 inline-block"></span>Nghỉ (HT/P/CT)</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-rose-400 inline-block"></span>Thiếu báo cáo</span>
+        </span>
+      `;
 
       // ================= TRƯỜNG HỢP 1: XEM CHI TIẾT TỪNG ĐẦU VIỆC CỤ THỂ =================
       if (currentRhythmSelectedTaskKey !== 'ALL') {
         const curTask = allTasks.find(t => t.key === currentRhythmSelectedTaskKey);
         if (curTask) {
           let maxVal = 0;
-          let peakDay = null;
-          let peakValStr = "-";
+          let peakDays = [];
+          let peakValStr = '-';
           let activeDaysCount = 0;
+          let activeDaysEvalCount = 0;
+          let leaveDaysCount = 0;
+          let missingEvalDays = [];
+          let numericSum = 0;
+          let numericCount = 0;
           let lastActiveDay = null;
-          let lastActiveValStr = "-";
+          let lastActiveValStr = '-';
 
           dayCols.forEach(dc => {
             const raw = curTask.dailyValues[dc.colIndex];
-            if (raw !== undefined && raw !== null && String(raw).trim() !== '' && String(raw).trim() !== '-' && String(raw).trim() !== '·' && String(raw).trim() !== '0') {
-              const strVal = String(raw).trim();
-              // BỎ QUA NGÀY NGHỈ THEO QUY CHUẨN (HT, P, Ô, O, CT, VR, H, L...): Hiển thị trống và không tính vào ngày hoạt động
-              if (!isLeaveSymbolValue(strVal)) {
-                activeDaysCount++;
-                lastActiveDay = dc.label;
-                lastActiveValStr = strVal;
+            const strVal = (raw !== undefined && raw !== null) ? String(raw).trim() : '';
+            const isValid = (strVal !== '' && strVal !== '-' && strVal !== '·' && strVal !== '0');
+            const isLeave = isValid && isLeaveSymbolValue(strVal);
+            const isWork = isValid && !isLeave;
+            const isEval = dc.dayNum <= targetDayNum;
 
-                const cleanStr = strVal.replace(/,/g, '').trim();
-                const num = parseFloat(cleanStr);
-                if (!isNaN(num) && !curTask.isTextMode) {
-                  if (num > maxVal) {
-                    maxVal = num;
-                    peakDay = dc.label;
-                    peakValStr = formatNumberWithCommas(num);
-                  }
+            if (isLeave && isEval) {
+              leaveDaysCount++;
+            } else if (!isValid && isEval && !dayStatusByCol[dc.colIndex]?.anyEntry) {
+              missingEvalDays.push(dc);
+            }
+
+            if (isWork) {
+              activeDaysCount++;
+              if (isEval) activeDaysEvalCount++;
+              lastActiveDay = dc.label;
+              lastActiveValStr = strVal;
+
+              const cleanStr = strVal.replace(/,/g, '').trim();
+              const num = parseFloat(cleanStr);
+              if (!isNaN(num) && !curTask.isTextMode) {
+                numericSum += num;
+                numericCount++;
+                if (num > maxVal) {
+                  maxVal = num;
+                  peakDays = [dc.label];
+                  peakValStr = formatNumberWithCommas(num);
+                } else if (num === maxVal && maxVal > 0) {
+                  peakDays.push(dc.label);
                 }
               }
             }
           });
 
-          // Nếu là đầu việc chuyên ký hiệu quy chuẩn hoặc không có số liệu định lượng hợp lệ, dùng ngày phát sinh gần nhất
-          if (!peakDay && lastActiveDay) {
-            peakDay = lastActiveDay;
+          if (peakDays.length === 0 && lastActiveDay) {
+            peakDays = [lastActiveDay];
             peakValStr = lastActiveValStr;
           }
 
-          // Cập nhật nhãn và thẻ thống kê đầu việc
           if (peakBadge) {
-            if (activeDaysCount > 0 && peakDay) {
-              peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>Cao điểm: ${peakDay} (${peakValStr})`;
-              peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap";
+            if (activeDaysCount > 0 && peakDays.length > 0) {
+              const peakText = curTask.isTextMode
+                ? `Gần nhất: ${lastActiveDay} (${lastActiveValStr})`
+                : (peakDays.length > 1
+                  ? `Cao điểm: ${peakValStr} (${peakDays.length} ngày)`
+                  : `Cao điểm: ${peakDays[0]} (${peakValStr})`);
+              peakBadge.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i>${peakText}`;
+              peakBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap';
             } else {
-              peakBadge.innerHTML = "Chưa có phát sinh";
-              peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap";
+              peakBadge.innerHTML = 'Chưa có phát sinh';
+              peakBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap';
             }
           }
 
@@ -17950,43 +18516,69 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               ? curTask.department
               : (curTask.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
             titleLabel.innerHTML = `
-              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
               <span class="font-black text-slate-900 break-words" title="${escapeHtml(curTask.taskName)}">${escapeHtml(curTask.taskName)}</span>
               ${subLabel ? `<span class="text-[11px] text-emerald-700 font-bold">• ${escapeHtml(subLabel)}</span>` : ''}
+              <button type="button" onclick="selectTaskFromAnalyticsCard('ALL')" class="ml-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 border border-slate-200 text-[10px] font-bold transition cursor-pointer">↩ Xem tổng hợp ${allTasks.length} việc</button>
             `;
           }
 
           if (scaleModeLabel) {
-            scaleModeLabel.innerText = curTask.isTextMode
-              ? "Đơn vị: Ký hiệu (X, Đ, C)"
-              : "Đơn vị: Số liệu định lượng";
+            scaleModeLabel.innerHTML = legendHtml;
           }
 
           if (totalBadge) {
             let totDisplay = curTask.monthTotal !== undefined && curTask.monthTotal !== null && curTask.monthTotal !== '' && curTask.monthTotal !== '-'
               ? (typeof curTask.monthTotal === 'number' ? formatNumberWithCommas(curTask.monthTotal) : curTask.monthTotal)
               : `${activeDaysCount} ngày`;
-            totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng: <b class="text-emerald-700 font-num">${totDisplay}</b></span>`;
+            totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng kỳ: <b class="text-emerald-700 font-num">${totDisplay}</b></span>`;
           }
 
           if (daysBadge) {
-            daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Có số liệu: <b class="text-sky-700 font-num">${activeDaysCount}/${dayCols.length}</b> ngày</span>`;
+            daysBadge.title = `Tính đến ngày xét duyệt: ${activeDaysEvalCount}/${evalDaysCount} ngày (Toàn tháng: ${activeDaysCount}/${dayCols.length} ngày)`;
+            daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Phát sinh: <b class="text-sky-700 font-num">${activeDaysEvalCount}/${evalDaysCount}</b> ngày</span>`;
           }
 
-          // Vẽ cột biểu đồ kèm SỐ LIỆU NHẬP VÀO hiển thị trực tiếp trên từng cột
+          if (leaveBadge) {
+            if (!curTask.isTextMode && numericCount > 0) {
+              const avg = numericSum / numericCount;
+              const avgStr = formatNumberWithCommas(avg >= 100 ? Math.round(avg) : Math.round(avg * 10) / 10);
+              leaveBadge.innerHTML = `<i class="fa-solid fa-gauge-high text-indigo-500 text-[10px]"></i><span>TB/ngày: <b class="text-indigo-800 font-num">${avgStr}</b></span>`;
+            } else {
+              leaveBadge.innerHTML = `<i class="fa-solid fa-umbrella-beach text-indigo-500 text-[10px]"></i><span>Nghỉ: <b class="text-indigo-800 font-num">${leaveDaysCount}</b> ngày</span>`;
+            }
+          }
+
+          if (missingBadge) {
+            if (missingEvalDays.length > 0) {
+              const firstMiss = missingEvalDays[0];
+              missingBadge.className = 'px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer transition';
+              missingBadge.setAttribute('onclick', `scrollToDayColumn(${firstMiss.colIndex})`);
+              missingBadge.title = `Nhấp để cuộn ma trận tới ngày thiếu (${missingEvalDays.map(d => d.label).join(', ')})`;
+              missingBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600 text-[10px]"></i><span>Thiếu: <b>${missingEvalDays.length} ngày</b> (${firstMiss.label.split('/')[0]})</span>`;
+            } else {
+              missingBadge.className = 'px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap';
+              missingBadge.removeAttribute('onclick');
+              missingBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Đủ đến ${targetDayNum < 10 ? '0' + targetDayNum : targetDayNum}/${currentSelectedMonth < 10 ? '0' + currentSelectedMonth : currentSelectedMonth}</span>`;
+            }
+          }
+
           let html = '';
           dayCols.forEach(dc => {
             const raw = curTask.dailyValues[dc.colIndex];
             const strVal = (raw !== undefined && raw !== null) ? String(raw).trim() : '';
             const isLeave = isLeaveSymbolValue(strVal);
             const hasData = (strVal !== '' && strVal !== '-' && strVal !== '·' && strVal !== '0' && !isLeave);
-            const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
-            const weekendClass = dc.isWeekend ? "opacity-75" : "";
+            const st = dayStatusByCol[dc.colIndex] || {};
+            const isToday = st.isToday;
+            const isFuture = st.isFuture;
+            const isMissingEval = st.isEvaluated && !hasData && !isLeave && !st.anyEntry;
 
-            let displayVal = "";
-            let topLabelHtml = "";
-            let heightPercent = 8;
-            let barColor = "bg-slate-100 group-hover:bg-slate-200";
+            let displayVal = '';
+            let topLabelHtml = '';
+            let heightPercent = isFuture ? 4 : 6;
+            let barColor = isFuture ? 'bg-slate-100/60' : 'bg-slate-100 group-hover:bg-slate-200';
+            let statusTooltipLine = 'Chưa phát sinh số liệu';
 
             if (hasData) {
               if (!curTask.isTextMode) {
@@ -17995,85 +18587,92 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   displayVal = formatNumberWithCommas(num);
                   const isPeak = (num === maxVal && maxVal > 0);
                   heightPercent = maxVal > 0 ? Math.max(16, Math.round((num / maxVal) * 65) + 12) : 16;
+                  statusTooltipLine = `Số liệu nhập vào: ${displayVal}`;
 
                   if (isPeak) {
-                    barColor = "bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/25";
+                    barColor = 'bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/25';
                     topLabelHtml = `<span class="text-[10px] font-num font-black text-amber-800 leading-none">${displayVal}</span>`;
                   } else if (isToday) {
-                    barColor = "bg-gradient-to-t from-emerald-600 to-teal-500 ring-2 ring-emerald-500 ring-offset-1 shadow-xs";
+                    barColor = 'bg-gradient-to-t from-emerald-600 to-teal-500 ring-2 ring-emerald-500 ring-offset-1 shadow-xs';
                     topLabelHtml = `<span class="text-[10px] font-num font-black text-emerald-800 leading-none">${displayVal}</span>`;
                   } else {
-                    barColor = "bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600 shadow-xs shadow-emerald-500/20";
+                    barColor = 'bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600 shadow-xs shadow-emerald-500/20';
                     topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${displayVal}</span>`;
                   }
                 } else {
-                  // ĐẦU VIỆC CHECK-LIST HOẶC KÝ HIỆU HOÀN THÀNH (X, Đ, C...):
                   const symInfo = getSmartSymbolInfo(strVal);
-                  heightPercent = 12; // Mức thấp nhất cho dữ liệu chữ / ký hiệu
+                  heightPercent = 18;
                   barColor = isToday
-                    ? "bg-gradient-to-t from-teal-500 to-emerald-400 ring-2 ring-emerald-400 shadow-xs"
-                    : "bg-teal-400/80 group-hover:bg-teal-500";
-                  if (symInfo) {
-                    displayVal = symInfo.code;
-                    topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" title="${escapeHtml(symInfo.tooltip)}">${symInfo.code}</span>`;
-                  } else {
-                    displayVal = strVal;
-                    topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
-                  }
+                    ? 'bg-gradient-to-t from-teal-500 to-emerald-400 ring-2 ring-emerald-400 shadow-xs'
+                    : 'bg-teal-400/80 group-hover:bg-teal-500';
+                  displayVal = symInfo ? symInfo.code : strVal;
+                  statusTooltipLine = `Ký hiệu ghi nhận: ${symInfo ? `${symInfo.code} (${symInfo.title})` : strVal}`;
+                  topLabelHtml = symInfo
+                    ? `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};">${symInfo.code}</span>`
+                    : `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
                 }
               } else {
-                // ĐẦU VIỆC CHUYÊN KÝ HIỆU QUY CHUẨN HOÀN THÀNH (X, Đ, C...)
                 const symInfo = getSmartSymbolInfo(strVal);
-                heightPercent = 16;
+                heightPercent = 18;
                 barColor = isToday
-                  ? "bg-gradient-to-t from-teal-600 to-emerald-500 ring-2 ring-emerald-400 shadow-xs"
-                  : "bg-gradient-to-t from-teal-500 to-emerald-400 group-hover:from-teal-600";
-                if (symInfo) {
-                  displayVal = symInfo.code;
-                  topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};" title="${escapeHtml(symInfo.tooltip)}">${symInfo.code}</span>`;
-                } else {
-                  displayVal = strVal;
-                  topLabelHtml = `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
-                }
+                  ? 'bg-gradient-to-t from-teal-600 to-emerald-500 ring-2 ring-emerald-400 shadow-xs'
+                  : 'bg-gradient-to-t from-teal-500 to-emerald-400 group-hover:from-teal-600';
+                displayVal = symInfo ? symInfo.code : strVal;
+                statusTooltipLine = `Ký hiệu hoàn thành: ${symInfo ? `${symInfo.code} (${symInfo.title})` : strVal}`;
+                topLabelHtml = symInfo
+                  ? `<span class="inline-flex items-center justify-center px-1 py-0.5 rounded text-[8.5px] font-black border leading-none shadow-2xs" style="background-color: ${symInfo.bg}; color: ${symInfo.text}; border-color: ${symInfo.border};">${symInfo.code}</span>`
+                  : `<span class="text-[9px] font-black text-teal-800 px-1 py-0.5 rounded bg-teal-100 border border-teal-300 leading-none shadow-2xs">${escapeHtml(displayVal)}</span>`;
               }
             } else if (isLeave) {
-              // HIỂN THỊ TRỐNG: Ngày nghỉ theo quy chuẩn (HT, P, Ô, O, CT, VR, H, L...) nghỉ mặc định không có việc để báo cáo
-              topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
-              heightPercent = 8;
-              barColor = "bg-slate-100/70 group-hover:bg-slate-200/70";
               const symInfo = getSmartSymbolInfo(strVal);
+              const code = symInfo ? symInfo.code : strVal.toUpperCase();
               displayVal = symInfo ? `${symInfo.code} (${symInfo.title || 'Nghỉ'})` : strVal;
+              statusTooltipLine = `Nghỉ theo quy chuẩn: ${displayVal}`;
+              heightPercent = 18;
+              barColor = 'bg-indigo-100/90 border border-indigo-300/90 group-hover:bg-indigo-200/90';
+              topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.2 rounded text-[8px] font-black bg-indigo-50 text-indigo-800 border border-indigo-200 leading-none">${escapeHtml(code)}</span>`;
+            } else if (isMissingEval) {
+              heightPercent = 20;
+              barColor = 'bg-rose-50 border border-dashed border-rose-400 group-hover:bg-rose-100';
+              topLabelHtml = `<span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-rose-100 text-rose-700 text-[8.5px] font-black leading-none" title="Chưa ghi nhận báo cáo">!</span>`;
+              statusTooltipLine = '⚠️ Chưa ghi nhận báo cáo (Nhấp để điền)';
+            } else if (isToday) {
+              heightPercent = 12;
+              barColor = 'bg-emerald-50 border border-dashed border-emerald-400';
+              topLabelHtml = `<span class="text-[8px] font-bold text-emerald-700 leading-none">H.Nay</span>`;
+              statusTooltipLine = 'Hôm nay (Đang trong ngày báo cáo)';
             } else {
-              topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
+              topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">·</span>`;
+              statusTooltipLine = isFuture ? 'Chưa đến ngày báo cáo' : 'Không phát sinh đầu việc này';
             }
 
+            const dayNumClass = isToday
+              ? 'font-black text-emerald-800 underline'
+              : (isMissingEval ? 'font-black text-rose-600' : (isLeave ? 'font-bold text-indigo-700' : 'text-slate-400'));
+
             html += `
-              <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[22px] sm:min-w-[26px] ${weekendClass}" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${hasData ? `Số liệu = ${displayVal}` : 'Không có phát sinh'} (Nhấp để cuộn bảng tới ngày này)">
-                <!-- Tooltip hover chi tiết -->
+              <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[22px] sm:min-w-[26px]" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${statusTooltipLine}">
                 <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none transition-all">
                   <div class="bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl whitespace-nowrap shadow-xl border border-slate-700">
                     <div class="flex items-center gap-1.5 border-b border-slate-700 pb-1 mb-1">
-                      <span class="w-2 h-2 rounded-full ${hasData ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                      <span class="w-2 h-2 rounded-full ${hasData ? 'bg-emerald-400' : (isLeave ? 'bg-indigo-400' : (isMissingEval ? 'bg-rose-400' : 'bg-slate-500'))}"></span>
                       <span class="font-black text-emerald-400">Ngày ${dc.label}</span>
                       ${isToday ? '<span class="text-[9px] bg-emerald-700 text-white px-1.5 rounded">Hôm nay</span>' : ''}
                     </div>
-                    <div class="text-slate-200 text-[10px] truncate max-w-[200px]">${escapeHtml(curTask.taskName)}</div>
-                    <div class="text-amber-300 font-black font-num text-xs mt-0.5">Số liệu nhập vào: ${hasData ? displayVal : 'Chưa nhập'}</div>
+                    <div class="text-slate-200 text-[10px] truncate max-w-[220px]">${escapeHtml(curTask.taskName)}</div>
+                    <div class="${isMissingEval ? 'text-rose-300' : (isLeave ? 'text-indigo-300' : 'text-amber-300')} font-black font-num text-xs mt-0.5">${escapeHtml(statusTooltipLine)}</div>
                     <div class="text-slate-400 text-[9px] mt-0.5">Phụ trách: ${escapeHtml(curTask.staffName)}</div>
                   </div>
                   <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5"></div>
                 </div>
 
-                <!-- Số liệu in trực tiếp phía trên cột -->
                 <div class="h-4 flex items-center justify-center mb-1">
                   ${topLabelHtml}
                 </div>
 
-                <!-- Cột biểu đồ -->
                 <div class="w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor}" style="height: ${heightPercent}%"></div>
-                
-                <!-- Nhãn ngày bên dưới -->
-                <span class="text-[9px] font-num mt-1 ${isToday ? 'font-black text-emerald-800 underline' : 'text-slate-400'}">
+
+                <span class="text-[9px] font-num mt-1 ${dayNumClass}">
                   ${dc.label.split('/')[0]}
                 </span>
               </div>
@@ -18087,115 +18686,168 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // ================= TRƯỜNG HỢP 2: XEM TỔNG HỢP TOÀN BỘ ĐẦU VIỆC =================
       let maxCount = 0;
-      let peakDay = dayCols[0].label;
+      let peakDays = [];
       let totalAllTaskEntries = 0;
+      let activeDaysEvalCount = 0;
+      let activeDaysFullMonth = 0;
+      let leaveOnlyEvalCount = 0;
+      let leaveDaysLabels = [];
+      let missingEvalCols = [];
 
       dayCols.forEach(dc => {
         const val = dailyMap[dc.label] || 0;
+        const st = dayStatusByCol[dc.colIndex] || {};
         totalAllTaskEntries += val;
-        if (val > maxCount) {
-          maxCount = val;
-          peakDay = dc.label;
+        if (val > 0) {
+          activeDaysFullMonth++;
+          if (st.isEvaluated) activeDaysEvalCount++;
+          if (val > maxCount) {
+            maxCount = val;
+            peakDays = [dc.label];
+          } else if (val === maxCount && maxCount > 0) {
+            peakDays.push(dc.label);
+          }
+        } else if (st.isEvaluated) {
+          if (st.leaveCodes && st.leaveCodes.length > 0) {
+            leaveOnlyEvalCount++;
+            leaveDaysLabels.push(`${dc.label.split('/')[0]} (${st.leaveCodes.join(',')})`);
+          } else if (!st.anyEntry) {
+            missingEvalCols.push(dc);
+          }
         }
       });
 
       if (peakBadge) {
-        if (maxCount > 0) {
-          peakBadge.innerHTML = `<i class="fa-solid fa-fire text-amber-500 mr-1"></i>Cao điểm: ${peakDay} (${maxCount} việc)`;
-          peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap";
+        if (maxCount > 0 && peakDays.length > 0) {
+          const peakLabel = peakDays.length > 1
+            ? `Đạt đỉnh: ${maxCount} việc/ngày (${peakDays.length} ngày)`
+            : `Cao điểm: ${peakDays[0]} (${maxCount} việc)`;
+          peakBadge.innerHTML = `<i class="fa-solid fa-fire text-amber-500 mr-1"></i>${peakLabel}`;
+          peakBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-amber-50 text-amber-900 border border-amber-300 font-num inline-flex items-center shadow-2xs whitespace-nowrap';
         } else {
-          peakBadge.innerHTML = "Chưa có phát sinh";
-          peakBadge.className = "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap";
+          peakBadge.innerHTML = 'Chưa có phát sinh';
+          peakBadge.className = 'px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] font-black uppercase bg-slate-100 text-slate-500 border border-slate-200 font-num whitespace-nowrap';
         }
       }
 
       if (titleLabel) {
-        if (data && data.queryStaff && data.queryStaff !== "TẤT CẢ") {
-          titleLabel.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse"></span>
-            <span class="font-black text-slate-900">Nhịp độ: <span class="text-amber-800">${escapeHtml(data.queryStaff)}</span> <span class="text-emerald-700 font-bold">(${allTasks.length} đầu việc)</span></span>
-          `;
-        } else {
-          const isExec = isCurrentUserExecutiveOrManager();
-          if (!isExec && currentUser) {
-            titleLabel.innerHTML = `
-              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
-              <span class="font-black text-slate-900">Nhịp độ: <span class="text-emerald-800">${escapeHtml(currentUser.fullName)}</span> <span class="text-slate-600 font-bold">(${allTasks.length} đầu việc)</span></span>
-            `;
-          } else {
-            titleLabel.innerHTML = `
-              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
-              <span class="font-black text-slate-900">Tổng hợp toàn bộ ${allTasks.length} đầu việc trong kỳ</span>
-            `;
-          }
-        }
+        const avgPerActive = activeDaysFullMonth > 0 ? (Math.round((totalAllTaskEntries / activeDaysFullMonth) * 10) / 10) : 0;
+        titleLabel.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+          <span class="font-bold text-slate-700 text-[11.5px]">Mật độ phát sinh đầu việc theo ngày <span class="text-emerald-700 font-black font-num">(TB: ${avgPerActive} việc/ngày phát sinh)</span></span>
+        `;
       }
 
       if (scaleModeLabel) {
-        scaleModeLabel.innerText = "Đơn vị: Số lượt việc/ngày";
+        scaleModeLabel.innerHTML = legendHtml;
       }
 
       if (totalBadge) {
-        totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng: <b class="text-emerald-700 font-num">${totalAllTaskEntries}</b> lượt</span>`;
+        totalBadge.innerHTML = `<i class="fa-solid fa-calculator text-emerald-600 text-[10px]"></i><span>Tổng: <b class="text-emerald-700 font-num">${totalAllTaskEntries}</b> lượt việc</span>`;
       }
 
       if (daysBadge) {
-        let activeDays = 0;
-        dayCols.forEach(dc => { if ((dailyMap[dc.label] || 0) > 0) activeDays++; });
-        daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Có số liệu: <b class="text-sky-700 font-num">${activeDays}/${dayCols.length}</b> ngày</span>`;
+        const evalPct = evalDaysCount > 0 ? Math.round((activeDaysEvalCount / evalDaysCount) * 100) : 0;
+        daysBadge.title = `Đến ngày xét duyệt: ${activeDaysEvalCount}/${evalDaysCount} ngày có phát sinh (${evalPct}%) • Toàn tháng: ${activeDaysFullMonth}/${dayCols.length} ngày`;
+        daysBadge.innerHTML = `<i class="fa-solid fa-calendar-check text-sky-600 text-[10px]"></i><span>Phát sinh: <b class="text-sky-700 font-num">${activeDaysEvalCount}/${evalDaysCount}</b> ngày</span>`;
+      }
+
+      if (leaveBadge) {
+        leaveBadge.title = leaveDaysLabels.length > 0 ? `Các ngày nghỉ quy chuẩn: ${leaveDaysLabels.join(', ')}` : 'Không có ngày nghỉ nguyên ngày trong kỳ xét duyệt';
+        leaveBadge.innerHTML = `<i class="fa-solid fa-umbrella-beach text-indigo-500 text-[10px]"></i><span>Nghỉ/HT: <b class="text-indigo-800 font-num">${leaveOnlyEvalCount}</b> ngày</span>`;
+      }
+
+      if (missingBadge) {
+        if (missingEvalCols.length > 0) {
+          const firstMiss = missingEvalCols[0];
+          missingBadge.className = 'px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer transition';
+          missingBadge.setAttribute('onclick', `scrollToDayColumn(${firstMiss.colIndex})`);
+          missingBadge.title = `Nhấp để cuộn ma trận tới ngày chưa nộp (${missingEvalCols.map(d => d.label).join(', ')})`;
+          missingBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600 text-[10px]"></i><span>Thiếu: <b>${missingEvalCols.length} ngày</b> (ngày ${firstMiss.label.split('/')[0]})</span>`;
+        } else {
+          missingBadge.className = 'px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-2xs font-num flex items-center justify-center gap-1.5 whitespace-nowrap';
+          missingBadge.removeAttribute('onclick');
+          missingBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i><span>Đủ ${evalDaysCount}/${evalDaysCount} ngày</span>`;
+        }
       }
 
       let html = '';
       dayCols.forEach(dc => {
         const count = dailyMap[dc.label] || 0;
+        const st = dayStatusByCol[dc.colIndex] || {};
         const isPeak = (count === maxCount && maxCount > 0);
-        const isToday = isCurrentPeriod && (dc.dayNum === currentDayNum);
-        const weekendClass = dc.isWeekend ? "opacity-75" : "";
+        const isToday = st.isToday;
+        const isFuture = st.isFuture;
+        const hasLeave = st.leaveCodes && st.leaveCodes.length > 0;
+        const isLeaveOnly = (count === 0 && hasLeave);
+        const isMissingEval = (st.isEvaluated && count === 0 && !hasLeave && !st.anyEntry);
 
-        const heightPercent = maxCount > 0 ? Math.max(12, Math.round((count / maxCount) * 68) + 12) : 8;
-
-        let barColor = "bg-slate-100 group-hover:bg-slate-200";
-        let topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">-</span>`;
+        let heightPercent = isFuture ? 4 : 6;
+        let barColor = isFuture ? 'bg-slate-100/60' : 'bg-slate-100 group-hover:bg-slate-200';
+        let topLabelHtml = `<span class="text-[8px] font-num text-slate-300 leading-none">·</span>`;
+        let statusLine = `${count} lượt đầu việc phát sinh`;
 
         if (count > 0) {
+          heightPercent = maxCount > 0 ? Math.max(14, Math.round((count / maxCount) * 66) + 12) : 14;
+          if (hasLeave) {
+            statusLine = `${count} lượt phát sinh • Kèm nghỉ: ${st.leaveTitles.join(', ')}`;
+          }
           if (isPeak) {
-            barColor = "bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/20";
+            barColor = 'bg-gradient-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 shadow-xs shadow-amber-500/20';
             topLabelHtml = `<span class="text-[10px] font-num font-black text-amber-800 leading-none">${count}</span>`;
           } else if (isToday) {
-            barColor = "bg-gradient-to-t from-emerald-600 to-teal-500 group-hover:from-emerald-700 ring-2 ring-emerald-500 ring-offset-1";
+            barColor = 'bg-gradient-to-t from-emerald-600 to-teal-500 group-hover:from-emerald-700 ring-2 ring-emerald-500 ring-offset-1';
             topLabelHtml = `<span class="text-[10px] font-num font-black text-emerald-800 leading-none">${count}</span>`;
           } else {
-            barColor = "bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600";
+            barColor = 'bg-gradient-to-t from-emerald-500 to-teal-400 group-hover:from-emerald-600';
             topLabelHtml = `<span class="text-[9px] font-num font-bold text-slate-700 leading-none">${count}</span>`;
           }
+        } else if (isLeaveOnly) {
+          const codeLabel = st.leaveCodes[0] || 'HT';
+          heightPercent = 18;
+          barColor = 'bg-indigo-100/90 border border-indigo-300/90 group-hover:bg-indigo-200/90';
+          topLabelHtml = `<span class="inline-flex items-center justify-center px-1 py-0.2 rounded text-[8px] font-black bg-indigo-50 text-indigo-800 border border-indigo-200 leading-none">${escapeHtml(codeLabel)}</span>`;
+          statusLine = `Nghỉ theo quy chuẩn: ${st.leaveTitles.join(', ')}`;
+        } else if (isMissingEval) {
+          heightPercent = 20;
+          barColor = 'bg-rose-50 border border-dashed border-rose-400 group-hover:bg-rose-100';
+          topLabelHtml = `<span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-rose-100 text-rose-700 text-[8.5px] font-black leading-none" title="Chưa nộp báo cáo">!</span>`;
+          statusLine = '⚠️ Chưa ghi nhận báo cáo (Nhấp để điền)';
+        } else if (isToday) {
+          heightPercent = 12;
+          barColor = 'bg-emerald-50 border border-dashed border-emerald-400';
+          topLabelHtml = `<span class="text-[8px] font-bold text-emerald-700 leading-none">H.Nay</span>`;
+          statusLine = 'Hôm nay (Đang trong ngày báo cáo)';
+        } else if (isFuture) {
+          statusLine = 'Chưa đến ngày báo cáo';
         }
 
+        const dayNumClass = isToday
+          ? 'font-black text-emerald-800 underline'
+          : (isMissingEval ? 'font-black text-rose-600' : (isLeaveOnly ? 'font-bold text-indigo-700' : (isPeak ? 'font-black text-amber-800' : 'text-slate-400')));
+
         html += `
-          <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[20px] sm:min-w-[24px] ${weekendClass}" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${count} công việc ghi nhận (Nhấp để cuộn bảng tới ngày này)">
-            <!-- Tooltip hover tức thì -->
+          <div class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer min-w-[20px] sm:min-w-[24px]" onclick="scrollToDayColumn(${dc.colIndex})" title="Ngày ${dc.label}: ${statusLine} (Nhấp để cuộn bảng tới ngày này)">
             <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none transition-all">
               <div class="bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-3 rounded-xl whitespace-nowrap shadow-xl border border-slate-700">
                 <div class="flex items-center gap-1.5 border-b border-slate-700 pb-1 mb-1">
-                  <span class="w-2 h-2 rounded-full ${count > 0 ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+                  <span class="w-2 h-2 rounded-full ${count > 0 ? 'bg-emerald-400' : (isLeaveOnly ? 'bg-indigo-400' : (isMissingEval ? 'bg-rose-400' : 'bg-slate-500'))}"></span>
                   <span class="font-black text-emerald-400">Ngày ${dc.label}</span>
                   ${isToday ? '<span class="text-[9px] bg-emerald-700 text-white px-1.5 rounded">Hôm nay</span>' : ''}
                 </div>
-                <div class="text-white text-xs font-num font-black">${count} lượt đầu việc phát sinh</div>
-                <div class="text-slate-400 text-[9px] mt-0.5">Nhấp vào cột để xem trực tiếp trên ma trận</div>
+                <div class="${isMissingEval ? 'text-rose-300' : (isLeaveOnly ? 'text-indigo-300' : 'text-white')} text-xs font-num font-black">${escapeHtml(statusLine)}</div>
+                <div class="text-slate-400 text-[9px] mt-0.5">Nhấp vào cột để cuộn ma trận tới ngày ${dc.label}</div>
               </div>
               <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5"></div>
             </div>
 
-            <!-- In số lượng trực tiếp trên đỉnh cột -->
             <div class="h-4 flex items-center justify-center mb-1">
               ${topLabelHtml}
             </div>
 
-            <!-- Cột biểu đồ -->
             <div class="w-full max-w-[20px] rounded-t-md transition-all duration-300 ${barColor}" style="height: ${heightPercent}%"></div>
-            
-            <!-- Nhãn ngày bên dưới -->
-            <span class="text-[9px] font-num mt-1 ${isToday ? 'font-black text-emerald-800 underline' : isPeak ? 'font-black text-amber-800' : 'text-slate-400'}">
+
+            <span class="text-[9px] font-num mt-1 ${dayNumClass}">
               ${dc.label.split('/')[0]}
             </span>
           </div>
@@ -18207,25 +18859,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     // ================= BỘ TÍNH TOÁN BÁM SÁT TIẾN ĐỘ BÁO CÁO THEO NGÀY (THEO DÕI ĐÔN ĐỐC & THI ĐUA) =================
     let _cachedFollowUpProgressData = null;
-    let _currentFollowUpTab = 'pending'; // 'pending' = Chưa báo cáo (Cần đôn đốc) | 'completed' = Đã hoàn thành (Thi đua)
+    let _currentFollowUpTab = 'pending';
 
-    /**
-     * KIỂM TRA PHÂN QUYỀN THEO DÕI TIẾN ĐỘ & THI ĐUA:
-     * Admin & Quản lý: Hiển thị đầy đủ tất cả nhân sự và nhóm gộp.
-     * Nhân viên: Chỉ hiển thị tiến độ của chính mình (hoặc tổ kho/nhóm gộp mình thuộc về).
-     */
     function isFollowUpItemBelongToUser(item, user) {
       if (!user) return true;
-      const myName = user.fullName || "";
-      const myDept = user.department || "";
+      const myName = user.fullName || '';
+      const myDept = user.department || '';
 
       if (item.isGroup) {
-        // Nhóm gộp: Nhân sự thuộc bộ phận kho này hoặc có tên trong danh sách thành viên kho
         if (isDeptEquivalent(myDept, item.department)) return true;
         if (item.staffName && isStaffMatchedInCell(myName, item.staffName)) return true;
         return false;
       } else {
-        // Cá nhân: Đúng họ tên nhân sự này
         if (isStaffMatchedInCell(myName, item.displayName) || isStaffMatchedInCell(myName, item.staffName)) return true;
         const normMy = removeAccents(myName).toLowerCase().trim();
         const normDisp = removeAccents(item.displayName || '').toLowerCase().trim();
@@ -18236,7 +18881,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function getDailyReportingProgressData(data) {
       const scopedData = getScopedDataForCurrentUser(data);
       if (!scopedData || !scopedData.staffGroups || !scopedData.dayCols || scopedData.staffGroups.length === 0) {
-        return { targetDateLabel: '', targetDayNum: 1, totalDaysToEval: 1, pendingList: [], completedList: [] };
+        return { targetDateLabel: '', targetDayNum: 1, totalDaysToEval: 1, pendingList: [], completedList: [], currentDayNum: 1, isCurrentPeriod: false, todayDateLabel: '' };
       }
       data = scopedData;
 
@@ -18249,65 +18894,54 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const isCurrentPeriod = (currentSelectedMonth === todayMonth && currentSelectedYear === todayYear);
 
       if (isCurrentPeriod) {
-        // Ví dụ: Hôm nay ngày 08/10 thì tính hoàn thành là ngày 07/10
-        if (todayDate > 1) {
-          targetDayNum = todayDate - 1;
-        } else {
-          targetDayNum = 1;
-        }
+        targetDayNum = todayDate > 1 ? todayDate - 1 : 1;
       } else if (currentSelectedYear < todayYear || (currentSelectedYear === todayYear && currentSelectedMonth < todayMonth)) {
-        // Kỳ quá khứ (ví dụ xem lại tháng 9): tính theo ngày cuối cùng của tháng đó
         targetDayNum = data.dayCols.length > 0 ? data.dayCols[data.dayCols.length - 1].dayNum : 30;
       } else {
-        // Kỳ tương lai
         targetDayNum = 1;
       }
 
-      // Danh sách các cột ngày cần xét duyệt từ ngày 1 đến ngày targetDayNum
       const evalDayCols = data.dayCols.filter(dc => dc.dayNum <= targetDayNum);
       const totalDaysToEval = evalDayCols.length;
 
       const targetDayCol = data.dayCols.find(dc => dc.dayNum === targetDayNum);
       const targetColIdx = targetDayCol ? targetDayCol.colIndex : targetDayNum;
+      const todayCol = isCurrentPeriod ? data.dayCols.find(dc => dc.dayNum === todayDate) : null;
+      const todayColIdx = todayCol ? todayCol.colIndex : todayDate;
 
       const targetDayStr = (targetDayNum < 10 ? '0' : '') + targetDayNum;
       const targetMonthStr = (currentSelectedMonth < 10 ? '0' : '') + currentSelectedMonth;
       const targetDateLabel = `${targetDayStr}/${targetMonthStr}`;
+      const todayDateLabel = isCurrentPeriod ? `${todayDate < 10 ? '0' + todayDate : todayDate}/${targetMonthStr}` : targetDateLabel;
 
-      // Gom nhóm theo uniqueKey để nhóm gộp chỉ xuất hiện 1 dòng duy nhất
       const memberGroupMap = new Map();
 
       data.staffGroups.forEach(grp => {
-        // BẢO VỆ TUYỆT ĐỐI: Loại trừ mọi tài khoản bị khóa hoặc tạm khóa
-        if (isStaffGroupLockedOrPaused(grp)) {
-          return;
-        }
+        if (isStaffGroupLockedOrPaused(grp)) return;
 
         const isGroupDept = (grp.isShared === true) || isSharedGroupDeptClient(grp.department);
         const isPersonalInShared = !!grp.isPersonalInShared;
-        let displayName = "";
-        let subDeptName = "";
-        let uniqueKey = "";
+        let displayName = '';
+        let subDeptName = '';
+        let uniqueKey = '';
 
         if (isGroupDept && !isPersonalInShared) {
-          // DÒNG VIỆC CHUNG TỔ KHO: Gom nhóm hiển thị tên tổ kho
           displayName = grp.department;
-          subDeptName = "Việc chung tổ kho";
-          uniqueKey = "GROUP___" + normalizeDeptKey(grp.department);
+          subDeptName = 'Việc chung tổ kho';
+          uniqueKey = 'GROUP___' + normalizeDeptKey(grp.department);
         } else {
-          // NHÂN SỰ CÁ NHÂN (kể cả trong nhóm gộp hay bộ phận thường): Hiển thị họ tên nhân sự
-          let cleanStaff = (grp.staffName || "").replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
-          displayName = cleanStaff || grp.staffName || "Chưa đặt tên";
-          subDeptName = isPersonalInShared ? `${grp.department} (Việc cá nhân)` : (grp.department || "");
-          uniqueKey = "STAFF___" + displayName + "___" + (grp.department || "");
+          let cleanStaff = (grp.staffName || '').replace(/\s*[-–]\s*(KhoChinh|Truongnhom|NhanVien|Kho chính|Phụ kho|Trưởng nhóm|Nhân viên|Leader).*/i, '').trim();
+          displayName = cleanStaff || grp.staffName || 'Chưa đặt tên';
+          subDeptName = isPersonalInShared ? `${grp.department} (Việc cá nhân)` : (grp.department || '');
+          uniqueKey = 'STAFF___' + displayName + '___' + (grp.department || '');
         }
 
         const isGroupItem = (isGroupDept && !isPersonalInShared);
         if (!memberGroupMap.has(uniqueKey)) {
           memberGroupMap.set(uniqueKey, {
             isGroup: isGroupItem,
-            displayName: displayName,
-            subDeptName: subDeptName,
+            displayName,
+            subDeptName,
             department: grp.department,
             staffName: grp.staffName,
             tasks: [...(grp.tasks || [])]
@@ -18321,13 +18955,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const pendingList = [];
       const completedList = [];
 
-      memberGroupMap.forEach((entry, key) => {
+      memberGroupMap.forEach((entry) => {
         const allTasks = entry.tasks || [];
         const totalTasks = allTasks.length;
 
-        // 1. Kiểm tra ngày mục tiêu (targetDayNum)
         let targetDayLoggedCount = 0;
         let targetDayLeaveInfo = null;
+        let todayLoggedTasksCount = 0;
+        let todayLeaveInfo = null;
 
         allTasks.forEach(t => {
           const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
@@ -18341,34 +18976,77 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               }
             }
           }
+          if (isCurrentPeriod) {
+            const tVal = t.dailyValues ? t.dailyValues[todayColIdx] : undefined;
+            if (tVal !== undefined && tVal !== null && String(tVal).trim() !== '') {
+              const ts = String(tVal).trim();
+              if (ts !== '-' && ts !== '·' && ts !== '0') {
+                todayLoggedTasksCount++;
+                const tSym = getSmartSymbolInfo(ts);
+                if (tSym && tSym.isLeave && !todayLeaveInfo) {
+                  todayLeaveInfo = tSym;
+                }
+              }
+            }
+          }
         });
 
-        // 2. Thống kê số ngày chưa báo cáo tính từ đầu kỳ đến ngày targetDayNum
         let reportedDaysCount = 0;
         let unreportedDaysCount = 0;
+        let activeWorkDaysCount = 0;
+        let leaveOnlyDaysCount = 0;
         const unreportedDaysList = [];
+        const unreportedDaysDetail = [];
+        const leaveDaysDetail = [];
 
         evalDayCols.forEach(dc => {
           let hasDataOnDay = false;
+          let hasWorkOnDay = false;
+          let dayLeaveSym = null;
+
           allTasks.forEach(t => {
             const val = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
             if (val !== undefined && val !== null && String(val).trim() !== '') {
               const s = String(val).trim();
               if (s !== '-' && s !== '·' && s !== '0') {
                 hasDataOnDay = true;
+                if (isLeaveSymbolValue(s)) {
+                  if (!dayLeaveSym) dayLeaveSym = getSmartSymbolInfo(s) || { code: s.toUpperCase(), title: 'Nghỉ' };
+                } else {
+                  hasWorkOnDay = true;
+                }
               }
             }
           });
 
+          const dayShort = dc.label.split('/')[0];
           if (hasDataOnDay) {
             reportedDaysCount++;
+            if (hasWorkOnDay) {
+              activeWorkDaysCount++;
+            } else if (dayLeaveSym) {
+              leaveOnlyDaysCount++;
+              leaveDaysDetail.push({
+                dayStr: dayShort,
+                label: dc.label,
+                colIndex: dc.colIndex,
+                code: dayLeaveSym.code,
+                title: dayLeaveSym.title || 'Nghỉ'
+              });
+            }
           } else {
             unreportedDaysCount++;
-            unreportedDaysList.push(dc.label.split('/')[0]); // ví dụ '07'
+            unreportedDaysList.push(dayShort);
+            unreportedDaysDetail.push({
+              dayStr: dayShort,
+              label: dc.label,
+              colIndex: dc.colIndex
+            });
           }
         });
 
         const hasReportedTargetDay = targetDayLoggedCount > 0;
+        const coveragePct = totalDaysToEval > 0 ? Math.round((reportedDaysCount / totalDaysToEval) * 100) : 100;
 
         const itemObj = {
           isGroup: entry.isGroup,
@@ -18376,57 +19054,44 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           subDeptName: entry.subDeptName,
           department: entry.department,
           staffName: entry.staffName,
-          totalTasks: totalTasks,
-          targetDayLoggedCount: targetDayLoggedCount,
-          targetDayLeaveInfo: targetDayLeaveInfo,
-          reportedDaysCount: reportedDaysCount,
-          unreportedDaysCount: unreportedDaysCount,
-          unreportedDaysList: unreportedDaysList,
-          hasReportedTargetDay: hasReportedTargetDay,
-          totalDaysToEval: totalDaysToEval
+          totalTasks,
+          targetDayLoggedCount,
+          targetDayLeaveInfo,
+          todayLoggedTasksCount,
+          todayLeaveInfo,
+          reportedDaysCount,
+          unreportedDaysCount,
+          activeWorkDaysCount,
+          leaveOnlyDaysCount,
+          leaveDaysDetail,
+          unreportedDaysList,
+          unreportedDaysDetail,
+          hasReportedTargetDay,
+          totalDaysToEval,
+          coveragePct
         };
 
-        // Phân loại:
-        // 1. Nếu người/nhóm có ngày chưa báo cáo (unreportedDaysCount > 0) -> Đưa vào bảng đôn đốc
         if (unreportedDaysCount > 0) {
           pendingList.push(itemObj);
         }
-
-        // 2. BẢNG THI ĐUA TIẾN ĐỘ: Chỉ những người/nhóm ĐÃ BÁO CÁO ĐỦ 100% (không thiếu bất kỳ ngày nào tính đến ngày xét duyệt: unreportedDaysCount === 0) mới được xuất hiện!
         if (unreportedDaysCount === 0 && totalTasks > 0 && totalDaysToEval > 0) {
           completedList.push(itemObj);
         }
       });
 
-      // SẮP XẾP BẢNG CẦN ĐÔN ĐỐC: 
-      // 1. Số ngày chưa báo cáo nhiều nhất lên đầu tiên (giảm dần)
-      // 2. Cùng số ngày chưa báo cáo: Bộ phận nhóm gộp xếp trước, cá nhân xếp sau
-      // 3. Cùng loại: Sắp xếp theo bảng chữ cái tiếng Việt
       pendingList.sort((a, b) => {
-        if (b.unreportedDaysCount !== a.unreportedDaysCount) {
-          return b.unreportedDaysCount - a.unreportedDaysCount;
-        }
+        if (b.unreportedDaysCount !== a.unreportedDaysCount) return b.unreportedDaysCount - a.unreportedDaysCount;
         const aGroup = a.isGroup ? 1 : 0;
         const bGroup = b.isGroup ? 1 : 0;
-        if (aGroup !== bGroup) {
-          return bGroup - aGroup;
-        }
+        if (aGroup !== bGroup) return bGroup - aGroup;
         return a.displayName.localeCompare(b.displayName, 'vi');
       });
 
-      // SẮP XẾP BẢNG THI ĐUA: 
-      // 1. Tỷ lệ hoàn thành / số ngày đã nộp cao nhất lên đầu (giảm dần)
-      // 2. Cùng số ngày: Bộ phận nhóm gộp xếp trước, cá nhân xếp sau
-      // 3. Cùng loại: Sắp xếp theo bảng chữ cái tiếng Việt
       completedList.sort((a, b) => {
-        if (b.reportedDaysCount !== a.reportedDaysCount) {
-          return b.reportedDaysCount - a.reportedDaysCount;
-        }
+        if (b.reportedDaysCount !== a.reportedDaysCount) return b.reportedDaysCount - a.reportedDaysCount;
         const aGroup = a.isGroup ? 1 : 0;
         const bGroup = b.isGroup ? 1 : 0;
-        if (aGroup !== bGroup) {
-          return bGroup - aGroup;
-        }
+        if (aGroup !== bGroup) return bGroup - aGroup;
         return a.displayName.localeCompare(b.displayName, 'vi');
       });
 
@@ -18435,7 +19100,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         targetDayNum,
         totalDaysToEval,
         pendingList,
-        completedList
+        completedList,
+        currentDayNum: todayDate,
+        isCurrentPeriod,
+        todayDateLabel
       };
     }
 
@@ -18455,67 +19123,196 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const container = document.getElementById('deptLeaderboardList');
       const subTitle = document.getElementById('followUpCardSubtitle');
       const badge = document.getElementById('followUpPendingBadge');
+      const summaryBar = document.getElementById('followUpSummaryMetricsBar');
+      const tabsWrapper = document.getElementById('followUpTabsWrapper');
       const tabCountPending = document.getElementById('tabCountPending');
       const tabCountCompleted = document.getElementById('tabCountCompleted');
       const tabBtnPending = document.getElementById('tabBtnPending');
       const tabBtnCompleted = document.getElementById('tabBtnCompleted');
 
       if (!progressData) return;
-      const { targetDateLabel, pendingList, completedList, totalDaysToEval } = progressData;
+      const { targetDateLabel, pendingList, completedList, totalDaysToEval, isCurrentPeriod, todayDateLabel } = progressData;
 
       const isManagerOrAdmin = currentUser ? isAdminOrManager(currentUser.role, currentUser.username) : false;
       const activePendingList = isManagerOrAdmin ? pendingList : pendingList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
       const activeCompletedList = isManagerOrAdmin ? completedList : completedList.filter(it => isFollowUpItemBelongToUser(it, currentUser));
+      const allScopedEntities = [...activePendingList, ...activeCompletedList];
+      const isSingleEntityScope = (allScopedEntities.length === 1);
 
       if (tabCountPending) tabCountPending.innerText = activePendingList.length;
       if (tabCountCompleted) tabCountCompleted.innerText = activeCompletedList.length;
 
       if (subTitle) {
-        let scopeText = "";
-        if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+        let scopeText = '';
+        if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
           scopeText = `Nhân sự: ${currentSelectedStaff} • `;
-        } else if (currentSelectedDept && currentSelectedDept !== "TẤT CẢ") {
+        } else if (currentSelectedDept && currentSelectedDept !== 'TẤT CẢ') {
           scopeText = `Bộ phận: ${currentSelectedDept} • `;
         }
         subTitle.innerText = isManagerOrAdmin
-          ? `${scopeText}Thống kê số ngày chưa báo cáo tính đến ngày ${targetDateLabel}`
-          : `Tiến độ báo cáo tính đến ngày ${targetDateLabel}`;
+          ? `${scopeText}Kiểm soát tiến độ ghi nhận đến ngày ${targetDateLabel}`
+          : `Tiến độ ghi nhận ma trận tính đến ngày ${targetDateLabel}`;
       }
 
       if (badge) {
-        if (isManagerOrAdmin) {
-          if (activePendingList.length === 0) {
-            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
-            badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>100% Hoàn thành`;
+        if (isSingleEntityScope) {
+          const single = allScopedEntities[0];
+          if (single.unreportedDaysCount === 0) {
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num';
+            badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>Đạt ${single.coveragePct}% (${single.reportedDaysCount}/${totalDaysToEval} ngày)`;
           } else {
-            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
-            badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa nộp: ${activePendingList.length} nhân sự/nhóm`;
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 font-num';
+            badge.innerHTML = `<i class="fa-solid fa-clock mr-1"></i>Đạt ${single.coveragePct}% • Thiếu ${single.unreportedDaysCount} ngày`;
           }
+        } else if (activePendingList.length === 0) {
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num';
+          badge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>100% Đủ tiến độ';
         } else {
-          if (activePendingList.length === 0) {
-            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 font-num";
-            badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>Đã hoàn thành`;
-          } else {
-            badge.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num animate-pulse";
-            badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Chưa hoàn thành`;
-          }
-        }
-      }
-
-      if (tabBtnPending && tabBtnCompleted) {
-        if (_currentFollowUpTab === 'pending') {
-          tabBtnPending.className = "flex-1 py-1.5 px-2 rounded-lg bg-white text-amber-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60";
-          tabBtnCompleted.className = "flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-emerald-800 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer";
-        } else {
-          tabBtnPending.className = "flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-amber-900 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer";
-          tabBtnCompleted.className = "flex-1 py-1.5 px-2 rounded-lg bg-white text-emerald-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60";
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-200 font-num';
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Cần bổ sung: ${activePendingList.length}/${allScopedEntities.length}`;
         }
       }
 
       if (!container) return;
 
+      // TRƯỜNG HỢP 1: CHỈ CÓ 1 ĐƠN VỊ / 1 NHÂN SỰ TRONG PHẠM VI ĐANG XEM -> BẢNG KIỂM SOÁT CÁ NHÂN TRỰC QUAN (ẨN TAB 1/0 DƯ THỪA)
+      if (isSingleEntityScope) {
+        if (tabsWrapper) tabsWrapper.classList.add('hidden');
+        const item = allScopedEntities[0];
+        const isDanger = item.unreportedDaysCount >= 3;
+        const isComplete = item.unreportedDaysCount === 0;
+        const leaveCodesStr = item.leaveDaysDetail && item.leaveDaysDetail.length > 0
+          ? item.leaveDaysDetail.map(d => `${d.dayStr} (${d.code})`).join(', ')
+          : 'Không có';
+        const todayStatusStr = isCurrentPeriod
+          ? (item.todayLeaveInfo
+            ? `Nghỉ (${item.todayLeaveInfo.code})`
+            : (item.todayLoggedTasksCount > 0 ? `Đã nhập ${item.todayLoggedTasksCount}/${item.totalTasks} việc` : `Chưa nhập (0/${item.totalTasks})`))
+          : `${item.totalTasks} đầu việc`;
+
+        if (summaryBar) {
+          summaryBar.classList.remove('hidden');
+          const barColor = isComplete ? 'bg-emerald-500' : (isDanger ? 'bg-rose-500' : 'bg-amber-500');
+          summaryBar.innerHTML = `
+            <div class="p-2.5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-bold">
+                <span class="text-slate-700 flex items-center gap-1.5">
+                  <i class="fa-solid fa-gauge-high ${isComplete ? 'text-emerald-600' : 'text-amber-600'} text-[10px]"></i>
+                  <span>Tỷ lệ ngày đã ghi nhận (đến ${targetDateLabel})</span>
+                </span>
+                <span class="font-num font-black ${isComplete ? 'text-emerald-800' : (isDanger ? 'text-rose-700' : 'text-amber-900')}">${item.reportedDaysCount}/${totalDaysToEval} ngày (${item.coveragePct}%)</span>
+              </div>
+              <div class="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
+                <div class="h-full ${barColor} rounded-full transition-all duration-300" style="width: ${item.coveragePct}%"></div>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5 text-[10px] font-num">
+                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col">
+                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Có phát sinh</span>
+                  <span class="font-black text-emerald-700 text-xs mt-0.5">${item.activeWorkDaysCount} ngày</span>
+                </div>
+                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col" title="Ngày nghỉ theo quy chuẩn: ${escapeHtml(leaveCodesStr)}">
+                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Nghỉ / Ký hiệu</span>
+                  <span class="font-black text-indigo-700 text-xs mt-0.5 truncate">${item.leaveOnlyDaysCount} ngày${item.leaveDaysDetail.length > 0 ? ` (${item.leaveDaysDetail[0].code})` : ''}</span>
+                </div>
+                <div class="px-2 py-1.5 rounded-xl bg-white border ${isComplete ? 'border-slate-200/80' : 'border-amber-200 bg-amber-50/40'} flex flex-col">
+                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Còn thiếu</span>
+                  <span class="font-black ${isComplete ? 'text-slate-600' : (isDanger ? 'text-rose-700' : 'text-amber-800')} text-xs mt-0.5">${item.unreportedDaysCount} ngày</span>
+                </div>
+                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col">
+                  <span class="text-slate-400 font-semibold text-[9px] uppercase">${isCurrentPeriod ? `Hôm nay (${todayDateLabel})` : 'Quy mô giao'}</span>
+                  <span class="font-black ${item.todayLoggedTasksCount > 0 || item.todayLeaveInfo ? 'text-emerald-700' : 'text-slate-700'} text-[10.5px] mt-0.5 truncate">${escapeHtml(todayStatusStr)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        const missingButtonsHtml = (item.unreportedDaysDetail || []).slice(0, 6).map(d => `
+          <button type="button" onclick="event.stopPropagation(); scrollToDayColumn(${d.colIndex})"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black font-num shadow-2xs transition cursor-pointer active:scale-95"
+            title="Nhấp để cuộn bảng ma trận tới cột ngày ${d.label}">
+            <i class="fa-solid fa-pen-to-square text-amber-600 text-[9px]"></i>
+            <span>Điền ngày ${d.label}</span>
+          </button>
+        `).join('');
+
+        container.innerHTML = `
+          <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
+               class="followup-item-card p-3 rounded-2xl border ${isComplete ? 'border-emerald-200/90 bg-emerald-50/40' : (isDanger ? 'border-rose-200 bg-rose-50/45' : 'border-amber-200/90 bg-amber-50/40')} transition-all duration-150 cursor-pointer space-y-2 shadow-2xs"
+               data-theme="${isComplete ? 'emerald' : (isDanger ? 'rose' : 'amber')}"
+               data-staff-name="${escapeHtml(item.displayName)}">
+            <div class="flex items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl ${isComplete ? 'bg-emerald-100 text-emerald-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                  <i class="${isComplete ? 'fa-solid fa-circle-check' : (item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user')}"></i>
+                </span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-xs font-black text-slate-900 truncate">${escapeHtml(item.displayName)}</p>
+                    <span class="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-white/90 text-slate-600 border border-slate-200 shrink-0 font-num">${item.totalTasks} đầu việc</span>
+                  </div>
+                  <p class="text-[10.5px] text-slate-600 mt-0.5 truncate">
+                    ${escapeHtml(item.isGroup ? 'Đại diện bộ phận kho/tổ' : item.subDeptName)}
+                    ${item.leaveDaysDetail && item.leaveDaysDetail.length > 0 ? ` • <span class="text-indigo-700 font-semibold font-num">Nghỉ: ngày ${escapeHtml(leaveCodesStr)}</span>` : ''}
+                  </p>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isComplete ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : (isDanger ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300')} font-num whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
+                  <i class="fa-solid ${isComplete ? 'fa-check text-emerald-600' : 'fa-clock text-amber-700'} text-[9px]"></i>
+                  <span>${isComplete ? 'Đã nộp đủ 100%' : `Thiếu ${item.unreportedDaysCount} ngày`}</span>
+                </span>
+              </div>
+            </div>
+            ${!isComplete && missingButtonsHtml ? `
+              <div class="pt-1.5 border-t border-amber-200/60 flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-[10px] font-bold text-amber-900">Cần bổ sung số liệu trên ma trận:</span>
+                <div class="flex items-center gap-1.5 flex-wrap">${missingButtonsHtml}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        return;
+      }
+
+      // TRƯỜNG HỢP 2: XEM NHIỀU NHÂN SỰ / BỘ PHẬN / TOÀN BAN
+      if (tabsWrapper) tabsWrapper.classList.remove('hidden');
+
+      if (summaryBar) {
+        const sumReported = allScopedEntities.reduce((acc, it) => acc + it.reportedDaysCount, 0);
+        const sumEval = allScopedEntities.reduce((acc, it) => acc + it.totalDaysToEval, 0);
+        const sumMissing = allScopedEntities.reduce((acc, it) => acc + it.unreportedDaysCount, 0);
+        const overallPct = sumEval > 0 ? Math.round((sumReported / sumEval) * 100) : 100;
+        summaryBar.classList.remove('hidden');
+        summaryBar.innerHTML = `
+          <div class="grid grid-cols-3 gap-1.5 p-2 rounded-2xl bg-slate-50/90 border border-slate-200/80 text-[10px] font-num">
+            <div class="px-2 py-1 rounded-xl bg-white border border-slate-200/70 flex flex-col">
+              <span class="text-slate-400 font-semibold text-[9px] uppercase">Độ phủ báo cáo</span>
+              <span class="font-black text-emerald-800 text-xs mt-0.5">${overallPct}% <span class="text-[9.5px] font-normal text-slate-500">(${sumReported}/${sumEval})</span></span>
+            </div>
+            <div class="px-2 py-1 rounded-xl bg-white border border-slate-200/70 flex flex-col">
+              <span class="text-slate-400 font-semibold text-[9px] uppercase">Đủ 100% đúng hạn</span>
+              <span class="font-black text-teal-800 text-xs mt-0.5">${activeCompletedList.length}/${allScopedEntities.length} đơn vị</span>
+            </div>
+            <div class="px-2 py-1 rounded-xl bg-white border border-slate-200/70 flex flex-col">
+              <span class="text-slate-400 font-semibold text-[9px] uppercase">Tổng ngày thiếu</span>
+              <span class="font-black ${sumMissing > 0 ? 'text-amber-800' : 'text-slate-600'} text-xs mt-0.5">${sumMissing} ngày</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (tabBtnPending && tabBtnCompleted) {
+        if (_currentFollowUpTab === 'pending') {
+          tabBtnPending.className = 'flex-1 py-1.5 px-2 rounded-lg bg-white text-amber-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60';
+          tabBtnCompleted.className = 'flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-emerald-800 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer';
+        } else {
+          tabBtnPending.className = 'flex-1 py-1.5 px-2 rounded-lg text-slate-500 font-semibold hover:text-amber-900 hover:bg-white/60 flex items-center justify-center gap-1.5 transition cursor-pointer';
+          tabBtnCompleted.className = 'flex-1 py-1.5 px-2 rounded-lg bg-white text-emerald-950 font-black shadow-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200/60';
+        }
+      }
+
       if (_currentFollowUpTab === 'pending') {
-        // TAB 1: THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ (Chưa báo cáo - Xếp người chưa báo cáo nhiều ngày nhất lên đầu)
         if (activePendingList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-gradient-to-b from-emerald-50/80 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-1.5">
@@ -18540,8 +19337,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
                  class="followup-item-card p-2.5 rounded-2xl border ${isDanger ? 'border-rose-200 bg-rose-50/45 hover:bg-rose-100/60' : 'border-amber-200/80 bg-amber-50/40 hover:bg-amber-100/60'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
                  data-theme="${isDanger ? 'rose' : 'amber'}"
-                 data-staff-name="${escapeHtml(item.displayName)}"
-                 >
+                 data-staff-name="${escapeHtml(item.displayName)}">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user'}"></i>
@@ -18563,24 +19359,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <div class="text-right shrink-0">
                 <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isDanger ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300'} font-num shrink-0 whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
                   <i class="${isDanger ? 'fa-solid fa-triangle-exclamation text-rose-600' : 'fa-solid fa-clock text-amber-700'} text-[9px]"></i>
-                  <span>Chưa nộp ${item.unreportedDaysCount} ngày</span>
+                  <span>Thiếu ${item.unreportedDaysCount} ngày</span>
                 </span>
-                <p class="text-[9.5px] text-slate-400 font-num font-medium mt-0.5">Đã nộp: ${item.reportedDaysCount}/${totalDaysToEval} ngày</p>
+                <p class="text-[9.5px] text-slate-500 font-num font-medium mt-0.5">Đã nộp: ${item.reportedDaysCount}/${totalDaysToEval} ngày (${item.coveragePct}%)</p>
               </div>
             </div>
           `;
         });
         container.innerHTML = html;
-        if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+        if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
           setFollowUpCardActive(null, currentSelectedStaff);
         }
       } else {
-        // TAB 2: THI ĐUA HOÀN THÀNH (Đã báo cáo đến ngày mục tiêu)
         if (activeCompletedList.length === 0) {
           container.innerHTML = `
             <div class="py-6 px-3 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">
               <i class="fa-solid fa-inbox text-base mb-1 block"></i>
-              ${isManagerOrAdmin ? `Chưa ghi nhận nhân sự hoặc nhóm gộp nào hoàn thành báo cáo đến ngày ${targetDateLabel}.` : `Bạn còn ngày chưa nộp báo cáo tính đến ngày ${targetDateLabel}. Vui lòng chuyển sang tab <b>Chưa báo cáo</b> để bổ sung.`}
+              ${isManagerOrAdmin ? `Chưa ghi nhận nhân sự hoặc nhóm gộp nào hoàn thành đủ 100% đến ngày ${targetDateLabel}.` : `Bạn còn ngày chưa nộp báo cáo tính đến ngày ${targetDateLabel}. Vui lòng chuyển sang tab <b>Cần bổ sung</b>.`}
             </div>
           `;
           return;
@@ -18592,8 +19387,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
                  class="followup-item-card p-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs"
                  data-theme="emerald"
-                 data-staff-name="${escapeHtml(item.displayName)}"
-                 >
+                 data-staff-name="${escapeHtml(item.displayName)}">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-8 h-8 rounded-xl ${item.isGroup ? 'bg-teal-100 text-teal-800' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xs shrink-0 shadow-2xs">
                   <i class="${item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-medal'}"></i>
@@ -18603,13 +19397,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                     <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
                     ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                   </div>
-                  <p class="text-[10px] text-slate-400 truncate mt-0.5">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</p>
+                  <p class="text-[10px] text-slate-500 truncate mt-0.5 font-num">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)} • Phát sinh: ${item.activeWorkDaysCount} ngày${item.leaveOnlyDaysCount ? ` • Nghỉ: ${item.leaveOnlyDaysCount} ngày` : ''}</p>
                 </div>
               </div>
               <div class="text-right shrink-0">
                 <span class="px-2.5 py-1 rounded-xl text-[9.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/90 shrink-0 whitespace-nowrap font-num shadow-2xs inline-flex items-center gap-1">
                   <i class="fa-solid fa-check text-emerald-600 text-[9px]"></i>
-                  <span>Đã nộp ${item.reportedDaysCount}/${totalDaysToEval} ngày</span>
+                  <span>Đủ ${item.reportedDaysCount}/${totalDaysToEval} ngày</span>
                 </span>
                 <p class="text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Đã báo nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : 'Đầy đủ kỳ này'}</p>
               </div>
@@ -18617,7 +19411,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           `;
         });
         container.innerHTML = html;
-        if (currentSelectedStaff && currentSelectedStaff !== "TẤT CẢ" && !currentSelectedStaff.startsWith("SEARCH_")) {
+        if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
           setFollowUpCardActive(null, currentSelectedStaff);
         }
       }
