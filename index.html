@@ -3623,29 +3623,50 @@
           class="bg-white border border-slate-200 p-2.5 sm:p-3 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex flex-wrap items-center gap-2">
-              <div
-                class="h-10 flex items-center gap-2 bg-emerald-50/70 border border-emerald-200/90 px-3 rounded-xl shadow-2xs hover:border-emerald-300 transition-colors">
-                <i class="fa-solid fa-calendar-days text-emerald-600 text-xs shrink-0"></i>
-                <span
-                  class="text-[10.5px] sm:text-[11px] font-bold text-emerald-800 uppercase tracking-wider shrink-0">Kỳ
-                  báo cáo:</span>
-                <select id="reportPeriodSelect" onchange="onPeriodChange()"
-                  class="bg-transparent text-xs sm:text-[12.5px] font-bold text-emerald-950 focus:outline-none cursor-pointer">
-                </select>
+              <!-- 1. KỲ BÁO CÁO: ĐỒNG BỘ 100% CHIỀU CAO H-10 & BỐ CỤC 2 DÒNG VỚI BỘ LỌC BÊN PHẢI -->
+              <div id="periodSelectCard"
+                class="relative h-10 bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-400 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-400/30 rounded-xl px-2.5 text-xs text-slate-800 font-bold transition shadow-2xs flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span id="periodSelectIconBox"
+                    class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs pointer-events-none">
+                    <i class="fa-solid fa-calendar-days"></i>
+                  </span>
+                  <div class="min-w-0 flex flex-col leading-tight">
+                    <label for="reportPeriodSelect"
+                      class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider select-none cursor-pointer">Kỳ
+                      báo cáo:</label>
+                    <select id="reportPeriodSelect" onchange="onPeriodChange()"
+                      class="appearance-none bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer p-0 m-0 border-0 leading-tight pr-4 truncate">
+                    </select>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] shrink-0 pointer-events-none -ml-4"></i>
               </div>
 
-              <span id="periodLockBadge"
-                class="h-10 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase flex items-center gap-1.5 border shadow-2xs">
-                <i class="fa-solid fa-lock text-[10px]"></i>
-                <span>Đang kiểm tra...</span>
-              </span>
+              <!-- 2. TRẠNG THÁI SỔ & THAO TÁC KHÓA SỔ: GOM CỤM H-10 CHUYÊN NGHIỆP, CÂN ĐỐI -->
+              <div id="periodLockControlCard"
+                class="h-10 bg-white border border-slate-200 rounded-xl px-2.5 shadow-2xs flex items-center gap-2.5 shrink-0 transition-colors">
+                <span id="periodLockBadge" role="status" aria-live="polite"
+                  class="flex items-center gap-2 min-w-0 select-none">
+                  <span
+                    class="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                    <i class="fa-solid fa-clock text-[11px]"></i>
+                  </span>
+                  <span class="min-w-0 flex flex-col leading-tight">
+                    <span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">Trạng thái sổ:</span>
+                    <span class="text-xs font-bold text-slate-600 truncate">Đang kiểm tra...</span>
+                  </span>
+                </span>
 
-              <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()"
-                data-tooltip="Khóa sổ báo cáo"
-                class="hidden h-10 px-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer">
-                <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
-                <span id="btnTogglePeriodLockText">Khóa sổ</span>
-              </button>
+                <span id="periodLockActionDivider" class="hidden h-5 w-px bg-slate-200 shrink-0"></span>
+
+                <button type="button" id="btnTogglePeriodLock" onclick="openPeriodLockModal()"
+                  data-tooltip="Khóa sổ kỳ báo cáo"
+                  class="hidden h-7 px-2.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer shrink-0">
+                  <i id="btnTogglePeriodLockIcon" class="fa-solid fa-lock text-[10px]"></i>
+                  <span id="btnTogglePeriodLockText">Khóa sổ</span>
+                </button>
+              </div>
             </div>
 
             <!-- Bộ lọc Admin/Quản lý: GIAO DIỆN BỘ PHẬN VÀ HỌ TÊN ĐỒNG BỘ VỚI MÀN HÌNH ĐĂNG NHẬP -->
@@ -12177,7 +12198,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      */
     function updatePeriodLockUI(isLocked) {
       currentPeriodLocked = isLocked;
+      const controlCard = document.getElementById('periodLockControlCard');
       const badge = document.getElementById('periodLockBadge');
+      const divider = document.getElementById('periodLockActionDivider');
       const btn = document.getElementById('btnTogglePeriodLock');
       const icon = document.getElementById('btnTogglePeriodLockIcon');
       const text = document.getElementById('btnTogglePeriodLockText');
@@ -12188,27 +12211,59 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         select.options[select.selectedIndex].dataset.locked = isLocked ? "true" : "false";
       }
 
+      if (controlCard) {
+        controlCard.className = isLocked
+          ? "h-10 bg-rose-50/40 border border-rose-200/90 rounded-xl px-2.5 shadow-2xs flex items-center gap-2.5 shrink-0 transition-colors"
+          : "h-10 bg-white border border-slate-200 rounded-xl px-2.5 shadow-2xs flex items-center gap-2.5 shrink-0 transition-colors";
+      }
+
       if (badge) {
+        badge.className = "flex items-center gap-2 min-w-0 select-none";
         if (isLocked) {
-          badge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border shadow-2xs bg-rose-50 border-rose-200 text-rose-700";
-          badge.innerHTML = '<i class="fa-solid fa-lock text-[10px] text-rose-600"></i><span>ĐÃ KHÓA SỔ</span>';
+          badge.innerHTML =
+            '<span class="w-6 h-6 rounded-lg bg-rose-100/90 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">' +
+              '<i class="fa-solid fa-lock text-[11px]"></i>' +
+            '</span>' +
+            '<span class="min-w-0 flex flex-col leading-tight">' +
+              '<span class="text-[9.5px] font-bold text-rose-600/80 uppercase tracking-wider">Trạng thái sổ:</span>' +
+              '<span class="text-xs font-extrabold text-rose-700 truncate">Đã khóa sổ</span>' +
+            '</span>';
         } else {
-          badge.className = "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase flex items-center gap-1.5 border shadow-2xs bg-emerald-50 border-emerald-200 text-emerald-800";
-          badge.innerHTML = '<i class="fa-solid fa-lock-open text-[10px] text-emerald-600"></i><span>ĐANG MỞ</span>';
+          badge.innerHTML =
+            '<span class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">' +
+              '<i class="fa-solid fa-lock-open text-[11px]"></i>' +
+            '</span>' +
+            '<span class="min-w-0 flex flex-col leading-tight">' +
+              '<span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">Trạng thái sổ:</span>' +
+              '<span class="text-xs font-bold text-emerald-700 truncate">Đang mở</span>' +
+            '</span>';
+        }
+      }
+
+      const canManageLock = Boolean(currentUser && isAdminOrManager(currentUser.role, currentUser.username));
+      if (divider) {
+        if (canManageLock) {
+          divider.className = isLocked
+            ? "h-5 w-px bg-rose-200/80 shrink-0"
+            : "h-5 w-px bg-slate-200 shrink-0";
+        } else {
+          divider.className = "hidden h-5 w-px bg-slate-200 shrink-0";
         }
       }
 
       if (btn) {
-        if (currentUser && isAdminOrManager(currentUser.role, currentUser.username)) {
+        if (canManageLock) {
           btn.classList.remove('hidden');
           if (isLocked) {
-            btn.className = "px-3 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
+            btn.className = "h-7 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-white border border-amber-600/20 text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0";
             if (icon) icon.className = "fa-solid fa-lock-open text-[10px]";
             if (text) text.innerText = "Mở khóa sổ";
+            btn.setAttribute('data-tooltip', 'Mở khóa sổ kỳ báo cáo');
           } else {
-            btn.className = "px-3 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer";
+            btn.className = "h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-600 active:scale-95 text-rose-700 hover:text-white border border-rose-200 hover:border-rose-600 text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0";
             if (icon) icon.className = "fa-solid fa-lock text-[10px]";
             if (text) text.innerText = "Khóa sổ";
+            btn.setAttribute('data-tooltip', 'Khóa sổ kỳ báo cáo');
           }
         } else {
           btn.classList.add('hidden');
@@ -12725,6 +12780,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         document.getElementById('modalEntryDate').value = `${currentSelectedYear}-${mStr}-01`;
       }
 
+      if (typeof invalidateMatrixSyncContext === 'function') {
+        invalidateMatrixSyncContext();
+      }
       _matrixPeriodFetchToken++;
       schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
       fullPeriodMatrixCache = null;
@@ -14835,10 +14893,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           focusMatrixInputWithoutScroll(restoredInp, activeInputMeta.selectionStart, activeInputMeta.selectionEnd);
         }
       }
-
-      if (senderName) {
-        showLiveSyncIndicator(senderName, m, y);
-      }
     }
 
     async function fetchMatrixFromSupabase(month, year) {
@@ -14953,8 +15007,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         });
       }
 
-      if (maxFetchedUpdatedAtMs > 0 && Number(year) === Number(currentSelectedYear) && Number(month) === Number(currentSelectedMonth)) {
-        _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, maxFetchedUpdatedAtMs);
+      if (Number(year) === Number(currentSelectedYear) && Number(month) === Number(currentSelectedMonth)) {
+        _lastKnownReportUpdatedAt = maxFetchedUpdatedAtMs > 0 ? maxFetchedUpdatedAtMs : 0;
+        if (typeof _periodPollStateMap === 'object' && _periodPollStateMap) {
+          const pKey = `${Number(year)}_${Number(month)}`;
+          if (_periodPollStateMap[pKey]) {
+            _periodPollStateMap[pKey].updatedAt = _lastKnownReportUpdatedAt;
+          }
+        }
       }
 
       // HỢP NHẤT BẢN GHI CỤC BỘ CHƯA ĐỒNG BỘ (!lw.synced) ĐỂ CHỐNG MẤT DỮ LIỆU KHI MẤT MẠNG TẠM THỜI
@@ -16930,14 +16990,96 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let _matrixRealtimeChannel = null;
     let _lastKnownReportUpdatedAt = null;
     let _lastPolledReportsDigest = '';
+    let _periodPollStateMap = {};
+    let _matrixSyncGeneration = 0;
+    let _matrixPollInFlight = false;
     let _isSilentRefreshing = false;
     let _autoSyncPollingInterval = null;
     let _silentRefreshTimer = null;
     let _lastToastTime = 0;
     const MATRIX_CLIENT_INSTANCE_ID = 'matrix_cli_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
 
+    function invalidateMatrixSyncContext() {
+      _matrixSyncGeneration++;
+      _lastKnownReportUpdatedAt = null;
+      _lastPolledReportsDigest = '';
+      _pendingSyncSenderName = '';
+      if (_silentRefreshTimer) {
+        clearTimeout(_silentRefreshTimer);
+        _silentRefreshTimer = null;
+      }
+    }
+
+    function isHistoricalOrLockedPeriod(year = currentSelectedYear, month = currentSelectedMonth) {
+      if (currentPeriodLocked) return true;
+      const now = new Date();
+      const curY = now.getFullYear();
+      const curM = now.getMonth() + 1;
+      const y = Number(year);
+      const m = Number(month);
+      if (y < curY || (y === curY && m < curM)) {
+        const savedLock = (typeof localStorage !== 'undefined')
+          ? localStorage.getItem(`ops_period_lock_${y}_${m}`)
+          : null;
+        if (savedLock === 'true') return true;
+        // Kỳ báo cáo tháng cũ: không phát thông báo đẩy realtime giả
+        return true;
+      }
+      return false;
+    }
+
+    function canManagerSeeSenderLiveNotification(senderIdentifier, senderDepartment = '') {
+      if (!currentUser) return false;
+      const role = currentUser.role || '';
+      const username = currentUser.username || '';
+      // Ban Giám Đốc / Admin toàn hệ thống được xem toàn ban
+      if (
+        isDirectorOrAdmin(role, username) ||
+        isBoardOfDirectors(currentUser) ||
+        isSystemAdmin(role, username) ||
+        (typeof isSystemAdminUser === 'function' && isSystemAdminUser(currentUser))
+      ) {
+        return true;
+      }
+      if (!isAdminOrManager(role, username)) return false;
+
+      // Quản lý bộ phận: chỉ nhận thông báo đẩy của nhân sự thuộc bộ phận mình đang quản lý
+      const mgrDept = String(currentUser.department || '').trim();
+      if (!mgrDept) return true;
+      if (senderDepartment && typeof isDeptEquivalent === 'function') {
+        return isDeptEquivalent(mgrDept, senderDepartment);
+      }
+
+      const idStr = String(senderIdentifier || '').trim().toLowerCase();
+      if (!idStr) return false;
+
+      if (adminManageUsersCache && Array.isArray(adminManageUsersCache.users)) {
+        const u = adminManageUsersCache.users.find(item =>
+          String(item.id).toLowerCase() === idStr ||
+          (item.username && item.username.toLowerCase() === idStr) ||
+          (item.fullName && item.fullName.toLowerCase() === idStr)
+        );
+        if (u && u.department && typeof isDeptEquivalent === 'function') {
+          return isDeptEquivalent(mgrDept, u.department);
+        }
+      }
+
+      const matrix = fullPeriodMatrixCache || currentMatrixData;
+      if (matrix && Array.isArray(matrix.staffGroups)) {
+        const grp = matrix.staffGroups.find(g =>
+          String(g.userId).toLowerCase() === idStr ||
+          (g.staffName && g.staffName.toLowerCase() === idStr)
+        );
+        if (grp && grp.department && typeof isDeptEquivalent === 'function') {
+          return isDeptEquivalent(mgrDept, grp.department);
+        }
+      }
+      return false;
+    }
+
     function handleDailyReportsPostgresChange(payload) {
       if (!payload) return;
+      if (currentPeriodLocked) return;
       const row = payload.new || payload.old || {};
       if (row.report_date) {
         const parts = String(row.report_date).split('-');
@@ -16947,11 +17089,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           return;
         }
       }
-      // Nếu bản ghi vừa thay đổi trên DB khác với giá trị đang hiển thị trên máy này thì đồng bộ ngay
+      // Đồng bộ ngầm bảng ma trận khi có thay đổi DB, không tự sinh thông báo đẩy giả
       if (_activeMatrixCellSaveCount > 0) return;
-      const isSameUser = Boolean(currentUser && row.user_id && String(row.user_id) === String(currentUser.id));
-      const senderLabel = isSameUser ? 'Thiết bị khác của bạn' : (row.user_id ? resolveStaffFullName(row.user_id) : '');
-      scheduleSilentMatrixRefresh(80, senderLabel);
+      scheduleSilentMatrixRefresh(80, '');
     }
 
     function setupDailyReportsRealtimeListener() {
@@ -17037,6 +17177,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           clientId: MATRIX_CLIENT_INSTANCE_ID,
           senderId: currentUser ? currentUser.id : null,
           senderName: extraData.senderName || myName,
+          senderDepartment: currentUser ? (currentUser.department || '') : '',
           targetMonth: extraData.targetMonth || currentSelectedMonth,
           targetYear: extraData.targetYear || currentSelectedYear,
           timestamp: Date.now(),
@@ -17083,7 +17224,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       // Chỉ bỏ qua nếu chính phiên trình duyệt này (cùng clientId) là nơi phát tín hiệu.
-      // Nếu cùng tài khoản (cùng senderId) nhưng khác thiết bị (ví dụ: nhập trên điện thoại, xem trên máy tính) -> BẮT BUỘC ĐỒNG BỘ NGAY!
       if (p.clientId && p.clientId === MATRIX_CLIENT_INSTANCE_ID) return;
 
       const isSameAccountOtherDevice = Boolean(currentUser && p.senderId && String(p.senderId) === String(currentUser.id));
@@ -17091,49 +17231,75 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const sender = isSameAccountOtherDevice ? 'Thiết bị khác của bạn' : resolveStaffFullName(rawSender);
       console.log(`[Matrix Realtime] Nhận được tín hiệu cập nhật từ ${sender} (${p.action})`);
 
-      // 1. Kích hoạt thông báo cho Quản lý/Admin hoặc khi đồng bộ từ thiết bị khác của cùng tài khoản
-      if (isSameAccountOtherDevice || canUserSeeLiveSyncNotification(currentUser)) {
-        showLiveSyncIndicator(sender, p.targetMonth, p.targetYear);
-      }
-
-      // 2. Tải lại số liệu ma trận nếu đúng kỳ đang xem trên màn hình
       const isMatchingPeriod = (
         !p.targetMonth || !p.targetYear ||
         (Number(p.targetMonth) === Number(currentSelectedMonth) && Number(p.targetYear) === Number(currentSelectedYear))
       );
 
-      if (isMatchingPeriod) {
-        scheduleSilentMatrixRefresh(60, sender);
+      // Chỉ xem xét hiện thông báo khi:
+      // 1. Đang xem đúng kỳ báo cáo của bản tin broadcast
+      // 2. Kỳ đang xem KHÔNG phải kỳ quá khứ / đã khóa sổ
+      // 3. Sự kiện là thao tác lưu báo cáo thực tế vừa diễn ra (< 30 giây)
+      const isReportSaveEvent = (p.action === 'cell_saved' || p.action === 'report_saved');
+      const isFreshBroadcast = !p.timestamp || (Math.abs(Date.now() - Number(p.timestamp)) < 30000);
+
+      if (
+        isMatchingPeriod &&
+        isReportSaveEvent &&
+        isFreshBroadcast &&
+        !isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)
+      ) {
+        if (isSameAccountOtherDevice || canManagerSeeSenderLiveNotification(p.senderId || rawSender, p.senderDepartment)) {
+          showLiveSyncIndicator(sender, p.targetMonth, p.targetYear);
+        }
+      }
+
+      if (isMatchingPeriod && !currentPeriodLocked) {
+        scheduleSilentMatrixRefresh(60, '');
       }
     }
 
-    // ĐIỀU PHỐI LÀM MỚI NGẦM (DEBOUNCE ĐỂ TRÁNH DỒN TOÁN VÀ BẢO LƯU TÊN NGƯỜI CẬP NHẬT)
+    // ĐIỀU PHỐI LÀM MỚI NGẦM (DEBOUNCE ĐỂ TRÁNH DỒN TOÁN, KHÔNG GẮN TÊN GÂY TOAST GIẢ)
     let _pendingSyncSenderName = '';
-    function scheduleSilentMatrixRefresh(delayMs = 150, senderName = '') {
-      if (senderName && String(senderName).trim()) {
-        _pendingSyncSenderName = String(senderName).trim();
-      }
+    function scheduleSilentMatrixRefresh(delayMs = 150, _senderName = '') {
+      const genAtSchedule = _matrixSyncGeneration;
+      const monthAtSchedule = Number(currentSelectedMonth);
+      const yearAtSchedule = Number(currentSelectedYear);
       if (_silentRefreshTimer) clearTimeout(_silentRefreshTimer);
       _silentRefreshTimer = setTimeout(() => {
         _silentRefreshTimer = null;
-        const nameToUse = _pendingSyncSenderName || senderName;
         _pendingSyncSenderName = '';
-        silentRefreshMatrixData(nameToUse);
+        if (
+          genAtSchedule !== _matrixSyncGeneration ||
+          monthAtSchedule !== Number(currentSelectedMonth) ||
+          yearAtSchedule !== Number(currentSelectedYear)
+        ) {
+          return;
+        }
+        silentRefreshMatrixData('');
       }, delayMs);
     }
 
     // LÀM MỚI NGẦM MA TRẬN: BẢO LƯU VỊ TRÍ CUỘN & KHÔNG LÀM MẤT CON TRỎ SOẠN THẢO
-    async function silentRefreshMatrixData(senderName = '') {
-      if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
+    async function silentRefreshMatrixData(_senderName = '') {
+      if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0 || currentPeriodLocked) return;
       _isSilentRefreshing = true;
 
       try {
         const refreshM = currentSelectedMonth;
         const refreshY = currentSelectedYear;
         const reqToken = _matrixPeriodFetchToken;
+        const syncGen = _matrixSyncGeneration;
         const fresh = await fetchMatrixFromSupabase(refreshM, refreshY);
-        if (fresh && fresh.staffGroups && reqToken === _matrixPeriodFetchToken && Number(refreshM) === Number(currentSelectedMonth) && Number(refreshY) === Number(currentSelectedYear)) {
-          applyFreshMatrixSafely(fresh, refreshY, refreshM, senderName);
+        if (
+          fresh &&
+          fresh.staffGroups &&
+          reqToken === _matrixPeriodFetchToken &&
+          syncGen === _matrixSyncGeneration &&
+          Number(refreshM) === Number(currentSelectedMonth) &&
+          Number(refreshY) === Number(currentSelectedYear)
+        ) {
+          applyFreshMatrixSafely(fresh, refreshY, refreshM, '');
         }
       } catch (err) {
         console.warn("[SilentRefresh] Lỗi cập nhật ma trận ngầm:", err);
@@ -17155,9 +17321,20 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         (typeof isSystemAdminUser === 'function' && isSystemAdminUser(user));
     }
 
-    // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME: TOAST NỔI BẬT + NHÃN NHÁY SÁNG THANH CÔNG CỤ
+    // HIỂN THỊ CHỈ BÁO ĐỒNG BỘ REALTIME: CHỈ HIỆN TRÊN KỲ HIỆN TẠI ĐANG MỞ, CHẶN TUYỆT ĐỐI KHI XEM KỲ CŨ
     let _lastLiveSyncToastTime = 0;
     function showLiveSyncIndicator(senderName = '', targetMonth = null, targetYear = null) {
+      // Chặn tuyệt đối khi đang xem kỳ báo cáo cũ hoặc kỳ đã khóa sổ
+      if (isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)) {
+        return;
+      }
+      if (targetMonth && Number(targetMonth) !== Number(currentSelectedMonth)) {
+        return;
+      }
+      if (targetYear && Number(targetYear) !== Number(currentSelectedYear)) {
+        return;
+      }
+
       const isSameAccountSync = (senderName === 'Thiết bị khác của bạn');
       // 1. Phân quyền: Ban Giám Đốc, Quản lý, Admin hoặc chính tài khoản đó cập nhật từ điện thoại/máy khác
       if (!isSameAccountSync && !canUserSeeLiveSyncNotification(currentUser)) {
@@ -17231,17 +17408,23 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return false;
     }
 
-    // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (4 GIÂY) CHỐNG LỆCH ĐỒNG HỒ GIỮA ĐIỆN THOẠI & MÁY TÍNH
+    // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (4 GIÂY) ĐỒNG BỘ NGẦM THEO TỪNG KỲ, KHÔNG PHÁT THÔNG BÁO GIẢ
     function startMatrixAutoSyncPolling() {
       if (_autoSyncPollingInterval) clearInterval(_autoSyncPollingInterval);
 
       _autoSyncPollingInterval = setInterval(async () => {
         if (document.hidden) return; // Không truy vấn khi tab đang ẩn
-        if (_isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
+        if (_matrixPollInFlight || _isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
+        // Không chạy polling đồng bộ ngầm khi đang xem kỳ đã khóa sổ hoặc kỳ lịch sử tháng cũ
+        if (isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)) return;
 
+        const pollMonth = Number(currentSelectedMonth);
+        const pollYear = Number(currentSelectedYear);
+        const pollGen = _matrixSyncGeneration;
+        const periodKey = `${pollYear}_${pollMonth}`;
+
+        _matrixPollInFlight = true;
         try {
-          const pollMonth = currentSelectedMonth;
-          const pollYear = currentSelectedYear;
           const mFormatted = (pollMonth < 10 ? '0' : '') + pollMonth;
           const daysInPollMonth = new Date(pollYear, pollMonth, 0).getDate();
           const startDate = `${pollYear}-${mFormatted}-01`;
@@ -17253,34 +17436,44 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             .gte('report_date', startDate)
             .lte('report_date', endDate)
             .order('updated_at', { ascending: false })
+            .order('id', { ascending: false })
             .limit(30);
 
-          if (!error && data && data.length > 0) {
+          if (
+            pollGen !== _matrixSyncGeneration ||
+            pollMonth !== Number(currentSelectedMonth) ||
+            pollYear !== Number(currentSelectedYear)
+          ) {
+            return;
+          }
+
+          if (!error && Array.isArray(data) && data.length > 0) {
             const latestDbUpdate = new Date(data[0].updated_at).getTime();
             const digest = data.map(r => `${r.id}:${r.updated_at}:${r.num_val ?? ''}:${r.sym_val ?? ''}:${r.text_val ?? ''}`).join('|');
             const hasValueMismatch = detectMatrixMismatchWithRecentDbRows(data, pollYear, pollMonth);
 
-            if (!_lastKnownReportUpdatedAt) {
-              _lastKnownReportUpdatedAt = latestDbUpdate;
-              _lastPolledReportsDigest = digest;
+            const prevState = _periodPollStateMap[periodKey];
+            _periodPollStateMap[periodKey] = {
+              updatedAt: latestDbUpdate,
+              digest: digest
+            };
+            _lastKnownReportUpdatedAt = latestDbUpdate;
+            _lastPolledReportsDigest = digest;
+
+            if (!prevState) {
               if (hasValueMismatch) {
                 scheduleSilentMatrixRefresh(80, '');
               }
-            } else if (hasValueMismatch || (digest !== _lastPolledReportsDigest && latestDbUpdate !== _lastKnownReportUpdatedAt)) {
-              _lastKnownReportUpdatedAt = Math.max(_lastKnownReportUpdatedAt || 0, latestDbUpdate);
-              _lastPolledReportsDigest = digest;
-              console.log("[Heartbeat] Phát hiện số liệu thay đổi từ thiết bị khác -> Tự động đồng bộ ma trận!");
-              const updaterId = data[0].user_id;
-              let updaterName = '';
-              if (currentUser && String(updaterId) === String(currentUser.id)) {
-                updaterName = hasValueMismatch ? 'Thiết bị khác của bạn' : '';
-              } else {
-                updaterName = resolveStaffFullName(updaterId);
-              }
-              scheduleSilentMatrixRefresh(80, updaterName);
+            } else if (hasValueMismatch || (digest !== prevState.digest && latestDbUpdate !== prevState.updatedAt)) {
+              console.log("[Heartbeat] Đồng bộ ngầm dữ liệu ma trận kỳ hiện tại...");
+              // Tuyệt đối đồng bộ ngầm (senderName = ''), không bao giờ suy diễn data[0].user_id thành thông báo đẩy
+              scheduleSilentMatrixRefresh(80, '');
             }
           }
-        } catch (e) { }
+        } catch (e) {
+        } finally {
+          _matrixPollInFlight = false;
+        }
       }, 4000);
     }
 
