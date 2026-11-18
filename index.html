@@ -17028,58 +17028,78 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return false;
     }
 
-    function canManagerSeeSenderLiveNotification(senderIdentifier, senderDepartment = '') {
-      if (!currentUser) return false;
-      const role = currentUser.role || '';
-      const username = currentUser.username || '';
-      // Ban Giám Đốc / Admin toàn hệ thống được xem toàn ban
-      if (
-        isDirectorOrAdmin(role, username) ||
-        isBoardOfDirectors(currentUser) ||
-        isSystemAdmin(role, username) ||
-        (typeof isSystemAdminUser === 'function' && isSystemAdminUser(currentUser))
-      ) {
-        return true;
+    function resolveSenderRoleLevel(senderIdentifier, senderRole = '') {
+      if (senderRole && typeof getWorkRoleLevel === 'function') {
+        const explicitLvl = getWorkRoleLevel({ role: senderRole });
+        if (explicitLvl > 0) return explicitLvl;
       }
-      if (!isAdminOrManager(role, username)) return false;
-
-      // Quản lý bộ phận: chỉ nhận thông báo đẩy của nhân sự thuộc bộ phận mình đang quản lý
-      const mgrDept = String(currentUser.department || '').trim();
-      if (!mgrDept) return true;
-      if (senderDepartment && typeof isDeptEquivalent === 'function') {
-        return isDeptEquivalent(mgrDept, senderDepartment);
-      }
-
       const idStr = String(senderIdentifier || '').trim().toLowerCase();
-      if (!idStr) return false;
+      if (!idStr) return 0;
 
-      if (adminManageUsersCache && Array.isArray(adminManageUsersCache.users)) {
-        const u = adminManageUsersCache.users.find(item =>
-          String(item.id).toLowerCase() === idStr ||
-          (item.username && item.username.toLowerCase() === idStr) ||
-          (item.fullName && item.fullName.toLowerCase() === idStr)
+      const candidateLists = [];
+      if (typeof adminManageUsersCache !== 'undefined' && adminManageUsersCache && Array.isArray(adminManageUsersCache.users)) {
+        candidateLists.push(adminManageUsersCache.users);
+      }
+      if (typeof globalInitData !== 'undefined' && globalInitData) {
+        if (Array.isArray(globalInitData.allUsers)) candidateLists.push(globalInitData.allUsers);
+        if (globalInitData.deptMap && typeof globalInitData.deptMap === 'object') {
+          candidateLists.push(Object.values(globalInitData.deptMap).flat());
+        }
+      }
+
+      for (const list of candidateLists) {
+        if (!Array.isArray(list)) continue;
+        const found = list.find(u =>
+          u && (
+            String(u.id ?? '').toLowerCase() === idStr ||
+            String(u.username ?? '').toLowerCase() === idStr ||
+            String(u.fullName || u.full_name || '').toLowerCase() === idStr
+          )
         );
-        if (u && u.department && typeof isDeptEquivalent === 'function') {
-          return isDeptEquivalent(mgrDept, u.department);
+        if (found && typeof getWorkRoleLevel === 'function') {
+          const lvl = getWorkRoleLevel(found);
+          if (lvl > 0) return lvl;
         }
       }
 
       const matrix = fullPeriodMatrixCache || currentMatrixData;
       if (matrix && Array.isArray(matrix.staffGroups)) {
         const grp = matrix.staffGroups.find(g =>
-          String(g.userId).toLowerCase() === idStr ||
-          (g.staffName && g.staffName.toLowerCase() === idStr)
+          g && (
+            String(g.userId ?? '').toLowerCase() === idStr ||
+            String(g.staffName ?? '').toLowerCase() === idStr
+          )
         );
-        if (grp && grp.department && typeof isDeptEquivalent === 'function') {
-          return isDeptEquivalent(mgrDept, grp.department);
+        if (grp) {
+          if (grp.role && typeof getWorkRoleLevel === 'function') {
+            const grpLvl = getWorkRoleLevel({ role: grp.role, username: grp.username || '' });
+            if (grpLvl > 0) return grpLvl;
+          }
+          return 1; // Mặc định nhân sự trên bảng ma trận là cấp nhân viên (1)
         }
       }
-      return false;
+
+      return 1;
+    }
+
+    function canManagerSeeSenderLiveNotification(senderIdentifier, senderRole = '') {
+      if (!currentUser) return false;
+      const actorLevel = (typeof getWorkRoleLevel === 'function')
+        ? getWorkRoleLevel(currentUser)
+        : (canUserSeeLiveSyncNotification(currentUser) ? 3 : 1);
+
+      // Chỉ tài khoản từ cấp Quản lý trở lên (Quản lý = 3, Phó Giám Đốc = 4, Giám Đốc / Admin = 5)
+      if (actorLevel < 3) return false;
+
+      // Quản lý là quản lý chung (sau Phó giám đốc, Giám đốc, Admin):
+      // Nhận thông báo khi bất kỳ nhân sự cấp dưới hoặc cùng cấp (senderLevel <= actorLevel) cập nhật trong kỳ báo cáo đang mở
+      const senderLevel = resolveSenderRoleLevel(senderIdentifier, senderRole);
+      return senderLevel > 0 && senderLevel <= actorLevel;
     }
 
     function handleDailyReportsPostgresChange(payload) {
       if (!payload) return;
-      if (currentPeriodLocked) return;
+      if (isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)) return;
       const row = payload.new || payload.old || {};
       if (row.report_date) {
         const parts = String(row.report_date).split('-');
@@ -17089,7 +17109,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           return;
         }
       }
-      // Đồng bộ ngầm bảng ma trận khi có thay đổi DB, không tự sinh thông báo đẩy giả
       if (_activeMatrixCellSaveCount > 0) return;
       scheduleSilentMatrixRefresh(80, '');
     }
@@ -17176,6 +17195,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           action: actionType || 'report_saved',
           clientId: MATRIX_CLIENT_INSTANCE_ID,
           senderId: currentUser ? currentUser.id : null,
+          senderUsername: currentUser ? (currentUser.username || '') : '',
+          senderRole: currentUser ? (currentUser.role || '') : '',
           senderName: extraData.senderName || myName,
           senderDepartment: currentUser ? (currentUser.department || '') : '',
           targetMonth: extraData.targetMonth || currentSelectedMonth,
@@ -17249,7 +17270,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         isFreshBroadcast &&
         !isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)
       ) {
-        if (isSameAccountOtherDevice || canManagerSeeSenderLiveNotification(p.senderId || rawSender, p.senderDepartment)) {
+        if (isSameAccountOtherDevice || canManagerSeeSenderLiveNotification(p.senderId || p.senderUsername || rawSender, p.senderRole)) {
           showLiveSyncIndicator(sender, p.targetMonth, p.targetYear);
         }
       }
