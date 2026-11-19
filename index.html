@@ -1583,6 +1583,106 @@
       }
     }
 
+    /* ================= KHỐI NHẬN DIỆN TÀI KHOẢN HEADER (V238) ================= */
+    #headerUserProfileButton {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    #headerUserProfileButton:hover,
+    #headerUserProfileButton:focus-visible {
+      background: rgba(236, 253, 245, 0.55);
+      border-color: #d1fae5;
+    }
+
+    #headerUserProfileButton:focus-visible {
+      outline: 2px solid #047857;
+      outline-offset: 2px;
+    }
+
+    #headerUserProfileButton:hover #userFullnameLabel,
+    #headerUserProfileButton:focus-visible #userFullnameLabel {
+      color: #047857;
+    }
+
+    #userDeptLabel {
+      color: #64748b;
+    }
+
+    #headerUserProfileButton:hover #userDeptLabel,
+    #headerUserProfileButton:focus-visible #userDeptLabel {
+      color: #475569;
+    }
+
+    #userRoleBadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      max-width: 11.5rem;
+      overflow: hidden;
+      padding: 2px 9px;
+      border: 1px solid #bae6fd;
+      border-radius: 999px;
+      background: #f0f9ff;
+      color: #0369a1;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 15px;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #userRoleBadge[data-tier="staff"] {
+      background: #f0f9ff;
+      color: #0369a1;
+      border-color: #bae6fd;
+    }
+
+    #userRoleBadge[data-tier="lead"] {
+      background: #f0fdfa;
+      color: #0f766e;
+      border-color: #99f6e4;
+    }
+
+    #userRoleBadge[data-tier="manager"] {
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #6ee7b7;
+    }
+
+    #userRoleBadge[data-tier="deputy"] {
+      background: #eef2ff;
+      color: #3730a3;
+      border-color: #c7d2fe;
+    }
+
+    #userRoleBadge[data-tier="director"] {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+
+    #userRoleBadge[data-tier="system"] {
+      background: #065f46;
+      color: #ffffff;
+      border-color: #064e3b;
+    }
+
+    #userRoleBadge[data-tier="unknown"] {
+      background: #f8fafc;
+      color: #475569;
+      border-color: #e2e8f0;
+    }
+
+    @media (forced-colors: active) {
+      #headerUserProfileButton:focus-visible {
+        outline-color: Highlight;
+      }
+    }
+
     /* ================= SỔ TAY CÔNG VIỆC — TINH CHỈNH CHỈ DÀNH CHO ĐIỆN THOẠI (< 768px / < 640px) ================= */
     @media (max-width: 767px) {
       /* 1A. Chống auto-zoom input trên iOS & mở rộng vùng chạm chuẩn mobile cho mọi ô nhập/chọn trong Sổ tay */
@@ -3240,46 +3340,152 @@
   <!-- ================= DASHBOARD CHÍNH ================= -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
     <script>
-      (function earlyRenderUserData() {
-        try {
-          var u = window._earlySavedUser;
-          if (u) {
-            var fn = document.getElementById('userFullnameLabel');
-            var dp = document.getElementById('userDeptLabel');
-            var rl = document.getElementById('userRoleBadge');
-            if (fn && u.fullName) fn.innerText = u.fullName;
-            if (dp && u.department) dp.innerText = u.department;
-            if (rl && u.role) rl.innerText = u.role;
+      (function installHeaderIdentity() {
+        var clean = function (value) {
+          return String(value == null ? '' : value).trim().replace(/\s+/g, ' ');
+        };
+        var normalize = function (value) {
+          return clean(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '');
+        };
+        var rules = [
+          ['system', 5, /^(admin|administrator|quantri|quantrivien|quantrihethong)$/],
+          ['deputy', 4, /^(phogiamdoc|phogd|pgd|deputydirector|vicedirector)$/],
+          ['director', 5, /^(giamdoc|gd|director|lanhdao|tonggiamdoc)$/],
+          ['manager', 3, /^(quanly|ql|manager|truongphong|phophong)$/],
+          ['lead', 2, /^(khochinh|totruong|truongnhom|truongkho|leader|teamleader)/],
+          ['staff', 1, /^(nhanvien|thukho|phukho|bocxep|chuyenvien|staff|employee|user)$/]
+        ];
+        var labels = {
+          system: 'Quản trị viên',
+          director: 'Giám đốc',
+          deputy: 'Phó Giám đốc',
+          manager: 'Quản lý',
+          lead: 'Tổ trưởng',
+          staff: 'Nhân viên'
+        };
+        var specificTitles = {
+          truongphong: 'Trưởng phòng',
+          phophong: 'Phó phòng',
+          khochinh: 'Kho chính',
+          totruong: 'Tổ trưởng',
+          truongnhom: 'Trưởng nhóm',
+          truongkho: 'Trưởng kho',
+          thukho: 'Thủ kho',
+          phukho: 'Phụ kho',
+          bocxep: 'Bốc xếp',
+          chuyenvien: 'Chuyên viên'
+        };
+
+        window.applyHeaderUserIdentity = function (user) {
+          var nameEl = document.getElementById('userFullnameLabel');
+          var badgeEl = document.getElementById('userRoleBadge');
+          var deptEl = document.getElementById('userDeptLabel');
+          if (!nameEl || !badgeEl || !deptEl) return false;
+
+          if (!user) {
+            nameEl.textContent = 'Tài khoản';
+            deptEl.textContent = 'Chưa cập nhật bộ phận';
+            badgeEl.className = 'header-role-badge';
+            badgeEl.dataset.tier = 'unknown';
+            badgeEl.textContent = 'Chưa xác định';
+            var emptyAv = document.getElementById('userAvatarChar');
+            if (emptyAv) emptyAv.textContent = '';
+            return true;
           }
-        } catch (e) { }
+
+          var u = {
+            fullName: clean(user.fullName || user.full_name),
+            role: clean(user.role),
+            username: clean(user.username),
+            department: clean(user.department)
+          };
+
+          var key = normalize(u.role) || normalize(u.username);
+          var match = rules.find(function (r) { return r[2].test(key); });
+          var tier = match ? match[0] : 'unknown';
+
+          if (typeof window.getWorkRoleLevel === 'function' && typeof window.isSystemAdmin === 'function') {
+            var level = window.getWorkRoleLevel(u);
+            if (window.isSystemAdmin(u.role, u.username)) {
+              tier = 'system';
+            } else {
+              tier = ({ 5: 'director', 4: 'deputy', 3: 'manager', 2: 'lead', 1: 'staff' })[level] || 'unknown';
+            }
+          }
+
+          var roleLabel = tier === 'unknown'
+            ? (u.role || 'Chưa xác định')
+            : (specificTitles[key] || labels[tier]);
+
+          var name = u.fullName || u.username || 'Tài khoản';
+          var rawDept = u.department;
+          var deptNorm = normalize(rawDept);
+          var department = (rawDept && deptNorm !== 'chuaphanbo')
+            ? rawDept
+            : (tier === 'system'
+              ? 'Quản trị Ban Điều hành'
+              : (tier === 'director' || tier === 'deputy'
+                ? 'Ban Giám đốc'
+                : 'Ban Điều hành DVKH'));
+
+          nameEl.textContent = name;
+          deptEl.textContent = department;
+
+          // Luôn reset đầy đủ class & data-tier cho mọi vai trò (kể cả Nhân viên / chưa xác định)
+          badgeEl.className = 'header-role-badge';
+          badgeEl.dataset.tier = tier;
+          badgeEl.textContent = roleLabel;
+
+          var avatar = document.getElementById('userAvatarChar');
+          if (avatar) {
+            var firstChar = Array.from(name)[0] || '';
+            avatar.textContent = firstChar.toLocaleUpperCase('vi');
+          }
+
+          return true;
+        };
       })();
     </script>
-    <!-- Header: Thẻ gợi ý bắt mắt, ngắn gọn khi rê chuột -->
+    <!-- Header: Thanh điều hướng chuẩn doanh nghiệp -->
     <header id="mainAppHeader"
       class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-2xs gap-2">
       <!-- Thông tin nhân sự đăng nhập & Logo công ty: BẤM VÀO ĐỂ XEM BẢNG THÔNG TIN TÀI KHOẢN -->
-      <div onclick="openUserProfileModal()" data-tooltip="Xem hồ sơ tài khoản"
-        class="flex items-center gap-2.5 sm:gap-3 min-w-0 cursor-pointer group p-1 -m-1 rounded-2xl hover:bg-slate-50 transition">
-        <!-- Logo chính thức của công ty Nhựa Tiền Phong thay thế cho logo tên -->
-        <div
-          class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-0.5 shadow-xs flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+      <button id="headerUserProfileButton" type="button" onclick="openUserProfileModal()"
+        data-tooltip="Xem hồ sơ tài khoản" aria-haspopup="dialog"
+        aria-labelledby="headerUserProfileAction userFullnameLabel" aria-describedby="userRoleBadge userDeptLabel"
+        class="group flex w-auto min-h-12 min-w-0 max-w-full sm:max-w-[28rem] items-center gap-2.5 sm:gap-3 rounded-xl border border-transparent px-2 py-1 -ml-2 text-left cursor-pointer transition-colors motion-reduce:transition-none">
+        <span id="headerUserProfileAction" class="sr-only">Xem hồ sơ tài khoản của</span>
+        <!-- Logo chính thức của công ty Nhựa Tiền Phong - Ban DVKH -->
+        <span class="w-10 h-10 shrink-0 flex items-center justify-center" aria-hidden="true">
           <img src="icon-512.png?v=151"
             onerror="this.onerror=null; this.src='icon-192.png?v=151';"
-            alt="Ban DVKH - Nhựa Tiền Phong" class="max-h-full max-w-full object-contain" />
+            alt="" width="40" height="40" class="w-10 h-10 object-contain block" />
           <span id="userAvatarChar" class="hidden"></span>
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <h2 id="userFullnameLabel"
-              class="font-black text-slate-900 text-xs sm:text-sm md:text-base leading-tight truncate group-hover:text-emerald-700 transition">
-              Họ và tên</h2>
-            <span id="userRoleBadge"
-              class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300">NHÂN
-              VIÊN</span>
-          </div>
-          <p id="userDeptLabel" class="text-[10px] sm:text-[11px] text-slate-500 font-semibold truncate">Bộ phận</p>
-        </div>
-      </div>
+        </span>
+        <span class="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" aria-hidden="true"></span>
+        <span class="flex min-w-0 flex-col justify-center gap-0.5">
+          <span class="flex min-w-0 items-center gap-2">
+            <span id="userFullnameLabel"
+              class="min-w-0 truncate text-[13.5px] sm:text-[15px] font-bold tracking-[-0.015em] leading-5 text-slate-900 transition-colors">Tài khoản</span>
+            <span id="userRoleBadge" class="header-role-badge" data-tier="unknown">Chưa xác định</span>
+          </span>
+          <span id="userDeptLabel" class="block truncate text-[11.5px] sm:text-[12px] font-medium leading-4 transition-colors">Chưa cập nhật bộ phận</span>
+        </span>
+      </button>
+      <script>
+        (function earlyRenderUserData() {
+          try {
+            if (window._earlySavedUser && typeof window.applyHeaderUserIdentity === 'function') {
+              window.applyHeaderUserIdentity(window._earlySavedUser);
+            }
+          } catch (e) { }
+        })();
+      </script>
 
 
 
@@ -13375,20 +13581,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const splash = document.getElementById('appAutoLoginSplash');
       if (splash) splash.remove();
       document.getElementById('loginScreen').classList.add('hidden');
+      if (typeof applyHeaderUserIdentity === 'function') {
+        applyHeaderUserIdentity(currentUser);
+      }
       document.getElementById('mainDashboard').classList.remove('hidden');
 
       const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
       const isDep = isDeputyDirector(currentUser.role, currentUser.username);
-
-      document.getElementById('userFullnameLabel').innerText = currentUser.fullName;
-      document.getElementById('userAvatarChar').innerText = currentUser.fullName.charAt(0);
-      let displayDept = currentUser.department || "Ban Điều Hành DVKH";
-      if (isSystemAdmin(currentUser.role, currentUser.username)) {
-        displayDept = "Quản trị Ban Điều Hành";
-      } else if (isBoardOfDirectors(currentUser) && (!displayDept || displayDept === "Chưa phân bổ")) {
-        displayDept = "Ban Giám Đốc";
-      }
-      document.getElementById('userDeptLabel').innerText = displayDept;
 
       // Cập nhật Sổ tay an toàn trong try...catch độc lập để tuyệt đối không ảnh hưởng đến giao diện chính
       try {
@@ -13437,24 +13636,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         console.warn("Lỗi showPersonalTaskReminderOnLogin:", e);
       }
 
-      const roleBadgeEl = document.getElementById('userRoleBadge');
-      if (roleBadgeEl) {
-        if (isSystemAdmin(currentUser.role, currentUser.username)) {
-          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-slate-900 text-emerald-400 border border-slate-700 shadow-2xs";
-          roleBadgeEl.innerText = "Quản trị viên";
-        } else if (isOnlyDirector(currentUser.role, currentUser.username)) {
-          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs";
-          roleBadgeEl.innerText = currentUser.role || "Giám Đốc";
-        } else if (isDep) {
-          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-2xs";
-          roleBadgeEl.innerText = currentUser.role || "Phó Giám Đốc";
-        } else if (isAdminOrManager(currentUser.role, currentUser.username)) {
-          roleBadgeEl.className = "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-100/80 text-emerald-800 border border-emerald-300";
-          roleBadgeEl.innerText = currentUser.role;
-        } else {
-          roleBadgeEl.innerText = currentUser.role;
-        }
-      }
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
       if (btnDayEntry) {
@@ -42540,6 +42721,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       document.documentElement.classList.remove('app-auto-login-pending');
       window._earlySavedUser = null;
+      if (typeof applyHeaderUserIdentity === 'function') {
+        applyHeaderUserIdentity(null);
+      }
       _pwReminderDismissedInSession = false;
       currentUser = null;
       fullPeriodMatrixCache = null;
