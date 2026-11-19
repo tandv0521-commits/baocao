@@ -18756,6 +18756,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       let html = '';
       activeCompletedList.forEach(item => {
         const isFull = item.unreportedDaysCount === 0;
+        const compSummary = item.leaveSymbolSummary || summarizeLeaveSymbols(item.leaveDaysDetail);
+        const compSymbolPart = compSummary.totalDays > 0
+          ? ` + Ký hiệu: ${compSummary.totalDays} ngày${compSummary.inlineText ? ` (${escapeHtml(compSummary.inlineText)})` : ''}`
+          : '';
+        const tState = item.targetDayState;
+        const tCodes = (tState && tState.symbols && tState.symbols.length > 0) ? tState.symbols.map(s => s.code).join(' + ') : '';
+        const targetDayFoot = item.targetDayLoggedCount > 0
+          ? (tCodes ? `✓ ${targetDateLabel} · ${tState && tState.hasWork ? 'kèm ' : ''}${escapeHtml(tCodes)}` : `✓ Đã có số liệu ${targetDateLabel}`)
+          : `Đã ghi nhận: ${item.reportedDaysCount}/${totalDaysToEval} ngày`;
         html += `
           <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
                class="followup-item-card p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border ${isFull ? 'border-emerald-200/90 bg-emerald-50/40 hover:bg-emerald-100/70' : 'border-slate-200/90 bg-slate-50/50 hover:bg-slate-100/70'} transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 sm:gap-2.5 group shadow-2xs"
@@ -18770,10 +18779,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   <p class="text-xs font-black text-slate-800 truncate group-hover:text-emerald-950 transition">${escapeHtml(item.displayName)}</p>
                   ${item.isGroup ? '<span class="px-1.5 py-0.2 rounded-full text-[8.5px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200 shrink-0">Nhóm gộp</span>' : ''}
                 </div>
-                <p class="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 truncate font-num">
+                <p class="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 truncate font-num" title="${escapeHtml((item.isGroup ? 'Đại diện bộ phận kho/tổ' : item.subDeptName) + ' • Phát sinh: ' + item.activeWorkDaysCount + ' ngày' + (compSummary.totalDays ? ' + Ký hiệu: ' + compSummary.totalDays + ' ngày (' + compSummary.inlineText + ')' : ''))}">
                   <span class="font-medium text-slate-600">${item.isGroup ? 'Đại diện bộ phận kho/tổ' : escapeHtml(item.subDeptName)}</span>
                   <span class="text-slate-300 mx-1">•</span>
-                  <span class="text-emerald-700 font-bold">Phát sinh: ${item.activeWorkDaysCount} ngày${item.leaveOnlyDaysCount ? ` + Nghỉ: ${item.leaveOnlyDaysCount} ngày` : ''}</span>
+                  <span class="text-emerald-700 font-bold">Phát sinh: ${item.activeWorkDaysCount} ngày${compSymbolPart}</span>
                 </p>
               </div>
             </div>
@@ -18782,7 +18791,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 <i class="fa-solid fa-check text-emerald-600 text-[8.5px]"></i>
                 <span>Đủ ${item.reportedDaysCount}/${totalDaysToEval} ngày</span>
               </span>
-              <p class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${item.targetDayLoggedCount > 0 ? (item.targetDayLeaveInfo ? `✓ Nghỉ (${item.targetDayLeaveInfo.code}) ${targetDateLabel}` : `✓ Đã có số liệu ${targetDateLabel}`) : `Đã nộp: ${item.reportedDaysCount}/${totalDaysToEval} ngày`}</p>
+              <p class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-medium mt-0.5">${targetDayFoot}</p>
             </div>
           </div>
         `;
@@ -19446,6 +19455,134 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
+    function readReportingDay(tasks, dc) {
+      const result = {
+        available: !!dc,
+        loggedTasksCount: 0,
+        hasWork: false,
+        symbols: []
+      };
+      if (!dc) return result;
+
+      const symbolCatalog = (typeof STANDARDIZED_SYMBOLS !== 'undefined' && STANDARDIZED_SYMBOLS) ? STANDARDIZED_SYMBOLS : {};
+      const symMap = new Map();
+      for (const task of (tasks || [])) {
+        const rawVal = task && task.dailyValues ? task.dailyValues[dc.colIndex] : undefined;
+        if (rawVal === undefined || rawVal === null) continue;
+        const s = String(rawVal).trim();
+        if (!s || s === '-' || s === '·' || s === '0') continue;
+
+        result.loggedTasksCount++;
+        if (isLeaveSymbolValue(s)) {
+          const info = (typeof getSmartSymbolInfo === 'function') ? getSmartSymbolInfo(s) : null;
+          let code = String((info && info.code) || s).trim().toUpperCase().normalize('NFC');
+          if (code === 'O') code = 'Ô';
+          const meta = symbolCatalog[code];
+          if (!symMap.has(code)) {
+            symMap.set(code, {
+              code,
+              title: (meta && meta.title) || (info && info.title) || 'Ký hiệu khác',
+              badgeClass: (meta && meta.badgeClass) || 'bg-slate-100 text-slate-700 border-slate-300'
+            });
+          }
+        } else {
+          result.hasWork = true;
+        }
+      }
+      result.symbols = Array.from(symMap.values());
+      return result;
+    }
+
+    function summarizeLeaveSymbols(leaveDaysDetail = []) {
+      const symbolCatalog = (typeof STANDARDIZED_SYMBOLS !== 'undefined' && STANDARDIZED_SYMBOLS) ? STANDARDIZED_SYMBOLS : {};
+      const order = new Map(Object.keys(symbolCatalog).map((code, i) => [code, i]));
+      const days = new Map();
+
+      for (const d of (leaveDaysDetail || [])) {
+        if (!d) continue;
+        const dayKey = (d.colIndex !== undefined && d.colIndex !== null)
+          ? ('col:' + d.colIndex)
+          : ('date:' + (d.label || d.dayStr || ''));
+        if (!days.has(dayKey)) {
+          days.set(dayKey, {
+            dayNum: d.dayNum,
+            dayStr: d.dayStr,
+            label: d.label,
+            colIndex: d.colIndex,
+            symbols: new Map()
+          });
+        }
+        const dayEntry = days.get(dayKey);
+        const rawList = Array.isArray(d.symbols) && d.symbols.length > 0 ? d.symbols : (d.code ? [d] : []);
+        for (const raw of rawList) {
+          let code = String(typeof raw === 'string' ? raw : (raw && raw.code ? raw.code : '')).trim().toUpperCase().normalize('NFC');
+          if (!code) continue;
+          if (code === 'O') code = 'Ô';
+          const meta = symbolCatalog[code];
+          dayEntry.symbols.set(code, {
+            code,
+            title: (meta && meta.title) || (raw && raw.title) || 'Ký hiệu khác',
+            badgeClass: (meta && meta.badgeClass) || 'bg-slate-100 text-slate-700 border-slate-300'
+          });
+        }
+      }
+
+      const sortedDays = Array.from(days.values()).sort((a, b) => {
+        const an = Number(a.dayNum !== undefined ? a.dayNum : parseInt(a.dayStr || a.label || '0', 10));
+        const bn = Number(b.dayNum !== undefined ? b.dayNum : parseInt(b.dayStr || b.label || '0', 10));
+        return an - bn;
+      });
+
+      const buckets = new Map();
+      const uniqueCodes = new Set();
+      for (const day of sortedDays) {
+        const symbols = Array.from(day.symbols.values()).sort((a, b) => {
+          const ao = order.has(a.code) ? order.get(a.code) : 99;
+          const bo = order.has(b.code) ? order.get(b.code) : 99;
+          if (ao !== bo) return ao - bo;
+          return a.code.localeCompare(b.code, 'vi');
+        });
+        if (symbols.length === 0) continue;
+        symbols.forEach(s => uniqueCodes.add(s.code));
+        const bucketKey = symbols.map(s => s.code).join('+');
+        if (!buckets.has(bucketKey)) {
+          buckets.set(bucketKey, { key: bucketKey, symbols, days: [] });
+        }
+        buckets.get(bucketKey).days.push({ ...day, symbols });
+      }
+
+      const groups = Array.from(buckets.values()).map(g => ({
+        ...g,
+        count: g.days.length,
+        codeText: g.symbols.map(s => s.code).join(' + ')
+      })).sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        const ao = order.has(a.symbols[0].code) ? order.get(a.symbols[0].code) : 99;
+        const bo = order.has(b.symbols[0].code) ? order.get(b.symbols[0].code) : 99;
+        if (ao !== bo) return ao - bo;
+        return a.codeText.localeCompare(b.codeText, 'vi');
+      });
+
+      const totalDays = groups.reduce((acc, g) => acc + g.count, 0);
+      const inlineText = groups.map(g => `${g.count} ${g.codeText}`).join(', ');
+      return {
+        totalDays,
+        typeCount: uniqueCodes.size,
+        groups,
+        inlineText
+      };
+    }
+
+    function reportingDayStatus(day, totalTasks) {
+      if (!day || !day.available) return 'Chưa có cột ngày';
+      if (!totalTasks) return 'Chưa có đầu việc';
+      const n = day.loggedTasksCount || 0;
+      if (!n) return `Chưa nhập (0/${totalTasks})`;
+      const codes = (day.symbols || []).map(s => s.code).join(' + ');
+      if (!codes) return `Đã nhập ${n}/${totalTasks} việc`;
+      return `Đã nhập ${n}/${totalTasks} ô · ${day.hasWork ? 'kèm ' : ''}${codes}`;
+    }
+
     function getDailyReportingProgressData(data) {
       const scopedData = getScopedDataForCurrentUser(data);
       if (!scopedData || !scopedData.staffGroups || !scopedData.dayCols || scopedData.staffGroups.length === 0) {
@@ -19527,37 +19664,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const allTasks = entry.tasks || [];
         const totalTasks = allTasks.length;
 
-        let targetDayLoggedCount = 0;
-        let targetDayLeaveInfo = null;
-        let todayLoggedTasksCount = 0;
-        let todayLeaveInfo = null;
-
-        allTasks.forEach(t => {
-          const val = t.dailyValues ? t.dailyValues[targetColIdx] : undefined;
-          if (val !== undefined && val !== null && String(val).trim() !== '') {
-            const s = String(val).trim();
-            if (s !== '-' && s !== '·' && s !== '0') {
-              targetDayLoggedCount++;
-              const sym = getSmartSymbolInfo(s);
-              if (sym && sym.isLeave && !targetDayLeaveInfo) {
-                targetDayLeaveInfo = sym;
-              }
-            }
-          }
-          if (isCurrentPeriod) {
-            const tVal = t.dailyValues ? t.dailyValues[todayColIdx] : undefined;
-            if (tVal !== undefined && tVal !== null && String(tVal).trim() !== '') {
-              const ts = String(tVal).trim();
-              if (ts !== '-' && ts !== '·' && ts !== '0') {
-                todayLoggedTasksCount++;
-                const tSym = getSmartSymbolInfo(ts);
-                if (tSym && tSym.isLeave && !todayLeaveInfo) {
-                  todayLeaveInfo = tSym;
-                }
-              }
-            }
-          }
-        });
+        const targetDayState = readReportingDay(allTasks, targetDayCol);
+        const todayState = isCurrentPeriod ? readReportingDay(allTasks, todayCol) : null;
+        const targetDayLoggedCount = targetDayState.loggedTasksCount;
+        const targetDayLeaveInfo = (!targetDayState.hasWork && targetDayState.symbols.length > 0) ? targetDayState.symbols[0] : null;
+        const todayLoggedTasksCount = todayState ? todayState.loggedTasksCount : 0;
+        const todayLeaveInfo = (todayState && !todayState.hasWork && todayState.symbols.length > 0) ? todayState.symbols[0] : null;
 
         let reportedDaysCount = 0;
         let unreportedDaysCount = 0;
@@ -19568,51 +19680,35 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const leaveDaysDetail = [];
 
         evalDayCols.forEach(dc => {
-          let hasDataOnDay = false;
-          let hasWorkOnDay = false;
-          let dayLeaveSym = null;
-
-          allTasks.forEach(t => {
-            const val = t.dailyValues ? t.dailyValues[dc.colIndex] : undefined;
-            if (val !== undefined && val !== null && String(val).trim() !== '') {
-              const s = String(val).trim();
-              if (s !== '-' && s !== '·' && s !== '0') {
-                hasDataOnDay = true;
-                if (isLeaveSymbolValue(s)) {
-                  if (!dayLeaveSym) dayLeaveSym = getSmartSymbolInfo(s) || { code: s.toUpperCase(), title: 'Nghỉ' };
-                } else {
-                  hasWorkOnDay = true;
-                }
-              }
-            }
-          });
-
+          const day = readReportingDay(allTasks, dc);
           const dayShort = dc.label.split('/')[0];
-          if (hasDataOnDay) {
-            reportedDaysCount++;
-            if (hasWorkOnDay) {
-              activeWorkDaysCount++;
-            } else if (dayLeaveSym) {
-              leaveOnlyDaysCount++;
-              leaveDaysDetail.push({
-                dayStr: dayShort,
-                label: dc.label,
-                colIndex: dc.colIndex,
-                code: dayLeaveSym.code,
-                title: dayLeaveSym.title || 'Nghỉ'
-              });
-            }
-          } else {
+          const detail = {
+            dayNum: dc.dayNum,
+            dayStr: dayShort,
+            label: dc.label,
+            colIndex: dc.colIndex
+          };
+          if (!day.loggedTasksCount) {
             unreportedDaysCount++;
             unreportedDaysList.push(dayShort);
-            unreportedDaysDetail.push({
-              dayStr: dayShort,
-              label: dc.label,
-              colIndex: dc.colIndex
+            unreportedDaysDetail.push(detail);
+            return;
+          }
+          reportedDaysCount++;
+          if (day.hasWork) {
+            activeWorkDaysCount++;
+          } else if (day.symbols.length > 0) {
+            leaveOnlyDaysCount++;
+            leaveDaysDetail.push({
+              ...detail,
+              code: day.symbols[0].code,
+              title: day.symbols[0].title,
+              symbols: day.symbols
             });
           }
         });
 
+        const leaveSymbolSummary = summarizeLeaveSymbols(leaveDaysDetail);
         const hasReportedTargetDay = targetDayLoggedCount > 0;
         const coveragePct = totalDaysToEval > 0 ? Math.round((reportedDaysCount / totalDaysToEval) * 100) : 100;
 
@@ -19625,13 +19721,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           totalTasks,
           targetDayLoggedCount,
           targetDayLeaveInfo,
+          targetDayState,
           todayLoggedTasksCount,
           todayLeaveInfo,
+          todayState,
           reportedDaysCount,
           unreportedDaysCount,
           activeWorkDaysCount,
           leaveOnlyDaysCount,
           leaveDaysDetail,
+          leaveSymbolSummary,
           unreportedDaysList,
           unreportedDaysDetail,
           hasReportedTargetDay,
@@ -19726,17 +19825,25 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (tabCountMild) tabCountMild.innerText = mildPendingList.length;
 
       if (subTitle) {
-        let scopeText = '';
-        if (_followUpSelectedDept) {
-          scopeText = `Bộ phận: ${_followUpSelectedDept} • `;
-        } else if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
-          scopeText = `Nhân sự: ${currentSelectedStaff} • `;
-        } else if (currentSelectedDept && currentSelectedDept !== 'TẤT CẢ') {
-          scopeText = `Bộ phận: ${currentSelectedDept} • `;
+        if (isSingleEntityScope) {
+          const single = allScopedEntities[0];
+          const entityPrefix = `${single.isGroup ? 'Đơn vị' : 'Nhân sự'}: ${single.displayName} • `;
+          subTitle.innerText = single.unreportedDaysCount > 0
+            ? `${entityPrefix}Còn thiếu ${single.unreportedDaysCount} ngày đến ngày ${targetDateLabel}`
+            : `${entityPrefix}Đã ghi nhận đủ ${single.reportedDaysCount}/${totalDaysToEval} ngày đến ngày ${targetDateLabel}`;
+        } else {
+          let scopeText = '';
+          if (_followUpSelectedDept) {
+            scopeText = `Bộ phận: ${_followUpSelectedDept} • `;
+          } else if (currentSelectedStaff && currentSelectedStaff !== 'TẤT CẢ' && !currentSelectedStaff.startsWith('SEARCH_')) {
+            scopeText = `Nhân sự: ${currentSelectedStaff} • `;
+          } else if (currentSelectedDept && currentSelectedDept !== 'TẤT CẢ') {
+            scopeText = `Bộ phận: ${currentSelectedDept} • `;
+          }
+          subTitle.innerText = isManagerOrAdmin
+            ? `${scopeText}Hàng đợi đôn đốc bổ sung báo cáo đến ngày ${targetDateLabel}`
+            : `Tiến độ ghi nhận ma trận tính đến ngày ${targetDateLabel}`;
         }
-        subTitle.innerText = isManagerOrAdmin
-          ? `${scopeText}Hàng đợi đôn đốc bổ sung báo cáo đến ngày ${targetDateLabel}`
-          : `Tiến độ ghi nhận ma trận tính đến ngày ${targetDateLabel}`;
       }
 
       if (badge) {
@@ -19766,14 +19873,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const item = allScopedEntities[0];
         const isDanger = item.unreportedDaysCount > 3;
         const isComplete = item.unreportedDaysCount === 0;
-        const leaveCodesStr = item.leaveDaysDetail && item.leaveDaysDetail.length > 0
-          ? item.leaveDaysDetail.map(d => `${d.dayStr} (${d.code})`).join(', ')
-          : 'Không có';
+        const symbolSummary = item.leaveSymbolSummary || summarizeLeaveSymbols(item.leaveDaysDetail);
+        const symbolBadgeHtml = (sym, text) => `<span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold font-num leading-tight whitespace-nowrap ${sym.badgeClass}">${escapeHtml(text)}</span>`;
+        const canShowInlineChips = symbolSummary.groups.length <= 2 && symbolSummary.groups.every(g => g.symbols.length === 1);
+        const kpiSymbolTooltip = symbolSummary.totalDays > 0
+          ? `Tổng ${symbolSummary.totalDays} ngày ghi ký hiệu: ${symbolSummary.groups.map(g => `${g.symbols.map(s => s.code + ' (' + s.title + ')').join(' + ')}: ${g.count} ngày`).join(' • ')}`
+          : 'Không có ngày chỉ ghi ký hiệu';
+        const symbolPreviewHtml = !symbolSummary.totalDays
+          ? '<span class="text-[10px] font-medium text-slate-400">Không có</span>'
+          : `<button type="button" aria-controls="followUpSymbolDaysDetail" aria-label="Xem chi tiết các ngày ghi ký hiệu"
+              onclick="const p=document.getElementById('followUpSymbolDaysDetail'); if(p){p.scrollIntoView({block:'nearest',behavior:'smooth'}); p.focus({preventScroll:true});}"
+              class="inline-flex max-w-full flex-wrap items-center gap-1 rounded text-left text-[10px] font-semibold text-indigo-700 hover:opacity-90 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              ${canShowInlineChips
+                ? symbolSummary.groups.map(g => symbolBadgeHtml(g.symbols[0], `${g.count} ${g.symbols[0].code}`)).join('')
+                : `<span>${symbolSummary.typeCount} loại · Chi tiết</span><i class="fa-solid fa-angle-down text-[9px]" aria-hidden="true"></i>`}
+            </button>`;
+
         const todayStatusStr = isCurrentPeriod
-          ? (item.todayLeaveInfo
-            ? `Nghỉ (${item.todayLeaveInfo.code})`
-            : (item.todayLoggedTasksCount > 0 ? `Đã nhập ${item.todayLoggedTasksCount}/${item.totalTasks} việc` : `Chưa nhập (0/${item.totalTasks})`))
+          ? reportingDayStatus(item.todayState, item.totalTasks)
           : `${item.totalTasks} đầu việc`;
+        const hasTodayActivity = isCurrentPeriod && item.todayLoggedTasksCount > 0;
 
         if (summaryBar) {
           summaryBar.classList.remove('hidden');
@@ -19791,26 +19910,65 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 <div class="h-full ${barColor} rounded-full transition-all duration-300" style="width: ${item.coveragePct}%"></div>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5 text-[10px] font-num">
-                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col">
+                <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between">
                   <span class="text-slate-400 font-semibold text-[9px] uppercase">Có phát sinh</span>
                   <span class="font-black text-emerald-700 text-xs mt-0.5">${item.activeWorkDaysCount} ngày</span>
                 </div>
-                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col" title="Ngày nghỉ theo quy chuẩn: ${escapeHtml(leaveCodesStr)}">
-                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Nghỉ / Ký hiệu</span>
-                  <span class="font-black text-indigo-700 text-xs mt-0.5 truncate">${item.leaveOnlyDaysCount} ngày${item.leaveDaysDetail.length > 0 ? ` (${item.leaveDaysDetail[0].code})` : ''}</span>
+                <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between" title="${escapeHtml(kpiSymbolTooltip)}">
+                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Ký hiệu ngày</span>
+                  <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+                    <span class="font-black text-indigo-700 text-xs shrink-0">${symbolSummary.totalDays} ngày</span>
+                    ${symbolSummary.totalDays > 0 ? symbolPreviewHtml : ''}
+                  </div>
                 </div>
-                <div class="px-2 py-1.5 rounded-xl bg-white border ${isComplete ? 'border-slate-200/80' : 'border-amber-200 bg-amber-50/40'} flex flex-col">
+                <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border ${isComplete ? 'border-slate-200/80' : 'border-amber-200 bg-amber-50/40'} flex flex-col justify-between">
                   <span class="text-slate-400 font-semibold text-[9px] uppercase">Còn thiếu</span>
                   <span class="font-black ${isComplete ? 'text-slate-600' : (isDanger ? 'text-rose-700' : 'text-amber-800')} text-xs mt-0.5">${item.unreportedDaysCount} ngày</span>
                 </div>
-                <div class="px-2 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col">
+                <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between">
                   <span class="text-slate-400 font-semibold text-[9px] uppercase">${isCurrentPeriod ? `Hôm nay (${todayDateLabel})` : 'Quy mô giao'}</span>
-                  <span class="font-black ${item.todayLoggedTasksCount > 0 || item.todayLeaveInfo ? 'text-emerald-700' : 'text-slate-700'} text-[10.5px] mt-0.5 truncate">${escapeHtml(todayStatusStr)}</span>
+                  <span class="font-black ${hasTodayActivity ? 'text-emerald-700' : 'text-slate-700'} text-[10.5px] leading-snug mt-0.5 whitespace-normal break-words">${escapeHtml(todayStatusStr)}</span>
                 </div>
               </div>
             </div>
           `;
         }
+
+        const symbolDetailSectionHtml = symbolSummary.totalDays > 0 ? `
+          <section id="followUpSymbolDaysDetail" tabindex="-1"
+            onclick="event.stopPropagation()"
+            class="pt-2 border-t ${isComplete ? 'border-emerald-200/70' : (isDanger ? 'border-rose-200/70' : 'border-amber-200/70')} space-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg">
+            <div class="flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
+              <span class="font-bold text-slate-700 inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-tags text-indigo-600 text-[9.5px]" aria-hidden="true"></i>
+                <span>Chi tiết ký hiệu ngày</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-[9.5px] font-black font-num">${symbolSummary.totalDays} ngày</span>
+              </span>
+              <span class="text-[9.5px] text-slate-500">Nhấp ngày để xem trên ma trận</span>
+            </div>
+            <ul class="space-y-1.5">
+              ${symbolSummary.groups.map(g => `
+                <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 px-2 py-1.5 rounded-xl bg-white/85 border border-slate-200/75">
+                  <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                    ${g.symbols.map(s => symbolBadgeHtml(s, `${s.code} · ${s.title}`)).join('<span class="text-slate-400 text-[10px] font-bold" aria-hidden="true">+</span>')}
+                    <span class="text-[10.5px] font-black font-num text-slate-800">${g.count} ngày</span>
+                  </div>
+                  <div class="flex items-center gap-1 flex-wrap">
+                    ${g.days.map(d => Number.isInteger(d.colIndex) ? `
+                      <button type="button"
+                        onclick="event.stopPropagation(); scrollToDayColumn(${d.colIndex})"
+                        aria-label="Xem cột ngày ${escapeHtml(d.label || d.dayStr)}"
+                        title="Cuộn bảng ma trận tới ngày ${escapeHtml(d.label || d.dayStr)}"
+                        class="px-1.5 py-0.5 rounded-md border border-slate-200 bg-slate-50/90 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-800 text-[10px] font-semibold font-num text-slate-700 transition cursor-pointer active:scale-95">
+                        ${escapeHtml(d.label || d.dayStr)}
+                      </button>` : `<span class="px-1.5 py-0.5 rounded-md border border-slate-200 bg-slate-50 text-[10px] font-semibold font-num text-slate-700">${escapeHtml(d.label || d.dayStr)}</span>`).join('')}
+                  </div>
+                </li>
+              `).join('')}
+            </ul>
+            ${symbolSummary.groups.some(g => g.symbols.length > 1) ? '<p class="text-[9.5px] text-slate-500">Ngày có nhiều ký hiệu được gộp chung một dòng và chỉ tính 1 ngày.</p>' : ''}
+          </section>
+        ` : '';
 
         const missingButtonsHtml = (item.unreportedDaysDetail || []).slice(0, 6).map(d => `
           <button type="button" onclick="event.stopPropagation(); scrollToDayColumn(${d.colIndex})"
@@ -19836,19 +19994,19 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                     <p class="text-xs font-black text-slate-900 truncate">${escapeHtml(item.displayName)}</p>
                     <span class="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-white/90 text-slate-600 border border-slate-200 shrink-0 font-num">${item.totalTasks} đầu việc</span>
                   </div>
-                  <p class="text-[10.5px] text-slate-600 mt-0.5 truncate">
+                  <p class="text-[10.5px] text-slate-600 mt-0.5 whitespace-normal break-words">
                     ${escapeHtml(item.isGroup ? 'Đại diện bộ phận kho/tổ' : item.subDeptName)}
-                    ${item.leaveDaysDetail && item.leaveDaysDetail.length > 0 ? ` • <span class="text-indigo-700 font-semibold font-num">Nghỉ: ngày ${escapeHtml(leaveCodesStr)}</span>` : ''}
                   </p>
                 </div>
               </div>
               <div class="text-right shrink-0">
                 <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isComplete ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : (isDanger ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300')} font-num whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
                   <i class="fa-solid ${isComplete ? 'fa-check text-emerald-600' : 'fa-clock text-amber-700'} text-[9px]"></i>
-                  <span>${isComplete ? 'Đã nộp đủ 100%' : `Thiếu ${item.unreportedDaysCount} ngày`}</span>
+                  <span>${isComplete ? `Đủ ghi nhận ${item.reportedDaysCount}/${totalDaysToEval} ngày` : `Thiếu ${item.unreportedDaysCount} ngày`}</span>
                 </span>
               </div>
             </div>
+            ${symbolDetailSectionHtml}
             ${!isComplete && missingButtonsHtml ? `
               <div class="pt-1.5 border-t border-amber-200/60 flex items-center justify-between gap-2 flex-wrap">
                 <span class="text-[10px] font-bold text-amber-900">Cần bổ sung số liệu trên ma trận:</span>
