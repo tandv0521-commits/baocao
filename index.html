@@ -90,7 +90,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap"
     rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -1680,6 +1680,683 @@
     @media (forced-colors: active) {
       #headerUserProfileButton:focus-visible {
         outline-color: Highlight;
+      }
+    }
+
+    /* ================= TIÊU ĐỀ TIẾNG VIỆT & BẢNG LEDGER THỐNG KÊ (V241) ================= */
+    #analyticsSection .analytics-card-title {
+      font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 22px;
+      letter-spacing: -0.01em;
+      text-transform: none;
+      color: #0f172a;
+      margin: 0;
+      padding-block: 2px;
+      min-width: 0;
+      height: auto;
+      max-height: none;
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 639px) {
+      #analyticsSection .analytics-card-title {
+        font-size: 13px;
+        line-height: 21px;
+      }
+    }
+
+    #progressCompetitionCard,
+    #deptLeaderboardCard {
+      min-width: 0;
+    }
+
+    #insightAttentionTasks.task-ledger-list {
+      container: task-ledger / inline-size;
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      max-height: 22rem;
+      overflow: auto;
+      padding: 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #ffffff;
+    }
+
+    #insightAttentionTasks.task-ledger-list.is-natural {
+      max-height: none;
+      overflow: hidden;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-head,
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) 76px 60px 80px 88px;
+      align-items: center;
+      column-gap: 8px;
+      padding-inline: 8px;
+    }
+
+    #insightAttentionTasks .tl-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      min-height: 28px;
+      background: #f8fafc;
+      border-bottom: 1px solid #cbd5e1;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    #insightAttentionTasks .tl-head > :first-child {
+      text-align: center;
+    }
+
+    #insightAttentionTasks .tl-head > :nth-child(n+3) {
+      text-align: right;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row {
+      appearance: none;
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 44px;
+      margin: 0;
+      padding-block: 5px;
+      border: 0;
+      border-bottom: 1px solid #e2e8f0;
+      border-radius: 0;
+      background: #ffffff;
+      color: #334155;
+      font: inherit;
+      font-size: 12px;
+      line-height: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 140ms ease;
+    }
+
+    #insightAttentionTasks .matrix-task-stat-row:last-child {
+      border-bottom: 0;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row:nth-child(even) {
+      background: rgba(248, 250, 252, 0.72);
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row:hover {
+      background: rgba(236, 253, 245, 0.65);
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row[aria-pressed="true"] {
+      background: #ecfdf5;
+      box-shadow: inset 0 0 0 1px #6ee7b7;
+    }
+
+    #insightAttentionTasks .matrix-task-stat-row:focus-visible {
+      outline: 2px solid #059669;
+      outline-offset: -2px;
+    }
+
+    #insightAttentionTasks .tl-index {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 24px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #insightAttentionTasks [aria-pressed="true"] .tl-index {
+      background: #059669;
+      border-color: #059669;
+      color: #ffffff;
+    }
+
+    #insightAttentionTasks .tl-task,
+    #insightAttentionTasks .tl-num {
+      min-width: 0;
+    }
+
+    #insightAttentionTasks .tl-name {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    #insightAttentionTasks .has-owner .tl-name {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+    }
+
+    #insightAttentionTasks .tl-owner,
+    #insightAttentionTasks .tl-value,
+    #insightAttentionTasks .tl-total small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #insightAttentionTasks .tl-owner,
+    #insightAttentionTasks .tl-num small {
+      color: #64748b;
+      font-size: 10px;
+      line-height: 14px;
+      font-weight: 400;
+    }
+
+    #insightAttentionTasks .tl-metrics {
+      display: contents;
+    }
+
+    #insightAttentionTasks .tl-num {
+      text-align: right;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #insightAttentionTasks .tl-frequency small {
+      display: block;
+    }
+
+    #insightAttentionTasks .tl-total strong {
+      color: #047857;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    #insightAttentionTasks .tl-label {
+      display: none;
+    }
+
+    /* ================= DẢI LỊCH TRẠNG THÁI CHẤM CÔNG GỌN 1 CÁ NHÂN (V247) ================= */
+    #followUpDailyStrip {
+      container: daily-strip / inline-size;
+      box-sizing: border-box;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: rgba(248, 250, 252, 0.85);
+    }
+
+    #followUpDailyStrip:focus-visible {
+      outline: 2px solid #047857;
+      outline-offset: 2px;
+    }
+
+    #followUpDailyStrip .ds-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-bottom: 8px;
+    }
+
+    #followUpDailyStrip .ds-title-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    #followUpDailyStrip .ds-title {
+      color: #1e293b;
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 700;
+    }
+
+    #followUpDailyStrip .ds-range {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 7px;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 10px;
+      line-height: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    #followUpDailyStrip .ds-legend {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: #475569;
+      font-size: 10px;
+      line-height: 14px;
+      font-weight: 600;
+    }
+
+    #followUpDailyStrip .ds-leg {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    #followUpDailyStrip .ds-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    #followUpDailyStrip .ds-dot-work { background: #10b981; }
+    #followUpDailyStrip .ds-dot-symbol { background: #6366f1; }
+    #followUpDailyStrip .ds-dot-missing { background: #f43f5e; }
+    #followUpDailyStrip .ds-dot-today {
+      background: #ffffff;
+      border: 1.5px dashed #475569;
+    }
+
+    #followUpDailyStrip .ds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+      gap: 5px;
+    }
+
+    #followUpDailyStrip .ds-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      box-sizing: border-box;
+      min-height: 40px;
+      padding: 4px 2px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #334155;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease, box-shadow 140ms ease, opacity 140ms ease;
+    }
+
+    #followUpDailyStrip .ds-day:hover {
+      transform: translateY(-1px);
+    }
+
+    #followUpDailyStrip .ds-day:active {
+      transform: translateY(0);
+    }
+
+    #followUpDailyStrip .ds-day:focus-visible {
+      outline: 2px solid #047857;
+      outline-offset: 1px;
+    }
+
+    #followUpDailyStrip .ds-num {
+      font-size: 11px;
+      line-height: 14px;
+      font-weight: 700;
+    }
+
+    #followUpDailyStrip .ds-code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      max-width: 100%;
+      padding-inline: 2px;
+      font-size: 9px;
+      line-height: 12px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #followUpDailyStrip .ds-day.is-work {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    #followUpDailyStrip .ds-day.is-work .ds-code {
+      color: #047857;
+    }
+
+    #followUpDailyStrip .ds-day.is-work:hover {
+      background: #d1fae5;
+      border-color: #34d399;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol {
+      background: #eef2ff;
+      border-color: #a5b4fc;
+      color: #3730a3;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="HT"] {
+      background: #f0fdfa;
+      border-color: #5eead4;
+      color: #115e59;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="H"] {
+      background: #eef2ff;
+      border-color: #a5b4fc;
+      color: #3730a3;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="P"] {
+      background: #fffbeb;
+      border-color: #fcd34d;
+      color: #92400e;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="O"] {
+      background: #faf5ff;
+      border-color: #d8b4fe;
+      color: #6b21a8;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="CT"] {
+      background: #f0f9ff;
+      border-color: #7dd3fc;
+      color: #075985;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="VR"] {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #334155;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol[data-sym="L"] {
+      background: #fff1f2;
+      border-color: #fda4af;
+      color: #9f1239;
+    }
+
+    #followUpDailyStrip .ds-day.is-symbol:hover {
+      box-shadow: inset 0 0 0 1px currentColor;
+    }
+
+    #followUpDailyStrip .ds-day.is-missing {
+      background: #fff1f2;
+      border-color: #fda4af;
+      color: #9f1239;
+    }
+
+    #followUpDailyStrip .ds-day.is-missing:hover {
+      background: #ffe4e6;
+      border-color: #fb7185;
+    }
+
+    #followUpDailyStrip .ds-day.is-today {
+      border-style: dashed;
+      border-width: 1.5px;
+    }
+
+    #followUpDailyStrip .ds-day.is-today-pending {
+      background: #ffffff;
+      border-color: #64748b;
+      color: #334155;
+    }
+
+    #followUpDailyStrip .ds-day.is-today-pending:hover {
+      background: #f1f5f9;
+      border-color: #334155;
+    }
+
+    #followUpDailyStrip[data-spotlight="symbol"] .ds-day.is-symbol {
+      box-shadow: 0 0 0 2px currentColor;
+    }
+
+    #followUpDailyStrip[data-spotlight="symbol"] .ds-day:not(.is-symbol) {
+      opacity: 0.45;
+    }
+
+    #followUpDailyStrip[data-spotlight="symbol"] .ds-day:not(.is-symbol):hover {
+      opacity: 1;
+    }
+
+    #followUpDailyStrip .ds-foot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 7px 0 0;
+      color: #475569;
+      font-size: 10px;
+      line-height: 15px;
+      font-weight: 500;
+    }
+
+    #followUpDailyStrip .ds-foot.is-warn {
+      color: #9f1239;
+      font-weight: 600;
+    }
+
+    @container task-ledger (max-width: 539px) {
+      #insightAttentionTasks .tl-head {
+        display: none;
+      }
+      #insightAttentionTasks.task-ledger-list .matrix-task-stat-row {
+        grid-template-columns: 28px minmax(0, 1fr) 88px;
+        align-items: start;
+        gap: 7px;
+        padding-block: 9px;
+      }
+      #insightAttentionTasks .tl-index { grid-area: 1 / 1; }
+      #insightAttentionTasks .tl-task { grid-area: 1 / 2; }
+      #insightAttentionTasks .has-owner .tl-name { -webkit-line-clamp: 2; line-clamp: 2; }
+      #insightAttentionTasks .tl-total { grid-area: 1 / 3; }
+      #insightAttentionTasks .tl-metrics {
+        grid-column: 2 / -1;
+        display: grid;
+        grid-template-columns: 1fr 0.85fr 1.35fr;
+        gap: 8px;
+      }
+      #insightAttentionTasks .tl-metrics .tl-num { text-align: left; }
+      #insightAttentionTasks .tl-label {
+        display: block;
+        color: #64748b;
+        font-size: 9px;
+        line-height: 14px;
+        font-weight: 400;
+      }
+      #insightAttentionTasks .tl-total .tl-label,
+      #insightAttentionTasks .tl-total .tl-value { display: inline; }
+      #insightAttentionTasks .tl-total .tl-label { margin-right: 3px; }
+      #insightAttentionTasks .tl-total strong { font-size: 12px; }
+      #insightAttentionTasks .tl-frequency small { display: inline; }
+    }
+
+    @container daily-strip (max-width: 399px) {
+      #followUpDailyStrip .ds-grid {
+        grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+        gap: 4px;
+      }
+      #followUpDailyStrip .ds-day {
+        min-height: 42px;
+      }
+    }
+
+    /* ================= SẮC THÁI MÀU TƯƠI MỚI & ĐIỂM NHẤN THÔNG SỐ BẢNG ĐẦU VIỆC (V244) ================= */
+    #insightAttentionTasks.task-ledger-list {
+      --tl-frequency: #0f766e;
+      --tl-average: #0369a1;
+      --tl-peak: #92400e;
+      --tl-total: #047857;
+      border-color: #a7f3d0;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-head {
+      background: #ecfdf5;
+      color: #065f46;
+      border-bottom-color: #a7f3d0;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row {
+      background: #ffffff;
+      border-bottom-color: #dceee5;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row:nth-child(even) {
+      background: #f4fbf8;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row:hover {
+      background: #ecfdf5;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row[aria-pressed="true"] {
+      background: #d1fae5;
+      box-shadow: inset 0 0 0 1px #34d399;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row:focus-visible {
+      outline: 2px solid #047857;
+      outline-offset: -2px;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-index {
+      background: #d1fae5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    #insightAttentionTasks.task-ledger-list [aria-pressed="true"] .tl-index {
+      background: #047857;
+      border-color: #047857;
+      color: #ffffff;
+    }
+
+    #insightAttentionTasks.task-ledger-list :is(.tl-owner, .tl-num small, .tl-label) {
+      color: #475569;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-frequency {
+      color: var(--tl-frequency);
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-avg {
+      color: var(--tl-average);
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-peak {
+      color: var(--tl-peak);
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-metrics .tl-value {
+      font-weight: 600;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-total .tl-total-pill {
+      display: inline-block;
+      box-sizing: border-box;
+      max-width: 100%;
+      padding: 1px 7px;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      background: #ecfdf5;
+      color: var(--tl-total);
+      line-height: 16px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    #insightAttentionTasks.task-ledger-list .tl-today.is-logged {
+      color: var(--tl-total);
+      font-weight: 600;
+    }
+
+    #insightAttentionTasks.task-ledger-list .matrix-task-stat-row.is-inactive {
+      --tl-frequency: #475569;
+      --tl-average: #475569;
+      --tl-peak: #475569;
+      --tl-total: #475569;
+      background: #f8fafc;
+      border-bottom-color: #e2e8f0;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive:hover {
+      background: #f1f5f9;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive[aria-pressed="true"] {
+      background: #e2e8f0;
+      box-shadow: inset 0 0 0 1px #94a3b8;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive .tl-name {
+      color: #475569;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive .tl-index {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive[aria-pressed="true"] .tl-index {
+      background: #475569;
+      border-color: #475569;
+      color: #ffffff;
+    }
+
+    #insightAttentionTasks.task-ledger-list .is-inactive .tl-total-pill {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    /* ================= ĐỒNG BỘ TRẦN CHIỀU CAO TỰ NHIÊN HAI THẺ PHÂN TÍCH DESKTOP (V245) ================= */
+    #analyticsControlGrid {
+      --analytics-list-budget: 22rem;
+    }
+
+    #deptLeaderboardList:focus-visible,
+    #insightAttentionTasks:focus-visible {
+      outline: 2px solid #047857;
+      outline-offset: 2px;
+    }
+
+    @media (min-width: 1024px) {
+      #analyticsControlGrid #deptLeaderboardCard,
+      #analyticsControlGrid #progressCompetitionCard {
+        align-self: start;
+        min-height: 0;
+      }
+
+      #analyticsControlGrid #deptLeaderboardCard > :not(#deptLeaderboardList),
+      #analyticsControlGrid #progressCompetitionCard > :not(#insightAttentionTasks) {
+        flex: 0 0 auto;
+      }
+
+      #analyticsControlGrid #deptLeaderboardList,
+      #analyticsControlGrid #insightAttentionTasks:not(.is-natural) {
+        box-sizing: border-box;
+        min-height: 0;
+        flex: 0 1 auto;
+        max-height: var(--analytics-list-max, var(--analytics-list-budget));
       }
     }
 
@@ -4139,7 +4816,8 @@
         <!-- ================= 2. THEO DÕI TIẾN ĐỘ, THỐNG KÊ ĐẦU VIỆC MA TRẬN & NHỊP ĐỘ CÔNG VIỆC ================= -->
         <section id="analyticsSection" class="hidden space-y-3 sm:space-y-3.5 pt-1">
           <!-- DÒNG 1: HAI BẢNG KIỂM SOÁT TIẾN ĐỘ & THỐNG KÊ ĐẦU VIỆC / THI ĐUA NGANG HÀNG (50 - 50) -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
+          <div id="analyticsControlGrid"
+            class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
             <!-- 1. BẢNG THEO DÕI & ĐÔN ĐỐC TIẾN ĐỘ -->
             <div id="deptLeaderboardCard"
               class="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xs space-y-2.5 sm:space-y-3 flex flex-col">
@@ -4150,9 +4828,7 @@
                     <i id="followUpCardIcon" class="fa-solid fa-clipboard-check"></i>
                   </span>
                   <div class="min-w-0 flex-1">
-                    <h4 id="followUpCardTitle"
-                      class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Theo Dõi &
-                      Đôn Đốc</h4>
+                    <h4 id="followUpCardTitle" class="analytics-card-title">Theo dõi &amp; đôn đốc</h4>
                     <p id="followUpCardSubtitle" class="text-[10px] sm:text-[11px] text-slate-500 truncate mt-0.5">Tiến
                       độ báo cáo tính đến ngày ...</p>
                   </div>
@@ -4193,8 +4869,8 @@
                 </button>
               </div>
 
-              <div id="deptLeaderboardList"
-                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
+              <div id="deptLeaderboardList" tabindex="0" role="region" aria-labelledby="followUpCardTitle"
+                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-[22rem] custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
                 <!-- Danh sách Cần đôn đốc / Theo dõi sẽ render tự động bằng JS -->
               </div>
             </div>
@@ -4209,7 +4885,7 @@
                     <i id="competitionCardIcon" class="fa-solid fa-layer-group"></i>
                   </span>
                   <div class="min-w-0 flex-1">
-                    <h4 id="competitionCardTitle" class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Thống Kê Đầu Việc &amp; Sản Lượng</h4>
+                    <h4 id="competitionCardTitle" class="analytics-card-title">Thống kê đầu việc &amp; sản lượng</h4>
                     <p id="insightLeaderboardSubtitle"
                       class="text-[10px] sm:text-[11px] text-slate-500 truncate mt-0.5">Tổng hợp trực tiếp từ bảng ma trận...</p>
                   </div>
@@ -4232,8 +4908,8 @@
                   class="text-[9px] sm:text-[9.5px] text-emerald-700 font-num font-bold shrink-0 whitespace-nowrap">Nhấp việc để lọc biểu đồ</span>
               </div>
 
-              <div id="insightAttentionTasks"
-                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-64 custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
+              <div id="insightAttentionTasks" tabindex="0" role="region" aria-labelledby="competitionCardTitle"
+                class="space-y-1.5 sm:space-y-2 overflow-y-auto max-h-[22rem] custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2">
                 <!-- Danh sách thống kê đầu việc / vinh danh thi đua sẽ render tự động bằng JS -->
               </div>
             </div>
@@ -4250,8 +4926,7 @@
                   <i class="fa-solid fa-chart-column"></i>
                 </span>
                 <div class="min-w-0 flex-1">
-                  <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 truncate">Nhịp Độ
-                    Phát Sinh</h4>
+                  <h4 class="analytics-card-title">Nhịp độ phát sinh</h4>
                   <p class="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">Diễn biến số liệu qua từng ngày</p>
                 </div>
               </div>
@@ -18783,8 +19458,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // ================= CHẾ ĐỘ 1: KIỂM SOÁT TIẾN ĐỘ THEO BỘ PHẬN / TỔ KHO (MẶC ĐỊNH CHO QUẢN LÝ TOÀN BAN) =================
       if (effectiveMode === 'departments') {
+        leaderboardBox.className = 'space-y-1.5 sm:space-y-2 overflow-y-auto max-h-[22rem] custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2';
         const fullDeptsCount = deptMetrics.filter(d => d.missingDaysSum === 0).length;
-        if (cardTitle) cardTitle.innerText = 'Kiểm Soát Theo Bộ Phận & Tổ Kho';
+        if (cardTitle) cardTitle.innerText = 'Kiểm soát theo bộ phận & tổ kho';
         if (cardIconBox) cardIconBox.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs';
         if (cardIcon) cardIcon.className = 'fa-solid fa-building-user';
 
@@ -18850,7 +19526,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // ================= CHẾ ĐỘ 2: THỐNG KÊ ĐẦU VIỆC & SẢN LƯỢNG MA TRẬN =================
       if (effectiveMode === 'tasks') {
-        if (cardTitle) cardTitle.innerText = 'Thống Kê Đầu Việc & Sản Lượng';
+        const taskScrollTop = leaderboardBox.scrollTop;
+        const useNaturalTaskHeight = isSingleEntityScope && taskMetrics.length <= 6;
+        leaderboardBox.className = 'task-ledger-list custom-scroll' + (useNaturalTaskHeight ? ' is-natural' : '');
+        if (cardTitle) cardTitle.innerText = 'Thống kê đầu việc & sản lượng';
         if (cardIconBox) cardIconBox.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs';
         if (cardIcon) cardIcon.className = 'fa-solid fa-layer-group';
 
@@ -18890,54 +19569,71 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           return;
         }
 
-        let rowsHtml = '';
-        taskMetrics.forEach(t => {
-          const isSelected = (currentRhythmSelectedTaskKey === t.key);
-          const hasActivity = t.activeDaysMonth > 0;
-          const freqPct = totalDaysToEval > 0 ? Math.min(100, Math.round((t.activeDaysEval / totalDaysToEval) * 100)) : 0;
-          const ownerChip = !isSingleEntityScope
-            ? `<span class="text-slate-400 mx-1">•</span><span class="text-slate-600 font-semibold truncate">${escapeHtml(t.isGroup ? t.department : t.staffName)}</span>`
-            : '';
+        const rowsHtml = taskMetrics.map(t => {
+          const selected = (currentRhythmSelectedTaskKey === t.key);
+          const inactive = (t.activeDaysMonth === 0);
+          const loggedToday = isCurrentPeriod && Boolean(t.todayValDisplay);
+          const owner = isSingleEntityScope ? '' : (t.isGroup ? t.department : t.staffName);
+          const pct = totalDaysToEval > 0 ? Math.min(100, Math.max(0, Math.round((t.activeDaysEval / totalDaysToEval) * 100))) : 0;
+          const avg = (!t.isTextMode && t.avgPerActiveDay != null && t.avgPerActiveDay !== '') ? String(t.avgPerActiveDay) : '—';
+          const peak = (!t.isTextMode && t.peakDayLabel && t.peakValDisplay) ? `${t.peakValDisplay} (${String(t.peakDayLabel).split('/')[0]})` : '—';
+          const today = isCurrentPeriod ? `HN: ${t.todayValDisplay || '—'}` : `Kỳ: ${t.activeDaysMonth} ngày`;
+          const label = [
+            t.taskName,
+            owner,
+            `Phát sinh ${t.activeDaysEval}/${totalDaysToEval} ngày (${pct}%)`,
+            `Trung bình ${avg}; cao nhất ${peak}`,
+            `Tổng kỳ ${t.monthTotalDisplay}; ${today}`
+          ].filter(Boolean).join('; ');
 
-          rowsHtml += `
-            <div onclick="selectTaskFromAnalyticsCard('${escapeJsStr(t.key)}')"
-                 class="matrix-task-stat-row p-2.5 rounded-2xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 group shadow-2xs ${isSelected ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/40' : (hasActivity ? 'border-slate-200/90 bg-white hover:border-emerald-300 hover:bg-emerald-50/30' : 'border-slate-200/70 bg-slate-50/50 hover:bg-slate-100/60')}"
-                 data-task-key="${escapeHtml(t.key)}"
-                 title="Nhấp để xem diễn biến từng ngày của đầu việc này trên biểu đồ">
-              <div class="flex items-start gap-2 min-w-0 flex-1">
-                <span class="w-6 h-6 rounded-lg ${isSelected ? 'bg-emerald-600 text-white' : (hasActivity ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-200/70 text-slate-500')} flex items-center justify-center text-[10.5px] font-black font-num shrink-0 mt-0.5">
-                  ${t.idx}
+          return `
+            <button type="button" class="matrix-task-stat-row${inactive ? ' is-inactive' : ''}"
+              data-task-key="${escapeHtml(t.key)}" aria-pressed="${selected}"
+              onclick="selectTaskFromAnalyticsCard('${escapeHtml(escapeJsStr(t.key))}')"
+              aria-label="${escapeHtml(label)}">
+              <span class="tl-index">${t.idx}</span>
+              <span class="tl-task${owner ? ' has-owner' : ''}">
+                <span class="tl-name" title="${escapeHtml(t.taskName)}">${escapeHtml(t.taskName)}</span>
+                ${owner ? `<span class="tl-owner" title="${escapeHtml(owner)}">${escapeHtml(owner)}</span>` : ''}
+              </span>
+              <span class="tl-metrics">
+                <span class="tl-num tl-frequency">
+                  <span class="tl-label">Phát sinh</span>
+                  <span class="tl-value">${t.activeDaysEval}/${totalDaysToEval} <small>(${pct}%)</small></span>
                 </span>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <p class="text-xs font-bold ${isSelected ? 'text-emerald-950' : 'text-slate-800'} truncate group-hover:text-emerald-900 transition" title="${escapeHtml(t.taskName)}">${escapeHtml(t.taskName)}</p>
-                  </div>
-                  <div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] text-slate-500 mt-0.5 font-num">
-                    <span class="${t.activeDaysEval > 0 ? 'text-emerald-700 font-bold' : 'text-slate-400'}">Phát sinh: ${t.activeDaysEval}/${totalDaysToEval} ngày (${freqPct}%)</span>
-                    ${t.avgPerActiveDay ? `<span class="text-slate-300">•</span><span class="text-sky-700 font-semibold">TB: ${t.avgPerActiveDay}/ngày</span>` : ''}
-                    ${t.peakDayLabel && t.peakValDisplay ? `<span class="text-slate-300">•</span><span class="text-amber-800 font-semibold">Cao nhất: ${escapeHtml(t.peakValDisplay)} (${t.peakDayLabel.split('/')[0]})</span>` : ''}
-                    ${ownerChip}
-                  </div>
-                </div>
-              </div>
-              <div class="text-right shrink-0">
-                <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-black ${hasActivity ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/90' : 'bg-slate-100 text-slate-500 border border-slate-200'} font-num whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
-                  <span class="text-[9px] font-semibold text-slate-400 uppercase">Tổng:</span>
-                  <span>${escapeHtml(t.monthTotalDisplay)}</span>
+                <span class="tl-num tl-avg">
+                  <span class="tl-label">TB/ngày</span>
+                  <span class="tl-value" title="${escapeHtml(avg)}">${escapeHtml(avg)}</span>
                 </span>
-                <p class="text-[9.5px] ${t.todayValDisplay ? 'text-emerald-700 font-bold' : 'text-slate-400'} font-num mt-0.5">
-                  ${isCurrentPeriod ? (t.todayValDisplay ? `Hôm nay: ${escapeHtml(t.todayValDisplay)}` : 'Hôm nay: —') : `Kỳ: ${t.activeDaysMonth} ngày`}
-                </p>
-              </div>
-            </div>
-          `;
-        });
-        leaderboardBox.innerHTML = rowsHtml;
+                <span class="tl-num tl-peak">
+                  <span class="tl-label">Cao nhất</span>
+                  <span class="tl-value" title="${escapeHtml(peak)}">${escapeHtml(peak)}</span>
+                </span>
+              </span>
+              <span class="tl-num tl-total">
+                <span class="tl-label">Tổng</span>
+                <strong class="tl-value tl-total-pill" title="${escapeHtml(t.monthTotalDisplay)}">${escapeHtml(t.monthTotalDisplay)}</strong>
+                <small class="tl-today${loggedToday ? ' is-logged' : ''}" title="${escapeHtml(today)}">${escapeHtml(today)}</small>
+              </span>
+            </button>`;
+        }).join('');
+
+        leaderboardBox.innerHTML = `
+          <div class="tl-head" aria-hidden="true">
+            <span>#</span><span>Đầu việc</span><span>Phát sinh</span>
+            <span title="Trung bình trên ngày có số liệu">TB/ngày</span>
+            <span>Cao nhất</span><span>Tổng kỳ</span>
+          </div>
+          <div class="tl-body" role="group" aria-label="Chọn đầu việc để lọc biểu đồ">
+            ${rowsHtml}
+          </div>`;
+        leaderboardBox.scrollTop = taskScrollTop;
         return;
       }
 
       // ================= CHẾ ĐỘ 3: ĐƠN VỊ ĐỦ 100% NGÀY BÁO CÁO (NƠI DUY NHẤT HIỂN THỊ DANH SÁCH ĐỦ KỲ) =================
-      if (cardTitle) cardTitle.innerText = 'Đơn Vị Hoàn Thành Đủ Báo Cáo';
+      leaderboardBox.className = 'space-y-1.5 sm:space-y-2 overflow-y-auto max-h-[22rem] custom-scroll p-0.5 sm:p-1 pr-1 sm:pr-2';
+      if (cardTitle) cardTitle.innerText = 'Đơn vị hoàn thành đủ báo cáo';
       if (cardIconBox) cardIconBox.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm sm:text-base shrink-0 shadow-2xs';
       if (cardIcon) cardIcon.className = 'fa-solid fa-medal';
 
@@ -19022,11 +19718,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         renderActivityRhythmChart(cachedRhythmData, cachedDailyActiveTasksMap);
       }
       document.querySelectorAll('.matrix-task-stat-row').forEach(row => {
-        const isSel = row.getAttribute('data-task-key') === taskKey;
-        row.classList.toggle('border-emerald-500', isSel);
-        row.classList.toggle('bg-emerald-50/70', isSel);
-        row.classList.toggle('ring-1', isSel);
-        row.classList.toggle('ring-emerald-500/40', isSel);
+        row.setAttribute('aria-pressed', String(row.getAttribute('data-task-key') === taskKey));
       });
     }
 
@@ -19889,10 +20581,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const unreportedDaysList = [];
         const unreportedDaysDetail = [];
         const leaveDaysDetail = [];
+        const dailyTimeline = [];
 
         evalDayCols.forEach(dc => {
           const day = readReportingDay(allTasks, dc);
           const dayShort = dc.label.split('/')[0];
+          const isTodayTile = Boolean(isCurrentPeriod && todayCol && dc.dayNum === todayCol.dayNum);
           const detail = {
             dayNum: dc.dayNum,
             dayStr: dayShort,
@@ -19903,11 +20597,27 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             unreportedDaysCount++;
             unreportedDaysList.push(dayShort);
             unreportedDaysDetail.push(detail);
+            dailyTimeline.push({
+              ...detail,
+              status: 'missing',
+              isToday: isTodayTile,
+              loggedTasksCount: 0,
+              hasWork: false,
+              symbols: []
+            });
             return;
           }
           reportedDaysCount++;
           if (day.hasWork) {
             activeWorkDaysCount++;
+            dailyTimeline.push({
+              ...detail,
+              status: 'work',
+              isToday: isTodayTile,
+              loggedTasksCount: day.loggedTasksCount,
+              hasWork: true,
+              symbols: day.symbols
+            });
           } else if (day.symbols.length > 0) {
             leaveOnlyDaysCount++;
             leaveDaysDetail.push({
@@ -19916,8 +20626,32 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               title: day.symbols[0].title,
               symbols: day.symbols
             });
+            dailyTimeline.push({
+              ...detail,
+              status: 'symbol',
+              isToday: isTodayTile,
+              loggedTasksCount: day.loggedTasksCount,
+              hasWork: false,
+              symbols: day.symbols
+            });
           }
         });
+
+        if (isCurrentPeriod && todayCol && todayCol.dayNum > targetDayNum) {
+          const tState = todayState || readReportingDay(allTasks, todayCol);
+          const tShort = todayCol.label.split('/')[0];
+          dailyTimeline.push({
+            dayNum: todayCol.dayNum,
+            dayStr: tShort,
+            label: todayCol.label,
+            colIndex: todayCol.colIndex,
+            status: tState.loggedTasksCount === 0 ? 'today-pending' : (tState.hasWork ? 'work' : 'symbol'),
+            isToday: true,
+            loggedTasksCount: tState.loggedTasksCount,
+            hasWork: tState.hasWork,
+            symbols: tState.symbols || []
+          });
+        }
 
         const leaveSymbolSummary = summarizeLeaveSymbols(leaveDaysDetail);
         const hasReportedTargetDay = targetDayLoggedCount > 0;
@@ -19944,6 +20678,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           leaveSymbolSummary,
           unreportedDaysList,
           unreportedDaysDetail,
+          dailyTimeline,
           hasReportedTargetDay,
           totalDaysToEval,
           coveragePct
@@ -20038,7 +20773,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (subTitle) {
         if (isSingleEntityScope) {
           const single = allScopedEntities[0];
-          const entityPrefix = `${single.isGroup ? 'Đơn vị' : 'Nhân sự'}: ${single.displayName} • `;
+          const deptMeta = single.isGroup ? 'Nhóm gộp' : (single.subDeptName || single.department || '');
+          const entityPrefix = [single.displayName, deptMeta].filter(Boolean).join(' • ') + ' • ';
           subTitle.innerText = single.unreportedDaysCount > 0
             ? `${entityPrefix}Còn thiếu ${single.unreportedDaysCount} ngày đến ngày ${targetDateLabel}`
             : `${entityPrefix}Đã ghi nhận đủ ${single.reportedDaysCount}/${totalDaysToEval} ngày đến ngày ${targetDateLabel}`;
@@ -20078,26 +20814,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       if (!container) return;
 
-      // TRƯỜNG HỢP 1: CHỈ CÓ 1 ĐƠN VỊ / 1 NHÂN SỰ TRONG PHẠM VI ĐANG XEM -> BẢNG KIỂM SOÁT CÁ NHÂN TRỰC QUAN
+      // TRƯỜNG HỢP 1: CHỈ CÓ 1 ĐƠN VỊ / 1 NHÂN SỰ TRONG PHẠM VI ĐANG XEM -> DẢI LỊCH TRẠNG THÁI CHẤM CÔNG GỌN
       if (isSingleEntityScope) {
         if (tabsWrapper) tabsWrapper.classList.add('hidden');
         const item = allScopedEntities[0];
         const isDanger = item.unreportedDaysCount > 3;
         const isComplete = item.unreportedDaysCount === 0;
         const symbolSummary = item.leaveSymbolSummary || summarizeLeaveSymbols(item.leaveDaysDetail);
-        const symbolBadgeHtml = (sym, text) => `<span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold font-num leading-tight whitespace-nowrap ${sym.badgeClass}">${escapeHtml(text)}</span>`;
+        const symbolBadgeHtml = (sym, text, titleText) => `<span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold font-num leading-tight whitespace-nowrap ${sym.badgeClass}"${titleText ? ` title="${escapeHtml(titleText)}"` : ''}>${escapeHtml(text)}</span>`;
         const canShowInlineChips = symbolSummary.groups.length <= 2 && symbolSummary.groups.every(g => g.symbols.length === 1);
         const kpiSymbolTooltip = symbolSummary.totalDays > 0
-          ? `Tổng ${symbolSummary.totalDays} ngày ghi ký hiệu: ${symbolSummary.groups.map(g => `${g.symbols.map(s => s.code + ' (' + s.title + ')').join(' + ')}: ${g.count} ngày`).join(' • ')}`
+          ? `Tổng ${symbolSummary.totalDays} ngày ghi ký hiệu: ${symbolSummary.groups.map(g => `${g.symbols.map(s => s.code + ' (' + s.title + ')').join(' + ')}: ${g.count} ngày (${g.days.map(d => d.label).join(', ')})`).join(' • ')}`
           : 'Không có ngày chỉ ghi ký hiệu';
         const symbolPreviewHtml = !symbolSummary.totalDays
-          ? '<span class="text-[10px] font-medium text-slate-400">Không có</span>'
-          : `<button type="button" aria-controls="followUpSymbolDaysDetail" aria-label="Xem chi tiết các ngày ghi ký hiệu"
-              onclick="const p=document.getElementById('followUpSymbolDaysDetail'); if(p){p.scrollIntoView({block:'nearest',behavior:'smooth'}); p.focus({preventScroll:true});}"
+          ? '<span class="text-[10px] font-medium text-slate-500">Không có</span>'
+          : `<button type="button" aria-controls="followUpDailyStrip" aria-pressed="false" aria-label="Làm nổi bật các ngày ghi ký hiệu trên dải lịch"
+              onclick="const s=document.getElementById('followUpDailyStrip'); if(s){const on=s.getAttribute('data-spotlight')!=='symbol'; if(on){s.setAttribute('data-spotlight','symbol');}else{s.removeAttribute('data-spotlight');} this.setAttribute('aria-pressed', String(on)); s.scrollIntoView({block:'nearest',behavior:'smooth'});}"
               class="inline-flex max-w-full flex-wrap items-center gap-1 rounded text-left text-[10px] font-semibold text-indigo-700 hover:opacity-90 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
               ${canShowInlineChips
-                ? symbolSummary.groups.map(g => symbolBadgeHtml(g.symbols[0], `${g.count} ${g.symbols[0].code}`)).join('')
-                : `<span>${symbolSummary.typeCount} loại · Chi tiết</span><i class="fa-solid fa-angle-down text-[9px]" aria-hidden="true"></i>`}
+                ? symbolSummary.groups.map(g => symbolBadgeHtml(g.symbols[0], `${g.count} ${g.symbols[0].code}`, `${g.symbols[0].code} · ${g.symbols[0].title}: ${g.days.map(d => d.label).join(', ')}`)).join('')
+                : `<span>${symbolSummary.typeCount} loại · Lọc lịch</span>`}
             </button>`;
 
         const todayStatusStr = isCurrentPeriod
@@ -20122,22 +20858,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5 text-[10px] font-num">
                 <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between">
-                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Có phát sinh</span>
+                  <span class="text-slate-600 font-semibold text-[9px] uppercase">Có phát sinh</span>
                   <span class="font-black text-emerald-700 text-xs mt-0.5">${item.activeWorkDaysCount} ngày</span>
                 </div>
                 <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between" title="${escapeHtml(kpiSymbolTooltip)}">
-                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Ký hiệu ngày</span>
+                  <span class="text-slate-600 font-semibold text-[9px] uppercase">Ký hiệu ngày</span>
                   <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
                     <span class="font-black text-indigo-700 text-xs shrink-0">${symbolSummary.totalDays} ngày</span>
                     ${symbolSummary.totalDays > 0 ? symbolPreviewHtml : ''}
                   </div>
                 </div>
                 <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border ${isComplete ? 'border-slate-200/80' : 'border-amber-200 bg-amber-50/40'} flex flex-col justify-between">
-                  <span class="text-slate-400 font-semibold text-[9px] uppercase">Còn thiếu</span>
+                  <span class="text-slate-600 font-semibold text-[9px] uppercase">Còn thiếu</span>
                   <span class="font-black ${isComplete ? 'text-slate-600' : (isDanger ? 'text-rose-700' : 'text-amber-800')} text-xs mt-0.5">${item.unreportedDaysCount} ngày</span>
                 </div>
                 <div class="min-w-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 flex flex-col justify-between">
-                  <span class="text-slate-400 font-semibold text-[9px] uppercase">${isCurrentPeriod ? `Hôm nay (${todayDateLabel})` : 'Quy mô giao'}</span>
+                  <span class="text-slate-600 font-semibold text-[9px] uppercase">${isCurrentPeriod ? `Hôm nay (${todayDateLabel})` : 'Quy mô giao'}</span>
                   <span class="font-black ${hasTodayActivity ? 'text-emerald-700' : 'text-slate-700'} text-[10.5px] leading-snug mt-0.5 whitespace-normal break-words">${escapeHtml(todayStatusStr)}</span>
                 </div>
               </div>
@@ -20145,86 +20881,86 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           `;
         }
 
-        const symbolDetailSectionHtml = symbolSummary.totalDays > 0 ? `
-          <section id="followUpSymbolDaysDetail" tabindex="-1"
-            onclick="event.stopPropagation()"
-            class="pt-2 border-t ${isComplete ? 'border-emerald-200/70' : (isDanger ? 'border-rose-200/70' : 'border-amber-200/70')} space-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg">
-            <div class="flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
-              <span class="font-bold text-slate-700 inline-flex items-center gap-1.5">
-                <i class="fa-solid fa-tags text-indigo-600 text-[9.5px]" aria-hidden="true"></i>
-                <span>Chi tiết ký hiệu ngày</span>
-                <span class="px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-[9.5px] font-black font-num">${symbolSummary.totalDays} ngày</span>
-              </span>
-              <span class="text-[9.5px] text-slate-500">Nhấp ngày để xem trên ma trận</span>
-            </div>
-            <ul class="space-y-1.5">
-              ${symbolSummary.groups.map(g => `
-                <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 px-2 py-1.5 rounded-xl bg-white/85 border border-slate-200/75">
-                  <div class="flex items-center gap-1.5 flex-wrap shrink-0">
-                    ${g.symbols.map(s => symbolBadgeHtml(s, `${s.code} · ${s.title}`)).join('<span class="text-slate-400 text-[10px] font-bold" aria-hidden="true">+</span>')}
-                    <span class="text-[10.5px] font-black font-num text-slate-800">${g.count} ngày</span>
-                  </div>
-                  <div class="flex items-center gap-1 flex-wrap">
-                    ${g.days.map(d => Number.isInteger(d.colIndex) ? `
-                      <button type="button"
-                        onclick="event.stopPropagation(); scrollToDayColumn(${d.colIndex})"
-                        aria-label="Xem cột ngày ${escapeHtml(d.label || d.dayStr)}"
-                        title="Cuộn bảng ma trận tới ngày ${escapeHtml(d.label || d.dayStr)}"
-                        class="px-1.5 py-0.5 rounded-md border border-slate-200 bg-slate-50/90 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-800 text-[10px] font-semibold font-num text-slate-700 transition cursor-pointer active:scale-95">
-                        ${escapeHtml(d.label || d.dayStr)}
-                      </button>` : `<span class="px-1.5 py-0.5 rounded-md border border-slate-200 bg-slate-50 text-[10px] font-semibold font-num text-slate-700">${escapeHtml(d.label || d.dayStr)}</span>`).join('')}
-                  </div>
-                </li>
-              `).join('')}
-            </ul>
-            ${symbolSummary.groups.some(g => g.symbols.length > 1) ? '<p class="text-[9.5px] text-slate-500">Ngày có nhiều ký hiệu được gộp chung một dòng và chỉ tính 1 ngày.</p>' : ''}
-          </section>
-        ` : '';
+        const timeline = Array.isArray(item.dailyTimeline) ? item.dailyTimeline : [];
+        const firstEvalLabel = timeline.length > 0 ? (timeline[0].dayStr || '01') : '01';
+        const rangeText = (firstEvalLabel === targetDateLabel.split('/')[0]) ? targetDateLabel : `${firstEvalLabel} → ${targetDateLabel}`;
+        const hasTodayTile = timeline.some(d => d.isToday);
+        const toSymAttr = (syms) => {
+          if (!syms || syms.length === 0) return 'MIX';
+          if (syms.length > 1) return 'MIX';
+          const code = String(syms[0].code || '').toUpperCase();
+          return code === 'Ô' ? 'O' : code;
+        };
 
-        const missingButtonsHtml = (item.unreportedDaysDetail || []).slice(0, 6).map(d => `
-          <button type="button" onclick="event.stopPropagation(); scrollToDayColumn(${d.colIndex})"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black font-num shadow-2xs transition cursor-pointer active:scale-95"
-            title="Nhấp để cuộn bảng ma trận tới cột ngày ${d.label}">
-            <i class="fa-solid fa-pen-to-square text-amber-600 text-[9px]"></i>
-            <span>Điền ngày ${d.label}</span>
-          </button>
-        `).join('');
+        const dayTilesHtml = timeline.map(d => {
+          const syms = Array.isArray(d.symbols) ? d.symbols : [];
+          const symCodes = syms.map(s => s.code).join('+');
+          const symDesc = syms.map(s => `${s.code} · ${s.title}`).join(' + ');
+          const dayPrefix = d.isToday ? `Hôm nay ${d.label}` : `Ngày ${d.label}`;
+          let cls = 'ds-day';
+          let extraAttrs = '';
+          let codeHtml = '';
+          let tipText = '';
+
+          if (d.status === 'work') {
+            cls += ' is-work';
+            if (d.isToday) {
+              cls += ' is-today';
+              codeHtml = symCodes
+                ? `+${escapeHtml(symCodes)}`
+                : '<span>HN</span><i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>';
+            } else {
+              codeHtml = symCodes
+                ? `+${escapeHtml(symCodes)}`
+                : '<i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>';
+            }
+            tipText = `${dayPrefix}: Đã ghi nhận ${d.loggedTasksCount}/${item.totalTasks} đầu việc${symDesc ? ` (kèm ${symDesc})` : ''} — Nhấp để xem trên ma trận`;
+          } else if (d.status === 'symbol') {
+            cls += ' is-symbol' + (d.isToday ? ' is-today' : '');
+            extraAttrs = ` data-sym="${escapeHtml(toSymAttr(syms))}"`;
+            codeHtml = escapeHtml(symCodes || 'KH');
+            tipText = `${dayPrefix}: ${symDesc || 'Ký hiệu ngày'} — Nhấp để xem trên ma trận`;
+          } else if (d.status === 'missing') {
+            cls += ' is-missing' + (d.isToday ? ' is-today' : '');
+            codeHtml = 'Thiếu';
+            tipText = `${dayPrefix}: Chưa ghi nhận báo cáo — Nhấp để điền trên ma trận`;
+          } else {
+            cls += ' is-today is-today-pending';
+            codeHtml = 'HN';
+            tipText = `${dayPrefix}: Chưa nhập số liệu hôm nay — Nhấp để mở cột hôm nay trên ma trận`;
+          }
+
+          const clickAttr = Number.isInteger(d.colIndex) ? ` onclick="scrollToDayColumn(${d.colIndex})"` : '';
+          return `
+            <button type="button" class="${cls}"${extraAttrs}${clickAttr}
+              data-day-num="${d.dayNum}" data-day-status="${escapeHtml(d.status)}"
+              title="${escapeHtml(tipText)}" aria-label="${escapeHtml(tipText)}">
+              <span class="ds-num">${escapeHtml(d.dayStr)}</span>
+              <span class="ds-code">${codeHtml}</span>
+            </button>`;
+        }).join('');
 
         container.innerHTML = `
-          <div onclick="locateStaffOrGroupInMatrix('${escapeJsStr(item.displayName)}', '${escapeJsStr(item.department)}', ${item.isGroup ? 'true' : 'false'}, event)"
-               class="followup-item-card p-3 rounded-2xl border ${isComplete ? 'border-emerald-200/90 bg-emerald-50/40' : (isDanger ? 'border-rose-200 bg-rose-50/45' : 'border-amber-200/90 bg-amber-50/40')} transition-all duration-150 cursor-pointer space-y-2 shadow-2xs"
-               data-theme="${isComplete ? 'emerald' : (isDanger ? 'rose' : 'amber')}"
-               data-staff-name="${escapeHtml(item.displayName)}">
-            <div class="flex items-center justify-between gap-2.5">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-8 h-8 rounded-xl ${isComplete ? 'bg-emerald-100 text-emerald-800' : (isDanger ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')} flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                  <i class="${isComplete ? 'fa-solid fa-circle-check' : (item.isGroup ? 'fa-solid fa-users' : 'fa-solid fa-user')}"></i>
-                </span>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <p class="text-xs font-black text-slate-900 truncate">${escapeHtml(item.displayName)}</p>
-                    <span class="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-white/90 text-slate-600 border border-slate-200 shrink-0 font-num">${item.totalTasks} đầu việc</span>
-                  </div>
-                  <p class="text-[10.5px] text-slate-600 mt-0.5 whitespace-normal break-words">
-                    ${escapeHtml(item.isGroup ? 'Đại diện bộ phận kho/tổ' : item.subDeptName)}
-                  </p>
-                </div>
-              </div>
-              <div class="text-right shrink-0">
-                <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase ${isComplete ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : (isDanger ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300')} font-num whitespace-nowrap shadow-2xs inline-flex items-center gap-1">
-                  <i class="fa-solid ${isComplete ? 'fa-check text-emerald-600' : 'fa-clock text-amber-700'} text-[9px]"></i>
-                  <span>${isComplete ? `Đủ ghi nhận ${item.reportedDaysCount}/${totalDaysToEval} ngày` : `Thiếu ${item.unreportedDaysCount} ngày`}</span>
-                </span>
-              </div>
+          <section id="followUpDailyStrip" tabindex="-1" aria-labelledby="dailyStripHeading">
+            <div class="ds-header">
+              <span class="ds-title-group">
+                <span id="dailyStripHeading" class="ds-title">Lịch trạng thái ngày</span>
+                <span class="ds-range">${escapeHtml(rangeText)}</span>
+              </span>
+              <span class="ds-legend" aria-hidden="true">
+                <span class="ds-leg"><i class="ds-dot ds-dot-work"></i>Có việc</span>
+                ${symbolSummary.totalDays > 0 ? '<span class="ds-leg"><i class="ds-dot ds-dot-symbol"></i>Ký hiệu</span>' : ''}
+                ${item.unreportedDaysCount > 0 ? '<span class="ds-leg"><i class="ds-dot ds-dot-missing"></i>Thiếu</span>' : ''}
+                ${hasTodayTile ? '<span class="ds-leg"><i class="ds-dot ds-dot-today"></i>Hôm nay</span>' : ''}
+              </span>
             </div>
-            ${symbolDetailSectionHtml}
-            ${!isComplete && missingButtonsHtml ? `
-              <div class="pt-1.5 border-t border-amber-200/60 flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-[10px] font-bold text-amber-900">Cần bổ sung số liệu trên ma trận:</span>
-                <div class="flex items-center gap-1.5 flex-wrap">${missingButtonsHtml}</div>
-              </div>
-            ` : ''}
-          </div>
+            <div class="ds-grid" role="group" aria-label="Trạng thái báo cáo từng ngày">
+              ${dayTilesHtml}
+            </div>
+            ${item.unreportedDaysCount > 0
+              ? '<p class="ds-foot is-warn"><i class="fa-solid fa-circle-exclamation text-[10px]" aria-hidden="true"></i><span>Nhấp trực tiếp vào ô <b>Thiếu</b> màu đỏ để mở và điền bổ sung trên ma trận</span></p>'
+              : '<p class="ds-foot"><i class="fa-solid fa-arrow-pointer text-[9.5px] text-emerald-700" aria-hidden="true"></i><span>Nhấp vào từng ngày để cuộn tới cột tương ứng trên ma trận</span></p>'}
+          </section>
         `;
         return;
       }
@@ -45401,6 +46137,88 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
 
     </div>
   </div>
+
+  <script id="analyticsCardHeightSyncScript">
+    (() => {
+      const grid = document.getElementById('analyticsControlGrid');
+      if (!grid) return;
+
+      const cards = ['deptLeaderboardCard', 'progressCompetitionCard']
+        .map(id => document.getElementById(id));
+      const lists = ['deptLeaderboardList', 'insightAttentionTasks']
+        .map(id => document.getElementById(id));
+      if (cards.some(el => !el) || lists.some(el => !el)) return;
+
+      const section = document.getElementById('analyticsSection');
+      const desktop = window.matchMedia('(min-width: 1024px)');
+      let frame = 0;
+
+      function update() {
+        frame = 0;
+
+        if (!desktop.matches || !grid.getBoundingClientRect().width) {
+          lists.forEach(list => list.style.removeProperty('--analytics-list-max'));
+          return;
+        }
+
+        const rawBudget = parseFloat(getComputedStyle(grid).getPropertyValue('--analytics-list-budget'));
+        const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const budget = (Number.isFinite(rawBudget) && rawBudget > 0 ? rawBudget : 22) * rootFontSize;
+
+        const chrome = cards.map((card, i) =>
+          Math.max(0, card.getBoundingClientRect().height - lists[i].getBoundingClientRect().height)
+        );
+        const ceiling = Math.max(...chrome) + budget;
+
+        lists.forEach((list, i) => {
+          const nextPx = Math.round(Math.max(budget, ceiling - chrome[i]));
+          const prevPx = parseFloat(list.style.getPropertyValue('--analytics-list-max'));
+          if (!Number.isFinite(prevPx) || Math.abs(prevPx - nextPx) >= 1) {
+            list.style.setProperty('--analytics-list-max', nextPx + 'px');
+          }
+        });
+      }
+
+      function schedule() {
+        if (!frame) frame = requestAnimationFrame(update);
+      }
+
+      if (window.ResizeObserver) {
+        const resize = new ResizeObserver(schedule);
+        [grid, ...cards].forEach(el => resize.observe(el, { box: 'border-box' }));
+      }
+
+      if (window.MutationObserver) {
+        const mutations = new MutationObserver(schedule);
+        mutations.observe(grid, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ['class', 'hidden']
+        });
+        if (section) {
+          mutations.observe(section, {
+            attributes: true,
+            attributeFilter: ['class', 'hidden']
+          });
+        }
+      }
+
+      if (desktop.addEventListener) {
+        desktop.addEventListener('change', schedule);
+      } else if (desktop.addListener) {
+        desktop.addListener(schedule);
+      }
+      window.addEventListener('resize', schedule, { passive: true });
+
+      if (document.fonts) {
+        if (document.fonts.ready) document.fonts.ready.then(schedule);
+        if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', schedule);
+      }
+
+      schedule();
+    })();
+  </script>
 
 </body>
 
