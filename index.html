@@ -8971,7 +8971,14 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // BỘ NHỚ ĐỆM RAM TỨC THÌ
     let fullPeriodMatrixCache = null;
     let cachedPreloadMatrix = null;
+    let cachedPreloadPeriodKey = '';
+    let _matrixDashboardEntryKey = null;
     let cachedDeptsDetailed = null;
+
+    function setCachedPreloadMatrix(matrix, year, month) {
+      cachedPreloadMatrix = matrix || null;
+      cachedPreloadPeriodKey = matrix ? (Number(year) + '_' + Number(month)) : '';
+    }
     let adminManageUsersCache = null;
 
     let draftSaveTimeout = null;
@@ -9201,6 +9208,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       initModalScrollLockSystem();
       if (hasInitializedApp) return;
       hasInitializedApp = true;
+      const entryNow = new Date();
+      if (!currentSelectedYear) currentSelectedYear = entryNow.getFullYear();
+      if (!currentSelectedMonth) currentSelectedMonth = entryNow.getMonth() + 1;
 
       // 1. TỰ ĐỘNG ĐIỀN THÔNG TIN GHI NHỚ TỨC THÌ (0ms) - SẴN SÀNG ĐĂNG NHẬP NGAY KHI MỞ TRANG
       checkAndFillRememberedPassword();
@@ -9449,13 +9459,15 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       } catch (e) { }
     }
 
-    // Khởi chạy nạp dữ liệu ngay lập tức vì cây DOM đăng nhập nằm trước thẻ <script>
+    // Khởi chạy sau khi hoàn tất khởi tạo toàn bộ biến cấp script (tránh lỗi TDZ trên các biến bộ điều phối cuộn khi F5 nạp cache)
     updateLoginScale();
-    initAppOnLoad();
-    if (!hasInitializedApp) {
-      document.addEventListener('DOMContentLoaded', initAppOnLoad);
-      window.addEventListener('load', initAppOnLoad);
-    }
+    queueMicrotask(() => {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAppOnLoad, { once: true });
+      } else {
+        initAppOnLoad();
+      }
+    });
 
     // ================= XỬ LÝ THÔNG BÁO TÀI KHOẢN CHƯA PHÂN CÔNG CÔNG VIỆC =================
     function openUnassignedStaffModal(user, month, year, customMsg, customGuide) {
@@ -11477,7 +11489,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
             const parsed = JSON.parse(localSaved);
             if (parsed && parsed.staffGroups && parsed.staffGroups.length > 0) {
               applyLocalMatrixWritesToMatrixObj(parsed, y, m);
-              cachedPreloadMatrix = parsed;
+              setCachedPreloadMatrix(parsed, y, m);
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
               if (currentUser) {
@@ -13588,6 +13600,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
       const isDep = isDeputyDirector(currentUser.role, currentUser.username);
+      const entryKey = String(currentUser.id ?? currentUser.username ?? '');
+      const firstDashboardEntry = _matrixDashboardEntryKey !== entryKey;
+      _matrixDashboardEntryKey = entryKey;
 
       // Cập nhật Sổ tay an toàn trong try...catch độc lập để tuyệt đối không ảnh hưởng đến giao diện chính
       try {
@@ -13652,24 +13667,28 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         else mobileReportBtn.classList.remove('hidden');
       }
 
-      if (isBoardOfDirectors(currentUser)) {
-        isDirectorDashboardInitial = true;
-        currentSelectedDept = "TẤT CẢ";
-        currentSelectedStaff = "TẤT CẢ";
-      } else if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
-        isDirectorDashboardInitial = false;
-        currentSelectedDept = "TẤT CẢ";
-        currentSelectedStaff = "TẤT CẢ";
-      } else {
-        isDirectorDashboardInitial = false;
-        currentSelectedDept = currentUser.department;
-        currentSelectedStaff = currentUser.fullName;
+      if (firstDashboardEntry) {
+        if (isBoardOfDirectors(currentUser)) {
+          isDirectorDashboardInitial = true;
+          currentSelectedDept = "TẤT CẢ";
+          currentSelectedStaff = "TẤT CẢ";
+        } else if (isDir || isDep || !currentUser.department || currentUser.department === "Chưa phân bổ") {
+          isDirectorDashboardInitial = false;
+          currentSelectedDept = "TẤT CẢ";
+          currentSelectedStaff = "TẤT CẢ";
+        } else {
+          isDirectorDashboardInitial = false;
+          currentSelectedDept = currentUser.department;
+          currentSelectedStaff = currentUser.fullName;
+        }
       }
 
       ensurePeriodDropdownPopulated();
       setupRoleControls();
       ensureMatrixUserScrollTracker();
-      schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
+      if (firstDashboardEntry) {
+        schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
+      }
       preloadAdminDataInBackground();
       setupDailyReportsRealtimeListener();
 
@@ -13701,7 +13720,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
 
-      if (cachedPreloadMatrix) {
+      if (cachedPreloadMatrix && cachedPreloadPeriodKey === matrixPeriodKey(currentSelectedYear, currentSelectedMonth)) {
         fullPeriodMatrixCache = cachedPreloadMatrix;
         currentMatrixData = cachedPreloadMatrix;
         const loadingBox = document.getElementById('loadingTasksBox');
@@ -14515,6 +14534,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const clearBtn = document.getElementById('btnClearStaffSearch');
       if (clearBtn) clearBtn.classList.add('hidden');
       applyClientFilterAndRender();
+      wakeMatrixDefaultNavigation();
       updateDirectorOverviewButtonUI();
       scrollToElement('mainPeriodFilterContainer');
     }
@@ -14949,7 +14969,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (y === Number(currentSelectedYear) && m === Number(currentSelectedMonth)) {
         fullPeriodMatrixCache = target;
         currentMatrixData = target;
-        cachedPreloadMatrix = target;
+        setCachedPreloadMatrix(target, y, m);
       }
       const memKey = `${y}_${m}`;
       if (typeof periodMatrixMemoryCache !== 'undefined' && periodMatrixMemoryCache) {
@@ -15085,10 +15105,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         return;
       }
 
-      const tableContainer = document.getElementById('tableScrollContainer');
-      const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
-      const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
-
       const activeEl = document.activeElement;
       let activeInputMeta = null;
       if (activeEl && activeEl.tagName === 'INPUT' && activeEl.dataset && activeEl.dataset.taskId && activeEl.dataset.day) {
@@ -15100,12 +15116,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           selectionStart: activeEl.selectionStart,
           selectionEnd: activeEl.selectionEnd
         };
+        _matrixUserManuallyScrolled = true;
+        cancelPendingMatrixAutoScroll(true);
       }
 
       applyClientFilterAndRender();
       refreshReportingProgressRealtime();
-
-      restoreMatrixScrollSafely(prevScrollLeft, prevScrollTop);
 
       if (activeInputMeta) {
         const restoredInp = document.querySelector(`input[data-task-id="${activeInputMeta.taskId}"][data-day="${activeInputMeta.day}"]`);
@@ -15646,7 +15662,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               parsed.staffGroups = sortStaffGroupsUniformly(parsed.staffGroups);
               fullPeriodMatrixCache = parsed;
               currentMatrixData = parsed;
-              cachedPreloadMatrix = parsed;
+              setCachedPreloadMatrix(parsed, currentSelectedYear, currentSelectedMonth);
               const loadingBox = document.getElementById('loadingTasksBox');
               if (loadingBox) loadingBox.classList.add('hidden');
               applyClientFilterAndRender();
@@ -15690,7 +15706,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         loading.classList.add('hidden');
         fullPeriodMatrixCache = matrix;
         currentMatrixData = matrix;
-        cachedPreloadMatrix = matrix;
+        setCachedPreloadMatrix(matrix, reqY, reqM);
         try {
           localStorage.setItem(`ops_matrix_active_cache_${reqY}_${reqM}`, JSON.stringify(matrix));
         } catch (e) { }
@@ -15780,41 +15796,70 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let _matrixLastKnownScrollLeft = 0;
     let _matrixUserManuallyScrolled = false;
     let _restoringMatrixCellFocus = false;
+    let _matrixAutoRaf = 0;
+    let _matrixAutoCleanup = null;
+
+    function matrixPeriodKey(y, m) {
+      return Number(y) + '_' + Number(m);
+    }
+
+    function hasValidMatrixDefaultNav() {
+      const p = _matrixPendingNavIntent;
+      return Boolean(
+        p &&
+        p.type === 'period_default' &&
+        p.gen === _matrixNavGeneration &&
+        !_matrixUserManuallyScrolled &&
+        matrixPeriodKey(p.year, p.month) === matrixPeriodKey(currentSelectedYear, currentSelectedMonth)
+      );
+    }
 
     function cancelPendingMatrixAutoScroll(clearIntent = true) {
-      if (_matrixPendingScrollTimer) {
+      if (_matrixPendingScrollTimer !== null) {
         clearTimeout(_matrixPendingScrollTimer);
         _matrixPendingScrollTimer = null;
       }
+      if (_matrixAutoRaf) {
+        if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(_matrixAutoRaf);
+        _matrixAutoRaf = 0;
+      }
       if (clearIntent) {
         _matrixPendingNavIntent = null;
+        if (_matrixAutoCleanup) {
+          try { _matrixAutoCleanup(); } catch (e) { }
+          _matrixAutoCleanup = null;
+        }
       }
     }
 
     function schedulePeriodDefaultNavIntent(year, month) {
+      cancelPendingMatrixAutoScroll(true);
       _matrixNavGeneration++;
-      cancelPendingMatrixAutoScroll(false);
       _matrixUserManuallyScrolled = false;
       _matrixPendingNavIntent = {
         type: 'period_default',
         year: Number(year),
         month: Number(month),
-        gen: _matrixNavGeneration
+        gen: _matrixNavGeneration,
+        phase: 'waiting',
+        signature: '',
+        placedDay: null
       };
     }
 
     function restoreMatrixScrollSafely(scrollLeft, scrollTop) {
       const container = document.getElementById('tableScrollContainer');
       if (!container) return;
-      _matrixProgrammaticScrollUntil = Date.now() + 180;
+      _matrixProgrammaticScrollUntil = Math.max(_matrixProgrammaticScrollUntil, Date.now() + 180);
       const prevBehavior = container.style.scrollBehavior;
       container.style.scrollBehavior = 'auto';
-      container.scrollLeft = Math.max(0, Number(scrollLeft) || 0);
-      container.scrollTop = Math.max(0, Number(scrollTop) || 0);
-      _matrixLastKnownScrollLeft = container.scrollLeft;
-      requestAnimationFrame(() => {
-        if (container) container.style.scrollBehavior = prevBehavior || '';
-      });
+      try {
+        container.scrollLeft = Math.max(0, Number(scrollLeft) || 0);
+        container.scrollTop = Math.max(0, Number(scrollTop) || 0);
+        _matrixLastKnownScrollLeft = container.scrollLeft;
+      } finally {
+        container.style.scrollBehavior = prevBehavior || '';
+      }
     }
 
     function focusMatrixInputWithoutScroll(inputElem, selStart = null, selEnd = null) {
@@ -15836,10 +15881,168 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
+    function measureMatrixDefaultNav(p) {
+      const c = document.getElementById('tableScrollContainer');
+      if (
+        !c ||
+        c.isConnected === false ||
+        document.readyState === 'loading' ||
+        document.visibilityState === 'hidden' ||
+        (typeof isDirectorDashboardInitial !== 'undefined' && isDirectorDashboardInitial) ||
+        c.dataset.matrixRowsReady !== '1' ||
+        c.dataset.matrixPeriod !== matrixPeriodKey(p.year, p.month) ||
+        c.clientWidth <= 0 ||
+        c.clientHeight <= 0
+      ) {
+        return null;
+      }
+      if (typeof getComputedStyle === 'function' && getComputedStyle(c).visibility !== 'visible') {
+        return null;
+      }
+
+      const now = new Date();
+      const isTodayPeriod = (p.year === now.getFullYear()) && (p.month === (now.getMonth() + 1));
+      const day = isTodayPeriod ? now.getDate() : 1;
+
+      const th = c.querySelector('th[data-matrix-day="' + day + '"]') || c.querySelector('th[data-col-index="' + day + '"]');
+      const task = c.querySelector('thead .col-fixed-task');
+      const total = c.querySelector('thead .col-fixed-total');
+      const isDesktop = (typeof window === 'undefined') ? true : (window.innerWidth >= 768);
+      if (!th || !task || (isDesktop && !total)) return null;
+
+      const cr = c.getBoundingClientRect();
+      const tr = th.getBoundingClientRect();
+      if (tr.width <= 0 || tr.height <= 0) return null;
+
+      const viewLeft = cr.left + (c.clientLeft || 0);
+      const viewRight = viewLeft + c.clientWidth;
+      const left = Math.max(viewLeft, task.getBoundingClientRect().right);
+      const right = (isDesktop && total) ? Math.min(viewRight, total.getBoundingClientRect().left) : viewRight;
+      if (right <= left) return null;
+
+      const max = Math.max(0, c.scrollWidth - c.clientWidth);
+      const target = Math.max(0, Math.min(max, c.scrollLeft + tr.left + (tr.width / 2) - ((left + right) / 2)));
+
+      const signature = [
+        day,
+        tr.left - viewLeft + c.scrollLeft,
+        tr.width,
+        left - viewLeft,
+        right - viewLeft,
+        c.clientWidth,
+        c.scrollWidth
+      ].map(v => Math.round(v * 2) / 2).join('|');
+
+      return { c, day, isTodayPeriod, target, signature };
+    }
+
+    function watchMatrixDefaultNavigation() {
+      const c = document.getElementById('tableScrollContainer');
+      if (!c) return;
+      const cleanup = [];
+      const wake = () => wakeMatrixDefaultNavigation();
+      const layoutChanged = () => {
+        if (hasValidMatrixDefaultNav()) {
+          _matrixLastKnownScrollLeft = c.scrollLeft || 0;
+          _matrixProgrammaticScrollUntil = Math.max(_matrixProgrammaticScrollUntil, Date.now() + 180);
+        }
+        wake();
+      };
+      const on = (el, ev, handler, opts) => {
+        if (!el || typeof el.addEventListener !== 'function') return;
+        el.addEventListener(ev, handler, opts);
+        cleanup.push(() => {
+          try { el.removeEventListener(ev, handler, opts); } catch (e) { }
+        });
+      };
+
+      let ro = null;
+      const observeGeometry = () => {
+        if (!ro) return;
+        ro.disconnect();
+        const targets = [c, c.querySelector('table'), ...(c.querySelectorAll ? Array.from(c.querySelectorAll('thead th')) : [])].filter(Boolean);
+        targets.forEach(el => { try { ro.observe(el); } catch (e) { } });
+      };
+      if (typeof ResizeObserver !== 'undefined') {
+        ro = new ResizeObserver(layoutChanged);
+        observeGeometry();
+        cleanup.push(() => ro.disconnect());
+      }
+      if (typeof MutationObserver !== 'undefined') {
+        const mo = new MutationObserver(() => {
+          observeGeometry();
+          layoutChanged();
+        });
+        try { mo.observe(c, { childList: true, subtree: true }); } catch (e) { }
+        if (document.head) {
+          try {
+            mo.observe(document.head, {
+              childList: true,
+              subtree: true,
+              characterData: true,
+              attributes: true,
+              attributeFilter: ['href', 'media', 'disabled']
+            });
+          } catch (e) { }
+        }
+        cleanup.push(() => mo.disconnect());
+      }
+
+      if (typeof window !== 'undefined') {
+        on(window, 'load', layoutChanged);
+        on(window, 'resize', layoutChanged, { passive: true });
+        on(window, 'pageshow', layoutChanged);
+      }
+      on(document, 'visibilitychange', layoutChanged);
+      if (document.head) on(document.head, 'load', layoutChanged, true);
+      if (document.fonts) {
+        on(document.fonts, 'loadingdone', layoutChanged);
+        on(document.fonts, 'loadingerror', layoutChanged);
+        if (document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+          document.fonts.ready.then(wake, wake);
+        }
+      }
+
+      _matrixAutoCleanup = () => {
+        cleanup.forEach(fn => { try { fn(); } catch (e) { } });
+      };
+    }
+
+    function wakeMatrixDefaultNavigation() {
+      if (!hasValidMatrixDefaultNav() || _matrixAutoRaf || !document.getElementById('tableScrollContainer')) return;
+      if (!_matrixAutoCleanup) watchMatrixDefaultNavigation();
+      const p = _matrixPendingNavIntent;
+      _matrixAutoRaf = requestAnimationFrame(() => {
+        _matrixAutoRaf = 0;
+        if (_matrixPendingNavIntent !== p || !hasValidMatrixDefaultNav()) return;
+        const g = measureMatrixDefaultNav(p);
+        if (!g) {
+          p.signature = '';
+          return;
+        }
+        // Đảm bảo hình học ổn định qua 2 khung hình trước khi khóa vị trí
+        if (p.signature !== g.signature) {
+          p.signature = g.signature;
+          wakeMatrixDefaultNavigation();
+          return;
+        }
+        if (Math.abs((g.c.scrollLeft || 0) - g.target) > 1) {
+          restoreMatrixScrollSafely(g.target, g.c.scrollTop);
+          wakeMatrixDefaultNavigation();
+          return;
+        }
+        p.phase = 'positioned';
+        if (p.placedDay !== g.day) {
+          currentNavActiveDay = g.day;
+          setActiveDateNavButton(g.isTodayPeriod ? 'today' : 'other');
+          p.placedDay = g.day;
+        }
+      });
+    }
+
     function ensureMatrixUserScrollTracker() {
       const container = document.getElementById('tableScrollContainer');
       if (!container || container.dataset.userScrollTrackerInit === 'true') return;
-      container.dataset.userScrollTrackerInit = 'true';
       _matrixLastKnownScrollLeft = container.scrollLeft || 0;
 
       const markManualInteraction = () => {
@@ -15856,7 +16059,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }, { passive: true });
       container.addEventListener('touchstart', markManualInteraction, { passive: true });
       container.addEventListener('pointerdown', (e) => {
-        if (!e.target.closest('button')) {
+        if (!e.target || !e.target.closest || !e.target.closest('button')) {
+          markManualInteraction();
+        }
+      });
+      container.addEventListener('keydown', (e) => {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Tab'].includes(e.key)) {
+          markManualInteraction();
+        }
+      });
+      container.addEventListener('focusin', (e) => {
+        if (e.target && e.target.closest && e.target.closest('td.matrix-day-td')) {
           markManualInteraction();
         }
       });
@@ -15870,6 +16083,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           setActiveDateNavButton('other');
         }
       }, { passive: true });
+      // Chỉ gắn cờ sau khi đã đăng ký trọn vẹn tất cả listener
+      container.dataset.userScrollTrackerInit = 'true';
     }
 
     // ================= RENDER BẢNG MA TRẬN, ẨN SỐ 0 & PHÂN QUYỀN NHẬP TRỰC TIẾP =================
@@ -15878,7 +16093,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
       const prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
       ensureMatrixUserScrollTracker();
+      if (tableContainer) {
+        tableContainer.dataset.matrixRowsReady = '0';
+        tableContainer.dataset.matrixPeriod = matrixPeriodKey(currentSelectedYear, currentSelectedMonth);
+      }
+      _matrixProgrammaticScrollUntil = Math.max(_matrixProgrammaticScrollUntil, Date.now() + 180);
 
+      try {
+      const renderNow = new Date();
+      const renderingCurrentPeriod = (Number(currentSelectedYear) === renderNow.getFullYear()) && (Number(currentSelectedMonth) === (renderNow.getMonth() + 1));
+      if (data && Array.isArray(data.dayCols)) {
+        data = Object.assign({}, data, {
+          dayCols: data.dayCols.map(dc => Object.assign({}, dc, {
+            isToday: renderingCurrentPeriod && (Number(dc.dayNum) === renderNow.getDate())
+          }))
+        });
+      }
       const theadRow = document.getElementById('tableHeaderRow');
       const tbody = document.getElementById('sheetTableBody');
       tbody.innerHTML = '';
@@ -15909,6 +16139,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         th.id = `th-col-${dc.colIndex}`;
         th.setAttribute('data-col-index', dc.colIndex);
+        th.dataset.matrixDay = String(Number(dc.dayNum));
         th.className = `py-2 px-1.5 min-w-[54px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
@@ -16232,49 +16463,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       });
 
       tbody.appendChild(tableFragment);
+      if (tableContainer) tableContainer.dataset.matrixRowsReady = '1';
 
       initMatrixCrosshairTracker();
       applySavedMatrixDensity();
-
-      const pendingNav = _matrixPendingNavIntent;
-      const hasValidPeriodNav = Boolean(
-        pendingNav &&
-        pendingNav.type === 'period_default' &&
-        !_matrixUserManuallyScrolled &&
-        Number(pendingNav.year) === Number(currentSelectedYear) &&
-        Number(pendingNav.month) === Number(currentSelectedMonth)
-      );
-
-      updateDateNavButtons(!hasValidPeriodNav);
-
-      if (hasValidPeriodNav) {
-        const capturedGen = pendingNav.gen;
-        const capturedY = Number(currentSelectedYear);
-        const capturedM = Number(currentSelectedMonth);
-        cancelPendingMatrixAutoScroll(false);
-        _matrixPendingScrollTimer = setTimeout(() => {
-          _matrixPendingScrollTimer = null;
-          if (
-            capturedGen !== _matrixNavGeneration ||
-            _matrixUserManuallyScrolled ||
-            !_matrixPendingNavIntent ||
-            capturedY !== Number(currentSelectedYear) ||
-            capturedM !== Number(currentSelectedMonth)
-          ) {
-            return;
+      } finally {
+        const hasValidPeriodNav = hasValidMatrixDefaultNav();
+        updateDateNavButtons(!hasValidPeriodNav);
+        if (hasValidPeriodNav) {
+          if (tableContainer) {
+            _matrixLastKnownScrollLeft = tableContainer.scrollLeft || 0;
           }
-          _matrixPendingNavIntent = null;
-          const now = new Date();
-          const isCurrentMonthNow = (capturedM === (now.getMonth() + 1)) && (capturedY === now.getFullYear());
-          if (isCurrentMonthNow) {
-            scrollToToday(true);
-          } else {
-            scrollColumnToCenter(1, true);
-            setActiveDateNavButton('other');
-          }
-        }, 120);
-      } else {
-        restoreMatrixScrollSafely(prevScrollLeft, prevScrollTop);
+          wakeMatrixDefaultNavigation();
+        } else {
+          restoreMatrixScrollSafely(prevScrollLeft, prevScrollTop);
+        }
       }
     }
 
@@ -16366,8 +16569,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const isInput = Boolean(e.target && e.target.classList && e.target.classList.contains('matrix-input-cell'));
         const cell = e.target.closest('td.matrix-day-td');
         if (isInput && cell) {
-          _matrixUserManuallyScrolled = true;
-          cancelPendingMatrixAutoScroll(true);
+          if (typeof _restoringMatrixCellFocus === 'undefined' || !_restoringMatrixCellFocus) {
+            _matrixUserManuallyScrolled = true;
+            cancelPendingMatrixAutoScroll(true);
+          }
           setFocusedCell(cell);
           applyCrosshairForCell(cell);
         }
@@ -17062,8 +17267,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // 1. Dọn dẹp phiên lưu cục bộ
       localStorage.removeItem('ops_portal_session_final_v48');
       currentUser = null;
+      _matrixDashboardEntryKey = null;
+      _matrixUserManuallyScrolled = true;
+      cancelPendingMatrixAutoScroll(true);
       fullPeriodMatrixCache = null;
-      cachedPreloadMatrix = null;
+      setCachedPreloadMatrix(null, 0, 0);
       cachedDeptsDetailed = null;
       adminManageUsersCache = null;
 
@@ -17786,10 +17994,12 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      * ĐÃ TỐI ƯU CÔNG THÁI HỌC VÀ CHỐNG CHE KHUẤT BỞI CÁC CỘT CỐ ĐỊNH
      */
     function scrollColumnToCenter(colIndex, isSmooth = true) {
+      cancelPendingMatrixAutoScroll(true);
+      _matrixUserManuallyScrolled = true;
       currentNavActiveDay = Number(colIndex);
       const container = document.getElementById('tableScrollContainer');
       if (!container) return;
-      const th = document.getElementById(`th-col-${colIndex}`) || document.querySelector(`th[data-col-index="${colIndex}"]`);
+      const th = container.querySelector(`th[data-matrix-day="${colIndex}"]`) || container.querySelector(`th[data-col-index="${colIndex}"]`) || document.getElementById(`th-col-${colIndex}`);
       if (!th) return;
 
       const isMobile = (window.innerWidth < 768);
@@ -17797,7 +18007,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const thRect = th.getBoundingClientRect();
 
       // 1. Xác định mép phải nhóm cột cố định bên trái trên màn hình
-      const stickyTaskHeader = document.querySelector('thead .col-fixed-task');
+      const stickyTaskHeader = container.querySelector('thead .col-fixed-task');
       let leftVisibleEdge = containerRect.left;
       if (stickyTaskHeader) {
         leftVisibleEdge = stickyTaskHeader.getBoundingClientRect().right;
@@ -17806,7 +18016,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
 
       // 2. Xác định mép trái cột cố định Tổng cộng bên phải trên màn hình (trên desktop >= 768px)
-      const stickyTotalHeader = document.querySelector('thead .col-fixed-total');
+      const stickyTotalHeader = container.querySelector('thead .col-fixed-total');
       let rightVisibleEdge = containerRect.right;
       if (!isMobile && stickyTotalHeader) {
         rightVisibleEdge = stickyTotalHeader.getBoundingClientRect().left;
@@ -17821,8 +18031,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // 5. Khoảng cách delta cần cuộn: nếu cột đang lệch phải, deltaX > 0 -> cuộn sang phải để cột dịch về giữa
       const deltaX = currentThCenterOnScreen - targetCenterOnScreen;
-      const finalScrollLeft = Math.max(0, container.scrollLeft + deltaX);
-      _matrixProgrammaticScrollUntil = Date.now() + (isSmooth ? 750 : 180);
+      const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+      const finalScrollLeft = Math.max(0, Math.min(maxScrollLeft, container.scrollLeft + deltaX));
+      _matrixProgrammaticScrollUntil = Math.max(_matrixProgrammaticScrollUntil, Date.now() + (isSmooth ? 750 : 180));
 
       container.scrollTo({
         left: finalScrollLeft,
@@ -17831,7 +18042,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // Tự động đồng bộ trạng thái nút điều hướng ngày
       const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const isCurrentPeriod = (Number(currentSelectedMonth) === (now.getMonth() + 1)) && (Number(currentSelectedYear) === now.getFullYear());
       if (isCurrentPeriod) {
         const todayDayNum = now.getDate();
         if (Number(colIndex) === todayDayNum) {
@@ -17854,7 +18065,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function updateDateNavButtons(preserveActiveState = false) {
       const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const isCurrentPeriod = (Number(currentSelectedMonth) === (now.getMonth() + 1)) && (Number(currentSelectedYear) === now.getFullYear());
 
       const btnYesterday = document.getElementById('btnScrollYesterday');
       const btnToday = document.getElementById('btnScrollToday');
@@ -17930,7 +18141,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function scrollToYesterday() {
       cancelPendingMatrixAutoScroll(true);
       const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const isCurrentPeriod = (Number(currentSelectedMonth) === (now.getMonth() + 1)) && (Number(currentSelectedYear) === now.getFullYear());
       if (!isCurrentPeriod) {
         scrollToStartOfMonth();
         return;
@@ -17968,7 +18179,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         _matrixUserManuallyScrolled = false;
       }
       const now = new Date();
-      const isCurrentPeriod = (currentSelectedMonth === (now.getMonth() + 1)) && (currentSelectedYear === now.getFullYear());
+      const isCurrentPeriod = (Number(currentSelectedMonth) === (now.getMonth() + 1)) && (Number(currentSelectedYear) === now.getFullYear());
 
       if (isCurrentPeriod) {
         const todayDayNum = now.getDate();
@@ -42884,8 +43095,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
       _pwReminderDismissedInSession = false;
       currentUser = null;
+      _matrixDashboardEntryKey = null;
+      _matrixUserManuallyScrolled = true;
+      cancelPendingMatrixAutoScroll(true);
       fullPeriodMatrixCache = null;
-      cachedPreloadMatrix = null;
+      setCachedPreloadMatrix(null, 0, 0);
       cachedDeptsDetailed = null;
       adminManageUsersCache = null;
       resetLoginButton();
