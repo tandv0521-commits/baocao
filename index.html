@@ -791,14 +791,41 @@
       #tableScrollContainer tbody td.matrix-day-td {
         min-width: 48px !important;
         width: 48px !important;
+        max-width: 48px !important;
       }
 
       #tableScrollContainer thead th[data-matrix-day] {
-        padding: 6px 3px !important;
+        padding: 6px 2px !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day] > div > span:first-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 20px;
+        line-height: 1;
+      }
+
+      #tableScrollContainer thead th.col-today-header > div > span:first-child {
+        padding: 0 5px;
+        border-radius: 999px;
+        background-color: #047857;
+        color: #ffffff;
+      }
+
+      #tableScrollContainer thead th.col-today-header > div > span:nth-child(3) {
+        display: none !important;
       }
 
       #tableScrollContainer tbody td.matrix-day-td {
         padding: 3px 2px !important;
+      }
+
+      #tableScrollContainer tbody td.matrix-day-td > span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       #tableScrollContainer .matrix-input-cell {
@@ -876,6 +903,7 @@
       #tableScrollContainer tbody td.matrix-day-td {
         min-width: 46px !important;
         width: 46px !important;
+        max-width: 46px !important;
       }
     }
 
