@@ -974,6 +974,43 @@
         right: 0;
         z-index: 60 !important;
       }
+
+      #tableScrollContainer thead th[data-matrix-day],
+      #tableScrollContainer tbody td.matrix-day-td {
+        min-width: 58px !important;
+        width: 58px !important;
+        max-width: 58px !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day] {
+        padding: 8px 4px !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day] > div > span:first-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        height: 22px;
+        line-height: 1;
+      }
+
+      #tableScrollContainer thead th.col-today-header > div > span:first-child {
+        padding: 0 6px;
+        border-radius: 999px;
+        background-color: #047857;
+        color: #ffffff;
+      }
+
+      #tableScrollContainer thead th.col-today-header > div > span:nth-child(3) {
+        display: none !important;
+      }
+
+      #tableScrollContainer tbody td.matrix-day-td > span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
 
     /* ================= CROSSHAIR TRACKER: RỌI SÁNG HÀNG & CỘT MA TRẬN KHI RÊ CHUỘT ================= */
@@ -2116,19 +2153,14 @@
       display: inline-block;
       box-sizing: border-box;
       max-width: 100%;
-      padding: 1px 7px;
+      padding: 2px 8px;
       border: 1px solid #a7f3d0;
-      border-radius: 6px;
+      border-radius: 7px;
       background: #ecfdf5;
       color: var(--tl-total);
-      line-height: 16px;
+      line-height: 18px;
       font-weight: 700;
       vertical-align: middle;
-    }
-
-    #insightAttentionTasks.task-ledger-list .tl-today.is-logged {
-      color: var(--tl-total);
-      font-weight: 600;
     }
 
     #insightAttentionTasks.task-ledger-list .matrix-task-stat-row.is-inactive {
@@ -2856,12 +2888,6 @@
         line-height: 18px;
       }
 
-      #insightAttentionTasks.task-ledger-list .tl-total .tl-today {
-        display: block;
-        margin-top: 2px;
-        font-size: 10px;
-        line-height: 14px;
-      }
 
       #insightAttentionTasks.task-ledger-list .tl-metrics {
         grid-column: 1 / -1;
@@ -10409,17 +10435,37 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const padding = window.innerWidth < 768 ? 8 : 16; // Khoảng đệm thoáng mắt chống sát mép cột cố định
 
+      let scrollDeltaX = 0;
+      let scrollDeltaY = 0;
+
       // 1. Nếu ô bị che hoặc chạm sát mép cột Nội dung việc bên trái -> Đẩy sang phải
       if (cellRect.left < stickyLeftEdge + padding) {
-        const diff = (stickyLeftEdge + padding) - cellRect.left;
-        _matrixProgrammaticScrollUntil = Date.now() + 450;
-        container.scrollBy({ left: -diff, behavior: 'smooth' });
+        scrollDeltaX = -((stickyLeftEdge + padding) - cellRect.left);
       }
       // 2. Nếu ô bị che hoặc chạm sát mép cột Tổng cộng bên phải -> Đẩy sang trái
       else if (cellRect.right > stickyRightEdge - padding) {
-        const diff = cellRect.right - (stickyRightEdge - padding);
+        scrollDeltaX = cellRect.right - (stickyRightEdge - padding);
+      }
+
+      // 3. Nếu ô bị che theo chiều dọc bởi thead cố định hoặc mép dưới khung cuộn -> Cuộn dọc vừa đủ
+      if (typeof cellRect.top === 'number' && typeof cellRect.bottom === 'number' &&
+          typeof containerRect.top === 'number' && typeof containerRect.bottom === 'number') {
+        const theadEl = container.querySelector ? container.querySelector('thead') : null;
+        const stickyTopEdge = theadEl ? theadEl.getBoundingClientRect().bottom : containerRect.top;
+        const vPad = 8;
+        if (cellRect.top < stickyTopEdge + vPad) {
+          scrollDeltaY = -((stickyTopEdge + vPad) - cellRect.top);
+        } else if (cellRect.bottom > containerRect.bottom - vPad) {
+          scrollDeltaY = cellRect.bottom - (containerRect.bottom - vPad);
+        }
+      }
+
+      if (scrollDeltaX !== 0 || scrollDeltaY !== 0) {
         _matrixProgrammaticScrollUntil = Date.now() + 450;
-        container.scrollBy({ left: diff, behavior: 'smooth' });
+        const opts = { behavior: 'smooth' };
+        if (scrollDeltaX !== 0) opts.left = scrollDeltaX;
+        if (scrollDeltaY !== 0) opts.top = scrollDeltaY;
+        container.scrollBy(opts);
       }
     }
 
@@ -17439,7 +17485,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         th.className = `py-2 px-1.5 min-w-[54px] sm:min-w-[58px] text-center border-r font-num text-xs transition ${headerStyle}`;
         th.innerHTML = `
           <div class="flex flex-col items-center justify-center leading-tight py-0.5">
-            <span class="text-xs font-black font-num" title="Ngày ${dc.label}">${dc.dayNum < 10 ? '0' + dc.dayNum : dc.dayNum}</span>
+            <span class="text-xs font-black font-num" title="Ngày ${dc.label}${isToday ? ' (Hôm nay)' : ''}">${dc.dayNum < 10 ? '0' + dc.dayNum : dc.dayNum}</span>
             <span class="text-[10px] font-bold mt-0.5 ${isSunday ? 'text-rose-600 font-black' : (isToday ? 'text-emerald-700 font-black' : 'text-slate-500')}">${dayOfWeekStr}</span>
             ${isToday ? '<span class="text-[9px] leading-none bg-emerald-600 text-white font-extrabold px-1.5 py-0.5 rounded-full mt-0.5 whitespace-nowrap shadow-2xs">Hôm nay</span>' : ''}
           </div>
@@ -17573,6 +17619,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                 if (canEditThisCell) {
                   mergedInputHtml = `
                     <input type="text" 
+                      enterkeyhint="next" 
                       class="matrix-input-cell font-num matrix-badge-cell matrix-leave-badge" 
                       data-row="${currentRowIndex}" 
                       data-col="${cIdx}" 
@@ -17658,6 +17705,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
               cellContentHtml = `
                 <input type="text" 
+                  enterkeyhint="next" 
                   class="matrix-input-cell font-num ${extraClasses}" 
                   data-row="${currentRowIndex}" 
                   data-col="${cIdx}" 
@@ -17940,43 +17988,110 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     /**
-     * ĐIỀU HƯỚNG BẰNG CÁC PHÍM MŨI TÊN (LÊN, XUỐNG, TRÁI, PHẢI, ENTER)
-     * ĐÃ TÍCH HỢP TỰ ĐỘNG CUỘN ĐẨY Ô RA NGOÀI VÙNG CHE KHUẤT
+     * TÌM Ô NHẬP LIỆU KẾ TIẾP TRÊN MA TRẬN (ƯU TIÊN NHẢY DỌC TRONG CÙNG CỘT NGÀY)
+     * Tự động bỏ qua ô chỉ đọc / ô gộp ngày nghỉ; khi bấm Tab ở dòng cuối ngày sẽ chuyển sang đầu ngày kế tiếp.
+     */
+    function findNextMatrixInputCell(currentRow, currentCol, axis, dir, wrapColumn = false) {
+      const scope = document.getElementById('sheetTableBody') || document;
+      const inputs = Array.from(scope.querySelectorAll('.matrix-input-cell'))
+        .filter(el => !el.disabled && !el.readOnly && el.offsetParent !== null);
+      if (inputs.length === 0) return null;
+
+      if (axis === 'row') {
+        const sameCol = inputs
+          .filter(el => Number(el.dataset.col) === currentCol)
+          .sort((a, b) => Number(a.dataset.row) - Number(b.dataset.row));
+        const nextInCol = dir > 0
+          ? sameCol.find(el => Number(el.dataset.row) > currentRow)
+          : [...sameCol].reverse().find(el => Number(el.dataset.row) < currentRow);
+        if (nextInCol) return nextInCol;
+
+        if (wrapColumn) {
+          const otherCols = [...new Set(inputs.map(el => Number(el.dataset.col)))]
+            .filter(c => (dir > 0 ? c > currentCol : c < currentCol))
+            .sort((a, b) => (dir > 0 ? a - b : b - a));
+          for (const targetCol of otherCols) {
+            const colCells = inputs
+              .filter(el => Number(el.dataset.col) === targetCol)
+              .sort((a, b) => Number(a.dataset.row) - Number(b.dataset.row));
+            if (colCells.length > 0) {
+              return dir > 0 ? colCells[0] : colCells[colCells.length - 1];
+            }
+          }
+        }
+        return null;
+      }
+
+      const sameRow = inputs
+        .filter(el => Number(el.dataset.row) === currentRow)
+        .sort((a, b) => Number(a.dataset.col) - Number(b.dataset.col));
+      const directHoriz = dir > 0
+        ? sameRow.find(el => Number(el.dataset.col) > currentCol)
+        : [...sameRow].reverse().find(el => Number(el.dataset.col) < currentCol);
+      const stepCol = currentCol + dir;
+      if (directHoriz && Number(directHoriz.dataset.col) === stepCol) return directHoriz;
+
+      const stepCells = inputs
+        .filter(el => Number(el.dataset.col) === stepCol)
+        .sort((a, b) => Math.abs(Number(a.dataset.row) - currentRow) - Math.abs(Number(b.dataset.row) - currentRow));
+      if (stepCells.length > 0) return stepCells[0];
+      return directHoriz || null;
+    }
+
+    /**
+     * ĐIỀU HƯỚNG BẰNG PHÍM (TAB, ENTER, MŨI TÊN LÊN/XUỐNG/TRÁI/PHẢI)
+     * - Tab / Enter: Nhảy thẳng xuống đầu việc kế tiếp trong CÙNG CỘT NGÀY (Shift+Tab / Shift+Enter: nhảy lên).
+     * - ĐÃ TÍCH HỢP TỰ ĐỘNG CUỘN ĐẨY Ô RA NGOÀI VÙNG CHE KHUẤT NGANG & DỌC.
      */
     function handleMatrixCellKeydown(e, rIdx, cIdx) {
-      let targetR = rIdx;
-      let targetC = cIdx;
-      let moved = false;
+      if (!e || e.isComposing || e.keyCode === 229) return;
+      const curR = Number(e.target && e.target.dataset && e.target.dataset.row !== undefined ? e.target.dataset.row : rIdx);
+      const curC = Number(e.target && e.target.dataset && e.target.dataset.col !== undefined ? e.target.dataset.col : cIdx);
 
-      if (e.key === 'ArrowUp') {
-        targetR = rIdx - 1;
-        moved = true;
-      } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
-        targetR = rIdx + 1;
-        moved = true;
+      let axis = null;
+      let dir = 0;
+      let wrapColumn = false;
+
+      if (e.key === 'Tab') {
+        axis = 'row';
+        dir = e.shiftKey ? -1 : 1;
+        wrapColumn = true;
+      } else if (e.key === 'Enter') {
+        axis = 'row';
+        dir = e.shiftKey ? -1 : 1;
+      } else if (e.key === 'ArrowUp') {
+        axis = 'row';
+        dir = -1;
+      } else if (e.key === 'ArrowDown') {
+        axis = 'row';
+        dir = 1;
       } else if (e.key === 'ArrowLeft') {
-        if (e.target.selectionStart === 0 && e.target.selectionEnd === 0) {
-          targetC = cIdx - 1;
-          moved = true;
+        if (e.target && e.target.selectionStart === 0 && e.target.selectionEnd === 0) {
+          axis = 'col';
+          dir = -1;
         }
       } else if (e.key === 'ArrowRight') {
-        if (e.target.selectionStart === e.target.value.length) {
-          targetC = cIdx + 1;
-          moved = true;
+        const valLen = e.target && typeof e.target.value === 'string' ? e.target.value.length : 0;
+        if (e.target && e.target.selectionStart === valLen && e.target.selectionEnd === valLen) {
+          axis = 'col';
+          dir = 1;
         }
       }
 
-      if (moved) {
-        const nextCell = document.querySelector(`.matrix-input-cell[data-row="${targetR}"][data-col="${targetC}"]`);
-        if (nextCell) {
-          e.preventDefault();
-          nextCell.focus();
-          nextCell.select();
-          scrollMatrixCellIntoView(nextCell);
-        } else if (e.key === 'Enter' && e.target) {
-          e.preventDefault();
-          e.target.blur();
-        }
+      if (!axis) return;
+
+      const nextCell = findNextMatrixInputCell(curR, curC, axis, dir, wrapColumn);
+      if (nextCell) {
+        e.preventDefault();
+        nextCell.focus();
+        if (typeof nextCell.select === 'function') nextCell.select();
+        scrollMatrixCellIntoView(nextCell);
+      } else if (e.key === 'Enter' && e.target) {
+        e.preventDefault();
+        if (!e.shiftKey) e.target.blur();
+      } else if (e.key === 'Tab' && !e.shiftKey && e.target) {
+        e.preventDefault();
+        e.target.blur();
       }
     }
 
@@ -20405,18 +20520,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         const rowsHtml = taskMetrics.map(t => {
           const selected = (currentRhythmSelectedTaskKey === t.key);
           const inactive = (t.activeDaysMonth === 0);
-          const loggedToday = isCurrentPeriod && Boolean(t.todayValDisplay);
           const owner = isFocusedSingleEntity ? '' : (t.isGroup ? t.department : t.staffName);
           const pct = totalDaysToEval > 0 ? Math.min(100, Math.max(0, Math.round((t.activeDaysEval / totalDaysToEval) * 100))) : 0;
           const avg = (!t.isTextMode && t.avgPerActiveDay != null && t.avgPerActiveDay !== '') ? String(t.avgPerActiveDay) : '—';
           const peak = (!t.isTextMode && t.peakDayLabel && t.peakValDisplay) ? `${t.peakValDisplay} (${String(t.peakDayLabel).split('/')[0]})` : '—';
-          const today = isCurrentPeriod ? `HN: ${t.todayValDisplay || '—'}` : `Kỳ: ${t.activeDaysMonth} ngày`;
           const label = [
             t.taskName,
             owner,
             `Phát sinh ${t.activeDaysEval}/${totalDaysToEval} ngày (${pct}%)`,
             `Trung bình ${avg}; cao nhất ${peak}`,
-            `Tổng kỳ ${t.monthTotalDisplay}; ${today}`
+            `Tổng kỳ ${t.monthTotalDisplay}`
           ].filter(Boolean).join('; ');
 
           return `
@@ -20446,7 +20559,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               <span class="tl-num tl-total">
                 <span class="tl-label">Tổng</span>
                 <strong class="tl-value tl-total-pill" title="${escapeHtml(t.monthTotalDisplay)}">${escapeHtml(t.monthTotalDisplay)}</strong>
-                <small class="tl-today${loggedToday ? ' is-logged' : ''}" title="${escapeHtml(today)}">${escapeHtml(today)}</small>
               </span>
             </button>`;
         }).join('');
