@@ -712,78 +712,170 @@
       scroll-padding-right: 102px;
     }
 
-    /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Tối ưu chống che lấp ngày */
+    /* KÍCH THƯỚC CỘT TRÊN DI ĐỘNG (< 768px): Cân đối ma trận & cố định 2 mép (Công việc trái + Tổng cộng phải) (V253) */
     @media (max-width: 767px) {
+      #matrixCard {
+        border-radius: 16px !important;
+      }
+
       #tableScrollContainer {
-        scroll-padding-left: 168px;
-        scroll-padding-right: 10px;
+        scroll-padding-left: 136px;
+        scroll-padding-right: 68px;
+        max-height: min(68vh, 560px) !important;
+        max-height: min(68dvh, 560px) !important;
       }
 
       .col-fixed-tt {
-        position: sticky !important;
-        left: 0 !important;
-        width: 32px !important;
-        min-width: 32px !important;
-        max-width: 32px !important;
-        z-index: 35 !important;
+        position: static !important;
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
+        padding-inline: 4px !important;
+        font-size: 11px !important;
+        box-shadow: none !important;
         background-color: #ffffff !important;
       }
 
       .col-fixed-name {
         position: static !important;
-        width: 140px !important;
-        min-width: 140px !important;
-        max-width: 140px !important;
+        width: 128px !important;
+        min-width: 128px !important;
+        max-width: 128px !important;
+        padding: 6px 8px !important;
         box-shadow: none !important;
         background-color: #ffffff !important;
       }
 
       .col-fixed-task {
         position: sticky !important;
-        left: 32px !important;
+        left: 0 !important;
         width: 132px !important;
         min-width: 132px !important;
         max-width: 132px !important;
+        padding: 6px 6px !important;
+        font-size: 11.5px !important;
+        line-height: 1.32 !important;
         box-shadow: 3px 0 8px -2px rgba(15, 23, 42, 0.12) !important;
         z-index: 35 !important;
         background-color: #ffffff !important;
       }
 
+      #tableScrollContainer td.col-fixed-task > div {
+        gap: 4px !important;
+        font-size: 11.5px !important;
+        line-height: 1.32 !important;
+      }
+
+      #tableScrollContainer td.col-fixed-task > div > span:first-child {
+        width: 15px !important;
+        height: 15px !important;
+        font-size: 9px !important;
+      }
+
       .col-fixed-total {
-        position: static !important;
-        width: 75px !important;
-        min-width: 75px !important;
-        max-width: 75px !important;
-        box-shadow: none !important;
+        position: sticky !important;
+        right: 0 !important;
+        width: 62px !important;
+        min-width: 62px !important;
+        max-width: 62px !important;
+        padding: 6px 4px !important;
+        font-size: 11.5px !important;
+        font-variant-numeric: tabular-nums !important;
+        white-space: nowrap !important;
+        box-shadow: -3px 0 8px -2px rgba(15, 23, 42, 0.12) !important;
+        z-index: 35 !important;
+        background-color: #f8fafc !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day],
+      #tableScrollContainer tbody td.matrix-day-td {
+        min-width: 48px !important;
+        width: 48px !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day] {
+        padding: 6px 3px !important;
+      }
+
+      #tableScrollContainer tbody td.matrix-day-td {
+        padding: 3px 2px !important;
+      }
+
+      #tableScrollContainer .matrix-input-cell {
+        min-height: 36px !important;
+        padding: 0 2px !important;
+        font-size: 12px !important;
       }
 
       thead .col-fixed-tt {
-        position: sticky !important;
-        left: 0 !important;
-        top: 0 !important;
-        z-index: 60 !important;
+        position: static !important;
+        z-index: 30 !important;
+        font-size: 10px !important;
+        padding: 6px 4px !important;
       }
 
       thead .col-fixed-name {
         position: static !important;
         z-index: 30 !important;
+        font-size: 10px !important;
+        padding: 6px 8px !important;
       }
 
       thead .col-fixed-task {
         position: sticky !important;
-        left: 32px !important;
+        left: 0 !important;
         top: 0 !important;
         z-index: 60 !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+        font-size: 10px !important;
+        letter-spacing: 0.01em !important;
+        padding: 6px 8px !important;
       }
 
       thead .col-fixed-total {
-        position: static !important;
-        z-index: 30 !important;
+        position: sticky !important;
+        right: 0 !important;
+        top: 0 !important;
+        z-index: 60 !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+        font-size: 10px !important;
+        letter-spacing: 0 !important;
+        padding: 6px 4px !important;
       }
 
       /* ẨN NÚT ĐIỀN BÁO CÁO Ở HEADER TRÊN DI ĐỘNG (< 768px): VÌ ĐÃ CÓ NÚT BÁO CÁO TẠI BOTTOM NAV */
       #btnOpenDayEntry {
         display: none !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      #tableScrollContainer {
+        scroll-padding-left: 122px;
+        scroll-padding-right: 62px;
+      }
+
+      .col-fixed-task {
+        width: 118px !important;
+        min-width: 118px !important;
+        max-width: 118px !important;
+        padding: 6px 5px !important;
+        font-size: 11px !important;
+      }
+
+      .col-fixed-total {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        font-size: 11px !important;
+      }
+
+      #tableScrollContainer thead th[data-matrix-day],
+      #tableScrollContainer tbody td.matrix-day-td {
+        min-width: 46px !important;
+        width: 46px !important;
       }
     }
 
@@ -2676,6 +2768,185 @@
       #analyticsControlGrid[data-layout="compact"] #analyticsRightContent {
         flex: 1 1 auto;
         overflow: visible;
+      }
+    }
+
+    /* ================= TINH CHỈNH CÂN ĐỐI GIAO DIỆN ĐIỆN THOẠI — BẢNG ĐẦU VIỆC, THEO DÕI & MA TRẬN (V253) ================= */
+    @media (max-width: 767px) {
+      /* Ẩn hoàn toàn dòng tiêu đề bảng 6 cột trên điện thoại (khắc phục lỗi độ ưu tiên CSS cũ) */
+      #insightAttentionTasks.task-ledger-list .tl-head {
+        display: none;
+      }
+
+      /* Tối ưu thẻ từng đầu việc trên điện thoại: không tràn cột Tổng, dải 3 thông số trải đều toàn chiều rộng */
+      #insightAttentionTasks.task-ledger-list .matrix-task-stat-row {
+        grid-template-columns: 26px minmax(0, 1fr) auto;
+        align-items: start;
+        column-gap: 10px;
+        row-gap: 8px;
+        padding: 11px 12px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-index {
+        grid-area: 1 / 1;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        font-size: 11px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-task {
+        grid-area: 1 / 2;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-name {
+        font-size: 12.5px;
+        line-height: 1.38;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-total {
+        grid-area: 1 / 3;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-total .tl-label {
+        display: inline;
+        margin-right: 4px;
+        font-size: 10px;
+        font-weight: 500;
+        color: #475569;
+        vertical-align: middle;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-total .tl-total-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 12.5px;
+        line-height: 18px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-total .tl-today {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        line-height: 14px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.85fr) minmax(0, 1fr);
+        gap: 8px;
+        padding-top: 7px;
+        border-top: 1px dashed #dceee5;
+      }
+
+      #insightAttentionTasks.task-ledger-list .matrix-task-stat-row.is-inactive .tl-metrics {
+        border-top-color: #e2e8f0;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics .tl-label {
+        display: block;
+        font-size: 9.5px;
+        line-height: 13px;
+        font-weight: 500;
+        margin-bottom: 1px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics .tl-value {
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics .tl-frequency {
+        text-align: left;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics .tl-avg {
+        text-align: center;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-metrics .tl-peak {
+        text-align: right;
+      }
+
+      #insightAttentionTasks.task-ledger-list .tl-frequency small {
+        display: inline;
+        font-size: 10.5px;
+      }
+
+      /* Cho phép phụ đề hiển thị đủ tên + bộ phận gọn 2 dòng thay vì cắt cụt dấu ba chấm */
+      #progressCompetitionCard #insightLeaderboardSubtitle {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        line-height: 1.35;
+      }
+
+      /* Ẩn dải nhắc lặp bị cắt chữ trên điện thoại khi không có nút tab hoặc nút bỏ lọc */
+      #progressCompetitionCard #competitionCardSubBanner:not(:has(button)) {
+        display: none;
+      }
+
+      #progressCompetitionCard #analyticsRightFooter {
+        padding-top: 6px;
+        font-size: 10.5px;
+        line-height: 16px;
+      }
+    }
+
+    @media (max-width: 639px) {
+      /* Dải ngày thiếu cân đối cùng hàng với nhãn khi ít ngày (1-2 ngày), gọn gàng trên cảm ứng */
+      :is(#deptLeaderboardCard, #focusedEntityFollowUp) .fu-actions {
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 8px;
+      }
+
+      :is(#deptLeaderboardCard, #focusedEntityFollowUp) .fu-action-label {
+        flex-basis: auto;
+      }
+
+      :is(#deptLeaderboardCard, #focusedEntityFollowUp) .fu-actions > .fu-dates {
+        flex: 1 1 auto;
+        min-width: 110px;
+      }
+
+      :is(#deptLeaderboardCard, #focusedEntityFollowUp) .fu-date {
+        min-height: 36px;
+        min-width: 52px;
+        padding: 5px 11px;
+        border-radius: 8px;
+        font-size: 11.5px;
+      }
+
+      /* Nén nhẹ thanh 3 tab bảng phải trên màn hình hẹp để không bị tràn chữ */
+      #progressCompetitionCard #competitionCardSubBanner button {
+        font-size: 9.5px;
+        padding-inline: 5px;
+      }
+
+      /* Thanh tên đang xem + nút nhảy ngày phía trên ma trận xuống dòng gọn trên điện thoại */
+      #mainPeriodFilterContainer > div:nth-child(2) {
+        flex-wrap: wrap;
+        row-gap: 6px;
+      }
+
+      #matrixDateNavGroup {
+        gap: 4px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      #progressCompetitionCard .analytics-card-title,
+      #deptLeaderboardCard .analytics-card-title {
+        font-size: 13.5px;
       }
     }
 
@@ -10091,18 +10362,24 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // Xác định mép phải của nhóm cột cố định bên trái (TT + Họ tên + Nội dung việc)
       let stickyLeftEdge = 0;
       if (stickyTaskHeader) {
-        stickyLeftEdge = stickyTaskHeader.getBoundingClientRect().right;
+        const taskRect = stickyTaskHeader.getBoundingClientRect();
+        stickyLeftEdge = window.innerWidth < 768
+          ? Math.max(containerRect.left, Math.min(taskRect.right, containerRect.left + taskRect.width))
+          : taskRect.right;
       } else {
         stickyLeftEdge = containerRect.left + (window.innerWidth < 768 ? 164 : 652);
       }
 
-      // Xác định mép trái của cột cố định Tổng cộng bên phải
+      // Xác định mép trái của cột cố định Tổng cộng bên phải (đồng bộ cả Desktop lẫn Mobile)
       let stickyRightEdge = containerRect.right;
-      if (stickyTotalHeader && window.innerWidth >= 768) {
-        stickyRightEdge = stickyTotalHeader.getBoundingClientRect().left;
+      if (stickyTotalHeader) {
+        const totalRect = stickyTotalHeader.getBoundingClientRect();
+        if (totalRect.width > 0 && totalRect.left > stickyLeftEdge && totalRect.left <= containerRect.right + 1) {
+          stickyRightEdge = totalRect.left;
+        }
       }
 
-      const padding = 16; // Khoảng đệm thoáng mắt chống sát mép cột cố định
+      const padding = window.innerWidth < 768 ? 8 : 16; // Khoảng đệm thoáng mắt chống sát mép cột cố định
 
       // 1. Nếu ô bị che hoặc chạm sát mép cột Nội dung việc bên trái -> Đẩy sang phải
       if (cellRect.left < stickyLeftEdge + padding) {
@@ -16900,8 +17177,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       const viewLeft = cr.left + (c.clientLeft || 0);
       const viewRight = viewLeft + c.clientWidth;
-      const left = Math.max(viewLeft, task.getBoundingClientRect().right);
-      const right = (isDesktop && total) ? Math.min(viewRight, total.getBoundingClientRect().left) : viewRight;
+      const taskRect = task.getBoundingClientRect();
+      const left = isDesktop
+        ? Math.max(viewLeft, taskRect.right)
+        : Math.max(viewLeft, Math.min(taskRect.right, viewLeft + taskRect.width));
+      const totalRect = total ? total.getBoundingClientRect() : null;
+      const hasStickyTotal = Boolean(totalRect && totalRect.width > 0 && totalRect.left > left && totalRect.left <= viewRight + 1);
+      const right = (total && (isDesktop || hasStickyTotal)) ? Math.min(viewRight, totalRect.left) : viewRight;
       if (right <= left) return null;
 
       const max = Math.max(0, c.scrollWidth - c.clientWidth);
@@ -19005,16 +19287,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const stickyTaskHeader = container.querySelector('thead .col-fixed-task');
       let leftVisibleEdge = containerRect.left;
       if (stickyTaskHeader) {
-        leftVisibleEdge = stickyTaskHeader.getBoundingClientRect().right;
+        const taskRect = stickyTaskHeader.getBoundingClientRect();
+        leftVisibleEdge = isMobile
+          ? Math.max(containerRect.left, Math.min(taskRect.right, containerRect.left + taskRect.width))
+          : taskRect.right;
       } else {
-        leftVisibleEdge = containerRect.left + (isMobile ? 164 : 652);
+        leftVisibleEdge = containerRect.left + (isMobile ? 128 : 652);
       }
 
-      // 2. Xác định mép trái cột cố định Tổng cộng bên phải trên màn hình (trên desktop >= 768px)
+      // 2. Xác định mép trái cột cố định Tổng cộng bên phải trên màn hình (cả Desktop & Mobile)
       const stickyTotalHeader = container.querySelector('thead .col-fixed-total');
       let rightVisibleEdge = containerRect.right;
-      if (!isMobile && stickyTotalHeader) {
-        rightVisibleEdge = stickyTotalHeader.getBoundingClientRect().left;
+      if (stickyTotalHeader) {
+        const totalRect = stickyTotalHeader.getBoundingClientRect();
+        if (totalRect.width > 0 && totalRect.left > leftVisibleEdge && totalRect.left <= containerRect.right + 1) {
+          rightVisibleEdge = totalRect.left;
+        }
       }
 
       // 3. Vùng hiển thị thực tế dành cho các ngày và tâm điểm mong muốn trên màn hình
@@ -19216,7 +19504,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const container = document.getElementById('tableScrollContainer');
       if (container) {
         _matrixProgrammaticScrollUntil = Date.now() + 750;
-        container.scrollTo({ left: 0, behavior: 'smooth' });
+        let targetStartLeft = 0;
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          const th1 = container.querySelector('th[data-matrix-day="1"]') || container.querySelector('th[data-col-index="1"]');
+          const taskTh = container.querySelector('thead .col-fixed-task');
+          if (th1 && taskTh) {
+            const cr = container.getBoundingClientRect();
+            const taskW = taskTh.getBoundingClientRect().width;
+            targetStartLeft = Math.max(0, container.scrollLeft + th1.getBoundingClientRect().left - (cr.left + taskW));
+          }
+        }
+        container.scrollTo({ left: targetStartLeft, behavior: 'smooth' });
         highlightColumnPulse(1);
         showToast("Đã cuộn về Ngày 01 đầu tháng");
       }
