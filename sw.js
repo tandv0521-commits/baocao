@@ -1,5 +1,5 @@
 // Service Worker for Báo Cáo Ban DVKH - Nhựa Tiền Phong PWA
-const CACHE_NAME = 'baocao-dvkh-pwa-v256';
+const CACHE_NAME = 'baocao-dvkh-pwa-v283';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,31 @@ const STATIC_ASSETS = [
   './icon-512.png?v=151',
   './apple-touch-icon.png?v=151',
   './tienphong_logo2.png',
-  './banner_thang11_trianculture.jpg'
+  './banner_thang11_trianculture.jpg',
+  './banner_tet_2027.jpg',
+  './banner_noel_advent.webp',
+  './banner_noel_advent.jpg',
+  './noel_mobile_header.webp',
+  './noel_mobile_header.jpg',
+  './noel_art_tree.webp',
+  './noel_art_fireplace.webp',
+  './noel_art_gift.webp',
+  './assets/plates/water-ribbon-left.png',
+  './assets/plates/water-caustic-right.png',
+  './assets/plates/brand-logo.png',
+  './assets/snbm_theme_preview.png',
+  './assets/noel-santa-hat.svg',
+  './assets/noel-target-icon.svg',
+  './assets/fonts/be-vietnam-pro-vietnamese-400.woff2',
+  './assets/fonts/be-vietnam-pro-latin-400.woff2',
+  './assets/fonts/be-vietnam-pro-vietnamese-500.woff2',
+  './assets/fonts/be-vietnam-pro-latin-500.woff2',
+  './assets/fonts/be-vietnam-pro-vietnamese-600.woff2',
+  './assets/fonts/be-vietnam-pro-latin-600.woff2',
+  './assets/fonts/be-vietnam-pro-vietnamese-700.woff2',
+  './assets/fonts/be-vietnam-pro-latin-700.woff2',
+  './assets/fonts/be-vietnam-pro-vietnamese-800.woff2',
+  './assets/fonts/be-vietnam-pro-latin-800.woff2'
 ];
 
 self.addEventListener('install', (event) => {
