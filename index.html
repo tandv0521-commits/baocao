@@ -56,7 +56,7 @@
         var css = document.createElement('link');
         css.id = 'noelWindowCss';
         css.rel = 'stylesheet';
-        css.href = base + '/noel-window.css?r=289';
+        css.href = base + '/noel-window.css?r=290';
         head.appendChild(css);
 
         var preloads = [
@@ -80,7 +80,7 @@
 
         var js = document.createElement('script');
         js.id = 'noelWindowJs';
-        js.src = base + '/noel-window.js?r=289';
+        js.src = base + '/noel-window.js?r=290';
         js.defer = true;
         head.appendChild(js);
 
@@ -4605,8 +4605,8 @@
 
     #loginScreen.uv-exiting {
       opacity: 0 !important;
-      transform: scale(0.986);
       pointer-events: none !important;
+      will-change: opacity;
     }
 
     @keyframes uvDashEnter {
@@ -12712,8 +12712,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     const NOEL_WINDOW_VERSION = 'v284';
-    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=289';
-    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=289';
+    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=290';
+    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=290';
     let _noelAdventSecondTimer = null;
     let _noelWindowScriptLoading = false;
     let _noelWindowLifecycleObserver = null;
@@ -12780,6 +12780,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
     function syncNoelWindowThemeLifecycle(doc = (typeof document !== 'undefined' ? document : null)) {
       if (!doc) return;
+      const lsGuard = typeof doc.getElementById === 'function' ? doc.getElementById('loginScreen') : null;
+      if (lsGuard && lsGuard.classList.contains('uv-exiting') && !lsGuard.classList.contains('hidden')) {
+        return;
+      }
       const want = shouldMountNoelWindowTheme(doc);
       if (!want) {
         if (typeof window !== 'undefined' && window.NoelWindowTheme && window.NoelWindowTheme.isMounted()) {
@@ -17263,7 +17267,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       return 'Kỳ ' + m + '/' + vn.getUTCFullYear();
     }
 
+    let _loginTransitionSeq = 0;
+
     function _clearLoginButtonTimers() {
+      _loginTransitionSeq++;
       if (_loginSimInterval) { clearInterval(_loginSimInterval); _loginSimInterval = null; }
       if (_loginSpinnerDelayTimer) { clearTimeout(_loginSpinnerDelayTimer); _loginSpinnerDelayTimer = null; }
       if (_loginStateTimer) { clearTimeout(_loginStateTimer); _loginStateTimer = null; }
@@ -17356,37 +17363,74 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }, 240);
     }
 
-    function finishLoginButtonAuth(userObj, onEnterDashboard) {
+    function finishLoginButtonAuth(userObj, onPrepareDashboard) {
       _clearLoginButtonTimers();
+      const mySeq = _loginTransitionSeq;
       const reduced = _prefersReducedMotionLogin();
       const greeting = formatLoginWelcomeGreeting(userObj && (userObj.full_name || userObj.fullName || userObj.username));
-      const enterNow = () => {
-        _isLoginSubmitting = false;
-        const ls = typeof document !== 'undefined' ? document.getElementById('loginScreen') : null;
-        const md = typeof document !== 'undefined' ? document.getElementById('mainDashboard') : null;
-        if (typeof onEnterDashboard === 'function') onEnterDashboard();
-        if (ls) ls.classList.remove('uv-exiting');
-        if (md && !reduced) {
-          md.classList.add('uv-entering');
-          setTimeout(() => md.classList.remove('uv-entering'), 260);
-        }
-      };
-
-      if (reduced) {
-        setLoginButtonState('success', { label: greeting });
-        enterNow();
-        return;
-      }
 
       setLoginButtonState('opening', { label: 'Đang mở ' + _getCurrentPeriodLabelForLogin() + '...' });
-      _loginStateTimer = setTimeout(() => {
+      try {
+        if (typeof window !== 'undefined' && window.NoelWindowTheme && typeof window.NoelWindowTheme.pause === 'function') {
+          window.NoelWindowTheme.pause();
+        }
+      } catch (e) { }
+
+      let prep = null;
+      try {
+        prep = (typeof onPrepareDashboard === 'function') ? onPrepareDashboard() : null;
+      } catch (e) {
+        console.warn('onPrepareDashboard error:', e);
+      }
+
+      const matrixWait = (prep && prep.matrixReadyPromise && typeof prep.matrixReadyPromise.then === 'function')
+        ? Promise.race([prep.matrixReadyPromise, new Promise(r => setTimeout(r, 600))])
+        : Promise.resolve();
+
+      matrixWait.then(() => {
+        if (mySeq !== _loginTransitionSeq) return;
         setLoginButtonState('success', { label: greeting });
-        _loginStateTimer = setTimeout(() => {
+
+        const revealDashboard = () => {
+          if (mySeq !== _loginTransitionSeq) return;
+          try { window.scrollTo(0, 0); } catch (e) { }
           const ls = typeof document !== 'undefined' ? document.getElementById('loginScreen') : null;
-          if (ls) ls.classList.add('uv-exiting');
-          _loginStateTimer = setTimeout(enterNow, 200);
-        }, 230);
-      }, 110);
+          const finishFade = () => {
+            if (mySeq !== _loginTransitionSeq) return;
+            _isLoginSubmitting = false;
+            if (ls) {
+              ls.classList.add('hidden');
+              ls.classList.remove('uv-exiting');
+            }
+            if (prep && typeof prep.runDeferredPostEntry === 'function') {
+              prep.runDeferredPostEntry();
+            }
+            setLoginButtonState('idle');
+          };
+
+          if (reduced || !ls) {
+            finishFade();
+            return;
+          }
+          ls.classList.add('uv-exiting');
+          _loginStateTimer = setTimeout(finishFade, 220);
+        };
+
+        const waitSuccessMs = reduced ? 0 : 120;
+        _loginStateTimer = setTimeout(() => {
+          if (mySeq !== _loginTransitionSeq) return;
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => {
+              if (mySeq !== _loginTransitionSeq) return;
+              requestAnimationFrame(() => {
+                if (mySeq === _loginTransitionSeq) revealDashboard();
+              });
+            });
+          } else {
+            revealDashboard();
+          }
+        }, waitSuccessMs);
+      });
     }
 
     // Backwards-compatible shims (không còn hiển thị đếm % giả)
@@ -17827,10 +17871,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         };
         if (typeof finishLoginButtonAuth === 'function') {
           finalizeVerifiedSession();
-          finishLoginButtonAuth(user, () => {
-            initMainDashboard();
-            resetLoginButton();
-          });
+          finishLoginButtonAuth(user, () => initMainDashboard({ keepLoginVisible: true, deferPostEntry: true }));
         } else {
           autoSimulateLoginButton(75, 100, "Xác thực thành công", 3, () => {
             finalizeVerifiedSession();
@@ -17846,7 +17887,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
     }
 
-    function initMainDashboard() {
+    function initMainDashboard(opts = {}) {
+      const keepLoginVisible = Boolean(opts && opts.keepLoginVisible);
+      const deferPostEntry = Boolean(opts && opts.deferPostEntry);
+
       // Quét và xóa sạch các công việc mẫu trên tất cả các tài khoản
       if (typeof purgeAllSampleTasksEverywhere === 'function') {
         purgeAllSampleTasksEverywhere();
@@ -17854,29 +17898,22 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       document.documentElement.classList.remove('app-auto-login-pending');
       const splash = document.getElementById('appAutoLoginSplash');
       if (splash) splash.remove();
-      document.getElementById('loginScreen').classList.add('hidden');
+      const loginEl = document.getElementById('loginScreen');
+      if (!keepLoginVisible && loginEl) {
+        loginEl.classList.remove('uv-exiting');
+        loginEl.classList.add('hidden');
+      }
       if (typeof applyHeaderUserIdentity === 'function') {
         applyHeaderUserIdentity(currentUser);
       }
-      document.getElementById('mainDashboard').classList.remove('hidden');
+      const dashEl = document.getElementById('mainDashboard');
+      if (dashEl) dashEl.classList.remove('hidden');
 
       const isDir = isDirectorOrAdmin(currentUser.role, currentUser.username);
       const isDep = isDeputyDirector(currentUser.role, currentUser.username);
       const entryKey = String(currentUser.id ?? currentUser.username ?? '');
       const firstDashboardEntry = _matrixDashboardEntryKey !== entryKey;
       _matrixDashboardEntryKey = entryKey;
-
-      // Cập nhật Sổ tay an toàn trong try...catch độc lập để tuyệt đối không ảnh hưởng đến giao diện chính
-      try {
-        updatePersonalWorkspaceReminders();
-      } catch (e) {
-        console.warn("Lỗi updatePersonalWorkspaceReminders:", e);
-      }
-      try {
-        checkPersonalWorkspaceRemindersOnLogin();
-      } catch (e) {
-        console.warn("Lỗi checkPersonalWorkspaceRemindersOnLogin:", e);
-      }
 
       // Tự động xóa cache local cũ để nạp nguyên trạng dữ liệu chuẩn từ Supabase Cloud
       try {
@@ -17892,27 +17929,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         console.warn("Lỗi dọn dẹp cache:", e);
       }
 
-      // Tự động kích hoạt đồng bộ từ Supabase Cloud ngay khi vào app hoặc ấn F5
       _pwReminderDismissedInSession = false;
-      try {
-        if (typeof fetchPersonalTasksFromSupabase === 'function') {
-          fetchPersonalTasksFromSupabase(false);
-        }
-      } catch (e) {
-        console.warn("Lỗi fetchPersonalTasksFromSupabase on login:", e);
-      }
-
-      try {
-        updatePersonalWorkspaceEntryCardStats();
-      } catch (e) {
-        console.warn("Lỗi updatePersonalWorkspaceEntryCardStats:", e);
-      }
-      try {
-        showPersonalTaskReminderOnLogin();
-      } catch (e) {
-        console.warn("Lỗi showPersonalTaskReminderOnLogin:", e);
-      }
-
 
       const btnDayEntry = document.getElementById('btnOpenDayEntry');
       if (btnDayEntry) {
@@ -17952,8 +17969,6 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       if (firstDashboardEntry) {
         schedulePeriodDefaultNavIntent(currentSelectedYear, currentSelectedMonth);
       }
-      preloadAdminDataInBackground();
-      setupDailyReportsRealtimeListener();
 
       const isMgrOrAdmin = isAdminOrManager(currentUser.role, currentUser.username);
       const headerSearchBtnText = document.getElementById('headerSearchBtnText');
@@ -17983,13 +17998,16 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
       }
 
-      if (cachedPreloadMatrix && cachedPreloadPeriodKey === matrixPeriodKey(currentSelectedYear, currentSelectedMonth)) {
+      let matrixReadyPromise = Promise.resolve();
+      const hasPreloadedMatrix = Boolean(
+        cachedPreloadMatrix && cachedPreloadPeriodKey === matrixPeriodKey(currentSelectedYear, currentSelectedMonth)
+      );
+      if (hasPreloadedMatrix) {
         fullPeriodMatrixCache = cachedPreloadMatrix;
         currentMatrixData = cachedPreloadMatrix;
         const loadingBox = document.getElementById('loadingTasksBox');
         if (loadingBox) loadingBox.classList.add('hidden');
         applyClientFilterAndRender();
-        setupDailyReportsRealtimeListener();
 
         // Đồng bộ ngầm để cập nhật số liệu mới nhất trong nền mà không xoay hay giật màn hình
         setTimeout(() => {
@@ -18003,9 +18021,29 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           }).catch(() => { });
         }, 300);
       } else {
-        loadMatrixData(false);
+        matrixReadyPromise = Promise.resolve(loadMatrixData(false)).catch(() => { });
       }
 
+      let postEntryRan = false;
+      const runDeferredPostEntry = () => {
+        if (postEntryRan) return;
+        postEntryRan = true;
+        if (!currentUser) return;
+        try { updatePersonalWorkspaceReminders(); } catch (e) { console.warn("Lỗi updatePersonalWorkspaceReminders:", e); }
+        try { checkPersonalWorkspaceRemindersOnLogin(); } catch (e) { console.warn("Lỗi checkPersonalWorkspaceRemindersOnLogin:", e); }
+        try {
+          if (typeof fetchPersonalTasksFromSupabase === 'function') fetchPersonalTasksFromSupabase(false);
+        } catch (e) { console.warn("Lỗi fetchPersonalTasksFromSupabase on login:", e); }
+        try { updatePersonalWorkspaceEntryCardStats(); } catch (e) { console.warn("Lỗi updatePersonalWorkspaceEntryCardStats:", e); }
+        try { showPersonalTaskReminderOnLogin(); } catch (e) { console.warn("Lỗi showPersonalTaskReminderOnLogin:", e); }
+        try { preloadAdminDataInBackground(); } catch (e) { }
+        try { setupDailyReportsRealtimeListener(); } catch (e) { }
+      };
+
+      if (!deferPostEntry) {
+        runDeferredPostEntry();
+      }
+      return { matrixReadyPromise, runDeferredPostEntry };
     }
 
     function setupRoleControls() {
