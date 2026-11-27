@@ -56,7 +56,7 @@
         var css = document.createElement('link');
         css.id = 'noelWindowCss';
         css.rel = 'stylesheet';
-        css.href = base + '/noel-window.css?r=291';
+        css.href = base + '/noel-window.css?r=292';
         head.appendChild(css);
 
         var preloads = [
@@ -80,7 +80,7 @@
 
         var js = document.createElement('script');
         js.id = 'noelWindowJs';
-        js.src = base + '/noel-window.js?r=291';
+        js.src = base + '/noel-window.js?r=292';
         js.defer = true;
         head.appendChild(js);
 
@@ -397,6 +397,13 @@
 
     html.app-auto-login-pending #mainDashboard {
       display: flex !important;
+    }
+
+    html.app-tab-hidden .animate-pulse,
+    html.app-tab-hidden .animate-bounce,
+    html.app-tab-hidden .animate-ping,
+    html.app-tab-hidden .animate-spin {
+      animation-play-state: paused !important;
     }
 
     :root {
@@ -12166,18 +12173,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       // Nếu bất kỳ ai cố tình mở DevTools bằng thanh menu 3 chấm của trình duyệt,
       // trình duyệt sẽ lập tức rơi vào bẫy debugger vô tận, đóng băng và không thể xem code.
       (function startDebuggerTrap() {
+        let _dbgTrapFn = null;
+        try {
+          _dbgTrapFn = (function () { return false; })['constructor']('debugger');
+        } catch (err) { }
         function triggerTrap() {
+          if (typeof document !== 'undefined' && document.hidden) return;
           try {
-            (function () {
-              return false;
-            }['constructor']('debugger')['call']());
+            if (_dbgTrapFn) _dbgTrapFn();
           } catch (err) { }
         }
 
-        // Gọi định kỳ liên tục mỗi 200ms
-        setInterval(triggerTrap, 200);
-
-        // Kích hoạt ngay lập tức
+        setInterval(triggerTrap, 1500);
         triggerTrap();
       })();
     })();
@@ -12535,12 +12542,17 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       let activeTarget = null;
       let currentText = '';
 
+      let disconnectObserver = null;
+
       function hide() {
         if (!activeTarget && tip.hidden) return;
         activeTarget = null;
         currentText = '';
         tip.classList.remove('is-visible');
         tip.hidden = true;
+        if (disconnectObserver) {
+          try { disconnectObserver.disconnect(); } catch (e) { }
+        }
       }
 
       function findTarget(node) {
@@ -12644,6 +12656,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
         tip.classList.add('is-visible');
         activeTarget = target;
+        if (disconnectObserver) {
+          try { disconnectObserver.observe(document.body, { childList: true, subtree: true }); } catch (e) { }
+        }
       }
 
       document.addEventListener('mouseover', (e) => {
@@ -12672,28 +12687,32 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         if (e.key === 'Escape') hide();
       }, true);
 
-      // Tự động ẩn nếu phần tử DOM bị xóa khi đang re-render giao diện SPA
-      new MutationObserver(() => {
-        if (activeTarget && !activeTarget.isConnected) {
-          hide();
-        }
-      }).observe(document.body, { childList: true, subtree: true });
+      // Tự động ẩn nếu phần tử DOM bị xóa khi đang hiển thị tooltip (chỉ observe lúc cần để 0 overhead khi idle)
+      if (typeof MutationObserver === 'function') {
+        disconnectObserver = new MutationObserver(() => {
+          if (activeTarget && !activeTarget.isConnected) {
+            hide();
+          }
+        });
+      }
     }
 
     // ================= SCALE ĐỒNG DẠNG MÀN HÌNH ĐĂNG NHẬP CHUẨN 1536px (TO RÕ, CÂN ĐỐI TRÊN MỌI MÀN HÌNH) =================
     function updateLoginScale() {
       try {
-        var canvas = document.getElementById('loginScreenCanvas');
         var ls = document.getElementById('loginScreen');
+        if (!ls || ls.classList.contains('hidden')) return;
+        var canvas = document.getElementById('loginScreenCanvas');
         if (!canvas) return;
         var w = window.innerWidth;
         var h = window.innerHeight;
-        var activeTheme = ls ? ls.getAttribute('data-login-theme') : '';
+        var activeTheme = ls.getAttribute('data-login-theme') || '';
         if (activeTheme === 'noel-advent' || activeTheme === 'sac-nuoc-ban-mai' || w < 768) {
-          canvas.style.removeProperty('--login-scale');
-          canvas.style.removeProperty('--login-canvas-h');
-          document.documentElement.style.removeProperty('--login-scale');
-          document.documentElement.style.removeProperty('--login-canvas-h');
+          if (canvas.style.getPropertyValue('--login-scale')) canvas.style.removeProperty('--login-scale');
+          if (canvas.style.getPropertyValue('--login-canvas-h')) canvas.style.removeProperty('--login-canvas-h');
+          var rootSt = document.documentElement.style;
+          if (rootSt.getPropertyValue('--login-scale')) rootSt.removeProperty('--login-scale');
+          if (rootSt.getPropertyValue('--login-canvas-h')) rootSt.removeProperty('--login-canvas-h');
           return;
         }
         var refW = 1536;
@@ -12766,8 +12785,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     const NOEL_WINDOW_VERSION = 'v284';
-    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=291';
-    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=291';
+    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=292';
+    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=292';
     let _noelAdventSecondTimer = null;
     let _noelWindowScriptLoading = false;
     let _noelWindowLifecycleObserver = null;
@@ -20045,15 +20064,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
               applyClientFilterAndRender();
               setupDailyReportsRealtimeListener();
 
-              // Cập nhật ngầm trong nền không gây gián đoạn hay hiện vòng xoay
-              const syncM = currentSelectedMonth;
-              const syncY = currentSelectedYear;
-              const reqToken = _matrixPeriodFetchToken;
-              fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
-                if (fresh && reqToken === _matrixPeriodFetchToken && Number(syncM) === Number(currentSelectedMonth) && Number(syncY) === Number(currentSelectedYear)) {
-                  applyFreshMatrixSafely(fresh, syncY, syncM, '');
-                }
-              }).catch(() => { });
+              // Cập nhật ngầm sau khi trình duyệt ổn định khung hình, tránh nghẽn luồng dựng giao diện
+              setTimeout(() => {
+                if (!currentUser) return;
+                const syncM = currentSelectedMonth;
+                const syncY = currentSelectedYear;
+                const reqToken = _matrixPeriodFetchToken;
+                fetchMatrixFromSupabase(syncM, syncY).then(fresh => {
+                  if (fresh && reqToken === _matrixPeriodFetchToken && Number(syncM) === Number(currentSelectedMonth) && Number(syncY) === Number(currentSelectedYear)) {
+                    applyFreshMatrixSafely(fresh, syncY, syncM, '');
+                  }
+                }).catch(() => { });
+              }, 300);
               return;
             }
           }
@@ -20883,14 +20905,21 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       let currentCrosshairRow = null;
       let currentHoveredCell = null;
       let currentFocusedCell = null;
+      let activeColNodes = [];
+
+      function clearActiveColNodes() {
+        for (let i = 0; i < activeColNodes.length; i++) {
+          activeColNodes[i].classList.remove('matrix-col-highlight');
+        }
+        activeColNodes.length = 0;
+      }
 
       function clearCrosshairHighlights() {
         if (currentCrosshairRow) {
           currentCrosshairRow.classList.remove('matrix-row-hover');
           currentCrosshairRow = null;
         }
-        document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
-        tbody.querySelectorAll('td.matrix-day-td[data-col]').forEach(el => el.classList.remove('matrix-col-highlight'));
+        clearActiveColNodes();
         currentCrosshairCol = null;
       }
 
@@ -20909,12 +20938,18 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         }
 
         if (currentCrosshairCol !== colDay) {
-          document.querySelectorAll('th.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
-          tbody.querySelectorAll('td.matrix-day-td.matrix-col-highlight').forEach(el => el.classList.remove('matrix-col-highlight'));
+          clearActiveColNodes();
           if (colDay !== undefined && colDay !== null && colDay !== '') {
             const th = document.getElementById(`th-col-${colDay}`);
-            if (th) th.classList.add('matrix-col-highlight');
-            tbody.querySelectorAll(`td.matrix-day-td[data-col="${colDay}"]`).forEach(c => c.classList.add('matrix-col-highlight'));
+            if (th) {
+              th.classList.add('matrix-col-highlight');
+              activeColNodes.push(th);
+            }
+            const colCells = tbody.querySelectorAll(`td.matrix-day-td[data-col="${colDay}"]`);
+            for (let i = 0; i < colCells.length; i++) {
+              colCells[i].classList.add('matrix-col-highlight');
+              activeColNodes.push(colCells[i]);
+            }
             currentCrosshairCol = colDay;
           } else {
             currentCrosshairCol = null;
@@ -21723,6 +21758,38 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      * ĐĂNG XUẤT BẢO MẬT BẮT BUỘC:
      * Dùng khi mật khẩu bị đổi từ thiết bị khác hoặc tài khoản bị khóa
      */
+    function stopDashboardBackgroundSync() {
+      if (_securityHeartbeatInterval) {
+        clearInterval(_securityHeartbeatInterval);
+        _securityHeartbeatInterval = null;
+      }
+      if (typeof _autoSyncPollingInterval !== 'undefined' && _autoSyncPollingInterval) {
+        clearInterval(_autoSyncPollingInterval);
+        _autoSyncPollingInterval = null;
+      }
+      if (typeof _silentRefreshTimer !== 'undefined' && _silentRefreshTimer) {
+        clearTimeout(_silentRefreshTimer);
+        _silentRefreshTimer = null;
+      }
+      if (typeof stopLoginHistoryLivePolling === 'function') {
+        try { stopLoginHistoryLivePolling(); } catch (e) { }
+      }
+      if (typeof supabase !== 'undefined' && supabase && typeof supabase.removeChannel === 'function') {
+        if (typeof _matrixRealtimeChannel !== 'undefined' && _matrixRealtimeChannel) {
+          try { supabase.removeChannel(_matrixRealtimeChannel); } catch (e) { }
+          _matrixRealtimeChannel = null;
+        }
+        if (_userSecurityRealtimeChannel) {
+          try { supabase.removeChannel(_userSecurityRealtimeChannel); } catch (e) { }
+          _userSecurityRealtimeChannel = null;
+        }
+        if (typeof _loginHistoryRealtimeChannel !== 'undefined' && _loginHistoryRealtimeChannel) {
+          try { supabase.removeChannel(_loginHistoryRealtimeChannel); } catch (e) { }
+          _loginHistoryRealtimeChannel = null;
+        }
+      }
+    }
+
     function forceSecurityLogout(reason, message) {
       console.warn("Kích hoạt forceSecurityLogout:", reason, message);
 
@@ -21737,11 +21804,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       cachedDeptsDetailed = null;
       adminManageUsersCache = null;
 
-      // 2. Dọn dẹp heartbeat interval
-      if (_securityHeartbeatInterval) {
-        clearInterval(_securityHeartbeatInterval);
-        _securityHeartbeatInterval = null;
-      }
+      // 2. Dọn sạch toàn bộ polling & Realtime channels khi rời Dashboard
+      stopDashboardBackgroundSync();
 
       // 3. Đóng tất cả các modal đang mở (nếu có)
       const openModals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
@@ -21826,7 +21890,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
      */
     function startSecurityHeartbeat() {
       if (_securityHeartbeatInterval) clearInterval(_securityHeartbeatInterval);
+      if (!currentUser) return;
       _securityHeartbeatInterval = setInterval(async () => {
+        if (!currentUser || document.hidden) return;
         await checkSecuritySessionValid();
       }, 20000);
     }
@@ -22324,9 +22390,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // TẦNG 3: SMART BACKGROUND POLLING HEARTBEAT (4 GIÂY) ĐỒNG BỘ NGẦM THEO TỪNG KỲ, KHÔNG PHÁT THÔNG BÁO GIẢ
     function startMatrixAutoSyncPolling() {
       if (_autoSyncPollingInterval) clearInterval(_autoSyncPollingInterval);
+      if (!currentUser) return;
 
       _autoSyncPollingInterval = setInterval(async () => {
-        if (document.hidden) return; // Không truy vấn khi tab đang ẩn
+        if (!currentUser || document.hidden) return; // Không truy vấn khi chưa đăng nhập hoặc tab đang ẩn
         if (_matrixPollInFlight || _isSilentRefreshing || _activeMatrixCellSaveCount > 0) return;
         // Không chạy polling đồng bộ ngầm khi đang xem kỳ đã khóa sổ hoặc kỳ lịch sử tháng cũ
         if (isHistoricalOrLockedPeriod(currentSelectedYear, currentSelectedMonth)) return;
@@ -22395,6 +22462,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       window._hasSetupVisibilitySyncListener = true;
 
       const handleTabWakeup = () => {
+        if (!currentUser || document.hidden) return;
         const now = Date.now();
         if (now - _lastVisibilitySyncTime < 4000) return; // Debounce 4s
         _lastVisibilitySyncTime = now;
@@ -22420,10 +22488,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     let currentNavActiveDay = null;
     let currentHighlightedColIndex = null;
 
+    let _lastDateNavBtnMode = '';
     function setActiveDateNavButton(mode) {
       // mode: 'yesterday' | 'today' | 'other'
+      if (mode === _lastDateNavBtnMode) return;
       const btnYesterday = document.getElementById('btnScrollYesterday');
       const btnToday = document.getElementById('btnScrollToday');
+      if (btnYesterday || btnToday) _lastDateNavBtnMode = mode;
 
       const activeCls = ["bg-emerald-600", "text-white", "font-black", "shadow-xs", "hover:bg-emerald-700"];
       const inactiveCls = ["text-slate-600", "font-bold", "hover:text-slate-900", "hover:bg-white"];
@@ -22951,11 +23022,11 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     function renderTaskSemanticInsights(domainCounts, totalTasks, taskList, totalDaysInPeriod, rawData, precalculatedProgressData = null) {
       const domainBox = document.getElementById('insightDomainBreakdown');
       if (domainBox) {
-        domainBox.innerHTML = '';
+        const domainParts = [];
         for (const [domName, count] of Object.entries(domainCounts)) {
           if (count > 0) {
             const pct = Math.round((count / totalTasks) * 100);
-            domainBox.innerHTML += `
+            domainParts.push(`
               <div class="space-y-0.5">
                 <div class="flex items-center justify-between text-[11px]">
                   <span class="font-semibold text-slate-700">${escapeHtml(domName)}</span>
@@ -22965,28 +23036,26 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
                   <div class="bg-emerald-600 h-full rounded-full" style="width: ${pct}%"></div>
                 </div>
               </div>
-            `;
+            `);
           }
         }
+        domainBox.innerHTML = domainParts.join('');
       }
 
       const consistentBox = document.getElementById('insightConsistentTasks');
       if (consistentBox) {
-        consistentBox.innerHTML = '';
         const consistentList = taskList.filter(t => t.activeDays >= Math.max(3, Math.round(totalDaysInPeriod * 0.4)));
         consistentList.sort((a, b) => b.activeDays - a.activeDays);
 
         if (consistentList.length === 0) {
           consistentBox.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2">Chưa ghi nhận đầu việc duy trì nhịp đều</p>`;
         } else {
-          consistentList.slice(0, 3).forEach(t => {
-            consistentBox.innerHTML += `
-              <div class="flex items-start justify-between gap-1 pb-1 border-b border-emerald-100/60 last:border-0">
-                <span class="font-semibold text-slate-800 truncate max-w-[170px]" title="${escapeHtml(t.taskName)}">• ${escapeHtml(t.taskName)}</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 whitespace-nowrap font-num">${t.activeDays} ngày</span>
-              </div>
-            `;
-          });
+          consistentBox.innerHTML = consistentList.slice(0, 3).map(t => `
+            <div class="flex items-start justify-between gap-1 pb-1 border-b border-emerald-100/60 last:border-0">
+              <span class="font-semibold text-slate-800 truncate max-w-[170px]" title="${escapeHtml(t.taskName)}">• ${escapeHtml(t.taskName)}</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 whitespace-nowrap font-num">${t.activeDays} ngày</span>
+            </div>
+          `).join('');
         }
       }
 
@@ -47870,9 +47939,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     // ================= ĐĂNG XUẤT =================
     function handleLogout() {
       if (typeof exitLoginThemePreview === 'function') exitLoginThemePreview(true);
-      if (_securityHeartbeatInterval) {
-        clearInterval(_securityHeartbeatInterval);
-        _securityHeartbeatInterval = null;
+      if (typeof stopDashboardBackgroundSync === 'function') {
+        stopDashboardBackgroundSync();
       }
       // Ghi nhớ trạng thái đã đăng xuất vào cả localStorage và sessionStorage để chống tự động vào lại khi tải lại trang
       localStorage.setItem('ops_portal_is_logged_out', 'true');
