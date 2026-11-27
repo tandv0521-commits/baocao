@@ -24,6 +24,77 @@
     } catch (e) { }
   </script>
   <script>
+    // NẠP TỨC THÌ CHỦ ĐIỂM GIÁNG SINH TỪ T=0MS (CHỈ KHI ĐÃ CHỌN noel-advent & CHƯA AUTO-LOGIN)
+    // Giữ 0 KiB overhead trên giao diện mặc định 365 ngày Sắc Nước Ban Mai & Tết 2027.
+    (function () {
+      try {
+        if (document.documentElement.classList.contains('app-auto-login-pending')) return;
+        var raw = localStorage.getItem('ops_system_login_theme_v1');
+        if (!raw) return;
+        var themeId = raw;
+        if (raw.charAt(0) === '{') {
+          var parsed = JSON.parse(raw);
+          themeId = parsed && parsed.themeId;
+        }
+        if (themeId !== 'noel-advent') return;
+
+        var scene = '';
+        try { scene = sessionStorage.getItem('noel_window_scene_mode_v1') || ''; } catch (e) { }
+        if (scene !== 'day' && scene !== 'night') {
+          var vnNow = new Date(Date.now() + 7 * 3600000);
+          var mins = vnNow.getUTCHours() * 60 + vnNow.getUTCMinutes();
+          scene = (mins >= 360 && mins < 1050) ? 'day' : 'night';
+        }
+        document.documentElement.classList.add('noel-boot-pending');
+        document.documentElement.setAttribute('data-noel-boot-scene', scene);
+
+        var head = document.head || document.getElementsByTagName('head')[0];
+        if (!head) return;
+        var base = 'assets/noel-window/v284';
+        var isMob = (window.innerWidth || 1280) <= 767;
+
+        var css = document.createElement('link');
+        css.id = 'noelWindowCss';
+        css.rel = 'stylesheet';
+        css.href = base + '/noel-window.css?r=289';
+        head.appendChild(css);
+
+        var preloads = [
+          { as: 'image', href: base + '/img/garden-' + scene + '-' + (isMob ? '768' : '1280') + '.webp', fp: 'high' },
+          { as: 'image', href: base + '/img/window-frame-' + (isMob ? 'mobile' : 'desktop') + '.svg', fp: 'high' },
+          { as: 'image', href: base + '/img/window-visitors-rig.png' },
+          { as: 'image', href: base + '/img/kitten-atlas.webp' },
+          { as: 'font', href: base + '/font/cormorant-garamond-600-vietnamese.woff2', type: 'font/woff2', cors: true }
+        ];
+        for (var i = 0; i < preloads.length; i++) {
+          var spec = preloads[i];
+          var pl = document.createElement('link');
+          pl.rel = 'preload';
+          pl.as = spec.as;
+          pl.href = spec.href;
+          if (spec.fp) pl.setAttribute('fetchpriority', spec.fp);
+          if (spec.type) pl.type = spec.type;
+          if (spec.cors) pl.crossOrigin = 'anonymous';
+          head.appendChild(pl);
+        }
+
+        var js = document.createElement('script');
+        js.id = 'noelWindowJs';
+        js.src = base + '/noel-window.js?r=289';
+        js.defer = true;
+        head.appendChild(js);
+
+        setTimeout(function () {
+          if (!document.documentElement.classList.contains('noel-boot-pending')) return;
+          document.documentElement.classList.remove('noel-boot-pending');
+          document.documentElement.removeAttribute('data-noel-boot-scene');
+          var ls = document.getElementById('loginScreen');
+          if (ls) ls.setAttribute('data-noel-ready', '1');
+        }, 2800);
+      } catch (e) { }
+    })();
+  </script>
+  <script>
     // Khóa tuyệt đối menu ngữ cảnh ngay từ giai đoạn nạp trang đầu tiên
     window.addEventListener('contextmenu', function (e) { e.preventDefault(); e.stopPropagation(); return false; }, true);
     // Chống biểu tượng con trỏ autoscroll khi nhấn chuột giữa
@@ -91,9 +162,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap"
-    rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;1,600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Roboto+Condensed:wght@500;600;700;800&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
+    rel="stylesheet" media="print" onload="this.media='all'">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;1,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Roboto+Condensed:wght@500;600;700;800&family=Roboto:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <!-- Thư viện Supabase JS Client độc lập -->
@@ -3735,7 +3806,45 @@
     }
 
     #loginScreen[data-login-theme="noel-advent"]:not(.hidden) {
-      background: #1B314E;
+      background: linear-gradient(180deg, #10233E 0%, #1B3559 100%);
+    }
+
+    html[data-noel-boot-scene="day"] #loginScreen[data-login-theme="noel-advent"]:not(.hidden) {
+      background: linear-gradient(180deg, #88B9EF 0%, #D9ECFA 58%, #EEF6FC 100%);
+    }
+
+    html[data-noel-boot-scene="night"] #loginScreen[data-login-theme="noel-advent"]:not(.hidden) {
+      background: linear-gradient(180deg, #0D1E38 0%, #152D52 55%, #1A2F4D 100%);
+    }
+
+    html.noel-boot-pending #loginScreen[data-login-theme="noel-advent"] #loginScreenCanvas,
+    #loginScreen[data-login-theme="noel-advent"]:not([data-noel-ready="1"]) #loginScreenCanvas {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    @keyframes noelBootRingSpin {
+      0% { opacity: 0; transform: translate(-50%, -50%) rotate(0deg); }
+      18% { opacity: 0.72; }
+      100% { opacity: 0.72; transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    #loginScreen[data-login-theme="noel-advent"]:not(.hidden):not([data-noel-ready="1"])::after {
+      content: '';
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid rgba(244, 220, 172, 0.22);
+      border-top-color: #F4DCAC;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 95;
+      transform: translate(-50%, -50%);
+      animation: noelBootRingSpin 900ms cubic-bezier(0.22, 1, 0.36, 1) 280ms infinite;
     }
 
     #loginScreen[data-login-theme="noel-advent"] #loginBgImage,
@@ -12603,8 +12712,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     const NOEL_WINDOW_VERSION = 'v284';
-    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=286';
-    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=286';
+    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=289';
+    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=289';
     let _noelAdventSecondTimer = null;
     let _noelWindowScriptLoading = false;
     let _noelWindowLifecycleObserver = null;
@@ -12691,7 +12800,13 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       }
       if (_noelWindowScriptLoading || !doc.head) return;
       const existingScript = doc.getElementById('noelWindowJs');
-      if (existingScript) return;
+      if (existingScript) {
+        if (!existingScript._noelHooked) {
+          existingScript._noelHooked = true;
+          existingScript.addEventListener('load', () => syncNoelWindowThemeLifecycle(doc), { once: true });
+        }
+        return;
+      }
       _noelWindowScriptLoading = true;
       const script = doc.createElement('script');
       script.id = 'noelWindowJs';
@@ -13067,7 +13182,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const instDesc = doc.getElementById('installBtnDesc');
       if (instDesc) {
         instDesc.textContent = id === 'noel-advent'
-          ? 'Tự động cài đặt từ nguồn tin • Mượt mà – An toàn'
+          ? 'Cài đặt 1 chạm • Mượt mà – An toàn'
           : 'Tự động cài đặt lên máy • Mượt mà 1 chạm';
       }
       const isSnbm = id === 'sac-nuoc-ban-mai';
@@ -17164,9 +17279,10 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       btn.setAttribute('data-login-state', nextState);
 
       const _lsBtn = typeof document !== 'undefined' ? document.getElementById('loginScreen') : null;
-      const _defaultIdleLabel = (_lsBtn && _lsBtn.getAttribute('data-login-theme') === 'sac-nuoc-ban-mai')
+      const _btnTheme = _lsBtn ? _lsBtn.getAttribute('data-login-theme') : '';
+      const _defaultIdleLabel = _btnTheme === 'sac-nuoc-ban-mai'
         ? 'Đăng nhập'
-        : 'Đăng Nhập Vào Hệ Thống';
+        : (_btnTheme === 'noel-advent' ? 'Đăng nhập hệ thống' : 'Đăng Nhập Vào Hệ Thống');
       if (nextState === 'idle') {
         btn.disabled = false;
         btn.removeAttribute('data-spinner');
@@ -49201,8 +49317,8 @@ CREATE POLICY "Allow anon all" ON public.login_history FOR ALL TO anon USING (tr
         if (iconBox) iconBox.className = 'w-7 h-7 rounded-xl bg-emerald-500/30 border border-emerald-300/50 flex items-center justify-center text-emerald-300 shrink-0';
       } else {
         const _lsT = (document.getElementById('loginScreen') && document.getElementById('loginScreen').getAttribute('data-login-theme')) || '';
-        if (title) title.innerText = _lsT === 'sac-nuoc-ban-mai' ? 'Cài đặt ứng dụng' : 'Cài Đặt Ứng Dụng (App)';
-        if (desc) desc.innerText = _lsT === 'noel-advent' ? 'Tự động cài đặt từ nguồn tin • Mượt mà – An toàn' : 'Tự động cài đặt lên máy • Mượt mà 1 chạm';
+        if (title) title.innerText = (_lsT === 'sac-nuoc-ban-mai' || _lsT === 'noel-advent') ? 'Cài đặt ứng dụng' : 'Cài Đặt Ứng Dụng (App)';
+        if (desc) desc.innerText = _lsT === 'noel-advent' ? 'Cài đặt 1 chạm • Mượt mà – An toàn' : 'Tự động cài đặt lên máy • Mượt mà 1 chạm';
         if (badge) {
           badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-400/25 text-emerald-100 border border-emerald-300/40 shrink-0 group-hover:bg-emerald-400/35 transition-colors';
           badge.innerHTML = '<i class="fa-solid fa-download text-[9px]"></i> Cài đặt';
