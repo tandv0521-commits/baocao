@@ -712,17 +712,47 @@ html.app-auto-login-pending #loginScreen[data-login-theme="noel-advent"],
   border-radius: 10px !important;
   border: 1.5px solid rgba(244, 220, 172, 0.42) !important;
   background: #FFFDF9 !important;
+  background-color: #FFFDF9 !important;
   color: #241416 !important;
+  -webkit-text-fill-color: #241416 !important;
+  caret-color: #7D1E26 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  color-scheme: light !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  opacity: 1 !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   box-shadow: inset 0 1px 2px rgba(48, 16, 20, 0.08) !important;
   transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease !important;
 }
 
+#loginScreen[data-login-theme="noel-advent"] #loginPasswordInput[type="password"] {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  letter-spacing: 0.16em !important;
+  line-height: normal !important;
+  -webkit-text-security: disc !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+#loginScreen[data-login-theme="noel-advent"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill,
+#loginScreen[data-login-theme="noel-advent"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:hover,
+#loginScreen[data-login-theme="noel-advent"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:focus,
+#loginScreen[data-login-theme="noel-advent"] :is(#loginUsernameInput, #loginPasswordInput):autofill {
+  -webkit-text-fill-color: #241416 !important;
+  caret-color: #7D1E26 !important;
+  box-shadow: 0 0 0 1000px #FFFDF9 inset !important;
+}
+
 #loginScreen[data-login-theme="noel-advent"] #loginUsernameInput::placeholder,
 #loginScreen[data-login-theme="noel-advent"] #loginPasswordInput::placeholder {
   color: #8C7572 !important;
+  -webkit-text-fill-color: #8C7572 !important;
   opacity: 1 !important;
+  letter-spacing: normal !important;
+  font-family: var(--nw-sans) !important;
 }
 
 #loginScreen[data-login-theme="noel-advent"] #loginUsernameInput:focus,
@@ -953,7 +983,7 @@ html.app-auto-login-pending #loginScreen[data-login-theme="noel-advent"],
     border-radius: 0 !important;
     background: linear-gradient(135deg, #741B23 0%, #5B131A 100%) !important;
     color: #FFF8EE !important;
-    padding: 8px 12px 7px !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 7px !important;
   }
 
   #loginScreen[data-login-theme="noel-advent"] .nw-brand-row {
@@ -1085,7 +1115,7 @@ html.app-auto-login-pending #loginScreen[data-login-theme="noel-advent"],
     margin: auto 0 0 !important;
     width: 100% !important;
     min-height: 0 !important;
-    padding: 8px 12px !important;
+    padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
     white-space: normal !important;
     font-size: 10.5px !important;
     line-height: 1.35 !important;

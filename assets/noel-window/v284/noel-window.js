@@ -1724,6 +1724,9 @@
           document.documentElement.removeAttribute('data-noel-boot-scene');
         }
         loginScreenEl.setAttribute('data-noel-ready', '1');
+        if (typeof window.syncLoginPasswordDotsPaint === 'function') {
+          window.syncLoginPasswordDotsPaint();
+        }
         startOrPaint();
       });
     };
