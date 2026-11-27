@@ -1,6 +1,6 @@
 // Service Worker for Báo Cáo Ban DVKH - Nhựa Tiền Phong PWA
-const CACHE_NAME = 'baocao-dvkh-pwa-v290';
-const NOEL_RUNTIME_CACHE = 'baocao-dvkh-noel-v290';
+const CACHE_NAME = 'baocao-dvkh-pwa-v291';
+const NOEL_RUNTIME_CACHE = 'baocao-dvkh-noel-v291';
 const NOEL_ASSET_PREFIX = '/assets/noel-window/v284/';
 
 // Precache ONLY core app shell & default 365-day theme (Sắc Nước Ban Mai).

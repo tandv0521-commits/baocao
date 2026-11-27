@@ -56,7 +56,7 @@
         var css = document.createElement('link');
         css.id = 'noelWindowCss';
         css.rel = 'stylesheet';
-        css.href = base + '/noel-window.css?r=290';
+        css.href = base + '/noel-window.css?r=291';
         head.appendChild(css);
 
         var preloads = [
@@ -80,7 +80,7 @@
 
         var js = document.createElement('script');
         js.id = 'noelWindowJs';
-        js.src = base + '/noel-window.js?r=290';
+        js.src = base + '/noel-window.js?r=291';
         js.defer = true;
         head.appendChild(js);
 
@@ -425,7 +425,6 @@
       display: flex;
       flex-direction: column;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
       position: relative;
       z-index: 10;
     }
@@ -3447,7 +3446,10 @@
     #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput) {
       min-height: 44px;
       background: #FFFFFF !important;
+      background-color: #FFFFFF !important;
       color: #172C25 !important;
+      -webkit-text-fill-color: #172C25 !important;
+      caret-color: #006A55 !important;
       border: 1px solid var(--tet-field-line) !important;
       border-radius: 12px;
       box-shadow: none;
@@ -3456,12 +3458,16 @@
 
     #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput)::placeholder {
       color: #48635C !important;
+      -webkit-text-fill-color: #48635C !important;
       opacity: 1 !important;
     }
 
-    #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill {
+    #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill,
+    #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:hover,
+    #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:focus,
+    #loginScreen[data-login-theme="tet-2027-c"] :is(#loginUsernameInput, #loginPasswordInput):autofill {
       -webkit-text-fill-color: #172C25 !important;
-      caret-color: #172C25;
+      caret-color: #006A55 !important;
       box-shadow: inset 0 0 0 1000px #FFFFFF !important;
     }
 
@@ -4237,7 +4243,10 @@
       border-radius: 8px !important;
       border: 1.5px solid var(--snbm-input-border) !important;
       background: #FFFFFF !important;
-      color: var(--snbm-ink-deep) !important;
+      background-color: #FFFFFF !important;
+      color: #0C2E2B !important;
+      -webkit-text-fill-color: #0C2E2B !important;
+      caret-color: #09684C !important;
       font-family: 'Be Vietnam Pro', system-ui, sans-serif !important;
       font-size: 14px !important;
       font-weight: 500 !important;
@@ -4252,7 +4261,17 @@
     #loginScreen[data-login-theme="sac-nuoc-ban-mai"] #loginUsernameInput::placeholder,
     #loginScreen[data-login-theme="sac-nuoc-ban-mai"] #loginPasswordInput::placeholder {
       color: #506C67 !important;
-      opacity: 1;
+      -webkit-text-fill-color: #506C67 !important;
+      opacity: 1 !important;
+    }
+
+    #loginScreen[data-login-theme="sac-nuoc-ban-mai"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill,
+    #loginScreen[data-login-theme="sac-nuoc-ban-mai"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:hover,
+    #loginScreen[data-login-theme="sac-nuoc-ban-mai"] :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill:focus,
+    #loginScreen[data-login-theme="sac-nuoc-ban-mai"] :is(#loginUsernameInput, #loginPasswordInput):autofill {
+      -webkit-text-fill-color: #0C2E2B !important;
+      caret-color: #09684C !important;
+      box-shadow: 0 0 0 1000px #FFFFFF inset !important;
     }
 
     #loginScreen[data-login-theme="sac-nuoc-ban-mai"] #loginUsernameInput:hover,
@@ -4626,6 +4645,41 @@
     #loginScreen .uv-input-box {
       position: relative;
       border-radius: 12px;
+    }
+
+    /* Sửa triệt để lỗi iOS Safari/PWA không hiện dấu chấm tròn mật khẩu (select-none / font subset / dark mode) trên cả 3 giao diện */
+    @keyframes loginAutofillSync {
+      from { opacity: 0.999; }
+      to { opacity: 1; }
+    }
+
+    #loginScreen #loginUsernameInput,
+    #loginScreen #loginPasswordInput {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      color-scheme: light !important;
+      opacity: 1 !important;
+    }
+
+    #loginScreen #loginPasswordInput[type="password"] {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+      letter-spacing: 0.16em !important;
+      line-height: normal !important;
+      -webkit-text-security: disc !important;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+
+    #loginScreen #loginPasswordInput[type="password"]::placeholder {
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif !important;
+      letter-spacing: normal !important;
+    }
+
+    #loginScreen :is(#loginUsernameInput, #loginPasswordInput):-webkit-autofill {
+      animation-name: loginAutofillSync;
+      animation-duration: 0.001s;
     }
 
     #loginScreen .uv-icon-pill {
@@ -12712,8 +12766,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     const NOEL_WINDOW_VERSION = 'v284';
-    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=290';
-    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=290';
+    const NOEL_WINDOW_CSS_HREF = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.css?r=291';
+    const NOEL_WINDOW_JS_SRC = 'assets/noel-window/' + NOEL_WINDOW_VERSION + '/noel-window.js?r=291';
     let _noelAdventSecondTimer = null;
     let _noelWindowScriptLoading = false;
     let _noelWindowLifecycleObserver = null;
@@ -13194,7 +13248,8 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
       const uIn = doc.getElementById('loginUsernameInput');
       const pIn = doc.getElementById('loginPasswordInput');
       if (uIn) uIn.placeholder = isSnbm ? '' : 'Nhập tên đăng nhập';
-      if (pIn) pIn.placeholder = isSnbm ? '' : 'Nhập mật khẩu...';
+      if (pIn) pIn.placeholder = 'Nhập mật khẩu...';
+      if (typeof syncLoginPasswordDotsPaint === 'function') syncLoginPasswordDotsPaint();
       const formTitleEl = doc.querySelector('#loginScreen .tet-form-title');
       if (formTitleEl) formTitleEl.textContent = isSnbm ? 'Đăng nhập' : (isNoel ? 'Đăng nhập hệ thống' : 'ĐĂNG NHẬP HỆ THỐNG');
       const passLblEl = doc.getElementById('loginPasswordLabelText');
@@ -13817,6 +13872,41 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
     }
 
     // ================= XỬ LÝ GHI NHỚ MẬT KHẨU TỰ ĐỘNG =================
+    function syncLoginPasswordDotsPaint() {
+      try {
+        const ls = document.getElementById('loginScreen');
+        const pInput = document.getElementById('loginPasswordInput');
+        if (!pInput || !ls || ls.classList.contains('hidden')) return;
+        if (pInput.type === 'password') {
+          pInput.style.webkitTextSecurity = 'disc';
+          if (pInput.value && document.activeElement !== pInput) {
+            const v = pInput.value;
+            pInput.value = '';
+            pInput.value = v;
+            void pInput.offsetHeight;
+          }
+        } else {
+          pInput.style.webkitTextSecurity = 'none';
+        }
+      } catch (e) { }
+    }
+    if (typeof window !== 'undefined') {
+      window.syncLoginPasswordDotsPaint = syncLoginPasswordDotsPaint;
+      window.addEventListener('pageshow', () => {
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(syncLoginPasswordDotsPaint);
+      });
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(syncLoginPasswordDotsPaint);
+        }
+      });
+      document.addEventListener('animationstart', (e) => {
+        if (e && e.animationName === 'loginAutofillSync') syncLoginPasswordDotsPaint();
+      }, true);
+    }
+
     function checkAndFillRememberedPassword() {
       try {
         const rememberedRaw = localStorage.getItem('ops_portal_remembered_auth_v49');
@@ -13833,6 +13923,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
           const pInput = document.getElementById('loginPasswordInput');
           if (pInput && authData.password) {
             pInput.value = authData.password;
+            syncLoginPasswordDotsPaint();
+            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(syncLoginPasswordDotsPaint);
+            setTimeout(syncLoginPasswordDotsPaint, 120);
           }
         }
       } catch (e) {
@@ -15199,6 +15292,7 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
         pInput.type = 'password';
         if (icon) icon.className = "fa-regular fa-eye text-sm";
         if (toggleBtn) toggleBtn.setAttribute('aria-label', 'Hiện mật khẩu');
+        if (typeof syncLoginPasswordDotsPaint === 'function') syncLoginPasswordDotsPaint();
       }
     }
 
@@ -47813,6 +47907,9 @@ CREATE POLICY "Cho phep tat ca thao tac leadership_reports" ON public.leadership
 
       // Điền lại tài khoản / mật khẩu đã lưu vào form đăng nhập để người dùng sẵn sàng bấm đăng nhập khi cần
       checkAndFillRememberedPassword();
+      if (typeof requestAnimationFrame === 'function' && typeof syncLoginPasswordDotsPaint === 'function') {
+        requestAnimationFrame(syncLoginPasswordDotsPaint);
+      }
     }
 
     // ================= XỬ LÝ TỰ ĐỘNG CÀI ĐẶT ỨNG DỤNG TRÊN ANDROID, IOS & PC =================
