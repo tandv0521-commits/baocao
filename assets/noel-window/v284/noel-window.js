@@ -141,6 +141,8 @@
   // ---------------- MODULE STATE ----------------
   let mounted = false;
   let paused = false;
+  let revealInFlight = false;
+  let mountGeneration = 0;
   let rafHandle = 0;
   let lastTs = 0;
   let clockTimer = null;
@@ -334,23 +336,82 @@
     const tier = isCompact() ? '768' : '1280';
     const keyTier = mode + 'Tier';
     const keyLoad = mode + 'Loading';
+    const keyProm = mode + 'Promise';
     if (gardenImgs[mode] && gardenImgs[keyTier] === tier) {
       drawGardenCanvas(mode);
-      return;
+      return Promise.resolve(gardenImgs[mode]);
     }
-    if (gardenImgs[keyLoad] === tier) return;
+    if (gardenImgs[keyLoad] === tier && gardenImgs[keyProm]) {
+      return gardenImgs[keyProm];
+    }
     gardenImgs[keyLoad] = tier;
     const url = `${ASSET_BASE}/img/garden-${mode}-${tier}.webp`;
-    loadDecodedImage(url).then(img => {
-      if (!mounted) return;
-      gardenImgs[mode] = img;
-      gardenImgs[keyTier] = tier;
+    const p = loadDecodedImage(url).then(img => {
+      if (mounted) {
+        gardenImgs[mode] = img;
+        gardenImgs[keyTier] = tier;
+        drawGardenCanvas(mode);
+      }
       gardenImgs[keyLoad] = '';
-      requestAnimationFrame(() => {
-        if (mounted) drawGardenCanvas(mode);
-      });
+      gardenImgs[keyProm] = null;
+      return img;
     }).catch(() => {
       gardenImgs[keyLoad] = '';
+      gardenImgs[keyProm] = null;
+      return null;
+    });
+    gardenImgs[keyProm] = p;
+    return p;
+  }
+
+  function waitForStylesheetReady(linkId, timeoutMs = 900) {
+    return new Promise(resolve => {
+      const link = document.getElementById(linkId);
+      if (!link) { resolve(); return; }
+      const isReady = () => {
+        try {
+          return Boolean(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 0);
+        } catch (e) {
+          return Boolean(link.sheet);
+        }
+      };
+      if (isReady()) { resolve(); return; }
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        clearInterval(poll);
+        resolve();
+      };
+      link.addEventListener('load', finish, { once: true });
+      link.addEventListener('error', finish, { once: true });
+      const poll = setInterval(() => { if (isReady()) finish(); }, 30);
+      const timer = setTimeout(finish, timeoutMs);
+    });
+  }
+
+  function waitForImageElement(imgEl, timeoutMs = 900) {
+    return new Promise(resolve => {
+      if (!imgEl) { resolve(); return; }
+      if (imgEl.complete && imgEl.naturalWidth > 0) {
+        if (typeof imgEl.decode === 'function') {
+          imgEl.decode().then(resolve, resolve);
+        } else {
+          resolve();
+        }
+        return;
+      }
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      imgEl.addEventListener('load', finish, { once: true });
+      imgEl.addEventListener('error', finish, { once: true });
+      const timer = setTimeout(finish, timeoutMs);
     });
   }
 
@@ -545,6 +606,9 @@
     if (!rightCol) return;
     const shellRect = canvasShellEl.getBoundingClientRect();
     const compact = isCompact();
+    const currentScale = (!compact && loginScreenEl && loginScreenEl.hasAttribute('data-noel-scaled'))
+      ? (parseFloat(loginScreenEl.style.getPropertyValue('--nw-s')) || 1)
+      : 1;
     const leftRect = leftCardEl.getBoundingClientRect();
     const rightRect = rightCol.getBoundingClientRect();
     if (!shellRect.width || !rightRect.width || !rightRect.height) return;
@@ -553,16 +617,16 @@
     const top = compact ? (rightRect.top - shellRect.top) : Math.min(leftRect.top, rightRect.top) - shellRect.top;
     const width = compact ? rightRect.width : (rightRect.right - leftRect.left);
     const height = compact ? rightRect.height : Math.max(leftRect.bottom, rightRect.bottom) - Math.min(leftRect.top, rightRect.top);
-    const radius = compact ? 20 : 24;
+    const radius = compact ? 18 : Math.round(20 * currentScale);
 
-    const key = [Math.round(left), Math.round(top), Math.round(width), Math.round(height), radius, compact].join(':');
+    const key = [Math.round(left), Math.round(top), Math.round(width), Math.round(height), radius, compact, currentScale].join(':');
     if (key === lastLightsGeomKey) return;
     lastLightsGeomKey = key;
     lastLightsFrame = -1;
 
     const cw = Math.max(60, Math.round(width));
     const ch = Math.max(60, Math.round(height));
-    const pad = 22;
+    const pad = Math.ceil(24 * Math.max(1, currentScale));
     lightsDims = { w: cw, h: ch, pad };
 
     lightsSvgEl.style.left = `${left}px`;
@@ -581,9 +645,9 @@
     if (lightsGlowCtx) lightsGlowCtx.setTransform(1, 0, 0, 1, 0, 0);
 
     const route = buildPerimeter(width, height, 0, radius);
-    const step = compact ? 44 : 48;
+    const step = compact ? 42 : Math.max(30, Math.round(44 * currentScale));
     const count = Math.max(16, Math.round(route.length / step));
-    const bulbScale = compact ? 0.64 : 0.78;
+    const bulbScale = compact ? 0.62 : 0.72 * currentScale;
     const strokeColors = ['#853c36', '#8f7138', '#30513e', '#426778'];
 
     const wire = lightsSvgEl.querySelector('.nw-lights-wire');
@@ -850,8 +914,10 @@
   }
 
   // ---------------- WINDOW VISITORS (CACHED SLEEVE PATTERNS + 24FPS QUANTIZED SKIP) ----------------
+  let visitorAtlasPromise = null;
   function initWindowVisitors() {
-    if (visitorAtlas) return;
+    if (visitorAtlas) return Promise.resolve(visitorAtlas);
+    if (visitorAtlasPromise) return visitorAtlasPromise;
     for (const s of ['day', 'night']) {
       for (const p of (s === 'day' ? DAY_VISITORS : NIGHT_VISITORS)) {
         const c = document.createElement('canvas');
@@ -862,8 +928,7 @@
         visitorBuffers[s + p.name] = { surface: c, ctx: bctx, pat: null };
       }
     }
-    loadDecodedImage(`${ASSET_BASE}/img/window-visitors-rig.png`).then(img => {
-      if (!mounted) return;
+    visitorAtlasPromise = loadDecodedImage(`${ASSET_BASE}/img/window-visitors-rig.png`).then(img => {
       visitorAtlas = img;
       for (const name of ['girl', 'blue', 'green']) {
         const part = VISITOR_PARTS[name + 'Cloth'];
@@ -883,8 +948,10 @@
         }
       }
       lastVisitorSig = '';
-      paintVisitors(0);
-    }).catch(() => { });
+      if (mounted) paintVisitors(0);
+      return img;
+    }).catch(() => null);
+    return visitorAtlasPromise;
   }
 
   function resizeWindowCanvas(canvas, logicalW, logicalH) {
@@ -1108,14 +1175,17 @@
   }
 
   // ---------------- SILL KITTEN (DIRTY-KEY SKIP WHEN SLEEPING/IDLE) ----------------
+  let kittenAtlasPromise = null;
   function initKitten() {
-    if (kittenAtlas) return;
-    loadDecodedImage(`${ASSET_BASE}/img/kitten-atlas.webp`).then(img => {
-      if (!mounted) return;
+    if (kittenAtlas) return Promise.resolve(kittenAtlas);
+    if (kittenAtlasPromise) return kittenAtlasPromise;
+    kittenAtlasPromise = loadDecodedImage(`${ASSET_BASE}/img/kitten-atlas.webp`).then(img => {
       kittenAtlas = img;
       lastKittenKey = '';
-      paintKitten(0);
-    }).catch(() => { });
+      if (mounted) paintKitten(0);
+      return img;
+    }).catch(() => null);
+    return kittenAtlasPromise;
   }
 
   function resizeKitten() {
@@ -1444,6 +1514,29 @@
     return card;
   }
 
+  function syncCanonicalScale() {
+    if (!loginScreenEl || !leftCardEl) return 1;
+    const compact = isCompact();
+    if (compact) {
+      loginScreenEl.style.removeProperty('--nw-s');
+      loginScreenEl.removeAttribute('data-noel-scaled');
+      return 1;
+    }
+    const vw = window.innerWidth || 1280;
+    const vh = window.innerHeight || 720;
+    const rightCol = document.getElementById('loginRightCol');
+    const naturalH = Math.max(480, leftCardEl.offsetHeight || 493, (rightCol && rightCol.offsetHeight) || 493);
+    const REF_W = 1600;
+    const REF_H = 820;
+    const stageScale = Math.min(vw / REF_W, vh / REF_H);
+    const maxFitScale = Math.min((vw - 28) / 800, (vh - 56) / naturalH);
+    const rawScale = Math.min(maxFitScale, Math.max(0.72, Math.min(1.85, stageScale)));
+    const s = Number(rawScale.toFixed(4));
+    loginScreenEl.style.setProperty('--nw-s', String(s));
+    loginScreenEl.setAttribute('data-noel-scaled', '1');
+    return s;
+  }
+
   function syncLayout() {
     if (!mounted) return;
     const compact = isCompact();
@@ -1453,6 +1546,7 @@
         windowFrameImg.setAttribute('src', wantSrc);
       }
     }
+    syncCanonicalScale();
     computeWorldCamera();
     ensureGardenImage(activeScene);
     if (gardenImgs.day) drawGardenCanvas('day');
@@ -1474,8 +1568,10 @@
   function mount() {
     if (mounted) {
       paused = false;
-      syncLayout();
-      startOrPaint();
+      if (!revealInFlight) {
+        syncLayout();
+        startOrPaint();
+      }
       return true;
     }
     loginScreenEl = document.getElementById('loginScreen');
@@ -1488,14 +1584,17 @@
       return false;
     }
 
+    const myGen = ++mountGeneration;
     mounted = true;
     paused = false;
+    revealInFlight = true;
     cleanups = [];
     lastLightsGeomKey = '';
     lastVisitorSig = '';
     lastKittenKey = '';
+    loginScreenEl.removeAttribute('data-noel-ready');
 
-    compactMql = window.matchMedia('(max-width: 850px)');
+    compactMql = window.matchMedia('(max-width: 767px)');
     reducedMql = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     // 1. Populate streamlined backdrop inside #noelWindowRoot (unified single FX canvas at DPR=1)
@@ -1592,17 +1691,58 @@
     nightTarget = initialMode === 'night' ? 1 : 0;
     nightLevel = nightTarget;
 
-    // 7. Kick off lightweight sprites & initial paint
+    // 7. Kick off asset readiness + atomic first-paint reveal (no staged partial UI flash)
+    const wantMobileFrame = isCompact();
+    if (windowFrameImg) {
+      windowFrameImg.setAttribute('src', `${ASSET_BASE}/img/${wantMobileFrame ? 'window-frame-mobile.svg' : 'window-frame-desktop.svg'}`);
+    }
     initGlowSprites();
-    initWindowVisitors();
-    initKitten();
-    if (!isCompact()) initCourtyardSprites();
+    const cssReady = waitForStylesheetReady('noelWindowCss', 900);
+    const gardenReady = ensureGardenImage(initialMode);
+    const frameReady = waitForImageElement(windowFrameImg, 900);
+    const visitorsReady = initWindowVisitors();
+    const kittenReady = initKitten();
+    if (!wantMobileFrame) initCourtyardSprites();
 
-    loginScreenEl.setAttribute('data-noel-ready', '1');
     applySceneMode(initialMode, { persist: false, animateSunset: false });
     scheduleMinuteClock();
     syncLayout();
-    startOrPaint();
+
+    let revealed = false;
+    let failsafeTimer = null;
+    const revealNow = () => {
+      if (revealed) return;
+      revealed = true;
+      revealInFlight = false;
+      if (failsafeTimer) { clearTimeout(failsafeTimer); failsafeTimer = null; }
+      if (!mounted || mountGeneration !== myGen || !loginScreenEl) return;
+      requestAnimationFrame(() => {
+        if (!mounted || mountGeneration !== myGen || !loginScreenEl) return;
+        syncLayout();
+        if (document.documentElement) {
+          document.documentElement.classList.remove('noel-boot-pending');
+          document.documentElement.removeAttribute('data-noel-boot-scene');
+        }
+        loginScreenEl.setAttribute('data-noel-ready', '1');
+        startOrPaint();
+      });
+    };
+
+    failsafeTimer = setTimeout(revealNow, 1200);
+    cleanups.push(() => {
+      if (failsafeTimer) { clearTimeout(failsafeTimer); failsafeTimer = null; }
+    });
+
+    cssReady.then(() => {
+      if (!mounted || mountGeneration !== myGen) return null;
+      syncLayout();
+      const spritesRace = Promise.race([
+        Promise.allSettled([visitorsReady, kittenReady]),
+        new Promise(r => setTimeout(r, 320))
+      ]);
+      return Promise.allSettled([gardenReady, frameReady, spritesRace]);
+    }).then(revealNow, revealNow);
+
     return true;
   }
 
@@ -1629,6 +1769,8 @@
 
   function unmount() {
     if (!mounted) return;
+    mountGeneration++;
+    revealInFlight = false;
     paused = true;
     mounted = false;
     stopRaf();
@@ -1650,8 +1792,14 @@
     if (footerEl && footerEl.parentNode) footerEl.parentNode.removeChild(footerEl);
     if (rootEl) rootEl.innerHTML = '';
     if (loginScreenEl) {
+      loginScreenEl.style.removeProperty('--nw-s');
+      loginScreenEl.removeAttribute('data-noel-scaled');
       loginScreenEl.removeAttribute('data-noel-scene');
       loginScreenEl.removeAttribute('data-noel-ready');
+    }
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.classList.remove('noel-boot-pending');
+      document.documentElement.removeAttribute('data-noel-boot-scene');
     }
 
     leftCardEl = lightsSvgEl = lightsGlowCanvas = lightsGlowCtx = footerEl = windowStageEl = windowFrameImg = null;
@@ -1695,6 +1843,7 @@
     getDebugStats: () => ({
       mounted,
       paused,
+      revealInFlight,
       activeScene,
       scenePref,
       hasRaf: rafHandle !== 0,
@@ -1709,4 +1858,19 @@
       getChristmasCountdownInfo
     })
   });
+
+  // Auto-mount immediately when script executes (supports early <head defer> preload)
+  if (typeof document !== 'undefined') {
+    const tryAutoMount = () => {
+      const ls = document.getElementById('loginScreen');
+      if (ls && ls.getAttribute('data-login-theme') === 'noel-advent' && !ls.classList.contains('hidden') && !document.documentElement.classList.contains('app-auto-login-pending')) {
+        mount();
+      }
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryAutoMount, { once: true });
+    } else {
+      tryAutoMount();
+    }
+  }
 })();
